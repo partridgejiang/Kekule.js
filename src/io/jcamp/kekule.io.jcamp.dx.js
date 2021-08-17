@@ -177,6 +177,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	/** @private */
 	doStoreSpectrumDataLdr: function(ldr, block, chemObj)
 	{
+		//console.log('doStoreSpectrumDataLdr', ldr);
 		// check whether the DATA_CLASS matches LDR label name, ensure this is the LDR containing the spectrum data
 		if (this._isSpectrumDataLdr(ldr, chemObj))
 		{
@@ -203,13 +204,17 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				//console.log(formatDetail);
 				//console.log(varInfos);
 				//console.log(dataValue);
-				var spectrumData = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
+				//var spectrumData = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
+				var spectrumData = chemObj.getData();
+				spectrumData.setVariables(varDefinitions);
 				var isContinuous = (ldr.labelName.indexOf('PEAK') < 0) && (ldr.labelName.indexOf('ASSIGNMENT') < 0);
-				spectrumData.setContinuity(isContinuous? Kekule.Spectroscopy.DataContinuity.CONTINUOUS: Kekule.Spectroscopy.DataContinuity.DISCRETE);
+				spectrumData.setMode(isContinuous? Kekule.Spectroscopy.DataMode.CONTINUOUS: Kekule.Spectroscopy.DataMode.PEAK);
 
 				var spectrumDataSection = this._createSpectrumDataSectionByFormat(formatDetail, dataValue.values, varInfos, spectrumData);
+				/*
 				if (spectrumData)
 					chemObj.setData(spectrumData);
+				*/
 			}
 		}
 		else  // use the default approach
@@ -291,8 +296,10 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		if (!spectrumData)    // create new spectrum data instance when necessary
 		{
 			var varDefinitions = this._createSpectrumVariableDefinitions(varInfos);
-			spectrumData = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
-			chemObj.setData(spectrumData);
+			//spectrumData = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
+			//chemObj.setData(spectrumData);
+			var spectrumData = chemObj.getData();
+			spectrumData.setVariables(varDefinitions);
 			ntuplesInfos.spectrumData = spectrumData;
 		}
 		//console.log(varDefinitions);
@@ -304,11 +311,11 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		var plotDescriptor = formatDetail.plotDescriptor || '';
 		var localVarSymbols = formatDetail.vars;
 
-		var isContinuous = (plotDescriptor.indexOf('PEAK') < 0) || (plotDescriptor.indexOf('ASSIGNMENT') < 0);
-		var dataContinuity = isContinuous? Kekule.Spectroscopy.DataContinuity.CONTINUOUS: Kekule.Spectroscopy.DataContinuity.DISCRETE;
+		var isContinuous = (plotDescriptor.indexOf('PEAK') < 0) && (plotDescriptor.indexOf('ASSIGNMENT') < 0);
+		var dataMode = isContinuous? Kekule.Spectroscopy.DataMode.CONTINUOUS: Kekule.Spectroscopy.DataMode.PEAK;
 
 		var spectrumDataSection = this._createSpectrumDataSectionByFormat(formatDetail, dataValue.values, varInfos, spectrumData);
-		spectrumDataSection.setContinuity(dataContinuity);
+		spectrumDataSection.setMode(dataMode);
 		var pageInfo = ntuplesInfos['PAGE'];
 		spectrumDataSection.setName(pageInfo.varSymbol + ': ' + pageInfo.sValue);
 	},
@@ -404,7 +411,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		var varDefinitions = this._createSpectrumVariableDefinitions(varInfos);  // ensure X before Y
 		var result = new Kekule.Spectroscopy.SpectrumData(null, varDefinitions);
 		*/
-		var result = parentSpectrumData.createSection(/*varInfos._symbols*/formatDetail.vars, Kekule.Spectroscopy.DataContinuity.CONTINUOUS);
+		var result = parentSpectrumData.createSection(/*varInfos._symbols*/formatDetail.vars, Kekule.Spectroscopy.DataMode.CONTINUOUS);
 		result.beginUpdate();
 		try
 		{
@@ -428,7 +435,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			}
 
 			// check pass, build the spectrum data
-			result.setVarRange(varSymbolInc, varIncValueRange.firstValue, varIncValueRange.lastValue);
+			result.setContinuousVarRange(varSymbolInc, varIncValueRange.firstValue, varIncValueRange.lastValue);
 			for (var i = 0, ii = dataLines.length; i < ii; ++i)
 			{
 				var lineValues = dataLines[i];
@@ -498,7 +505,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	_isSpectrumDataLdr: function(ldr, chemObj)
 	{
 		//console.log(chemObj.getClassName());
-		var result = !chemObj.getData();  // if spectrum data already be built, a data LDR has previously be parsed and this one should not be the data
+		var result = (!chemObj.getData() || chemObj.getData().getSectionCount() <= 0);  // if spectrum data already be built, a data LDR has previously be parsed and this one should not be the data
 		if (result)
 		{
 			var dataClassValue = chemObj.getInfoValue('DATA CLASS') || null;

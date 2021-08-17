@@ -814,6 +814,7 @@ Kekule.IO.Jcamp.ValueType = {
 	MULTILINE_AFFN_GROUP: 6,  // AFFN/string group, e.g. in XYPOINTS or PEAKTABLE, with a leading format line
 	SIMPLE_AFFN_GROUP: 7,     // AFFN group, without leading format line
 	STRING_GROUP: 8,  // string group, delimited by comma, e.g., many NTUPLES var definition LDRs
+	DATA_TABLE: 9,    // NTuple data table, the format varies according to format string of the first line
 	STRING: 10,
 	SHORT_DATE: 21,  // date string in format YY/MM/DD
 	SHORT_TIME: 22,  // time string in format hh:mm:ss
@@ -959,7 +960,7 @@ _createLabelTypeInfos([
 	['FACTOR', JValueType.SIMPLE_AFFN_GROUP],
 	['END NTUPLES', JValueType.STRING],
 	['PAGE', JValueType.STRING],
-	['DATA TABLE', JValueType.MULTILINE_AFFN_ASDF]
+	['DATA TABLE', JValueType.DATA_TABLE]
 ]);
 
 
@@ -1075,7 +1076,9 @@ Kekule.IO.Jcamp.LdrValueParser = {
 	},
 	stringGroupParser: function(lines, options)
 	{
-		var v = lines.join(' ');
+		var v = lines.join(' ').trim();
+		if (v.endsWith(JcampConsts.NTUPLES_VAR_DEFINITION_VALUE_DELIMITER))  // ignore the tailing delimiter
+			v = v.substr(0, v.length - JcampConsts.NTUPLES_VAR_DEFINITION_VALUE_DELIMITER.length);
 		var result = v.split(JcampConsts.NTUPLES_VAR_DEFINITION_VALUE_DELIMITER);
 		for (var i = 0, l = result.length; i < l; ++i)
 		{
@@ -1084,6 +1087,7 @@ Kekule.IO.Jcamp.LdrValueParser = {
 			if (s.startsWith(JcampConsts.VALUE_STR_EXPLICIT_QUOTE) && s.endsWith(JcampConsts.VALUE_STR_EXPLICIT_QUOTE))
 				result[i] = s.substr(JcampConsts.VALUE_STR_EXPLICIT_QUOTE.length, s.length - JcampConsts.VALUE_STR_EXPLICIT_QUOTE.length * 2);
 		}
+
 		return result;
 	},
 	simpleAffnGroupParser: function(lines)
@@ -1119,6 +1123,26 @@ Kekule.IO.Jcamp.LdrValueParser = {
 			'values': JcampUtils.decodeAffnGroupTableLines(lines.slice(1), options)
 		};
 		return result;
+	},
+	ntuplesDataTableParser: function(lines, options)
+	{
+		var result;
+		var formatDetail = Jcamp.Utils.getDataTableFormatAndPlotDetails(lines[0]);
+		//var valueLines = lines.slice(1);
+
+		if (formatDetail.format === Jcamp.Consts.DATA_VARLIST_FORMAT_XYDATA)
+		{
+			result = JcampLdrValueParser.xyDataTableParser(lines, options);
+		}
+		else if (formatDetail.format === Jcamp.Consts.DATA_VARLIST_FORMAT_XYPOINTS)
+		{
+			result = JcampLdrValueParser.groupedDataTableParser(lines, options);
+		}
+		else if (formatDetail.format === Jcamp.Consts.DATA_VARLIST_FORMAT_VAR_GROUPS)
+		{
+			result = JcampLdrValueParser.groupedDataTableParser(lines, options);
+		}
+		return result;
 	}
 }
 var JcampLdrValueParser = Kekule.IO.Jcamp.LdrValueParser;
@@ -1131,6 +1155,7 @@ JcampLdrValueParser.registerParser(null, JValueType.SHORT_TIME, JcampLdrValuePar
 JcampLdrValueParser.registerParser(null, JValueType.DATETIME, JcampLdrValueParser.longDateParser);
 JcampLdrValueParser.registerParser(null, JValueType.MULTILINE_AFFN_ASDF, JcampLdrValueParser.xyDataTableParser);
 JcampLdrValueParser.registerParser(null, JValueType.MULTILINE_AFFN_GROUP, JcampLdrValueParser.groupedDataTableParser);
+JcampLdrValueParser.registerParser(null, JValueType.DATA_TABLE, JcampLdrValueParser.ntuplesDataTableParser);
 JcampLdrValueParser.registerParser(null, JValueType.STRING_GROUP, JcampLdrValueParser.stringGroupParser);
 JcampLdrValueParser.registerParser(null, JValueType.SIMPLE_AFFN_GROUP, JcampLdrValueParser.simpleAffnGroupParser);
 
