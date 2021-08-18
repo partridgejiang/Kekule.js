@@ -1512,7 +1512,7 @@ Kekule.Spectroscopy.SpectrumType = {
  * @class
  * @augments Kekule.ChemObject
  *
- * @property {String} spectrumType Type of spectrum, value from {@link Kekule.Spectroscopy.SpectrumTypes}.
+ * @property {String} spectrumType Type of spectrum, value from {@link Kekule.Spectroscopy.SpectrumType}.
  * @property {Kekule.Spectroscopy.SpectrumData} data Spectrum data.
  */
 Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
