@@ -2785,6 +2785,26 @@ Kekule.Render.RenderOptionUtils = {
 	},
 	*/
 
+	/**
+	 * Get all config properties of a config object.
+	 * @param {Kekule.AbstractConfigs} configObject
+	 * @returns {Array} Names of all config properties.
+	 */
+	getConfigPropNames: function(configObject)
+	{
+		var result = [];
+		var props = configObject.getAllPropList();
+		for (var i = 0, l = props.getLength(); i < l; ++i)
+		{
+			var prop = props.getPropInfoAt(i);
+			if (configObject.isConfigProp(prop))
+			{
+				result.push(prop.name);
+			}
+		}
+		return result;
+	},
+
 	convertConfigsToPlainHash: function(configs)
 	{
 		var U = Kekule.Render.RenderOptionUtils;
@@ -2807,6 +2827,32 @@ Kekule.Render.RenderOptionUtils = {
 		// keep a ref to config instance
 		result._configs = render2DConfigs;
 
+		var configPropNames = Kekule.Render.RenderOptionUtils.getConfigPropNames(render2DConfigs);
+		var specialPropNames = ['generalConfigs', 'moleculeDisplayConfigs', 'displayLabelConfigs', 'lengthConfigs'];
+
+		for (var i = 0, l = configPropNames.length; i < l; ++i)
+		{
+			var pname = configPropNames[i];
+			if (specialPropNames.indexOf(pname) >= 0)
+				continue;
+			var value = render2DConfigs.getPropValue(pname);
+			if (value.toHash)
+			{
+				var hash = value.toHash();
+				result = Object.extend(result, hash);
+			}
+		}
+
+		/*
+		// textFontConfigs
+		h = render2DConfigs.getTextFontConfigs().toHash();
+		result = Object.extend(result, h);
+
+		// colorConfigs
+		h = render2DConfigs.getColorConfigs().toHash();
+		result = Object.extend(result, h);
+		*/
+
 		// general configs
 		var h = render2DConfigs.getGeneralConfigs().toHash();
 		OU.replacePropName(h, 'drawOpacity', 'opacity');
@@ -2823,18 +2869,10 @@ Kekule.Render.RenderOptionUtils = {
 		// displayLabelConfigs, special, keep the whole config object
 		result.displayLabelConfigs = render2DConfigs.getDisplayLabelConfigs();
 
-		// textFontConfigs
-		h = render2DConfigs.getTextFontConfigs().toHash();
-		result = Object.extend(result, h);
-
 		// lengthConfigs
 		h = render2DConfigs.getLengthConfigs().toHash();
 		result = Object.extend(result, h);
 		result.unitLength = result.unitLength || 1;
-
-		// colorConfigs
-		h = render2DConfigs.getColorConfigs().toHash();
-		result = Object.extend(result, h);
 
 		return result;
 	},
@@ -2850,6 +2888,32 @@ Kekule.Render.RenderOptionUtils = {
 		var result = {};
 		// keep a ref to config instance
 		result._configs = render3DConfigs;
+
+		var configPropNames = Kekule.Render.RenderOptionUtils.getConfigPropNames(render3DConfigs);
+		var specialPropNames = ['generalConfigs', 'moleculeDisplayConfigs', 'environmentConfigs'];
+
+		for (var i = 0, l = configPropNames.length; i < l; ++i)
+		{
+			var pname = configPropNames[i];
+			if (specialPropNames.indexOf(pname) >= 0)
+				continue;
+			var value = render3DConfigs.getPropValue(pname);
+			if (value.toHash)
+			{
+				var hash = value.toHash();
+				result = Object.extend(result, hash);
+			}
+		}
+
+		/*
+		// modelConfigs
+		var h = render3DConfigs.getModelConfigs().toHash();
+		result = Object.extend(result, h);
+
+		// lengthConfigs
+		var h = render3DConfigs.getLengthConfigs().toHash();
+		result = Object.extend(result, h);
+		*/
 
 		// generalConfigs
 		var h = render3DConfigs.getGeneralConfigs().toHash();
@@ -2867,14 +2931,6 @@ Kekule.Render.RenderOptionUtils = {
 		OU.replacePropName(h, 'defDisplayMultipleBond', 'displayMultipleBond');
 		OU.replacePropName(h, 'defBondColor', 'bondColor');
 		OU.replacePropName(h, 'defAtomColor', 'atomColor');
-		result = Object.extend(result, h);
-
-		// modelConfigs
-		var h = render3DConfigs.getModelConfigs().toHash();
-		result = Object.extend(result, h);
-
-		// lengthConfigs
-		var h = render3DConfigs.getLengthConfigs().toHash();
 		result = Object.extend(result, h);
 
 		return result;
