@@ -141,6 +141,15 @@ Kekule.AbstractConfigs = Class.create(ObjectEx,
 		}
 	},
 	/**
+	 * Check if a property is defined as config property.
+   * @param {Object} propInfo
+	 * @returns {Bool}
+	 */
+	isConfigProp: function(propInfo)
+	{
+		return !!propInfo[this.CONFIG_PROP_FLAG];
+	},
+	/**
 	 * Assign data of src to current config object.
 	 * @param {Kekule.AbstractConfig} src
 	 */
