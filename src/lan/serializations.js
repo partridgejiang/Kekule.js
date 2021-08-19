@@ -36,6 +36,17 @@ ObjSerializer = Class.create(ObjectEx,
 {
 	/** @private */
 	CLASS_NAME: 'ObjSerializer',
+	/** @private */
+	SERIALIZER_NAME: null,   // special field to store the registered serializer name.
+
+	/**
+	 * Returns the serializer name of this object.
+	 * @returns {STRING}
+	 */
+	getSerializerName: function()
+	{
+		return this.SERIALIZER_NAME;
+	},
 
 	/**
 	 * Convert simple value to a serializable form. Used for saving object. Descendants can override this.
@@ -563,7 +574,8 @@ ObjSerializer = Class.create(ObjectEx,
 						explicitType = undefined;
 				}
 			}
-			this.doSaveFieldValue(obj, propName, propValue, storageNode, explicitType);
+			var serializationName = obj.getPropSerializationName(propName, this.getSerializerName()) || propName;
+			this.doSaveFieldValue(obj, /*propName*/serializationName, propValue, storageNode, explicitType);
 		}
 	},
 	/**
@@ -821,7 +833,8 @@ ObjSerializer = Class.create(ObjectEx,
 	{
 		var propName = prop.name;
 		var propType = prop.dataType;
-		var propValue = this.doLoadFieldValue(obj, propName, storageNode, propType);
+		var serializationName = obj.getPropSerializationName(propName, this.getSerializerName()) || propName;
+		var propValue = this.doLoadFieldValue(obj, /*propName*/serializationName, storageNode, propType);
 
 		if ((propValue !== null) && (propValue !== undefined))
 		{
@@ -1346,6 +1359,8 @@ ObjSerializerFactory = {
 		ObjSerializerFactory._serializerClasses[name] = sClass;
 		if (isDefault)
 			ObjSerializerFactory._defaultName = name;
+		// stores the serializer name to class as well
+		ClassEx.getPrototype(serializerClass).SERIALIZER_NAME = name;
 	},
 	/**
 	 * Create a new serializer by name.
@@ -1379,6 +1394,36 @@ Class.ObjSerializerFactory = ObjSerializerFactory;
 ClassEx.extend(ObjectEx,
 /** @lends ObjectEx# */
 {
+	/**
+	 * Returns the name string that need to be stored when serializing.
+	 * It may returns different name for different serializers.
+	 * Descendants may override this method.
+	 * @param {String} propName
+	 * @param {String} serializerName
+	 * @returns {String}
+	 * @private
+	 */
+	getPropSerializationName: function(propName, serializerName)
+	{
+		return propName;
+	},
+	/*
+	 * Returns the corresponding property name string deserializing from a serializationName.
+	 * It may returns different name for different serializers.
+	 * This method works togather with {@link ObjectEx.getPropSerializationName}.
+	 * Descendants may override this method.
+	 * @param {String} serializationName
+	 * @param {String} serializerName
+	 * @returns {String}
+	 * @private
+	 */
+	/*
+	getDeserializedPropName: function(serializationName, serializerName)
+	{
+		return serializationName;
+	},
+	*/
+
 	/**
 	 * Save current object to destNode.
 	 * @param {Object} destNode Storage node to save object. Different serializer requires different node.
