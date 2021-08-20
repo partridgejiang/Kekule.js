@@ -28,6 +28,10 @@ Kekule.Localization.addResource('en', 'Texts', {
 Kekule.Localization.addResource('en', 'ErrorMsg', {
 	MODULE_NOT_LOADED: 'Module {0} is not loaded',
 
+	// core/kekule.metrics.js
+	UNIT_NOT_FOUND: 'Unit not found: {0}',
+	UNABLE_TO_CONVERT_BETWEEN_UNITS: 'Unable to convert between units {0} and {1}',
+
 	// utils/kekule.utils.js
 	NON_OWN_PROPERTY_CANNOT_BE_REPLACED: 'Only directly owned property of object can be replaced',
 	// utils/kekule.domHelper.js
