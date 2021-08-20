@@ -1664,4 +1664,22 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.Spectroscopy.Spectrum);
 Kekule.ClassDefineUtils.addStandardSizeSupport(Kekule.Spectroscopy.Spectrum);
 
+
+// register spectrum related units
+(function(){
+	var register = Kekule.Unit.register;
+	// IR
+	register('transmittance', 'transmittance', 'SpectrumIR', null);  // IT/I0
+	register('reflectance', 'reflectance', 'SpectrumIR', null);  // IR/I0
+	register('absorbance', 'absorbance', 'SpectrumIR', null);  // log10(IR/I0)
+	register('Kubelka Munk', 'Kubelka_Munk', 'SpectrumIR', null);  // (1-R^2)/(2R)
+	register('1/cm', 'wave_number', 'Frequency', null);
+	// NMR
+	register('ppm', 'nmr_ppm', 'Frequency', null);
+	// MS
+	register('counts', 'ms_counts', 'General', null);
+	register('relative abundance', 'ms_relative_abundance', 'SpectrumMS', null);
+	register('m/z', 'ms_mass_charge_ratio', 'SpectrumMS', null);
+})();
+
 })();
