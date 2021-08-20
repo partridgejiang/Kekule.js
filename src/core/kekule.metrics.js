@@ -199,7 +199,7 @@ Kekule.UnitUtils = {
 	convertValue: function(fromValue, fromUnit, toUnit, extraParams)
 	{
 		var fuObj = KU.getUnit(fromUnit);
-		return fuObj? fuObj.convertValueTo(fromValue, toUnit, extraParams);
+		return fuObj.convertValueTo(fromValue, toUnit, extraParams);
 	}
 };
 
