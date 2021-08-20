@@ -325,6 +325,7 @@ var kekuleFiles = {
 			'utils/kekule.domHelper.js',
 			'utils/kekule.domUtils.js',
 			'core/kekule.externalResMgr.js',
+			'core/kekule.metrics.js'
 		],
 		'category': 'common',
 		'minFile': 'common.min.js'
