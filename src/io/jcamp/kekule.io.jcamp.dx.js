@@ -60,7 +60,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	_initLdrHandlers: function()
 	{
 		var map = this.tryApplySuper('_initLdrHandlers');
-		map['DATA TYPE'] = this.doStoreSpectrumDataTypeLdr.bind(this, 'DATA TYPE');
+		map['DATATYPE'] = this.doStoreSpectrumDataTypeLdr.bind(this, 'DATA TYPE');
 		var dataTableLdrNames = this._getDataTableLdrNames();
 		for (var i = 0, l = dataTableLdrNames.length; i < l; ++i)
 			map[dataTableLdrNames[i]] = this.doStoreSpectrumDataLdr.bind(this);
@@ -74,7 +74,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		var ntuplesVarDefLdrNames = this._getNTuplesDefinitionLdrNames();
 		for (var i = 0, l = ntuplesVarDefLdrNames.length; i < l; ++i)
 			map[ntuplesVarDefLdrNames[i]] = this.doStoreNTuplesAttributeLdr.bind(this);
-		map['DATA TABLE'] = this.doStoreNTuplesDataLdr.bind(this);   // NTuples data table
+		map['DATATABLE'] = this.doStoreNTuplesDataLdr.bind(this);   // NTuples data table
 		return map;
 	},
 	/** @prviate */
@@ -87,14 +87,14 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	/** @private */
 	_getNTuplesDefinitionLdrNames: function()
 	{
-		return ['NTUPLES', 'VAR_NAME', 'SYMBOL', 'VAR_TYPE', 'VAR_FORM', 'VAR_DIM', 'UNITS', 'FIRST', 'LAST', 'MIN', 'MAX', 'FACTOR',
+		return ['NTUPLES', 'VAR_NAME', 'SYMBOL', /*'VAR_TYPE'*/'VARTYPE', /*'VAR_FORM'*/'VARFORM', /*'VAR_DIM'*/'VAR_DIM', 'UNITS', 'FIRST', 'LAST', 'MIN', 'MAX', 'FACTOR',
 			'PAGE', 'POINTS', /*'NPOINTS'?,*/ 'CASNAME',
-			'END NTUPLES'];
+			/*'END NTUPLES'*/'ENDNTUPLES'];
 	},
 	/** @private */
 	_getDataTableLdrNames: function()
 	{
-		return ['XYDATA', 'XYPOINTS', 'PEAK TABLE', 'PEAKTABLE', 'PEAK ASSIGNMENTS','PEAKASSIGNMENTS', 'ASSIGNMENTS', 'RADATA'];
+		return ['XYDATA', 'XYPOINTS', 'PEAKTABLE', 'PEAKASSIGNMENTS', 'ASSIGNMENTS', 'RADATA'];
 	},
 	/** @private */
 	_isDataTableLabelName: function(labelName)
@@ -119,7 +119,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	{
 		var info = this.getCurrNTuplesInfos();
 		var value = Jcamp.LdrValueParser.parseValue(ldr);
-		if (ldr.labelName === 'END NTUPLES')  // ntuples end, empty the var infos
+		if (ldr.labelName === 'ENDNTUPLES')  // ntuples end, empty the var infos
 		{
 			if (value !== info.name)  // begin/end name not same
 				Kekule.error(Kekule.$L('ErrorMsg.JCAMP_NTUPLES_BEGIN_END_NAME_NOT_MATCH', info.value, value));
@@ -184,6 +184,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			if (this._isDataTableLabelName(ldr.labelName))
 			{
 				var dataValue = Jcamp.LdrValueParser.parseValue(ldr, {doValueCheck: true});
+				//console.log(ldr, dataValue);
 				/*
 				var varFormat = dataValue.format;
 				var formatDetail = Jcamp.Utils.getDataTableFormatDetails(varFormat);
@@ -335,7 +336,8 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		}
 		var fillVarInfo = function(ldrKey, key, infoObj)
 		{
-			var values = AU.toArray(getStorageValue(ldrKey));
+			var standardizedLdrKey = Jcamp.Utils.standardizeLdrLabelName(ldrKey);
+			var values = AU.toArray(getStorageValue(standardizedLdrKey));
 			for (var i = 0, l = values.length; i < l; ++i)
 			{
 				if (!infoObj[i])

@@ -41,10 +41,10 @@ Kekule.IO.Jcamp.Consts = {
 	TABLE_LINE_CONTI_MARK: '=',
 	UNKNOWN_VALUE: NaN,  // special value indicating an unknown variable value in data table
 
-	LABEL_DX_VERSION: 'JCAMP-DX',
-	LABEL_DX_VERSION_2: 'JCAMPDX',
-	LABEL_CS_VERSION: 'JCAMP-CS',
-	LABEL_CS_VERSION_2: 'JCAMPCS',
+	//LABEL_DX_VERSION: 'JCAMP-DX',
+	LABEL_DX_VERSION: 'JCAMPDX',
+	//LABEL_CS_VERSION: 'JCAMP-CS',
+	LABEL_CS_VERSION: 'JCAMPCS',
 
 	DATA_FORMAT_GROUP_LEADING: '(',
 	DATA_FORMAT_GROUP_TAILING: ')',
@@ -131,6 +131,25 @@ Kekule.IO.Jcamp.Utils = {
 		return Kekule.NumUtils.compareFloat(v1, v2, allowedError);
 	},
 	/**
+	 * Remove all slashes, dashes, spaces, underlines and make all letters captializd.
+	 * @param {String} labelName
+	 * @returns {String}
+	 */
+	standardizeLdrLabelName: function(labelName)
+	{
+		var result = labelName.replace(/[\/\\\-\_\s]/g, '');
+		return result.toUpperCase();
+	},
+	/**
+	 * Check if two LDR label names are same.
+	 * @param {String} name1
+	 * @param {String} name2
+	 */
+	ldrLabelNameEqual: function(name1, name2)
+	{
+		return JcampUtils.standardizeLdrLabelName(name1) === JcampUtils.standardizeLdrLabelName(name2);
+	},
+	/**
 	 * Returns the core name and label type of LDR.
 	 * @param {String} labelName
 	 * @returns {Hash} {coreName, labelType}
@@ -139,9 +158,9 @@ Kekule.IO.Jcamp.Utils = {
 	{
 		var result;
 		if (labelName.startsWith(JcampConsts.SPECIFIC_LABEL_PREFIX))
-			result = {'coreName': labelName.substr(JcampConsts.SPECIFIC_LABEL_PREFIX.length), 'labelType': JLabelType.SPECIFIC};
+			result = {'coreName': JcampUtils.standardizeLdrLabelName(labelName.substr(JcampConsts.SPECIFIC_LABEL_PREFIX.length)), 'labelType': JLabelType.SPECIFIC};
 		else if (labelName.startsWith(JcampConsts.PRIVATE_LABEL_PREFIX))
-			result = {'coreName': labelName.substr(JcampConsts.PRIVATE_LABEL_PREFIX.length), 'labelType': JLabelType.PRIVATE};
+			result = {'coreName': JcampUtils.standardizeLdrLabelName(labelName.substr(JcampConsts.PRIVATE_LABEL_PREFIX.length)), 'labelType': JLabelType.PRIVATE};
 		else
 			result = {'coreName': labelName, 'labelType': JLabelType.GLOBAL};
 		return result;
@@ -791,8 +810,8 @@ Kekule.IO.Jcamp.Utils = {
 		{
 			result = {
 				'blockType': block.blocks.length ? Jcamp.BlockType.LINK : Jcamp.BlockType.DATA,
-				'format': block.ldrIndexes[JcampConsts.LABEL_DX_VERSION] ||block.ldrIndexes[JcampConsts.LABEL_DX_VERSION_2] ? Jcamp.Format.DX :
-					block.ldrIndexes[JcampConsts.LABEL_CS_VERSION] ||block.ldrIndexes[JcampConsts.LABEL_CS_VERSION_2] ? Jcamp.Format.CS :
+				'format': block.ldrIndexes[JcampConsts.LABEL_DX_VERSION]? Jcamp.Format.DX :
+					block.ldrIndexes[JcampConsts.LABEL_CS_VERSION]? Jcamp.Format.CS :
 						null  // unknown format
 			};
 			block.meta = result;
@@ -839,12 +858,13 @@ Kekule.IO.Jcamp.LabelTypeInfos = {
 };
 Kekule.IO.Jcamp.LabelTypeInfos.createInfo = function(labelName, dataType, labelType)
 {
+	var name = JcampUtils.standardizeLdrLabelName(labelName);
 	var result = {
-		'labelName': labelName,
+		'labelName': name,
 		'labelType': labelType,
 		'dataType': dataType || Kekule.IO.Jcamp.LabelType.GLOBAL
 	};
-	Kekule.IO.Jcamp.LabelTypeInfos[labelName] = result;
+	Kekule.IO.Jcamp.LabelTypeInfos[name] = result;
 	return result;
 };
 Kekule.IO.Jcamp.LabelTypeInfos.createInfos = function(infoItems)
@@ -866,7 +886,9 @@ var _createLabelTypeInfos = Kekule.IO.Jcamp.LabelTypeInfos.createInfos;
 _createLabelTypeInfos([
 	// global labels
 	['TITLE', JValueType.STRING],
-	['JCAMP-DX', JValueType.STRING],    // JCAMP-DX version
+	//['JCAMP-DX', JValueType.STRING],    // JCAMP-DX version
+	['JCAMPDX', JValueType.STRING],    // JCAMP-DX version
+	['JCAMPCX', JValueType.STRING],    // JCAMP-CX version
 	['DATA TYPE', JValueType.STRING],   // spectrum type
 	['BLOCKS', JValueType.AFFN],        // child block count
 	['END', JValueType.NONE],           // block end mark, value should be ignored
@@ -890,9 +912,9 @@ _createLabelTypeInfos([
 	['XYDATA', JValueType.MULTILINE_AFFN_ASDF],
 	['XYPOINTS', JValueType.MULTILINE_AFFN_GROUP],
 	['PEAK TABLE', JValueType.MULTILINE_AFFN_GROUP],
-	['PEAKTABLE', JValueType.MULTILINE_AFFN_GROUP],
+	//['PEAKTABLE', JValueType.MULTILINE_AFFN_GROUP],
 	['PEAK ASSIGNMENTS', JValueType.MULTILINE_AFFN_GROUP],
-	['PEAKASSIGNMENTS', JValueType.MULTILINE_AFFN_GROUP],
+	//['PEAKASSIGNMENTS', JValueType.MULTILINE_AFFN_GROUP],
 
 	['CLASS', JValueType.STRING],       // Coblentz Class of the spectrum (1,2,3, or 4) and the IUPAC Class of digital representation (A, B, C).3
 	['ORIGIN', JValueType.STRING],      // Name of organization, address, telephone number, name of individual contributor, etc.,
@@ -979,7 +1001,7 @@ Kekule.IO.Jcamp.LdrValueParser = {
 	registerParser: function(labelName, dataType, func)
 	{
 		if (labelName)
-			JcampLdrValueParser._parserFuncs.byLabelName[labelName] = func;
+			JcampLdrValueParser._parserFuncs.byLabelName[JcampUtils.standardizeLdrLabelName(labelName)] = func;
 		else if (dataType)
 			JcampLdrValueParser._parserFuncs.byDataType[dataType] = func;
 	},
@@ -990,10 +1012,11 @@ Kekule.IO.Jcamp.LdrValueParser = {
 	 */
 	getParserFunc: function(ldr)
 	{
-		var result = JcampLdrValueParser._parserFuncs.byLabelName[ldr.labelName];
+		var labelName = Jcamp.Utils.standardizeLdrLabelName(ldr.labelName);
+		var result = JcampLdrValueParser._parserFuncs.byLabelName[labelName];
 		if (!result)
 		{
-			var valueType = JcampLabelTypeInfos.getType(ldr.labelName);
+			var valueType = JcampLabelTypeInfos.getType(labelName);
 			result = JcampLdrValueParser._parserFuncs.byDataType[valueType];
 		}
 		if (!result)

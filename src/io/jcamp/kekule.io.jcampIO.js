@@ -56,7 +56,7 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 			{
 				valueLines.push(this._removeInlineComments(lines[i].trim()));
 			}
-			return {'labelName': slabel.toUpperCase(), 'valueLines': valueLines};
+			return {'labelName': Jcamp.Utils.standardizeLdrLabelName(slabel), 'valueLines': valueLines};
 		}
 	},
 
@@ -89,14 +89,14 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 			var ldrParseResult = self._parseLdrLines(lastLdrLines);
 			if (ldrParseResult)
 			{
-				if (ldrParseResult.labelName === JcampConsts.LABEL_BLOCK_BEGIN)  // file beginning or sub blocks begining
+				if (Jcamp.Utils.ldrLabelNameEqual(ldrParseResult.labelName, JcampConsts.LABEL_BLOCK_BEGIN))  // file beginning or sub blocks begining
 				{
 					var subBlock = _createBlock(currBlock);
 					currBlock.blocks.push(subBlock);
 					currBlock = subBlock;
 				}
 				_appendLdrInfo(lastLdrLines, currBlock);
-				if (ldrParseResult.labelName === JcampConsts.LABEL_BLOCK_END)  // end of sub blocks or file
+				if (Jcamp.Utils.ldrLabelNameEqual(ldrParseResult.labelName, JcampConsts.LABEL_BLOCK_END))  // end of sub blocks or file
 				{
 					currBlock = currBlock._parent;
 				}
