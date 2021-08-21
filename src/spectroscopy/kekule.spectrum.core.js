@@ -7,7 +7,7 @@ var AU = Kekule.ArrayUtils;
 
 /**
  * Base namespace for spectra.
- * @type {namespace}
+ * @namespace
  */
 Kekule.Spectroscopy = {};
 
