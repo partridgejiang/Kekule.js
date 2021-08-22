@@ -700,6 +700,11 @@ Kekule.Render.Base2DRenderer = Class.create(Kekule.Render.CompositeRenderer,  //
 		else
 			return drawer.drawEx(this.getActualTargetContext(context), coord, richText, /*op*/ options /*, this.getRenderConfigs()*/);
 	},
+	measureRichText: function(context, coord, richText, options)
+	{
+		var drawer = this.getRichTextDrawer();
+		return drawer.measure(context, coord, richText, options);
+	},
 	drawImage: function(context, src, baseCoord, size, options, callback)
 	{
 		var self = this;
