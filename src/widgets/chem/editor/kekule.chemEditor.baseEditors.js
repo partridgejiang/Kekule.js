@@ -7441,11 +7441,16 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		var C = Kekule.CoordUtils;
 		var newInfoMap = this.getManipulateObjCurrInfoMap();
+		var editor = this.getEditor();
 
 		var isMovingOneStickNode = this._isManipulatingSingleStickedObj(manipulatingObjs);
 
 		var isDirectManipulateSingleObj = this.isDirectManipulating() && (manipulatingObjs.length === 1);
-		var followPointerCoord = isDirectManipulateSingleObj && this.getEditorConfigs().getInteractionConfigs().getFollowPointerCoordOnDirectManipulatingSingleObj();
+		var manipulatingObjHasSize = isDirectManipulateSingleObj?
+			(manipulatingObjs[0] && manipulatingObjs[0].getSizeOfMode && manipulatingObjs[0].getSizeOfMode(editor.getCoordMode(), editor.getAllowCoordBorrow())):
+			true;
+		var followPointerCoord = isDirectManipulateSingleObj && !manipulatingObjHasSize   // when the object has size, it can not follow the pointer coord
+			&& this.getEditorConfigs().getInteractionConfigs().getFollowPointerCoordOnDirectManipulatingSingleObj();
 		if (followPointerCoord)
 		{
 			var startCoord = this.getStartCoord();
