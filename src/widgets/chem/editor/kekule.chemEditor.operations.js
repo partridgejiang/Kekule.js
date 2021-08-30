@@ -1197,11 +1197,20 @@ Kekule.ChemStructOperation.AnchorNodesPreview = Class.create(Kekule.ChemStructOp
 	/** @ignore */
 	doExecute: function()
 	{
+		const chemObj = this.getEditor().getChemObj()
+		const getObjById = chemObj.getObjById.bind(chemObj)
 		this._moveNodeOperations = [];
 		var fromNode = this.getTarget();
 		var toNode = this.getDest();
 		var CM = Kekule.CoordMode;
 		var coordModes = [CM.COORD2D];
+
+		const fromAnchorId = fromNode.getAnchorObj()
+		if (fromAnchorId) {
+			const fromAnchor = getObjById(fromAnchorId)
+			delete fromAnchor.getAttachedArcNodeIds()[fromNode.getId()]
+		}
+
 		try
 		{
 			for (var i = 0, l = coordModes.length; i < l; ++i)
