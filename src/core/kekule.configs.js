@@ -148,10 +148,35 @@ Kekule.AbstractConfigs = Class.create(ObjectEx,
 	{
 		src.copyPropsTo(this);
 	},
+
+	/**
+	 * Convert property name to a new key when calling {@link Kekule.AbstractConfigs.toHash}.
+	 * By default this method will attach a prefix from {@link Kekule.AbstractConfigs.doGetPropNameToHashPrefix} to property name。
+	 * Descendants may override this method.
+	 * @param {String} propName
+	 * @returns {String}
+	 * @private
+	 */
+	doTransformPropNameToHash: function(propName)
+	{
+		return this.doGetPropNameToHashPrefix() + propName;
+	},
+	/**
+	 * Returns a prefix attaching to property name when export hash from config object.
+	 * Desendants may override this method.
+	 * @returns {String}
+	 */
+	doGetPropNameToHashPrefix: function()
+	{
+		return '';
+	},
 	/**
 	 * Wrap all properties to a hash object.
+	 * @param {Function} propNameTransformer A function(propName): string, to transform property name.
+	 *   If not set, {@link Kekule.AbstractConfigs.doTransformPropNameToHash} will be used.
+	 * @returns {Hash}
 	 */
-	toHash: function()
+	toHash: function(propNameTransformer)
 	{
 		var obj = {};
 		var propFlagName = this.CONFIG_PROP_FLAG;
@@ -169,7 +194,16 @@ Kekule.AbstractConfigs = Class.create(ObjectEx,
 			delete obj['_type'];
 		*/
 		//console.log(obj);
-		return obj;
+		//return obj;
+		var transformFunc = propNameTransformer || this.doTransformPropNameToHash.bind(this);
+		var result = {};
+		var keyNames = Kekule.ObjUtils.getOwnedFieldNames(obj, false);
+		for (var i = 0, l = keyNames.length; i < l; ++i)
+		{
+			var transKeyName = transformFunc(keyNames[i]);
+			result[transKeyName] = obj[keyNames[i]];
+		}
+		return result;
 	}
 });
 
