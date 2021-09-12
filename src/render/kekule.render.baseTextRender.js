@@ -445,6 +445,8 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 	measure: function(context, coord, richText, options, drawConfigs)
 	{
 		var ops = this.doPrepareDrawOptions(context, richText, options);
+		if (!coord)
+			coord = {'x': 0, 'y': 0};
 
 		// clone richtext to modify the object freely
 		var destRichText = this.cloneRichText(richText);
@@ -457,7 +459,7 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 
 		var preDrawnElem = [];
 		this.doPrepare(context, coord, destRichText, ops, drawMode, preDrawnElem);
-		var result = this._getItemRectInfo(destRichText);
+		var rectInfo = this._getItemRectInfo(destRichText);
 
 		if (preDrawnElem.length && bridge.removeDrawnElem)  // free this elements after measurement
 		{
@@ -468,7 +470,7 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 			}
 		}
 
-		return result;
+		return rectInfo.boundRect;
 	},
 
 	/** @private */
