@@ -224,11 +224,11 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 
 	/** private */
 	_FONT_OPTION_FIELDS: ['fontSize', 'fontFamily', 'fontWeight', 'fontStyle',
-		'color', 'overhang', 'oversink', 'opacity', 'zoom'],
+		'color', 'overhang', 'oversink', 'opacity', 'zoom', 'transforms'],
 	/** @private */
 	_DRAW_OPTIONS_FIELDS: ['textType', 'charDirection', 'defaultCharDirection',
 		'fontSize', 'fontFamily', 'fontWeight', 'fontStyle', 'color',
-		'horizontalAlign', 'verticalAlign', 'zoom'],
+		'horizontalAlign', 'verticalAlign', 'zoom', 'transforms'],
 	/**
 	 * Get local draw options of a item.
 	 * @param {Object} richTextItem
