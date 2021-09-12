@@ -4023,7 +4023,7 @@ Kekule.VarDependency = {
  *
  * @property {String} name Name of variable.
  * @property {String} symbol Symbol of variable.
- * @property {String} units Units of variable.
+ * @property {String} unit Units of variable.
  * @property {Variant} displayLabel Display text of variable, can be string or rich text object.
  * @property {String} description Description of variable.
  * @property {Int} dependency Value from {@link Kekule.VarDependency}.
@@ -4055,7 +4055,11 @@ Kekule.VarDefinition = Class.create(ObjectEx,
 	{
 		this.defineProp('name', {'dataType': DataType.STRING});
 		this.defineProp('symbol', {'dataType': DataType.STRING});
-		this.defineProp('units', {'dataType': DataType.STRING});
+		this.defineProp('unit', {'dataType': DataType.STRING});
+		this.defineProp('units', {'dataType': DataType.STRING, 'serializable': false,
+			'getter': function() { return this.getUnit(); },
+			'setter': function(value) { this.setUnit(value); }
+		});
 		this.defineProp('dependency', {'dataType': DataType.INT, 'enumSource': Kekule.VarDependency});
 		this.defineProp('displayLabel', {'dataType': DataType.VARIANT});
 		this.defineProp('description', {'dataType': DataType.STRING});
