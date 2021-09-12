@@ -928,7 +928,30 @@ Kekule.Render.ChemObj2DRenderer = Class.create(Kekule.Render.Base2DRenderer,
 
 		//console.log('transform params', drawOptions.transformParams);
 
+		// also calculate and store the contextRefLength, it may used by child renderers
+		var contextRefLengthes = this.calcContextRefLengthes(context, drawOptions, transformMatrix);
+		drawOptions.contextRefLengthes = {
+			'x': contextRefLengthes.contextRefLengthX,
+			'y': contextRefLengthes.contextRefLengthY,
+			'xy': contextRefLengthes.contextRefLengthXY
+		};
+
 		return result;
+	},
+
+	/** @private */
+	calcContextRefLengthes: function(context, drawOptions, transformMatrix)
+	{
+		var refLength = drawOptions.defScaleRefLength;
+		var coord0 = CU.transform2DByMatrix({x: 0, y: 0}, transformMatrix);
+		var coord1 = CU.transform2DByMatrix({x: refLength, y: 0}, transformMatrix);
+		var coord2 = CU.transform2DByMatrix({x: 0, y: refLength}, transformMatrix);
+		var coord3 = CU.transform2DByMatrix({x: refLength, y: refLength}, transformMatrix);
+		return {
+			'contextRefLengthX': CU.getDistance(coord1, coord0),
+			'contextRefLengthY': CU.getDistance(coord2, coord0),
+			'contextRefLengthXY': CU.getDistance(coord3, coord0) / Math.sqrt(2)
+		}
 	},
 
 	/** @private */
