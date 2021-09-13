@@ -87,7 +87,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	/** @private */
 	_getNTuplesDefinitionLdrNames: function()
 	{
-		return ['NTUPLES', 'VAR_NAME', 'SYMBOL', /*'VAR_TYPE'*/'VARTYPE', /*'VAR_FORM'*/'VARFORM', /*'VAR_DIM'*/'VAR_DIM', 'UNITS', 'FIRST', 'LAST', 'MIN', 'MAX', 'FACTOR',
+		return ['NTUPLES', /*'VAR_NAME'*/'VARNAME', 'SYMBOL', /*'VAR_TYPE'*/'VARTYPE', /*'VAR_FORM'*/'VARFORM', /*'VAR_DIM'*/'VARDIM', 'UNITS', 'FIRST', 'LAST', 'MIN', 'MAX', 'FACTOR',
 			'PAGE', 'POINTS', /*'NPOINTS'?,*/ 'CASNAME',
 			/*'END NTUPLES'*/'ENDNTUPLES'];
 	},
