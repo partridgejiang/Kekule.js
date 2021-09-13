@@ -55,6 +55,56 @@ Kekule.Spectroscopy.Utils = {
 			}
 		}
 		return result;
+	},
+
+	/**
+	 * Returns scale point information for a data range.
+	 * @param {Number} dataRangeMin
+	 * @param {Number} dataRangeMax
+	 * @param {Int} preferredScaleSectionCount
+	 * @returns {Hash}
+	 */
+	calcScalePointInfo: function(dataRangeMin, dataRangeMax, preferredScaleSectionCount)
+	{
+		if (preferredScaleSectionCount <= 0)
+			preferredScaleSectionCount = 10;   // avoid exception, set a default count value here
+		var digitCounts = [Math.log10(Math.abs(dataRangeMin)), Math.log10(Math.abs(dataRangeMax))];
+		var digitCountMax = Math.floor(Math.max(digitCounts[0], digitCounts[1]));
+		var digitCountMin = (Math.sign(dataRangeMin) === Math.sign(dataRangeMax))? Math.floor(Math.min(digitCounts[0], digitCounts[1], 0)): -Infinity;
+		var useSciForm = (digitCountMax > 6);  // need to use sci form if the digit num is very large to compact space
+
+		var dataDelta = dataRangeMax - dataRangeMin;
+		var deltaBetweenScales = dataDelta / preferredScaleSectionCount;
+		var deltaBetweenScalesDigitCount = Math.max(Math.floor(Math.log10(Math.abs(deltaBetweenScales))), digitCountMin);
+		var scaleBase = Math.pow(10, deltaBetweenScalesDigitCount);
+		var actualDeltaBetweenScales;
+		if (actualDeltaBetweenScales < 10 && dataDelta > 0.5)  // major scale should be even number in 1-10 scope
+		{
+			actualDeltaBetweenScales = Math.ceil(actualDeltaBetweenScales / scaleBase / 2) * 2 * scaleBase;
+		}
+		else
+		{
+			actualDeltaBetweenScales = Math.ceil(deltaBetweenScales / scaleBase) * scaleBase;
+		}
+		var scaleFrom = Math.ceil(dataRangeMin / actualDeltaBetweenScales) * actualDeltaBetweenScales;
+		var scaleTo = Math.floor(dataRangeMax / actualDeltaBetweenScales) * actualDeltaBetweenScales;
+		var result = {
+			'useSciForm': useSciForm,
+			'scaleFrom': scaleFrom,
+			'scaleTo': scaleTo,
+			'scaleSectionCount': Math.round((scaleTo - scaleFrom) / actualDeltaBetweenScales),
+			'scaleValues': [],
+			'scaleBase': scaleBase,
+			'scaleFromOnBase': scaleFrom / scaleBase,
+			'scaleToOnBase': scaleTo / scaleBase,
+			'fixDigitsCountAfterPoint': Math.max(-deltaBetweenScalesDigitCount, 0)  // record the recommended digits to appear after the decimal point
+		};
+		for (var i = 0, l = result.scaleSectionCount + 1; i < l; ++i)
+		{
+			result.scaleValues.push(Math.round(i * actualDeltaBetweenScales / scaleBase) * scaleBase + scaleFrom);
+		}
+		//console.log(result, scaleBase);
+		return result;
 	}
 };
 
@@ -1642,7 +1692,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		proto[methodName] = function()
 		{
 			//console.log('call', methodName, arguments);
-			this.getData()[dataMethodName].apply(this.getData(), arguments);
+			return this.getData()[dataMethodName].apply(this.getData(), arguments);
 		}
 	}
 
