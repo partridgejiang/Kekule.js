@@ -235,7 +235,7 @@ register('pA', 'picoampere', 'ElectricCurrent', 1e-12);
 register('V', 'volts', 'ElectricVoltage', 1);
 
 register('Hz', 'hertz', 'Frequency', 1);
-register('kHz', 'kilohertz', 'Frequency', 1);
+register('kHz', 'kilohertz', 'Frequency', 1e3);
 
 
 
