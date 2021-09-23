@@ -207,6 +207,13 @@ var register = KU.register;
 
 // register common used units
 register('', 'arbitrary', 'General', null);
+
+register('', 'one', 'Ratio', 1);
+register('%', 'percent', 'Ratio', 1e-2);
+register('‰', 'thousandth', 'Ratio', 1e-3);
+register('ppm', 'millionth', 'Ratio', 1e-6);
+
+
 register('hr', 'hour', 'Time', 3600);
 register('min', 'minute', 'Time', 60);
 register('sec', 'second', 'Time', 1);
@@ -217,6 +224,7 @@ register('ns', 'nanosecond', 'Time', 1e-9);
 register('m', 'meter', 'Length', 1);
 register('cm', 'centimeter', 'Length', 1e-2);
 register('mm', 'millimeter', 'Length', 1e-3);
+register('μm', 'micrometer', 'Length', 1e-6);
 register('mm', 'nanometer', 'Length', 1e-9);
 register('Å', 'angstrom', 'Length', 1e-10);
 
