@@ -326,7 +326,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			}
 
 			var def = new Kekule.VarDefinition({
-				'name': info.name,
+				'name': (info.name || '').toLowerCase(),  // LDR values are often uppercased
 				'symbol': info.symbol,
 				'units': Jcamp.DxUtils.dxUnitToMetricsUnitSymbol(info.units),
 				//'minValue': info.minValue,
