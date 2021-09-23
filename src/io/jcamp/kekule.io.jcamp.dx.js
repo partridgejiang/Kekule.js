@@ -3,6 +3,7 @@
  * requires /utils/kekule.utils.js
  * requires /utils/kekule.textHelper.js
  * requires /core/kekule.common.js
+ * requires /core/kekule.metrics.js
  * requires /spectrum/kekule.spectrum.core.js
  * requires /io/kekule.io.js
  * requires /io/jcamp/kekule.io.jcamp.js
@@ -14,6 +15,61 @@
 
 var AU = Kekule.ArrayUtils;
 var Jcamp = Kekule.IO.Jcamp;
+
+var KU = Kekule.Unit;
+
+/**
+ * A helper class for JCAMP-DX formats.
+ * @class
+ */
+Kekule.IO.Jcamp.DxUtils = {
+	/** @private */
+	_dxUnitToMetricsObjMap: {
+		// general
+		'ARBITARY UNITS': KU.General.ARBITRARY,
+		'ARBITARY UNIT': KU.General.ARBITRARY,
+		'SECONDS': KU.Time.SECOND,
+		'SECOND': KU.Time.SECOND,
+		'MILLISECONDS': KU.Time.MILLISECOND,
+		'MICROSECONDS': KU.Time.MICROSECOND,
+		'NANOSECONDS': KU.Time.NANOSECOND,
+		'PPM': KU.Ratio.MILLIONTH,
+		// NMR
+		'HZ': KU.Frequency.HERTZ,
+		// IR
+		'1/CM': KU.Frequency.WAVE_NUMBER,
+		'MICROMETERS': KU.Length.MICROMETER,
+		'NANOMETERS': KU.Length.NANOMETER,
+		'TRANSMITTANCE': KU.Optics.TRANSMITTANCE,
+		'REFLECTANCE': KU.Optics.REFLECTANCE,
+		'ABSORBANCE': KU.Optics.ABSORBANCE,
+		'KUBELKA-MUNK': KU.Optics.KUBELKA_MUNK,
+		// MS
+		'CHANNEL NUMBER': null,
+		'COUNTS': KU.General.MS_COUNT,
+		'COUNT': KU.General.MS_COUNT,
+		'M/Z': KU.SpectrumMS.MS_MASS_CHARGE_RATIO,
+		'RELATIVE ABUNDANCE ': KU.SpectrumMS.MS_RELATIVE_ABUNDANCE,
+		// Other
+		'MICROAMPERES': KU.ElectricCurrent.MICROAMPERE,
+		'NANOAMPERES': KU.ElectricCurrent.NANOAMPERE,
+		'PICOAMPERES': KU.ElectricCurrent.PICOAMPERE
+	},
+	/**
+	 * Returns a suitable unit string registered in metrics system of Kekule.js.
+	 * @param {String} unitStr Unit label stored in DX file.
+	 * @returns {String}
+	 */
+	dxUnitToMetricsUnitSymbol: function(unitStr)
+	{
+		var map = Jcamp.DxUtils._dxUnitToMetricsObjMap;
+		var metricsObj = map[unitStr];
+		var result = metricsObj && metricsObj.symbol;
+		if (!result)  // not found in map, return the raw string, but since in JCAMP all are uppercased, we need to convert to lower here
+			result = unitStr.toLowerCase().upperFirst();
+		return result;
+	}
+};
 
 /**
  * Reader for reading a DX data block of JCAMP document tree.
@@ -272,7 +328,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			var def = new Kekule.VarDefinition({
 				'name': info.name,
 				'symbol': info.symbol,
-				'units': info.units,
+				'units': Jcamp.DxUtils.dxUnitToMetricsUnitSymbol(info.units),
 				//'minValue': info.minValue,
 				//'maxValue': info.maxValue,
 				'dependency': Kekule.ObjUtils.notUnset(info.dependency)? info.dependency: Kekule.VarDependency.DEPENDENT
