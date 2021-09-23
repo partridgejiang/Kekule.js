@@ -4056,7 +4056,7 @@ Kekule.VarDefinition = Class.create(ObjectEx,
 		this.defineProp('name', {'dataType': DataType.STRING});
 		this.defineProp('symbol', {'dataType': DataType.STRING});
 		this.defineProp('unit', {'dataType': DataType.STRING});
-		this.defineProp('units', {'dataType': DataType.STRING, 'serializable': false,
+		this.defineProp('units', {'dataType': DataType.STRING, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC,
 			'getter': function() { return this.getUnit(); },
 			'setter': function(value) { this.setUnit(value); }
 		});
