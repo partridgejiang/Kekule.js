@@ -1719,15 +1719,15 @@ Kekule.ClassDefineUtils.addStandardSizeSupport(Kekule.Spectroscopy.Spectrum);
 (function(){
 	var register = Kekule.Unit.register;
 	// IR
-	register('transmittance', 'transmittance', 'SpectrumIR', null);  // IT/I0
-	register('reflectance', 'reflectance', 'SpectrumIR', null);  // IR/I0
-	register('absorbance', 'absorbance', 'SpectrumIR', null);  // log10(IR/I0)
-	register('Kubelka Munk', 'Kubelka_Munk', 'SpectrumIR', null);  // (1-R^2)/(2R)
+	register('transmittance', 'transmittance', 'Optics', null);  // IT/I0
+	register('reflectance', 'reflectance', 'Optics', null);  // IR/I0
+	register('absorbance', 'absorbance', 'Optics', null);  // log10(IR/I0)
+	register('Kubelka Munk', 'Kubelka_Munk', 'Optics', null);  // (1-R^2)/(2R)
 	register('1/cm', 'wave_number', 'Frequency', null);
 	// NMR
-	register('ppm', 'nmr_ppm', 'Frequency', null);
+	//register('ppm', 'nmr_ppm', 'Frequency', null);
 	// MS
-	register('counts', 'ms_counts', 'General', null);
+	register('counts', 'ms_count', 'General', null);
 	register('relative abundance', 'ms_relative_abundance', 'SpectrumMS', null);
 	register('m/z', 'ms_mass_charge_ratio', 'SpectrumMS', null);
 })();
