@@ -28,6 +28,7 @@ var CU = Kekule.CoordUtils;
  * @augments Kekule.AbstractConfigs
  *
  * @property {Hash} defSize2DRatio Default 2D spectrum size({x, y}), these value multiply the default ref length will get the actual size.
+ * @property {Bool} reversedAxis Whether reverse the X/Y axis and rotate the spectrum with 90 degree.
  * //@property {Int} spectrumIndicatorElements Default displayed indicator elements in spectrum.
  * @property {String} scaleFontFamily Font family to draw the scale numbers on axis.
  * @property {Number} scaleFontSize Font size to draw the scale numbers on axis.
@@ -135,6 +136,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 	 *     abscissaUnitLabel: rich text label for abscissa axis unit.
 	 *     abscissaLabel: rich text label for abscissa axis,
 	 *     abscissaAxisPosition: int, 0 for on bottom and 1 for on top
+	 *     abscissaReversedDirection: bool, set true to draw min value on right and max on left
 	 *     ordinateDataRange: hash of {min, max},
 	 *     ordinateScales: array of scale numbers,
 	 *     ordinateScaleBase: scale based number, e.g. 10e3
@@ -144,6 +146,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 	 *     ordinateUnitLabel: rich text label for ordinate axis unit.
 	 *     ordinateLabel: rich text label for ordinate axis
 	 *     ordinateAxisPosition: int, 0 for on left and 1 for on right
+	 *     ordinateReversedDirection: bool, set true to draw min value on top and max on bottom
 	 *   }
 	 * @param {Hash} renderOptions
 	 * @Returns {Hash} A hash object containing fields: {drawnElem, clientBox}
@@ -264,7 +267,8 @@ Kekule.Render.CoordAxisRender2DUtils = {
 				*/
 			elem = ARU._drawSingleAxis(drawBridge, richTextDrawer, context, abscissaRenderBox,
 				actualParams.abscissaDataRange, actualParams.abscissaScales, scaleLabels,
-				actualParams.abscissaUnitLabel, actualParams.abscissaLabel, abscissaSizes, renderOptions, true, actualParams.abscissaAxisPosition === 1);
+				actualParams.abscissaUnitLabel, actualParams.abscissaLabel, abscissaSizes, renderOptions, true, actualParams.abscissaAxisPosition === 1,
+				actualParams.abscissaReversedDirection);
 			drawBridge.addToGroup(elem, result);
 		}
 		if (drawOrdinate)
@@ -272,7 +276,8 @@ Kekule.Render.CoordAxisRender2DUtils = {
 			var scaleLabels = ordinateScaleLabels;
 			elem = ARU._drawSingleAxis(drawBridge, richTextDrawer, context, ordinateRenderBox,
 				actualParams.ordinateDataRange, actualParams.ordinateScales, scaleLabels,
-				actualParams.ordinateUnitLabel, actualParams.ordinateLabel, ordinateSizes, renderOptions, false, actualParams.ordinateAxisPosition !== 1);
+				actualParams.ordinateUnitLabel, actualParams.ordinateLabel, ordinateSizes, renderOptions, false, actualParams.ordinateAxisPosition !== 1,
+				actualParams.ordinateReversedDirection);
 			drawBridge.addToGroup(elem, result);
 		}
 
@@ -297,7 +302,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 		};
 	},
 	/** @private */
-	_drawSingleAxis: function(drawBridge, richTextDrawer, context, renderBox, dataRange, scales, scaleLabels, unitLabel, axisLabel, elementSizes, renderOptions, isAbscissa, isOnTopOrLeft)
+	_drawSingleAxis: function(drawBridge, richTextDrawer, context, renderBox, dataRange, scales, scaleLabels, unitLabel, axisLabel, elementSizes, renderOptions, isAbscissa, isOnTopOrLeft, isReversedDir)
 	{
 		var BXA = Kekule.Render.BoxXAlignment;
 		var BYA = Kekule.Render.BoxYAlignment;
@@ -313,6 +318,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 
 		var stageSize = {'x': renderBox.x2 - renderBox.x1, 'y': renderBox.y2 - renderBox.y1};
 		var basePos = {'x': renderBox.x1, 'y': renderBox.y1};
+		var isMaxValueOnRightOrBottom = isAbscissa? !isReversedDir: isReversedDir;
 		var coord = {}, coord2 = {};
 		var drawLabelOptions;
 		var occupiedSizeOnSecondaryDir = 0;
@@ -358,7 +364,8 @@ Kekule.Render.CoordAxisRender2DUtils = {
 			//drawBridge.drawRect(context, c2, Kekule.CoordUtils.add(c2, elementSizes.scaleLabel), rOptions.axis);
 			for (var i = 0, l = scales.length; i < l; ++i)
 			{
-				var scalePos = (scales[i] - dataRange.min) / dRange * stageSize[primaryAxis] + basePos[primaryAxis];
+				var scalePosDelta = isMaxValueOnRightOrBottom? (scales[i] - dataRange.min): (dataRange.max - scales[i]);
+				var scalePos = scalePosDelta / dRange * stageSize[primaryAxis] + basePos[primaryAxis];
 				coord[primaryAxis] = scalePos;
 				scaleLabelCoord[primaryAxis] = coord[primaryAxis];
 				if (isAbscissa)
@@ -630,7 +637,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var getVarLabel = function(spectrumObj, varSymbol)
 		{
 			var varDef = spectrumObj.getVariable(varSymbol);
-			var text = varDef.getDisplayLabel() || varDef.getName() || varDef.getSymbol();
+			var text = varDef.getDisplayLabel() || varDef.getName();  // || varDef.getSymbol();
 			if (!text)
 				return null;
 			else if (DataType.isObjectValue(text))  // already a rich text?
@@ -704,7 +711,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			{
 				setDrawParam(drawParams, 'label', paramPrefixIndependent, getVarLabel(spectrumObj, dataVarSymbols.independant));
 			}
-			if (ops['spectrum_displayIndependentAxisUnitLabel'])
+			if (ops['spectrum_displayIndependentAxisUnit'])
 			{
 				setDrawParam(drawParams, 'unitLabel', paramPrefixIndependent, getVarUnitLabel(spectrumObj, dataVarSymbols.independant));
 			}
@@ -759,7 +766,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			{
 				setDrawParam(drawParams, 'label', paramPrefixDependent, getVarLabel(spectrumObj, dataVarSymbols.dependant));
 			}
-			if (ops['spectrum_displayDependentAxisUnitLabel'])
+			if (ops['spectrum_displayDependentAxisUnit'])
 			{
 				setDrawParam(drawParams, 'unitLabel', paramPrefixDependent, getVarUnitLabel(spectrumObj, dataVarSymbols.dependant));
 			}
@@ -826,11 +833,11 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		// calculate internal transform params
 		var internalTransformMatrix = Kekule.CoordUtils.calcTransform2DMatrix({
 			'translateX': -dataRangeBox.x1,
-			'translateY': -dataRangeBox.y1
+			'translateY': -dataRangeBox.y2,  //-dataRangeBox.y1
 		});
 		internalTransformMatrix = Kekule.MatrixUtils.multiply(CU.calcTransform2DMatrix({
 			'scaleX': (contextBox.x2 - contextBox.x1) / (dataRangeBox.x2 - dataRangeBox.x1),
-			'scaleY': (contextBox.y2 - contextBox.y1) / (dataRangeBox.y2 - dataRangeBox.y1),
+			'scaleY': -(contextBox.y2 - contextBox.y1) / (dataRangeBox.y2 - dataRangeBox.y1),
 			'translateX': contextBox.x1,
 			'translateY': contextBox.y1
 		}), internalTransformMatrix);
@@ -927,7 +934,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	{
 		var result = this.createDrawGroup(context);
 		//var renderOptions = Object.create(options);
-		var renderOptions = options;
+		var renderOptions = Object.create(options);
+		renderOptions.lineCap = 'round';  // for a more smooth curve
 
 		// calculate resample rate
 		var resampleRate = 2;

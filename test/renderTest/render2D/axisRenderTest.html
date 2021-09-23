@@ -91,6 +91,7 @@
         abscissaUnitLabel: ($b('inputShowUnitX') && $v('inputUnitX'))? Kekule.Render.RichTextUtils.strToRichText($v('inputUnitX')): null,
         abscissaLabel: $b('inputShowAxisLabelX')? Kekule.Render.RichTextUtils.strToRichText($v('inputAxisLabelX')): null,
         abscissaAxisPosition: parseInt($v('selAxisPosX')),
+        abscissaReversedDirection: $b('inputReversedX'),
         ordinateDataRange: $b('inputShowAxisY')? dataRanges.y: null,
         ordinateScales: scaleInfoY.scaleValues,
         ordinateScaleBase: scaleInfoY.scaleBase,
@@ -99,7 +100,8 @@
         //ordinateScaleMarkSize: parseFloat($v('inputScaleMarkWidthY')),
         ordinateUnitLabel: ($b('inputShowUnitY') && $v('inputUnitY'))? Kekule.Render.RichTextUtils.strToRichText($v('inputUnitY')): null,
         ordinateLabel: $b('inputShowAxisLabelY')? Kekule.Render.RichTextUtils.strToRichText($v('inputAxisLabelY')): null,
-        ordinateAxisPosition: parseInt($v('selAxisPosY'))
+        ordinateAxisPosition: parseInt($v('selAxisPosY')),
+        ordinateReversedDirection: $b('inputReversedY')
       }
       return result;
     }
@@ -234,6 +236,7 @@
             <br />
             <label>Data range from: </label><input id="inputRangeFromX" type="number" value="0" />
             <label>to: </label><input id="inputRangeToX" type="number" value="100" />
+            <label>Reversed</label><input id="inputReversedX" type="checkbox" />
             <label>Axis stroke width: </label><input id="inputAxisStrokeWidthX" type="number" value="3" />
             <br />
             <label>Scale mark width: </label><input id="inputScaleMarkWidthX" type="number" value="5" />
@@ -263,6 +266,7 @@
               <br />
               <label>Data range from: </label><input id="inputRangeFromY" type="number" value="0" />
               <label>to: </label><input id="inputRangeToY" type="number" value="100" />
+              <label>Reversed</label><input id="inputReversedY" type="checkbox" />
               <label>Axis stroke width: </label><input id="inputAxisStrokeWidthY" type="number" value="3" />
               <br />
               <label>Scale mark width: </label><input id="inputScaleMarkWidthY" type="number" value="5" />
