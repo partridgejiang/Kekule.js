@@ -30,11 +30,38 @@ var CU = Kekule.CoordUtils;
  * @property {Hash} defSize2DRatio Default 2D spectrum size({x, y}), these value multiply the default ref length will get the actual size.
  * @property {Bool} reversedAxis Whether reverse the X/Y axis and rotate the spectrum with 90 degree.
  * //@property {Int} spectrumIndicatorElements Default displayed indicator elements in spectrum.
- * @property {String} scaleFontFamily Font family to draw the scale numbers on axis.
- * @property {Number} scaleFontSize Font size to draw the scale numbers on axis.
- * @property {String} unitsFontFamily Font family to draw the unit of axis.
- * @property {Number} unitsFontSize Font size to draw the unit of axis.
+ * @property {Bool} reverseIndependentDataDirection Whether reverse the min->max direction of independent data from the usual convention.
+ * @property {Bool} reverseDependentDataDirection Whether reverse the min->max direction of dependent data from the usual convention.
+ * @property {Bool} reverseIndependentAxisAlign Whether reverse alignment of independent data axis from the usual convention.
+ * @property {Bool} reverseDependentAxisAlign Whether reverse alignment of dependent data axis from the usual convention.
  *
+ * @property {String} dataColor Color to draw the spectrum data curve.
+ * @property {Number} dataStrokeWidthRatio The actual stroke width of data curve is calculated from max(dataStrokeWidthRatio * refLength, dataStrokeWidthMin).
+ * @property {Number} dataStrokeWidthMin The actual stroke width of data curve is calculated from max(dataStrokeWidthRatio * refLength, dataStrokeWidthMin).
+ *
+ * @property {Bool} displayIndependentAxis Whether rendering the independent data axis.
+ * @property {Bool} displayIndependentAxisScales Whether rendering the scales in independent data axis.
+ * @property {Bool} displayIndependentAxisLabel Whether rendering the axis label of independent data.
+ * @property {Bool} displayIndependentAxisUnit Whether rendering the unit of independent data.
+ * @property {Bool} displayDependentAxis Whether rendering the dependent data axis.
+ * @property {Bool} displayDependentAxisScales Whether rendering the scales in dependent data axis.
+ * @property {Bool} displayDependentAxisLabel Whether rendering the axis label of dependent data.
+ * @property {Bool} displayDependentAxisUnit Whether rendering the unit of dependent data.
+ *
+ * @property {String} axisScaleLabelFontFamily Font family to render axis scale labels.
+ * @property {Number} axisScaleLabelFontSize Font size to render axis scale labels.
+ * @property {String} axisScaleLabelColor Color to render axis scale labels.
+ * @property {String} axisLabelFontFamily Font family to render axis label.
+ * @property {Number} axisLabelFontSize Font size to render axis label.
+ * @property {String} axisLabelColor Color to render axis label.
+ *
+ * @property {Color} axisColor Color to render data axis.
+ * @property {Number} axisWidthRatio The actual stroke width of data axis is calculated from max(axisWidthRatio * refLength, axisWidthMin).
+ * @property {Number} axisWidthMin The actual stroke width of data axis is calculated from max(axisWidthRatio * refLength, axisWidthMin).
+ * @property {Number} axisScaleMarkSizeRatio The actual size of scale marks in axis is calculated from max(axisScaleMarkSizeRatio * refLength, axisScaleMarkSizeMin).
+ * @property {Number} axisScaleMarkSizeMin The actual size of scale marks in axis is calculated from max(axisScaleMarkSizeRatio * refLength, axisScaleMarkSizeMin).
+ *
+ * @property {Number} axisScaleMarkPreferredCount Preferred scale count in data axis.
  */
 Kekule.Render.SpectrumDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.Render.SpectrumDisplayConfigs# */
@@ -49,6 +76,11 @@ Kekule.Render.SpectrumDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 
 		//this.addBoolConfigProp('spectrumAbscissaAxisOnMinEnd', true);
 		this.addBoolConfigProp('reversedAxis', false);
+
+		this.addBoolConfigProp('reverseIndependentDataDirection', false);
+		this.addBoolConfigProp('reverseDependentDataDirection', false);
+		this.addBoolConfigProp('reverseIndependentAxisAlign', false);
+		this.addBoolConfigProp('reverseDependentAxisAlign', false);
 
 		//this.addBoolConfigProp('spectrumAbscissaAxisOnMinEnd', true);
 		//this.addBoolConfigProp('spectrumOrdinateAxisOnMinEnd', true);
@@ -477,6 +509,64 @@ Kekule.Render.CoordAxisRender2DUtils = {
 };
 var ARU = Kekule.Render.CoordAxisRender2DUtils;
 
+/**
+ * Some util functions for 2D spectrum rendering.
+ * @class
+ */
+Kekule.Render.Spectrum2DRenderUtils = {
+	/**
+	 * Returns false if the axis direction should be reversed.
+	 * @param {String} spectrumType
+	 * @param {Bool} isIndependent
+	 * @param {String} axisUnitSymbol
+	 * @private
+	 */
+	_getDataDefaultAxisDirection: function(spectrumType, isIndependent, axisUnitSymbol)
+	{
+		var ST = Kekule.Spectroscopy.SpectrumType;
+		var KU = Kekule.Unit;
+		var result = true;
+		if (spectrumType === ST.NMR)
+		{
+			if (isIndependent)  // ppm, Hz... should be from right to left
+				result = false;
+		}
+		if (spectrumType === ST.IR)
+		{
+			if (isIndependent)
+			{
+				if (axisUnitSymbol === KU.Frequency.WAVE_NUMBER)
+					result = false;
+			}
+		}
+		return result;
+	},
+	/**
+	 * Returns false if the axis should be at the left/bottom rather than the right/top.
+	 * @param {String} spectrumType
+	 * @param {Bool} isIndependent
+	 * @param {String} axisUnitSymbol
+	 * @private
+	 */
+	_getDataDefaultAxisAlign: function(spectrumType, isIndependent, axisUnitSymbol)
+	{
+		var ST = Kekule.Spectroscopy.SpectrumType;
+		var KU = Kekule.Unit;
+		var result = true;
+		return result;
+	},
+
+	getDefaultAxisDirectionAndAlignInfo: function(spectrumType, isIndependant, axisUnitSymbol)
+	{
+		var defaultDirection = Kekule.Render.Spectrum2DRenderUtils._getDataDefaultAxisDirection(spectrumType, isIndependant, axisUnitSymbol);
+		var defaultAlign = Kekule.Render.Spectrum2DRenderUtils._getDataDefaultAxisAlign(spectrumType, isIndependant, axisUnitSymbol);
+		return {
+			'reversedDirection': !defaultDirection,
+			'reversedAlign': !defaultAlign
+		}
+	}
+};
+
 
 /**
  * Base spectrum render.
@@ -556,34 +646,39 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		{
 			var dataRange = this._getDisplayRangeOfSections(chemObj, chemObj.getData(), sections);
 
-			var varSymbols = this.doGetDataVarSymbols(sections);
-
-			result = this.createDrawGroup(context);
-			var clientContextBox;
-
-			// indicator elements
-			// note: since here we call getDrawBridge() directly, the context should be returned by getActualTargetContext()
-			var indicatorDrawParamsAndOptions = this._prepareAxisRenderParamsAndOptions(this.getActualTargetContext(context), chemObj, dataRange, varSymbols, actualRenderOptions);
-			var indicatorDrawResult = Kekule.Render.CoordAxisRender2DUtils.drawAxises(this.getDrawBridge(), this.getRichTextDrawer(), this.getActualTargetContext(context), contextBox,
-				indicatorDrawParamsAndOptions.drawParams, indicatorDrawParamsAndOptions.renderOptions);
-			//console.log(indicatorDrawResult);
-			if (indicatorDrawResult)
+			var varInfos = this.doGetDataVarInfos(sections);
+			if (varInfos)   // we can not render without proper variable information
 			{
-				this.addToDrawGroup(indicatorDrawResult.drawnElem, result);
-				clientContextBox = indicatorDrawResult.clientBox;
+				var varSymbols = varInfos.varSymbols;
+
+				// check the axis alignment and direction
+				var axisDirectionAndAlignInfo = this._getAxisDirectionAndAlignInfo(context, chemObj, dataRange, varSymbols, varInfos.varUnitSymbols, actualRenderOptions);
+
+				result = this.createDrawGroup(context);
+				var clientContextBox;
+
+				// indicator elements
+				// note: since here we call getDrawBridge() directly, the context should be returned by getActualTargetContext()
+				var indicatorDrawParamsAndOptions = this._prepareAxisRenderParamsAndOptions(this.getActualTargetContext(context), chemObj, dataRange, varSymbols, actualRenderOptions, axisDirectionAndAlignInfo);
+				var indicatorDrawResult = Kekule.Render.CoordAxisRender2DUtils.drawAxises(this.getDrawBridge(), this.getRichTextDrawer(), this.getActualTargetContext(context), contextBox,
+					indicatorDrawParamsAndOptions.drawParams, indicatorDrawParamsAndOptions.renderOptions);
+				//console.log(indicatorDrawResult);
+				if (indicatorDrawResult) {
+					this.addToDrawGroup(indicatorDrawResult.drawnElem, result);
+					clientContextBox = indicatorDrawResult.clientBox;
+				} else
+					clientContextBox = contextBox;
+
+				var transformMatrix = this.doCalcSprectrumTransformMatrix(chemObj, sections, varSymbols, dataRange, clientContextBox, actualRenderOptions, axisDirectionAndAlignInfo);
+
+				// spectrum data
+				var spectrumDataElem = this.doDrawDataSections(chemObj, sections, varSymbols, context, objBox, clientContextBox, transformMatrix, actualRenderOptions);
+				if (spectrumDataElem)
+					this.addToDrawGroup(spectrumDataElem, result);
+
+				this.basicDrawObjectUpdated(context, chemObj, chemObj,
+					this.createRectBoundInfo(contextBoxCoord1, contextBoxCoord2), Kekule.Render.ObjectUpdateType.ADD);
 			}
-			else
-				clientContextBox = contextBox;
-
-			var transformMatrix = this.doCalcSprectrumTransformMatrix(chemObj, sections, varSymbols, dataRange, clientContextBox, actualRenderOptions);
-
-			// spectrum data
-			var spectrumDataElem = this.doDrawDataSections(chemObj, sections, varSymbols, context, objBox, clientContextBox, transformMatrix, actualRenderOptions);
-			if (spectrumDataElem)
-				this.addToDrawGroup(spectrumDataElem, result);
-
-			this.basicDrawObjectUpdated(context, chemObj, chemObj,
-				this.createRectBoundInfo(contextBoxCoord1, contextBoxCoord2), Kekule.Render.ObjectUpdateType.ADD);
 		}
 
 		return result;
@@ -599,7 +694,25 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		return result;
 	},
 	/** @private */
-	_prepareAxisRenderParamsAndOptions: function(context, spectrumObj, dataRanges, dataVarSymbols, renderOptions)
+	_getAxisDirectionAndAlignInfo: function(context, spectrumObj, dataRanges, dataVarSymbol, dataVarUnitSymbols, actualRenderOptions)
+	{
+		var spectrumType = spectrumObj.getSpectrumType();
+		var independentInfo = Kekule.Render.Spectrum2DRenderUtils.getDefaultAxisDirectionAndAlignInfo(spectrumType, true, dataVarUnitSymbols.independant);
+		var dependentInfo = Kekule.Render.Spectrum2DRenderUtils.getDefaultAxisDirectionAndAlignInfo(spectrumType, false, dataVarUnitSymbols.dependant);
+		if (actualRenderOptions.spectrum_reverseIndependentDataDirection)
+			independentInfo.reversedDirection = !independentInfo.reversedDirection;
+		if (actualRenderOptions.spectrum_reverseIndependentAxisAlign)
+			independentInfo.reversedAlign = !independentInfo.reversedAlign;
+		if (actualRenderOptions.spectrum_reverseDependentDataDirection)
+			dependentInfo.reversedDirection = !dependentInfo.reversedDirection;
+		if (actualRenderOptions.spectrum_reverseDependentAxisAlign)
+			dependentInfo.reversedAlign = !dependentInfo.reversedAlign;
+		return {
+			'independent': independentInfo, 'dependent': dependentInfo
+		};
+	},
+	/** @private */
+	_prepareAxisRenderParamsAndOptions: function(context, spectrumObj, dataRanges, dataVarSymbols, renderOptions, directionAndAlignInfo)
 	{
 		var ops = renderOptions;
 		var reversedAxis = ops.spectrum_reversedAxis;
@@ -695,7 +808,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 
 			// draw params
 			setDrawParam(drawParams, 'dataRange', paramPrefixIndependent, dataRanges[dataVarSymbols.independant]);
-			setDrawParam(drawParams, 'axisPosition', paramPrefixIndependent, 0);
+			setDrawParam(drawParams, 'axisPosition', paramPrefixIndependent, directionAndAlignInfo.independent.reversedAlign? 1: 0);
+			setDrawParam(drawParams, 'reversedDirection', paramPrefixIndependent, directionAndAlignInfo.independent.reversedDirection);
 			if (ops['spectrum_displayIndependentAxisScales'])
 			{
 				//console.log(dataRanges, dataVarSymbols);
@@ -751,7 +865,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 
 			// draw params
 			setDrawParam(drawParams, 'dataRange', paramPrefixDependent, dataRanges[dataVarSymbols.dependant]);
-			setDrawParam(drawParams, 'axisPosition', paramPrefixDependent, 0);
+			setDrawParam(drawParams, 'axisPosition', paramPrefixDependent, directionAndAlignInfo.dependent.reversedAlign? 1: 0);
+			setDrawParam(drawParams, 'reversedDirection', paramPrefixDependent, directionAndAlignInfo.dependent.reversedDirection);
 			if (ops['spectrum_displayDependentAxisScales'])
 			{
 				var preferredScaleMarkCount = getAxisRenderOptionValue(ops, 'axisScaleMarkPreferredCount', 'dependent');
@@ -783,32 +898,39 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		return [spectrum.getActiveDataSection()];  // TODO: currently handles active section only
 	},
 	/** @private */
-	doGetDataVarSymbols: function(targetDataSections)
+	doGetDataVarInfos: function(targetDataSections)
 	{
 		// get the independant and denpendant vars
 		var dependantVarSymbol, independantVarSymbol;
 		var varInfos = targetDataSections[0].getLocalVarInfos();   // we assume the vars in sections are same
+		var varUnitSymbols = {};
+		var varSymbols = {};
 		for (var i = 0, l = varInfos.length; i < l; ++i)
 		{
 			var varDef = varInfos[i].varDef;
 			if (varDef.getDependency() === Kekule.VarDependency.DEPENDENT)
 			{
-				dependantVarSymbol = varDef.getSymbol();
+				varSymbols.dependant = varDef.getSymbol();
+				varUnitSymbols.dependant = varDef.getUnit();
 			}
 			else
 			{
-				independantVarSymbol = varDef.getSymbol();
+				varSymbols.independant = varDef.getSymbol();
+				varUnitSymbols.independant = varDef.getUnit();
 			}
-			if (dependantVarSymbol && independantVarSymbol)
+			if (varSymbols.dependant && varSymbols.independant)
 				break;
 		}
-		if (!(dependantVarSymbol && independantVarSymbol))  // less than two variables, can not draw
-			return;
-		var varSymbols = {'independant': independantVarSymbol, 'dependant': dependantVarSymbol};
-		return varSymbols;
+		if (!(varSymbols.dependant && varSymbols.independant))  // less than two variables, can not draw
+			return null;
+
+		return {
+			'varSymbols': varSymbols,
+			'varUnitSymbols': varUnitSymbols
+		};
 	},
 	/** @private */
-	doCalcSprectrumTransformMatrix: function(spectrum, targetDataSections, varSymbols, sectionDataRange, contextBox, renderOptions)
+	doCalcSprectrumTransformMatrix: function(spectrum, targetDataSections, varSymbols, sectionDataRange, contextBox, renderOptions, axisDirectionAndAlignInfo)
 	{
 		var dependantVarSymbol = varSymbols.dependant, independantVarSymbol = varSymbols.independant;
 		// retrieve data ranges of all sections and build the range box
@@ -816,6 +938,22 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var dataRange = sectionDataRange;
 		if (!dataRange[dependantVarSymbol] || !dataRange[independantVarSymbol])
 			return;
+
+		var reverseX, reverseY;
+		if (axisDirectionAndAlignInfo.independent.reversedDirection)
+		{
+			if (renderOptions.spectrum_reversedAxis)
+				reverseY = true;
+			else
+				reverseX = true;
+		}
+		if (axisDirectionAndAlignInfo.dependent.reversedDirection)
+		{
+			if (renderOptions.spectrum_reversedAxis)
+				reverseX = true;
+			else
+				reverseY = true;
+		}
 		var boxCoords = !renderOptions.spectrum_reversedAxis?
 			[
 				{'x': dataRange[independantVarSymbol].min, 'y': dataRange[dependantVarSymbol].min},
@@ -825,22 +963,30 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				{'y': dataRange[independantVarSymbol].min, 'x': dataRange[dependantVarSymbol].min},
 				{'y': dataRange[independantVarSymbol].max, 'x': dataRange[dependantVarSymbol].max}
 			];
-
 		var dataRangeBox = Kekule.BoxUtils.createBox(boxCoords[0], boxCoords[1]);
 
 		//console.log('contextbox', contextBox, 'dataRange', dataRange, 'dataRangeBox', dataRangeBox);
 
 		// calculate internal transform params
-		var internalTransformMatrix = Kekule.CoordUtils.calcTransform2DMatrix({
-			'translateX': -dataRangeBox.x1,
-			'translateY': -dataRangeBox.y2,  //-dataRangeBox.y1
-		});
-		internalTransformMatrix = Kekule.MatrixUtils.multiply(CU.calcTransform2DMatrix({
+		var transOps1 = {
+			//'translateX': -dataRangeBox.x1,
+			'translateX': reverseX? -dataRangeBox.x2: -dataRangeBox.x1,
+			'translateY': reverseY? -dataRangeBox.y1: -dataRangeBox.y2,  //-dataRangeBox.y1
+		};
+
+		var internalTransformMatrix = Kekule.CoordUtils.calcTransform2DMatrix(transOps1);
+		var transOps2 = {
 			'scaleX': (contextBox.x2 - contextBox.x1) / (dataRangeBox.x2 - dataRangeBox.x1),
 			'scaleY': -(contextBox.y2 - contextBox.y1) / (dataRangeBox.y2 - dataRangeBox.y1),
 			'translateX': contextBox.x1,
 			'translateY': contextBox.y1
-		}), internalTransformMatrix);
+		};
+		if (reverseX)
+			transOps2.scaleX = -transOps2.scaleX;
+		if (reverseY)
+			transOps2.scaleY = -transOps2.scaleY;
+
+		internalTransformMatrix = Kekule.MatrixUtils.multiply(CU.calcTransform2DMatrix(transOps2), internalTransformMatrix);
 
 		var dataTransformMatrix = internalTransformMatrix;
 		renderOptions.spectrumDataTransformMatrix = dataTransformMatrix;
