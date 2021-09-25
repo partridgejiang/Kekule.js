@@ -77,7 +77,8 @@
     function getAxisDrawParams()
     {
       var dataRanges = getDataRanges();
-      var preferredScaleMarkCount = 10;
+      //var preferredScaleMarkCount = 10;
+      var preferredScaleMarkCount = parseInt($('inputScaleCount').value);
       var scaleInfoX = Kekule.Spectroscopy.Utils.calcScalePointInfo(dataRanges.x.min, dataRanges.x.max, preferredScaleMarkCount);
       var scaleInfoY = Kekule.Spectroscopy.Utils.calcScalePointInfo(dataRanges.y.min, dataRanges.y.max, preferredScaleMarkCount);
 
@@ -126,6 +127,7 @@
         'axis': {
           'strokeWidth': parseFloat($v('inputAxisStrokeWidthX')),
           'scaleMarkSize': parseFloat($v('inputScaleMarkWidthX')),
+          'unlabeledScaleSizeRatio': 0.5,
           'strokeColor': '#ff0000'
         },
           'ordinateAxis': {
@@ -142,9 +144,11 @@
       var ARU = Kekule.Render.CoordAxisRender2DUtils;
 
       var dataRanges = getDataRanges();
-      var preferredScaleMarkCount = 10;
+      var preferredScaleMarkCount = parseInt($('inputScaleCount').value);
       var scaleInfoX = Kekule.Spectroscopy.Utils.calcScalePointInfo(dataRanges.x.min, dataRanges.x.max, preferredScaleMarkCount);
       var scaleInfoY = Kekule.Spectroscopy.Utils.calcScalePointInfo(dataRanges.y.min, dataRanges.y.max, preferredScaleMarkCount);
+
+      //console.log(preferredScaleMarkCount, scaleInfoX);
 
       /*
       var params = {
@@ -229,6 +233,10 @@
   <div id="drawStage"></div>
   <div id="controller">
       <form id="formController">
+          <fieldset>
+              <legend>General</legend>
+              <label>Preferred scale count: </label><input id="inputScaleCount" type="number" value="10" />
+          </fieldset>
       <fieldset>
         <legend>X Axis</legend>
         <p>
