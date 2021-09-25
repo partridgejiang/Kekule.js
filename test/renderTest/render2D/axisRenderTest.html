@@ -112,7 +112,8 @@
         'axisLabel': {
           'fontSize': parseFloat($v('inputAxisLabelFontSizeX')),
           'fontFamily': 'Times new Roman',
-          'color': '#00FF00'
+          'color': '#00FF00',
+          'padding': parseFloat($v('inputAxisLabelPadding'))
         },
         'scaleLabel': {
           'fontSize': parseFloat($v('inputScaleFontSizeX')),
@@ -120,9 +121,11 @@
           'subFontSizeRatio': 0.66,
           'fontFamily': 'Arial',
           'color': '#0000FF',
+          'padding': parseFloat($v('inputScaleLabelPadding'))
             //'textBoxAlignmentMode': Kekule.Render.TextBoxAlignmentMode.BOX
           //'verticalAlign': Kekule.Render.TextAlign.BOTTOM
         },
+        //'scaleLabelPadding':
         //'abscissaAxis': {
         'axis': {
           'strokeWidth': parseFloat($v('inputAxisStrokeWidthX')),
@@ -236,6 +239,8 @@
           <fieldset>
               <legend>General</legend>
               <label>Preferred scale count: </label><input id="inputScaleCount" type="number" value="10" />
+              <label>Scale label padding: </label><input id="inputScaleLabelPadding" type="number" value="3" />
+              <label>Axis label padding: </label><input id="inputAxisLabelPadding" type="number" value="3" />
           </fieldset>
       <fieldset>
         <legend>X Axis</legend>
