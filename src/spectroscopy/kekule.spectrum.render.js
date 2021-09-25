@@ -60,6 +60,7 @@ var CU = Kekule.CoordUtils;
  * @property {Number} axisWidthMin The actual stroke width of data axis is calculated from max(axisWidthRatio * refLength, axisWidthMin).
  * @property {Number} axisScaleMarkSizeRatio The actual size of scale marks in axis is calculated from max(axisScaleMarkSizeRatio * refLength, axisScaleMarkSizeMin).
  * @property {Number} axisScaleMarkSizeMin The actual size of scale marks in axis is calculated from max(axisScaleMarkSizeRatio * refLength, axisScaleMarkSizeMin).
+ * @property {Number} axisUnlabeledScaleSizeRatio The size of scale mark without a label is calculated from max(axisUnlabeledScaleSizeRatio * axisScaleMarkSizeRatio * refLength, axisScaleMarkSizeMin).
  *
  * @property {Number} axisScaleMarkPreferredCount Preferred scale count in data axis.
  */
@@ -111,7 +112,8 @@ Kekule.Render.SpectrumDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('axisWidthMin', 1);
 		this.addFloatConfigProp('axisScaleMarkSizeRatio', 0.1);
 		this.addFloatConfigProp('axisScaleMarkSizeMin', 3);
-		this.addIntConfigProp('axisScaleMarkPreferredCount', 5);
+		this.addFloatConfigProp('axisUnlabeledScaleSizeRatio', 0.7);
+		this.addIntConfigProp('axisScaleMarkPreferredCount', 10);
 	},
 	/** @ignore */
 	initPropDefValues: function()
@@ -394,43 +396,60 @@ Kekule.Render.CoordAxisRender2DUtils = {
 			scaleLabelCoord[secondaryAxis] = coord[secondaryAxis];
 			//console.log('scaleLabel pos', secondaryAxis, coord[secondaryAxis]);
 			//drawBridge.drawRect(context, c2, Kekule.CoordUtils.add(c2, elementSizes.scaleLabel), rOptions.axis);
+
+			// if the scaleLabel size overlaps each other, we need to bypass some of them
+			var basedScaleLabelSize = stageSize[primaryAxis] / (scaleLabels.length - 1);
+			var currScaleLabelSize = basedScaleLabelSize;
+			var labelPerScales = 1;
+			while (currScaleLabelSize < elementSizes.scaleLabel[primaryAxis])
+			{
+				++labelPerScales;
+				currScaleLabelSize += basedScaleLabelSize;
+			}
+
 			for (var i = 0, l = scales.length; i < l; ++i)
 			{
 				var scalePosDelta = isMaxValueOnRightOrBottom? (scales[i] - dataRange.min): (dataRange.max - scales[i]);
 				var scalePos = scalePosDelta / dRange * stageSize[primaryAxis] + basePos[primaryAxis];
 				coord[primaryAxis] = scalePos;
-				scaleLabelCoord[primaryAxis] = coord[primaryAxis];
-				if (isAbscissa)
+
+				// scale
+				var scaleLabeled = false;
+				if (i % labelPerScales === 0)
 				{
-					var scaleLabelRect = richTextDrawer.measure(context, scaleLabelCoord, scaleLabels[i], drawLabelOptions);
-					scaleLabelCoord.x = coord.x - scaleLabelRect.width / 2;
+					scaleLabelCoord[primaryAxis] = coord[primaryAxis];
+					if (isAbscissa)
+					{
+						var scaleLabelRect = richTextDrawer.measure(context, scaleLabelCoord, scaleLabels[i], drawLabelOptions);
+						scaleLabelCoord.x = coord.x - scaleLabelRect.width / 2;
+					} else if (alignOnTopOrLeft)  // scale label in ordinate axis, adjust X position when need to align to right
+					{
+						var scaleLabelRect = richTextDrawer.measure(context, scaleLabelCoord, scaleLabels[i], drawLabelOptions);
+						scaleLabelCoord.x = coord.x - scaleLabelRect.width;
+					}
+					//elem = drawBridge.drawRichText(context, coord, scaleLabels[i], drawLabelOptions);
+					var textDrawResult = richTextDrawer.drawEx(context, scaleLabelCoord, scaleLabels[i], drawLabelOptions);
+					elem = textDrawResult.drawnObj;
+					/* debug
+					var bound = textDrawResult.alignRect;
+					drawBridge.drawRect(context, {x: bound.left, y: bound.top}, {'x': bound.left + bound.width, 'y': bound.top + bound.height}, rOptions);
+					console.log('scale bound', bound);
+					*/
+					drawBridge.addToGroup(elem, result);
+					scaleLabeled = true;
 				}
-				else if (alignOnTopOrLeft)  // scale label in ordinate axis, adjust X position when need to align to right
-				{
-					var scaleLabelRect = richTextDrawer.measure(context, scaleLabelCoord, scaleLabels[i], drawLabelOptions);
-					scaleLabelCoord.x = coord.x - scaleLabelRect.width;
-				}
-				//elem = drawBridge.drawRichText(context, coord, scaleLabels[i], drawLabelOptions);
-				var textDrawResult = richTextDrawer.drawEx(context, scaleLabelCoord, scaleLabels[i], drawLabelOptions);
-				elem = textDrawResult.drawnObj;
-				/* debug
-				var bound = textDrawResult.alignRect;
-				drawBridge.drawRect(context, {x: bound.left, y: bound.top}, {'x': bound.left + bound.width, 'y': bound.top + bound.height}, rOptions);
-				console.log('scale bound', bound);
-				*/
-				drawBridge.addToGroup(elem, result);
 				// scale mark
+				var coord1 = {'x': coord.x, 'y': coord.y};
+				var scaleMarkSize = elementSizes.scaleMark[secondaryAxis];
+				coord1[secondaryAxis] += scaleMarkSize * (isOnTopOrLeft? 1: -1);
+				if (!scaleLabeled)
+					scaleMarkSize *= (axisRenderOptions.unlabeledScaleSizeRatio || 1);
 				coord2[primaryAxis] = scalePos;
-				coord2[secondaryAxis] = coord[secondaryAxis] + elementSizes.scaleMark[secondaryAxis] * (isOnTopOrLeft? 1: -1);
-				elem = drawBridge.drawLine(context, coord, coord2, axisRenderOptions);
+				coord2[secondaryAxis] = coord1[secondaryAxis] - scaleMarkSize * (isOnTopOrLeft? 1: -1);
+				elem = drawBridge.drawLine(context, coord1, coord2, axisRenderOptions);
 				drawBridge.addToGroup(elem, result);
 			}
 			occupiedSizeOnSecondaryDir += elementSizes.scaleLabel[secondaryAxis] + elementSizes.scaleMark[secondaryAxis];  //+ elementSizes.axis[secondaryAxis];
-		}
-		// draw unit label
-		if (unitLabel)
-		{
-
 		}
 
 		// draw axis
@@ -803,6 +822,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 					'color': oneOf(getAxisRenderOptionValue(ops, 'axisScaleLabelColor', 'independent'), ops['color'])
 				});
 				independentAxisOps['axis']['scaleMarkSize'] = getActualSpectrumLengthValue(ops, 'axisScaleMarkSize', 'independent', refLengthIndependent, unitLength);
+				independentAxisOps['axis']['unlabeledScaleSizeRatio'] = getAxisRenderOptionValue(ops, 'axisUnlabeledScaleSizeRatio', 'independent');
 			}
 
 
@@ -861,6 +881,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 					'color': oneOf(getAxisRenderOptionValue(ops, 'axisScaleLabelColor', 'dependent'), ops['color'])
 				});
 				dependentAxisOps['axis']['scaleMarkSize'] = getActualSpectrumLengthValue(ops, 'axisScaleMarkSize', 'dependent', refLengthDependent, unitLength);
+				dependentAxisOps['axis']['unlabeledScaleSizeRatio'] = getAxisRenderOptionValue(ops, 'axisUnlabeledScaleSizeRatio', 'dependent');
 			}
 
 			// draw params
