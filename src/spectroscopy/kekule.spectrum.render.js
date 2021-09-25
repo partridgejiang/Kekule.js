@@ -114,6 +114,8 @@ Kekule.Render.SpectrumDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('axisScaleMarkSizeMin', 3);
 		this.addFloatConfigProp('axisUnlabeledScaleSizeRatio', 0.7);
 		this.addIntConfigProp('axisScaleMarkPreferredCount', 10);
+		this.addFloatConfigProp('axisLabelPaddingRatio', 0);
+		this.addFloatConfigProp('axisScaleLabelPaddingRatio', 0.025);
 	},
 	/** @ignore */
 	initPropDefValues: function()
@@ -363,7 +365,11 @@ Kekule.Render.CoordAxisRender2DUtils = {
 		if (axisLabel)
 		{
 			coord[primaryAxis] = basePos[primaryAxis] + stageSize[primaryAxis] / 2 - elementSizes.axisLabel[primaryAxis] / 2 * (isAbscissa? 1: -1);
-			coord[secondaryAxis] = basePos[secondaryAxis] + (alignOnTopOrLeft? (elementSizes.axisLabel[secondaryAxis] / 2): (stageSize[secondaryAxis] - elementSizes.axisLabel[secondaryAxis] / 2));
+			coord[secondaryAxis] = basePos[secondaryAxis]
+				+ (alignOnTopOrLeft?
+						(elementSizes.axisLabelPadding[secondaryAxis] + elementSizes.axisLabel[secondaryAxis] / 2):
+						(stageSize[secondaryAxis] - (elementSizes.axisLabelPadding[secondaryAxis] + elementSizes.axisLabel[secondaryAxis] / 2))
+					);
 			drawLabelOptions = Object.extend(Object.extend({}, rOptions.axisLabel),
 				{'textBoxXAlignment': BXA.LEFT, 'textBoxYAlignment': BYA.CENTER});
 			if (!isAbscissa)
@@ -373,7 +379,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 			var textDrawResult = richTextDrawer.drawEx(context, coord, axisLabel, drawLabelOptions);
 			elem = textDrawResult.drawnObj;
 			drawBridge.addToGroup(elem, result);
-			occupiedSizeOnSecondaryDir += elementSizes.axisLabel[secondaryAxis];
+			occupiedSizeOnSecondaryDir += elementSizes.axisLabel[secondaryAxis] + elementSizes.axisLabelPadding[secondaryAxis] * 2;
 		}
 		var axisRenderOptions = rOptions.axis;
 		// draw scale markers and scale labels
@@ -390,8 +396,8 @@ Kekule.Render.CoordAxisRender2DUtils = {
 				{'textBoxXAlignment': BXA.LEFT, 'textBoxYAlignment': BYA.CENTER};
 			drawLabelOptions = Object.extend(Object.create(rOptions.scaleLabel), labelRenderAlignOps);
 			coord[secondaryAxis] = alignOnTopOrLeft?
-				(basePos[secondaryAxis] + occupiedSizeOnSecondaryDir + elementSizes.scaleLabel[secondaryAxis]):
-				(basePos[secondaryAxis] + stageSize[secondaryAxis] - occupiedSizeOnSecondaryDir - elementSizes.scaleLabel[secondaryAxis]);
+				(basePos[secondaryAxis] + occupiedSizeOnSecondaryDir + elementSizes.scaleLabel[secondaryAxis] + elementSizes.scaleLabelPadding[secondaryAxis]):
+				(basePos[secondaryAxis] + stageSize[secondaryAxis] - occupiedSizeOnSecondaryDir - elementSizes.scaleLabel[secondaryAxis] - elementSizes.scaleLabelPadding[secondaryAxis]);
 			var scaleLabelCoord = {};
 			scaleLabelCoord[secondaryAxis] = coord[secondaryAxis];
 			//console.log('scaleLabel pos', secondaryAxis, coord[secondaryAxis]);
@@ -441,7 +447,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 				// scale mark
 				var coord1 = {'x': coord.x, 'y': coord.y};
 				var scaleMarkSize = elementSizes.scaleMark[secondaryAxis];
-				coord1[secondaryAxis] += scaleMarkSize * (isOnTopOrLeft? 1: -1);
+				coord1[secondaryAxis] += (scaleMarkSize + elementSizes.scaleLabelPadding[secondaryAxis]) * (isOnTopOrLeft? 1: -1);
 				if (!scaleLabeled)
 					scaleMarkSize *= (axisRenderOptions.unlabeledScaleSizeRatio || 1);
 				coord2[primaryAxis] = scalePos;
@@ -449,7 +455,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 				elem = drawBridge.drawLine(context, coord1, coord2, axisRenderOptions);
 				drawBridge.addToGroup(elem, result);
 			}
-			occupiedSizeOnSecondaryDir += elementSizes.scaleLabel[secondaryAxis] + elementSizes.scaleMark[secondaryAxis];  //+ elementSizes.axis[secondaryAxis];
+			occupiedSizeOnSecondaryDir += elementSizes.scaleLabel[secondaryAxis] + elementSizes.scaleLabelPadding[secondaryAxis] * 2 + elementSizes.scaleMark[secondaryAxis];  //+ elementSizes.axis[secondaryAxis];
 		}
 
 		// draw axis
@@ -469,6 +475,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 	{
 		var rOptions = (isAbscissa? renderOptions.abscissa: renderOptions.ordinate) || renderOptions;
 		var scaleLabelSize = {'x': 0, 'y': 0};
+		var scaleLabelPaddingSize = {'x': 0, 'y': 0};
 		// here we check the first and last scale labels to roughly determinate the occupied dimensions of scale labels
 		if (scaleLabels)
 		{
@@ -477,6 +484,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 			var scaleLabelFirstDim = richTextDrawer.measure(context, {'x': 0, 'y': 0}, scaleLabelsFirst, rOptions.scaleLabel);
 			var scaleLabelLastDim = richTextDrawer.measure(context, {'x': 0, 'y': 0}, scaleLabelsLast, rOptions.scaleLabel);
 			scaleLabelSize = {'x': Math.max(scaleLabelFirstDim.width, scaleLabelLastDim.width), 'y': Math.max(scaleLabelFirstDim.height, scaleLabelLastDim.height)};
+			scaleLabelPaddingSize = {'x': (rOptions.scaleLabel.padding || 0), 'y': (rOptions.scaleLabel.padding || 0)};
 		}
 		// the unit label
 		var unitLabelSize = {'x': 0, 'y': 0};
@@ -488,6 +496,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 		}
 		// the axis label
 		var axisLabelSize = {'x': 0, 'y': 0};
+		var axisLabelPaddingSize = {'x': 0, 'y': 0};
 		if (axisLabel)
 		{
 			var axisLabelDim = richTextDrawer.measure(context, {'x': 0, 'y': 0}, axisLabel, rOptions.axisLabel);
@@ -496,6 +505,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 			else  // for ordinate axis, we need to draw the label with 90 deg rotation
 				axisLabelSize = {'y': axisLabelDim.width, 'x': axisLabelDim.height};
 			// console.log('axisLabelSize', Kekule.Render.RichTextUtils.toText(axisLabel), axisLabelSize);
+			axisLabelPaddingSize = {'x': (rOptions.axisLabel.padding || 0), 'y': (rOptions.axisLabel.padding || 0)};
 		}
 		// the scale marks
 		var axisOptions = rOptions.axis;
@@ -508,20 +518,22 @@ Kekule.Render.CoordAxisRender2DUtils = {
 		if (isAbscissa)
 		{
 			totalSize.x = renderBox.x2 - renderBox.x1;
-			totalSize.y = scaleLabelSize.y + axisLabelSize.y + axisSize.y + scaleMarkSize.y;
+			totalSize.y = scaleLabelSize.y + axisLabelSize.y + axisSize.y + scaleMarkSize.y + scaleLabelPaddingSize.y * 2 + axisLabelPaddingSize.y * 2;
 		}
 		else
 		{
 			totalSize.y = renderBox.y2 - renderBox.y1;
-			totalSize.x = scaleLabelSize.x + axisLabelSize.x + axisSize.x + scaleMarkSize.x;
+			totalSize.x = scaleLabelSize.x + axisLabelSize.x + axisSize.x + scaleMarkSize.x + scaleLabelPaddingSize.x * 2 + axisLabelPaddingSize.x * 2;
 		}
 		var result = {
 			total: totalSize,
 			axis: axisSize,
 			scaleMark: scaleMarkSize,
 			scaleLabel: scaleLabelSize,
+			scaleLabelPadding: scaleLabelPaddingSize,
 			unitLabel: unitLabelSize,
-			axisLabel: axisLabelSize
+			axisLabel: axisLabelSize,
+			axisLabelPadding: axisLabelPaddingSize,
 		};
 		return result;
 	}
@@ -760,7 +772,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		{
 			var ratio = oneOf(options['spectrum_' + axisPrefix + fieldName.upperFirst() + 'Ratio'], options['spectrum_' + fieldName + 'Ratio']);
 			var min = oneOf(options['spectrum_' + axisPrefix + fieldName.upperFirst() + 'Min'], options['spectrum_' + fieldName + 'Min']);
-			return Math.max(ratio * refLength, min) * unitLength;
+			return (min? Math.max(ratio * refLength, min): (ratio * refLength)) * unitLength;
 		};
 		var setDrawParam = function(params, fieldName, axisPrefix, value)
 		{
@@ -811,7 +823,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				independentAxisOps['axisLabel'] = createSubOptions(ops, {
 					'fontFamily': getAxisRenderOptionValue(ops, 'axisLabelFontFamily', 'independent'),
 					'fontSize': getAxisRenderOptionValue(ops, 'axisLabelFontSize', 'independent') * unitLength,
-					'color': getAxisRenderOptionValue(ops, 'axisLabelColor', 'independent')
+					'color': getAxisRenderOptionValue(ops, 'axisLabelColor', 'independent'),
+					'padding': getActualSpectrumLengthValue(ops, 'axisLabelPadding', 'independent', refLengthIndependent, unitLength)
 				});
 			}
 			if (ops['spectrum_displayIndependentAxisScales'])
@@ -819,7 +832,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				independentAxisOps['scaleLabel'] = createSubOptions(ops, {
 					'fontFamily': getAxisRenderOptionValue(ops, 'axisScaleLabelFontFamily', 'independent'),
 					'fontSize': getAxisRenderOptionValue(ops, 'axisScaleLabelFontSize', 'independent') * unitLength,
-					'color': oneOf(getAxisRenderOptionValue(ops, 'axisScaleLabelColor', 'independent'), ops['color'])
+					'color': oneOf(getAxisRenderOptionValue(ops, 'axisScaleLabelColor', 'independent'), ops['color']),
+					'padding': getActualSpectrumLengthValue(ops, 'axisScaleLabelPadding', 'independent', refLengthIndependent, unitLength)
 				});
 				independentAxisOps['axis']['scaleMarkSize'] = getActualSpectrumLengthValue(ops, 'axisScaleMarkSize', 'independent', refLengthIndependent, unitLength);
 				independentAxisOps['axis']['unlabeledScaleSizeRatio'] = getAxisRenderOptionValue(ops, 'axisUnlabeledScaleSizeRatio', 'independent');
@@ -870,7 +884,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				dependentAxisOps['axisLabel'] = createSubOptions(ops, {
 					'fontFamily': getAxisRenderOptionValue(ops, 'axisLabelFontFamily', 'dependent'),
 					'fontSize': getAxisRenderOptionValue(ops, 'axisLabelFontSize', 'dependent') * unitLength,
-					'color': getAxisRenderOptionValue(ops, 'axisLabelColor', 'dependent')
+					'color': getAxisRenderOptionValue(ops, 'axisLabelColor', 'dependent'),
+					'padding': getActualSpectrumLengthValue(ops, 'axisLabelPadding', 'dependent', refLengthDependent, unitLength)
 				});
 			}
 			if (ops['spectrum_displayDependentAxisScales'])
@@ -878,7 +893,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				dependentAxisOps['scaleLabel'] = createSubOptions(ops, {
 					'fontFamily': getAxisRenderOptionValue(ops, 'axisScaleLabelFontFamily', 'dependent'),
 					'fontSize': getAxisRenderOptionValue(ops, 'axisScaleLabelFontSize', 'dependent') * unitLength,
-					'color': oneOf(getAxisRenderOptionValue(ops, 'axisScaleLabelColor', 'dependent'), ops['color'])
+					'color': oneOf(getAxisRenderOptionValue(ops, 'axisScaleLabelColor', 'dependent'), ops['color']),
+					'padding': getActualSpectrumLengthValue(ops, 'axisScaleLabelPadding', 'dependent', refLengthDependent, unitLength)
 				});
 				dependentAxisOps['axis']['scaleMarkSize'] = getActualSpectrumLengthValue(ops, 'axisScaleMarkSize', 'dependent', refLengthDependent, unitLength);
 				dependentAxisOps['axis']['unlabeledScaleSizeRatio'] = getAxisRenderOptionValue(ops, 'axisUnlabeledScaleSizeRatio', 'dependent');
