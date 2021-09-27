@@ -61,6 +61,8 @@ var CU = Kekule.CoordUtils;
  * @property {Number} axisScaleMarkSizeRatio The actual size of scale marks in axis is calculated from max(axisScaleMarkSizeRatio * refLength, axisScaleMarkSizeMin).
  * @property {Number} axisScaleMarkSizeMin The actual size of scale marks in axis is calculated from max(axisScaleMarkSizeRatio * refLength, axisScaleMarkSizeMin).
  * @property {Number} axisUnlabeledScaleSizeRatio The size of scale mark without a label is calculated from max(axisUnlabeledScaleSizeRatio * axisScaleMarkSizeRatio * refLength, axisScaleMarkSizeMin).
+ * @property {Number} axisLabelPaddingRatio The padding of axis label is calculated from axisLabelPaddingRatio * refLength.
+ * @property {Number} axisScaleLabelPaddingRatio The padding of axis scale labels is calculated from axisLabelPaddingRatio * refLength.
  *
  * @property {Number} axisScaleMarkPreferredCount Preferred scale count in data axis.
  */
@@ -89,6 +91,11 @@ Kekule.Render.SpectrumDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addStrConfigProp('dataColor', '#000000');
 		this.addFloatConfigProp('dataStrokeWidthRatio', 0.025);
 		this.addFloatConfigProp('dataStrokeWidthMin', 1);
+
+		this.addFloatConfigProp('visibleIndependentDataRangeFrom', 0);
+		this.addFloatConfigProp('visibleIndependentDataRangeTo', 1);
+		this.addFloatConfigProp('visibleDependentDataRangeFrom', -0.05);
+		this.addFloatConfigProp('visibleDependentDataRangeTo', 1.05); //0.5 /*1.05*/);
 
 		// config about displayed elements
 		//this.addBoolConfigProp('displaySpectrumGrid', true);
@@ -675,22 +682,27 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var sections = this.doGetTargetDataSections(chemObj);
 		if (sections && sections.length)  // Need to do concrete drawing
 		{
-			var dataRange = this._getDisplayRangeOfSections(chemObj, chemObj.getData(), sections);
-
 			var varInfos = this.doGetDataVarInfos(sections);
 			if (varInfos)   // we can not render without proper variable information
 			{
+				var visibleDataRange = this._getDisplayRangeOfSections(chemObj, chemObj.getData(), sections, varInfos, actualRenderOptions);
 				var varSymbols = varInfos.varSymbols;
 
+				if (Kekule.NumUtils.isFloatEqual(visibleDataRange[varSymbols.independant].min, visibleDataRange[varSymbols.independant].max)
+					|| Kekule.NumUtils.isFloatEqual(visibleDataRange[varSymbols.dependant].min, visibleDataRange[varSymbols.dependant].max))  // visible range is empty
+				{
+					return null;  // do not need to do concrete drawing
+				}
+
 				// check the axis alignment and direction
-				var axisDirectionAndAlignInfo = this._getAxisDirectionAndAlignInfo(context, chemObj, dataRange, varSymbols, varInfos.varUnitSymbols, actualRenderOptions);
+				var axisDirectionAndAlignInfo = this._getAxisDirectionAndAlignInfo(context, chemObj, visibleDataRange, varSymbols, varInfos.varUnitSymbols, actualRenderOptions);
 
 				result = this.createDrawGroup(context);
 				var clientContextBox;
 
 				// indicator elements
 				// note: since here we call getDrawBridge() directly, the context should be returned by getActualTargetContext()
-				var indicatorDrawParamsAndOptions = this._prepareAxisRenderParamsAndOptions(this.getActualTargetContext(context), chemObj, dataRange, varSymbols, actualRenderOptions, axisDirectionAndAlignInfo);
+				var indicatorDrawParamsAndOptions = this._prepareAxisRenderParamsAndOptions(this.getActualTargetContext(context), chemObj, visibleDataRange, varSymbols, actualRenderOptions, axisDirectionAndAlignInfo);
 				var indicatorDrawResult = Kekule.Render.CoordAxisRender2DUtils.drawAxises(this.getDrawBridge(), this.getRichTextDrawer(), this.getActualTargetContext(context), contextBox,
 					indicatorDrawParamsAndOptions.drawParams, indicatorDrawParamsAndOptions.renderOptions);
 				//console.log(indicatorDrawResult);
@@ -700,10 +712,10 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				} else
 					clientContextBox = contextBox;
 
-				var transformMatrix = this.doCalcSprectrumTransformMatrix(chemObj, sections, varSymbols, dataRange, clientContextBox, actualRenderOptions, axisDirectionAndAlignInfo);
+				var transformMatrix = this.doCalcSprectrumTransformMatrix(chemObj, sections, varSymbols, visibleDataRange, clientContextBox, actualRenderOptions, axisDirectionAndAlignInfo);
 
 				// spectrum data
-				var spectrumDataElem = this.doDrawDataSections(chemObj, sections, varSymbols, context, objBox, clientContextBox, transformMatrix, actualRenderOptions);
+				var spectrumDataElem = this.doDrawDataSections(chemObj, sections, varSymbols, context, objBox, clientContextBox, transformMatrix, visibleDataRange, actualRenderOptions);
 				if (spectrumDataElem)
 					this.addToDrawGroup(spectrumDataElem, result);
 
@@ -1032,24 +1044,136 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	},
 
 	/** @private */
-	_getDisplayRangeOfSections: function(spectrum, spectrumData, sections)
+	_getDisplayRangeOfSections: function(spectrum, spectrumData, sections, varInfos, renderOptions)
 	{
 		var dataRange = spectrumData.getDisplayRangeOfSections(sections, null, true);
-		//var dataRange2 = spectrumData.calcDataRangeOfSections(sections);
-		//console.log('datarange', dataRange, dataRange2);
-		return dataRange;
+
+		// adjust the dataRange with render options
+		var calcVisibleRange = function(dataRangeOfVar, varSymbol, isDependentVar, renderOptions)
+		{
+			var varType = isDependentVar? 'dependent': 'independent';
+			var visibleRange = {
+				'rangeFrom': renderOptions['spectrum_visible' + varType.upperFirst() + 'DataRangeFrom'] || 0,
+				'rangeTo': renderOptions['spectrum_visible' + varType.upperFirst() + 'DataRangeTo'] || 1,
+			};
+			var range = dataRangeOfVar;
+			if (visibleRange.rangeFrom !== 0 || visibleRange.rangeTo !== 1)  // need adjust
+			{
+				var newFrom = (range.max - range.min) * visibleRange.rangeFrom + range.min;
+				var newTo = (range.max - range.min) * (visibleRange.rangeTo - 1) + range.max;
+				return {'min': Math.min(newFrom, newTo), 'max': Math.max(newFrom, newTo)};
+			}
+			else
+				return range;
+		}
+
+		var indepVar = varInfos.varSymbols.independant;
+		var depVar = varInfos.varSymbols.dependant;
+		var visibleDataRange = {};
+		visibleDataRange[indepVar] = calcVisibleRange(dataRange[indepVar], indepVar, false, renderOptions);
+		visibleDataRange[depVar] = calcVisibleRange(dataRange[depVar], depVar, true, renderOptions);
+
+		//return dataRange;
+		return visibleDataRange;
 	},
+	/*
+	 * Returns a hash to indicating whether the data point is in or out of data range.
+	 * @returns {Hash} Result[varSymbol] is a int, -1 means dataPoint[varSymbol] is less than range.min, 0 in range, +1 greator than range.max.
+	 * @private
+	 */
+	/*
+	_getDataPointRangeRelation: function(dataPoint, dataRange, varSymbols)
+	{
+		var result = {};
+		for (var i = 0, l = varSymbols.length; i < l; ++i)
+		{
+			var varSymbol = varSymbols[i];
+			var value = dataPoint[varSymbol];
+			var range = dataRange[varSymbol];
+			if (value < range.min)
+				result[varSymbol] = -1
+			else if (value > range.max)
+				result[varSymbol] = 1;
+			else
+				result[varSymbol] = 0;
+		}
+		return result;
+	},
+	*/
+
+	/*
+	 * Returns the data value actually be rendered inside the visible data range.
+	 * @param dataValue
+	 * @param dataVarSymbols
+	 * @param visibleDataRange
+	 * @returns {Hash}
+	 * @private
+	 */
+	/*
+	_getRenderableDataValueInsideVisibleDataRender: function(dataValue, dataVarSymbols, visibleDataRange)
+	{
+		var result = {};
+		var varSymbolList = [dataVarSymbols.independant, dataVarSymbols.dependant];
+		var relations = this._getDataPointRangeRelation(dataValue, visibleDataRange, varSymbolList);
+		if (relations[dataVarSymbols.independant] !== 0)  // x value out of range, need not to render
+			return null;
+		else
+			result[dataVarSymbols.independant] = dataValue[dataVarSymbols.independant];
+		if (relations[dataVarSymbols.dependant] < 0)  // if y value out of range, reset it into min/max value of range
+			result[dataVarSymbols.dependant] = visibleDataRange[dataVarSymbols.dependant].min;
+		else if (relations[dataVarSymbols.dependant] > 0)
+			result[dataVarSymbols.dependant] = visibleDataRange[dataVarSymbols.dependant].max;
+		else
+			result[dataVarSymbols.dependant] = dataValue[dataVarSymbols.dependant];
+		result._dependentValueRelation = relations[dataVarSymbols.dependant];  // and record the original y relation, if relations of two key points are same (all less or great, this point need not to be drawn)
+		//console.log('original', dataValue, 'result', result);
+		return result;
+	},
+	*/
+	/**
+	 * Clip the line formed by dataValues[0]-dataValues[1] to the visibleDataRange
+	 * @param dataValue1
+	 * @param dataValue2
+	 * @param dataVarSymbols
+	 * @param visibleDataRange
+	 * @returns {Array} Clipped data values of line ends or null.
+	 * @private
+	 */
+	_clipDataValuePairInsideVisibleRange: function(dataValue1, dataValue2, dataVarSymbols, visibleDataRange)
+	{
+		var coords = [
+			CU.create(dataValue1[dataVarSymbols.independant], dataValue1[dataVarSymbols.dependant]),
+			CU.create(dataValue2[dataVarSymbols.independant], dataValue2[dataVarSymbols.dependant])
+		];
+		var boxCoords = [
+			CU.create(visibleDataRange[dataVarSymbols.independant].min, visibleDataRange[dataVarSymbols.dependant].min),
+			CU.create(visibleDataRange[dataVarSymbols.independant].max, visibleDataRange[dataVarSymbols.dependant].max)
+		];
+		var clippedCoords = Kekule.GeometryUtils.clipLineSegmentByBox(coords, boxCoords);
+		if (clippedCoords)
+		{
+			var d0 = {}, d1 = {};
+			d0[dataVarSymbols.independant] = clippedCoords[0].x;
+			d0[dataVarSymbols.dependant] = clippedCoords[0].y;
+			d1[dataVarSymbols.independant] = clippedCoords[1].x;
+			d1[dataVarSymbols.dependant] = clippedCoords[1].y;
+			return [d0, d1];
+		}
+		else
+			return null;
+	},
+
 	/** @private */
-	doDrawDataSections: function(spectrum, sections, varSymbols, context, objBox, contextBox, dataTransformMatrix, options)
+	doDrawDataSections: function(spectrum, sections, varSymbols, context, objBox, contextBox, dataTransformMatrix, visibleDataRange, options)
 	{
 		//console.log('doDraw', options);
 		//var sectionRenderer = new Kekule.Render.SpectrumDataSection2DRenderer(null, this.getDrawBridge(), this);
 		var result = this.createDrawGroup(context);
 		for (var i = 0, l = sections.length; i < l; ++i)
 		{
-			var sectionResult = this.doDrawSectionData(spectrum, sections[i], context, contextBox, options, varSymbols, dataTransformMatrix);
+			var sectionResult = this.doDrawSectionData(spectrum, sections[i], context, contextBox, options, varSymbols, dataTransformMatrix, visibleDataRange);
 			if (sectionResult)
-				this.addToDrawGroup(sectionResult);
+				this.addToDrawGroup(sectionResult, result);
 		}
 		return result;
 	},
@@ -1075,7 +1199,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	},
 
 	/** @private */
-	doDrawSectionData: function(spectrum, section, context, contextBox, options, dataVarSymbols, dataTransferMatrix)
+	doDrawSectionData: function(spectrum, section, context, contextBox, options, dataVarSymbols, dataTransferMatrix, visibleDataRange)
 	{
 		if (section.getDataCount() <= 0)
 			return null;
@@ -1086,7 +1210,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var dataMode = section.getMode();
 		var drawMethod = Kekule.Render.Spectrum2DRenderer.sectionDataDrawerMap[dataMode];
 		var actualRenderOptions = this._prepareSectionDataActualRenderOptions(spectrum, section, context, options);
-		return drawMethod && drawMethod.apply(this, [spectrum, section, context, contextBox, actualRenderOptions, dataVarSymbols, dataTransferMatrix]);
+		return drawMethod && drawMethod.apply(this, [spectrum, section, context, contextBox, actualRenderOptions, dataVarSymbols, dataTransferMatrix, visibleDataRange]);
 		/*
 		if (dataMode === Kekule.Spectroscopy.DataMode.PEAK)
 			return this.doDrawPeakSectionData(spectrum, section, context, contextBox, renderOptions, dataVarSymbols, dataTransferMatrix);
@@ -1095,107 +1219,263 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		*/
 	},
 	/** @private */
-	doDrawPeakSectionData: function(spectrum, section, context, contextBox, renderOptions, dataVarSymbols, dataTransferMatrix)
+	doDrawPeakSectionData: function(spectrum, section, context, contextBox, renderOptions, dataVarSymbols, dataTransferMatrix, visibleDataRange)
 	{
 		var self = this;
-		var result = this.createDrawGroup(context);
+		var result;
+
+		var addNewPeakRootValue = function(peakRootValue, peakRootValues, dataVarSymbols)
+		{
+			// check if the dependent value of peakRootValue is same with the last one of peakRoots,
+			// if so, these values can be merged
+			var last = peakRootValues[peakRootValues.length - 1];
+			if (peakRootValues.length > 1 && Kekule.NumUtils.isFloatEqual(last[dataVarSymbols.dependant], peakRootValue[dataVarSymbols.dependant]))
+			{
+				last[dataVarSymbols.independant] = peakRootValue[dataVarSymbols.independant];
+			}
+			else
+				peakRootValues.push(peakRootValue);
+		}
+		var getClippedContextCoordOfDataValues = function(dataValue1, dataValue2)
+		{
+			var clippedValues = self._clipDataValuePairInsideVisibleRange(dataValue1, dataValue2, dataVarSymbols, visibleDataRange);
+			if (clippedValues)
+			{
+				var coord0 = self._calcSectionDataValueContextCoord(clippedValues[0], dataVarSymbols, dataTransferMatrix, renderOptions.spectrum_reversedAxis);
+				var coord1 = self._calcSectionDataValueContextCoord(clippedValues[1], dataVarSymbols, dataTransferMatrix, renderOptions.spectrum_reversedAxis);
+				return [coord0, coord1];
+			}
+			return null;
+		};
+		var generatePathArgsOfDataValueContextCoords = function(coords)
+		{
+			var pathArgs = [];
+			if (coords && coords.length > 1)
+			{
+				var coord0 = coords[0];
+				pathArgs.push('M');
+				pathArgs.push([coord0.x, coord0.y]);
+				for (var i = 1, l = coords.length; i < l; ++i)
+				{
+					pathArgs.push('L');
+					pathArgs.push([coords[i].x, coords[i].y]);
+				}
+			}
+			return pathArgs;
+		};
+
+		var pathArgs = [];
+		var peakRootValues = [];
 		section.forEach(function(dataValue, index){
 			var peakRootValue = section.getPeakRootValueOf(dataValue);
+			if (!peakRootValue || !dataValue )
+				return;
 
-			var coord1 = self._calcSectionDataValueContextCoord(dataValue, dataVarSymbols, dataTransferMatrix, renderOptions.spectrum_reversedAxis);
-			var coord0 = self._calcSectionDataValueContextCoord(peakRootValue, dataVarSymbols, dataTransferMatrix, renderOptions.spectrum_reversedAxis);
-			if (coord1 && coord0)
+			addNewPeakRootValue(peakRootValue, peakRootValues, dataVarSymbols);
+			var contextCoords = getClippedContextCoordOfDataValues(peakRootValue, dataValue);
+			if (contextCoords)
 			{
-				var line = self.drawLine(context, coord0, coord1, renderOptions);
-				self.addToDrawGroup(result, line);
+				var subPathArgs = generatePathArgsOfDataValueContextCoords(contextCoords);
+				if (subPathArgs && subPathArgs.length)
+					pathArgs = pathArgs.concat(subPathArgs);
 			}
 		});
+		// handle peak root line
+		if (peakRootValues.length > 1)
+		{
+			if (peakRootValues.length === 2)   // just a straighline, we may expand it to the whole data range
+			{
+				peakRootValues[0][dataVarSymbols.independant] = visibleDataRange[dataVarSymbols.independant].min;
+				peakRootValues[1][dataVarSymbols.independant] = visibleDataRange[dataVarSymbols.independant].max;
+			}
+			console.log(peakRootValues);
+			for (var i = 1, l = peakRootValues.length; i < l; ++i)
+			{
+				var contextCoords = getClippedContextCoordOfDataValues(peakRootValues[i - 1], peakRootValues[i]);
+				if (contextCoords)
+				{
+					pathArgs.push('M');
+					pathArgs.push([contextCoords[0].x, contextCoords[0].y]);
+					pathArgs.push('L');
+					pathArgs.push([contextCoords[1].x, contextCoords[1].y]);
+				}
+			}
+		}
+
+		if (pathArgs && pathArgs.length)
+		{
+			var path = Kekule.Render.DrawPathUtils.makePath.apply(this, pathArgs);
+			result = this.drawPath(context, path, renderOptions);
+		}
+
 		return result;
 	},
+
 	/** @private */
-	doDrawContinuousSectionData: function(spectrum, section, context, contextBox, options, dataVarSymbols, dataTransferMatrix)
+	doDrawContinuousSectionData: function(spectrum, section, context, contextBox, options, dataVarSymbols, dataTransferMatrix, visibleDataRange)
 	{
-		var result = this.createDrawGroup(context);
+		//var result = this.createDrawGroup(context);
+		var result;
 		//var renderOptions = Object.create(options);
 		var renderOptions = Object.create(options);
 		renderOptions.lineCap = 'round';  // for a more smooth curve
 
+		var self = this;
+		var getRenderableTypicalValues = function(dataValues)
+		{
+			return self._clipDataValuePairInsideVisibleRange(dataValues[0], dataValues[1], dataVarSymbols, visibleDataRange);
+		};
+		var calcDataValueContextCoords = function(dataValues, dataVarSymbols, dataTransferMatrix, isReversedAxis)
+		{
+			var result = [];
+			for (var i = 0, l = dataValues.length - 1; i < l; ++i)
+			{
+				var coord = self._calcSectionDataValueContextCoord(dataValues[i], dataVarSymbols, dataTransferMatrix, isReversedAxis);
+				result.push(coord);
+			}
+			return result;
+		};
+
 		// calculate resample rate
 		var resampleRate = 2;
 		var contextXWidth = Math.abs(contextBox.x2 - contextBox.x1) * resampleRate;
-		//var independantValueRange = section.calcDataRange(dataVarSymbols.independant);
-		//var valueWidth = independantValueRange.max - independantValueRange.min;
-		//var dataDetails = {};
-		//dataDetails.averages = section.calcDataAverage(dataVarSymbols.dependant);
-		var valueWidth = section.getDataCount();
-		var mergeSampleWidth = (valueWidth > contextXWidth)? valueWidth / contextXWidth: 1;
 
-		//console.log('mergeSampleWidth',valueWidth,contextXWidth, mergeSampleWidth);
+		var dataSampleMergeWidth = (visibleDataRange[dataVarSymbols.independant].max - visibleDataRange[dataVarSymbols.independant].min) / contextXWidth;
+		var getSampleMergeGroupIndex = function(dataValue)
+		{
+			return Math.floor((dataValue[dataVarSymbols.independant] - visibleDataRange[dataVarSymbols.independant].min) / dataSampleMergeWidth);
+		}
 
-		//section.sort();
-		var sampleCount = 0;
-		var coordSum = {'x': 0, 'y': 0};
+		var pathArgs = [];
+		var lastSampleMergeIndex = null;
 		var valueBuffer = [];
-		//var lastCoord = this._calcSectionDataValueContextCoord(section.getHashValueAt(0), dataVarSymbols, dataTransferMatrix)
 		var lastCoords;
+		var lastTypicalDataValues;
+		var contextBoxCornerCoords = [CU.create(contextBox.x1, contextBox.y1), CU.create(contextBox.x2, contextBox.y2)];
 		for (var i = 0, l = section.getDataCount(); i < l; ++i)
 		{
-			valueBuffer.push(section.getHashValueAt(i));
-			++sampleCount;
-			if (sampleCount >= mergeSampleWidth || i >= l - 1)
+			var dataValue = section.getHashValueAt(i);
+			// check if dataValue inside visible data range
+			var dataValueIndep = dataValue[dataVarSymbols.independant];
+			if (dataValueIndep < visibleDataRange[dataVarSymbols.independant].min || dataValueIndep > visibleDataRange[dataVarSymbols.independant].max)
+				continue;
+
+			var mergeIndex = getSampleMergeGroupIndex(dataValue);
+			if (lastSampleMergeIndex === null)
+				lastSampleMergeIndex = mergeIndex;
+			//console.log('curr', mergeIndex, lastSampleMergeIndex, dataSampleMergeWidth);
+			if (i == l - 1 || mergeIndex !== lastSampleMergeIndex)  // mergeIndex different from last, need to handle the old buffer and create new one
 			{
-				//var calcValue = this._mergeSectionDataValues(valueBuffer, dataVarSymbols, dataDetails);
-				/*
-				var coord = this._calcSectionDataValueContextCoord(calcValue, dataVarSymbols, dataTransferMatrix);
-				if (lastCoord)
+				if (valueBuffer.length)
 				{
-					// console.log('coord', coord, section.getHashValueAt(i));
-					var line = this.drawLine(context, lastCoord, coord, renderOptions);
-					this.addToDrawGroup(result, line);
-				}
-				lastCoord = coord;
-				*/
-				var typicalValues = this._getMergeSectionDataMinMaxValues(valueBuffer, dataVarSymbols);
-				if (!typicalValues)  // no valid data in this merge section
-					continue;
-				var coord1 = this._calcSectionDataValueContextCoord(typicalValues[0], dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxis);
-				var coord2 = this._calcSectionDataValueContextCoord(typicalValues[1], dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxis);
-				if (lastCoords)
-				{
-					var connectionLine;
-					var delta11 = (lastCoords[0].y - coord1.y);
-					var delta21 = (lastCoords[1].y - coord1.y);
-					var delta12 = (lastCoords[0].y - coord2.y);
-					var delta22 = (lastCoords[1].y - coord2.y);
-					if (Math.sign(delta11) !== Math.sign(delta21)	|| Math.sign(delta12) !== Math.sign(delta22))  // the two line intersects, no need to draw connection line
+					var typicalValues = this._getMergeSectionDataTypicalValues(valueBuffer, dataVarSymbols);
+					if (!typicalValues)  // no valid data in this merge section
 					{
-
+						continue;
 					}
-					else  // draw the connection line in closest end points
+					// clear buffer first, avoid the following continue breaks
+					valueBuffer = [];
+					lastSampleMergeIndex = mergeIndex;
+					if (i < l - 1)
+						valueBuffer.push(dataValue);
+
+					//var renderableTypicalValues = getRenderableTypicalValuePair(typicalValues);
+					var renderableTypicalValues = getRenderableTypicalValues(typicalValues);
+
+					var currLineCoords = null, connectionToVisibleLineCoords = null, connectionToInvisibleLineCoords = null;
+					//console.log(mergeIndex, typicalValues[0], typicalValues[1], renderableTypicalValues);
+					if (!renderableTypicalValues)  // need not to draw line of this data
 					{
-						if (Math.abs(delta21) < Math.abs(delta12))
+						// but may still need to draw the connection line to last visible line
+						if (lastCoords)
 						{
-							connectionLine = this.drawLine(context, lastCoords[1], coord1, renderOptions);
+							var dValue = typicalValues[0];
+							if (dValue)
+							{
+								var dCoord = this._calcSectionDataValueContextCoord(dValue, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxis);
+								connectionToInvisibleLineCoords = Kekule.GeometryUtils.clipLineSegmentByBox([lastCoords[lastCoords.length - 1], dCoord], contextBoxCornerCoords);
+							}
 						}
-						else
+						lastCoords = null;
+					}
+					else
+					{
+						var coords = calcDataValueContextCoords(renderableTypicalValues, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxis);
+						currLineCoords = coords;
+						if (lastCoords)
 						{
-							connectionLine = this.drawLine(context, lastCoords[0], coord2, renderOptions);
+							connectionToVisibleLineCoords = [lastCoords[lastCoords.length - 1], coords[0]];
+						}
+						else if (lastTypicalDataValues)  // last data values are out of box, but the connection line to this one may need to be drawn
+						{
+							var lastDValue = lastTypicalDataValues[lastTypicalDataValues.length - 1];
+							var lastDCoord = this._calcSectionDataValueContextCoord(lastDValue, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxis);
+							connectionToInvisibleLineCoords = Kekule.GeometryUtils.clipLineSegmentByBox([lastDCoord, coords[0]], contextBoxCornerCoords);
+						}
+						lastCoords = currLineCoords;
+					}
+					lastTypicalDataValues = typicalValues;
+
+					// do the concrete path generation
+					if (currLineCoords && currLineCoords.length > 1)
+					{
+						pathArgs.push('M');
+						pathArgs.push([currLineCoords[0].x, currLineCoords[0].y]);
+						for (var j = 1, k = currLineCoords.length; j < k; ++j)
+						{
+							/*
+							var line = this.drawLine(context, currLineCoords[j - 1], currLineCoords[j], renderOptions);
+							this.addToDrawGroup(line, result);
+							*/
+							pathArgs.push('L');
+							pathArgs.push(currLineCoords[i].x, currLineCoords[i].y);
 						}
 					}
-					if (connectionLine)
-						this.addToDrawGroup(result, connectionLine);
+					if (connectionToVisibleLineCoords)
+					{
+						/*
+						var connectionLineRenderOptions = Object.create(renderOptions);  // debug
+						connectionLineRenderOptions.strokeColor = 'red';
+						connectionLineRenderOptions.opacity = 0.3;
+						//console.log('draw connection line', lastCoords[1], coord1, renderableTypicalValues, typicalValues);
+						var connectionLine = this.drawLine(context, connectionToVisibleLineCoords[0], connectionToVisibleLineCoords[1], connectionLineRenderOptions);
+						this.addToDrawGroup(connectionLine, result);
+						*/
+						pathArgs.push('M');
+						pathArgs.push([connectionToVisibleLineCoords[0].x, connectionToVisibleLineCoords[0].y]);
+						pathArgs.push('L');
+						pathArgs.push([connectionToVisibleLineCoords[1].x, connectionToVisibleLineCoords[1].y]);
+					}
+					if (connectionToInvisibleLineCoords)
+					{
+						/*
+						var clippedConnectionLineRenderOptions = Object.create(renderOptions);  // debug
+						clippedConnectionLineRenderOptions.strokeColor = 'green';
+						clippedConnectionLineRenderOptions.opacity = 0.3;
+						var connectionLine = this.drawLine(context, connectionToInvisibleLineCoords[0], connectionToInvisibleLineCoords[1], clippedConnectionLineRenderOptions);
+						this.addToDrawGroup(connectionLine, result);
+						*/
+						pathArgs.push('M');
+						pathArgs.push([connectionToInvisibleLineCoords[0].x, connectionToInvisibleLineCoords[0].y]);
+						pathArgs.push('L');
+						pathArgs.push([connectionToInvisibleLineCoords[1].x, connectionToInvisibleLineCoords[1].y]);
+					}
 				}
-				var line = this.drawLine(context, coord1, coord2, renderOptions);
-				this.addToDrawGroup(result, line);
-				lastCoords = [coord1, coord2];
-
-				valueBuffer = [];
-				sampleCount = 0;
 			}
+			else /*if (lastSampleMergeIndex === null || mergeIndex === lastSampleMergeIndex)*/  // in the same merge group, push to valueBuffer to handle later
+			{
+				valueBuffer.push(dataValue);
+			}
+		}
+		if (pathArgs.length)
+		{
+			var path = Kekule.Render.DrawPathUtils.makePath.apply(this, pathArgs);
+			result = this.drawPath(context, path, renderOptions);
 		}
 		return result;
 	},
-	/** @private */
+	/* @private */
+	/*
 	_getMergeSectionDataMinMaxValues: function(values, dataVarSymbols)
 	{
 		var countIndep = 0;
@@ -1236,7 +1516,73 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		else
 			return null;
 	},
+	*/
 	/** @private */
+	_getMergeSectionDataTypicalValues: function(values, dataVarSymbols)
+	{
+		var countIndep = 0;
+		var countDep = 0;
+		var sumIndep = 0;
+		var minDep, maxDep, firstIndep, lastIndep, currAvailIndep;
+		var minDepOriginValue, maxDepOriginValue, minDepIndex, maxDepIndex;
+		var isNum = Kekule.NumUtils.isNormalNumber;
+
+		for (var i = 0; i < values.length; ++i)
+		{
+			var v = values[i][dataVarSymbols.independant];
+			if (isNum(v))
+			{
+				if (!isNum(firstIndep))
+					firstIndep = v;
+				currAvailIndep = v;
+			}
+			v = values[i][dataVarSymbols.dependant];
+			if (isNum(v))
+			{
+				if (!isNum(minDep) || (minDep > v))
+				{
+					minDep = v;
+					minDepOriginValue = {};
+					minDepOriginValue[dataVarSymbols.independant] = currAvailIndep;  // avoid values[i][dataVarSymbols.independant] is not a number
+					minDepOriginValue[dataVarSymbols.dependant] = v;
+					minDepIndex = i;
+				}
+				if (!isNum(maxDep) || (maxDep < v))
+				{
+					maxDep = v;
+					maxDepOriginValue = {};
+					maxDepOriginValue[dataVarSymbols.independant] = currAvailIndep;  // avoid values[i][dataVarSymbols.independant] is not a number
+					maxDepOriginValue[dataVarSymbols.dependant] = v;
+					maxDepIndex = i;
+				}
+			}
+		}
+		lastIndep = currAvailIndep;
+
+		if (isNum(firstIndep) && isNum(lastIndep) && isNum(minDep) && isNum(maxDep))
+		{
+			var isMinFirst = minDepIndex < maxDepIndex;
+			var v1 = {}, v2 = {};
+			if (isMinFirst)
+			{
+				v1[dataVarSymbols.independant] = firstIndep;
+				v1[dataVarSymbols.dependant] = minDep;
+				v2[dataVarSymbols.independant] = lastIndep;
+				v2[dataVarSymbols.dependant] = maxDep;
+			} else
+			{
+				v1[dataVarSymbols.independant] = firstIndep;
+				v1[dataVarSymbols.dependant] = maxDep;
+				v2[dataVarSymbols.independant] = lastIndep;
+				v2[dataVarSymbols.dependant] = minDep;
+			}
+			return [v1, v2];
+		}
+		else  // values are not number, illegal
+			return null;
+	},
+	/* @private */
+	/*
 	_mergeSectionDataValues: function(values, dataVarSymbols, dataDetails)
 	{
 		var count = values.length;
@@ -1259,20 +1605,6 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		else
 			average[dataVarSymbols.dependant] = globalAverageDependant;
 
-		// the dependant value should be recalculated, currently the algorithm is fixed
-		/*
-		var totalWeight = 0
-		var weightedSum = 0;
-		for (var i = 0; i < count; ++i)
-		{
-			var weight = Math.sqr(Math.sqr(values[i][dataVarSymbols.dependant] - average[dataVarSymbols.dependant]));
-			totalWeight += weight;
-			weightedSum += weight * values[i][dataVarSymbols.dependant];
-		}
-		var result = {};
-		result[dataVarSymbols.independant] = average[dataVarSymbols.independant];
-		result[dataVarSymbols.dependant] = weightedSum / totalWeight;
-		*/
 		var vDependant, maxAbs = 0;
 		for (var i = 0; i < count; ++i)
 		{
@@ -1289,6 +1621,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 
 		return result;
 	},
+	*/
 	/** @private */
 	_calcSectionDataValueContextCoord: function(dataValue, dataVarSymbols, dataTransferMatrix, reverseAxis)
 	{
