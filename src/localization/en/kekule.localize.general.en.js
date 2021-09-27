@@ -139,6 +139,10 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	JCAMP_DATA_TABLE_VAR_LIST_FORMAT_UNSUPPORTED: 'Unsupported JCAMP variable list format: {0}',
 	JCAMP_NTUPLES_BEGIN_END_NAME_NOT_MATCH: 'Ntuples name not match in begin/end labels: {0} and {1}',
 	JCAMP_NTUPLES_PAGE_DECLARATION_FORMAT_ERROR: 'Malformed JCAMP ntuples page declaration: {0}',
+	// spectroscopy/kekule.spectrum.render.js
+	VISIBLE_DATA_RANGE_IS_EMPTY: 'The visible range of data is empty, unable to draw the spectrum',
+
+
 	/*
 	// render/2d/kekule.render.def2DRenderer.js
 	CAN_NOT_REMOVE_INDIVIDUAL_ELEM: 'Unable to remove individual element on context',

@@ -691,6 +691,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				if (Kekule.NumUtils.isFloatEqual(visibleDataRange[varSymbols.independant].min, visibleDataRange[varSymbols.independant].max)
 					|| Kekule.NumUtils.isFloatEqual(visibleDataRange[varSymbols.dependant].min, visibleDataRange[varSymbols.dependant].max))  // visible range is empty
 				{
+					Kekule.error(Kekule.$L('ErrorMsg.VISIBLE_DATA_RANGE_IS_EMPTY'));
 					return null;  // do not need to do concrete drawing
 				}
 
