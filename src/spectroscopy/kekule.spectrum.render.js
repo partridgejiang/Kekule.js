@@ -28,7 +28,7 @@ var CU = Kekule.CoordUtils;
  * @augments Kekule.AbstractConfigs
  *
  * @property {Hash} defSize2DRatio Default 2D spectrum size({x, y}), these value multiply the default ref length will get the actual size.
- * @property {Bool} reversedAxis Whether reverse the X/Y axis and rotate the spectrum with 90 degree.
+ * @property {Bool} reversedAxises Whether reverse the X/Y axis and rotate the spectrum with 90 degree.
  * //@property {Int} spectrumIndicatorElements Default displayed indicator elements in spectrum.
  * @property {Bool} reverseIndependentDataDirection Whether reverse the min->max direction of independent data from the usual convention.
  * @property {Bool} reverseDependentDataDirection Whether reverse the min->max direction of dependent data from the usual convention.
@@ -78,7 +78,7 @@ Kekule.Render.SpectrumDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		//this.addHashConfigProp('defSpectrumSize3D');
 
 		//this.addBoolConfigProp('spectrumAbscissaAxisOnMinEnd', true);
-		this.addBoolConfigProp('reversedAxis', false);
+		this.addBoolConfigProp('reversedAxises', false);
 
 		this.addBoolConfigProp('reverseIndependentDataDirection', false);
 		this.addBoolConfigProp('reverseDependentDataDirection', false);
@@ -658,7 +658,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 
 		this._initSpectrumDefSize(chemObj, options);
 		// debug
-		//options.spectrum_reversedAxis = true;
+		//options.spectrum_reversedAxises = true;
 		// calc context size of image
 		var objBox = chemObj.getExposedContainerBox();
 
@@ -759,7 +759,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	_prepareAxisRenderParamsAndOptions: function(context, spectrumObj, dataRanges, dataVarSymbols, renderOptions, directionAndAlignInfo)
 	{
 		var ops = renderOptions;
-		var reversedAxis = ops.spectrum_reversedAxis;
+		var reversedAxis = ops.spectrum_reversedAxises;
 		//var refLengthAbscissa = ops.contextRefLengthes.x;
 		//var refLengthOrdinate = ops.contextRefLengthes.y;
 		var refLengthIndependent = reversedAxis? ops.contextRefLengthes.y: ops.contextRefLengthes.x;
@@ -992,19 +992,19 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var reverseX, reverseY;
 		if (axisDirectionAndAlignInfo.independent.reversedDirection)
 		{
-			if (renderOptions.spectrum_reversedAxis)
+			if (renderOptions.spectrum_reversedAxises)
 				reverseY = true;
 			else
 				reverseX = true;
 		}
 		if (axisDirectionAndAlignInfo.dependent.reversedDirection)
 		{
-			if (renderOptions.spectrum_reversedAxis)
+			if (renderOptions.spectrum_reversedAxises)
 				reverseX = true;
 			else
 				reverseY = true;
 		}
-		var boxCoords = !renderOptions.spectrum_reversedAxis?
+		var boxCoords = !renderOptions.spectrum_reversedAxises?
 			[
 				{'x': dataRange[independantVarSymbol].min, 'y': dataRange[dependantVarSymbol].min},
 				{'x': dataRange[independantVarSymbol].max, 'y': dataRange[dependantVarSymbol].max}
@@ -1242,8 +1242,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			var clippedValues = self._clipDataValuePairInsideVisibleRange(dataValue1, dataValue2, dataVarSymbols, visibleDataRange);
 			if (clippedValues)
 			{
-				var coord0 = self._calcSectionDataValueContextCoord(clippedValues[0], dataVarSymbols, dataTransferMatrix, renderOptions.spectrum_reversedAxis);
-				var coord1 = self._calcSectionDataValueContextCoord(clippedValues[1], dataVarSymbols, dataTransferMatrix, renderOptions.spectrum_reversedAxis);
+				var coord0 = self._calcSectionDataValueContextCoord(clippedValues[0], dataVarSymbols, dataTransferMatrix, renderOptions.spectrum_reversedAxises);
+				var coord1 = self._calcSectionDataValueContextCoord(clippedValues[1], dataVarSymbols, dataTransferMatrix, renderOptions.spectrum_reversedAxises);
 				return [coord0, coord1];
 			}
 			return null;
@@ -1393,7 +1393,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 							var dValue = typicalValues[0];
 							if (dValue)
 							{
-								var dCoord = this._calcSectionDataValueContextCoord(dValue, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxis);
+								var dCoord = this._calcSectionDataValueContextCoord(dValue, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxises);
 								connectionToInvisibleLineCoords = Kekule.GeometryUtils.clipLineSegmentByBox([lastCoords[lastCoords.length - 1], dCoord], contextBoxCornerCoords);
 							}
 						}
@@ -1401,7 +1401,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 					}
 					else
 					{
-						var coords = calcDataValueContextCoords(renderableTypicalValues, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxis);
+						var coords = calcDataValueContextCoords(renderableTypicalValues, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxises);
 						currLineCoords = coords;
 						if (lastCoords)
 						{
@@ -1410,7 +1410,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 						else if (lastTypicalDataValues)  // last data values are out of box, but the connection line to this one may need to be drawn
 						{
 							var lastDValue = lastTypicalDataValues[lastTypicalDataValues.length - 1];
-							var lastDCoord = this._calcSectionDataValueContextCoord(lastDValue, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxis);
+							var lastDCoord = this._calcSectionDataValueContextCoord(lastDValue, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxises);
 							connectionToInvisibleLineCoords = Kekule.GeometryUtils.clipLineSegmentByBox([lastDCoord, coords[0]], contextBoxCornerCoords);
 						}
 						lastCoords = currLineCoords;
