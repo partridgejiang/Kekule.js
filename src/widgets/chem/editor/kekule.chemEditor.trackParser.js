@@ -1441,7 +1441,8 @@ Kekule.Editor.TrackInputIaController = Class.create(Kekule.Editor.StructureInser
 				this.getEditor().select(children);
 				*/
 				this.startDirectManipulate(null, mol, endScreenCoord);
-				this.moveManipulatedObjs(endScreenCoord);  // force a "move" action, to apply possible merge
+				this.moveManipulatedObjs(endScreenCoord);   // force a "move" action, to apply possible merge
+				this.manipulateBeforeStopping();
 				this.stopManipulate();
 
 				var children = this.getStructureSelectableChildren(mol);
