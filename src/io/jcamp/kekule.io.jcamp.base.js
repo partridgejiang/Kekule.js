@@ -1268,6 +1268,7 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		//map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjProp.bind(this, 'title');  // TITLE
 		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjInfoProp.bind(this, 'title');  // TITLE
 		map[JcampConsts.LABEL_DX_VERSION] = map[JcampConsts.LABEL_DX_VERSION_2] = this.doStoreLdrToChemObjInfoProp.bind(this, 'jcampDxVersion');  // JCAMP-DX
+		map[JcampConsts.LABEL_BLOCK_END] = this._ignoreLdrHandler;  // block end, need not to store value of this ldr
 		var doStoreDateTimeLdrBind = this.doStoreDateTimeLdr.bind(this);
 		map['DATE'] = doStoreDateTimeLdrBind;
 		map['TIME'] = doStoreDateTimeLdrBind;
@@ -1278,6 +1279,11 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 	_defaultLdrHandler: function(ldr, block, targetChemObj)
 	{
 		return this.saveLdrValueToChemObjInfoProp(ldr.labelName, JcampLdrValueParser.parseValue(ldr), targetChemObj);
+	},
+	/** @private */
+	_ignoreLdrHandler: function(ldr, block, targetChemObj)
+	{
+		// bypass this ldr
 	},
 
 	/** @private */
