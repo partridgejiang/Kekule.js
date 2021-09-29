@@ -856,14 +856,17 @@ var JLabelType = Kekule.IO.Jcamp.LabelType;
 Kekule.IO.Jcamp.LabelTypeInfos = {
 	_DEFAULT_TYPE: JValueType.STRING
 };
-Kekule.IO.Jcamp.LabelTypeInfos.createInfo = function(labelName, dataType, labelType)
+Kekule.IO.Jcamp.LabelTypeInfos.createInfo = function(labelName, dataType, labelType, specificType)
 {
 	var name = JcampUtils.standardizeLdrLabelName(labelName);
+	var defaultDataType = specificType? Kekule.IO.Jcamp.LabelType.SPECIFIC: Kekule.IO.Jcamp.LabelType.GLOBAL;
 	var result = {
 		'labelName': name,
 		'labelType': labelType,
-		'dataType': dataType || Kekule.IO.Jcamp.LabelType.GLOBAL
+		'dataType': dataType || defaultDataType
 	};
+	if (specificType)
+		result.specificType = specificType;
 	Kekule.IO.Jcamp.LabelTypeInfos[name] = result;
 	return result;
 };
@@ -872,7 +875,7 @@ Kekule.IO.Jcamp.LabelTypeInfos.createInfos = function(infoItems)
 	for (var i = 0, l = infoItems.length; i < l; ++i)
 	{
 		var item = infoItems[i];
-		Kekule.IO.Jcamp.LabelTypeInfos.createInfo(item[0], item[1], item[2]);
+		Kekule.IO.Jcamp.LabelTypeInfos.createInfo.apply(null, item);
 	}
 };
 Kekule.IO.Jcamp.LabelTypeInfos.getType = function(labelName)
@@ -1256,17 +1259,27 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 	_initLdrHandlers: function()
 	{
 		var map = this.getLdrHandlerMap();
+		/*
 		map['_default'] = function(ldr, block, targetChemObj) {
 			targetChemObj.setInfoValue(ldr.labelName, JcampLdrValueParser.parseValue(ldr));
 		};
+		*/
+		map['_default'] = this._defaultLdrHandler.bind(this);
 		//map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjProp.bind(this, 'title');  // TITLE
 		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjInfoProp.bind(this, 'title');  // TITLE
 		map[JcampConsts.LABEL_DX_VERSION] = map[JcampConsts.LABEL_DX_VERSION_2] = this.doStoreLdrToChemObjInfoProp.bind(this, 'jcampDxVersion');  // JCAMP-DX
-		map['DATE'] = this.doStoreDateTimeLdr;
-		map['TIME'] = this.doStoreDateTimeLdr;
-		map['LONGDATE'] = this.doStoreDateTimeLdr;
+		var doStoreDateTimeLdrBind = this.doStoreDateTimeLdr.bind(this);
+		map['DATE'] = doStoreDateTimeLdrBind;
+		map['TIME'] = doStoreDateTimeLdrBind;
+		map['LONGDATE'] = doStoreDateTimeLdrBind;
 		return map;
 	},
+	/** @private */
+	_defaultLdrHandler: function(ldr, block, targetChemObj)
+	{
+		return this.saveLdrValueToChemObjInfoProp(ldr.labelName, JcampLdrValueParser.parseValue(ldr), targetChemObj);
+	},
+
 	/** @private */
 	_getBlockMeta: function(block)
 	{
@@ -1312,21 +1325,54 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 	*/
 
 	/** @private */
-	doStoreLdrToChemObjInfoProp: function(infoFieldName, ldr, block, chemObj)
+	getLdrNamePrefixForInfoField: function(labelName, labelType, chemObj)
 	{
-		var ldrValue = JcampLdrValueParser.parseValue(ldr);
-		chemObj.setInfoValue(infoFieldName, ldrValue);
+		var result = 'jcamp.';
+		if (labelType === JLabelType.SPECIFIC)
+		{
+			// do nothing here
+		}
+		else if (labelType === JLabelType.PRIVATE)
+		{
+			result += 'custom.'
+		}
+		return result;
 	},
 	/** @private */
+	getLdrFullNameForInfoField: function(labelName, chemObj)
+	{
+		var ldrNameInfo = Jcamp.Utils.analysisLdrLabelName(labelName);
+		var labelType = ldrNameInfo.labelType;
+		var prefix = this.getLdrNamePrefixForInfoField(labelName, labelType, chemObj);
+		var result = prefix? prefix + ldrNameInfo.coreName: ldrNameInfo.coreName;
+		return result;
+	},
+	/** @private */
+	saveLdrValueToChemObjInfoProp: function(ldrName, ldrValue, chemObj)
+	{
+		var fname = this.getLdrFullNameForInfoField(ldrName, chemObj);
+		chemObj.setInfoValue(fname, ldrValue);
+	},
+
+	/** @private */
+	doStoreLdrToChemObjInfoProp: function(name, ldr, block, chemObj)
+	{
+		var ldrValue = JcampLdrValueParser.parseValue(ldr);
+		//chemObj.setInfoValue(infoFieldName, ldrValue);
+		this.saveLdrValueToChemObjInfoProp(name, ldrValue, chemObj);
+	},
+	/* @private */
+	/*
 	doStoreLdrToChemObjProp: function(propName, ldr, block, chemObj)
 	{
 		var ldrValue = JcampLdrValueParser.parseValue(ldr);
 		chemObj.setCascadePropValue([propName], ldrValue);
 	},
+	*/
 	/** @private */
 	doStoreDateTimeLdr: function(ldr, block, chemObj)
 	{
-		var infoFieldName = 'date';
+		var fieldName = 'date';
 		var infoFieldValue;
 		var labelName = ldr.labelName;
 		var ldrValue = JcampLdrValueParser.parseValue(ldr);
@@ -1349,7 +1395,10 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 			// bypass the TIME ldr, since it is processed in DATE
 		}
 		if (infoFieldValue)
-			chemObj.setInfoValue(infoFieldName, infoFieldValue);
+		{
+			//chemObj.setInfoValue(fieldName, infoFieldValue);
+			this.saveLdrValueToChemObjInfoProp(fieldName, infoFieldValue, chemObj);
+		}
 	},
 
 	/**

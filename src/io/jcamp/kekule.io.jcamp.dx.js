@@ -71,6 +71,11 @@ Kekule.IO.Jcamp.DxUtils = {
 	}
 };
 
+// create some ldr info for DX format
+Kekule.IO.Jcamp.LabelTypeInfos.createInfos([
+	['']
+]);
+
 /**
  * Reader for reading a DX data block of JCAMP document tree.
  * @class
@@ -157,6 +162,21 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	{
 		return this._getDataTableLdrNames().indexOf(labelName) >= 0;
 	},
+
+	/** @ignore */
+	getLdrNamePrefixForInfoField: function(labelName, labelType, chemObj)
+	{
+		var result = this.tryApplySuper('getLdrNamePrefixForInfoField', [labelName, labelType, chemObj]);
+		if (labelType === Jcamp.LabelType.SPECIFIC)  // data specified label
+		{
+			// the data type should already be stored in chemObj
+			var spectrumType = chemObj.getSpectrumType();
+			if (spectrumType)
+				result += spectrumType + '.';
+		}
+		return result;
+	},
+
 	/* @ignore */
 	/*
 	getPendingLdrNames: function()
