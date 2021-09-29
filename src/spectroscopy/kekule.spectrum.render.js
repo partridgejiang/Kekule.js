@@ -1289,7 +1289,6 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				peakRootValues[0][dataVarSymbols.independant] = visibleDataRange[dataVarSymbols.independant].min;
 				peakRootValues[1][dataVarSymbols.independant] = visibleDataRange[dataVarSymbols.independant].max;
 			}
-			console.log(peakRootValues);
 			for (var i = 1, l = peakRootValues.length; i < l; ++i)
 			{
 				var contextCoords = getClippedContextCoordOfDataValues(peakRootValues[i - 1], peakRootValues[i]);
