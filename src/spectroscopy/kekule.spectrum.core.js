@@ -4,6 +4,7 @@
 
 var PS = Class.PropertyScope;
 var AU = Kekule.ArrayUtils;
+var KUnit = Kekule.Unit;
 
 /**
  * Base namespace for spectra.
@@ -181,14 +182,24 @@ DCM.register({
 		return fromUnitObj.canConvertValueTo(toUnitObj);
 	}
 });
-// register a converter to convert NMR frequency to ppm
+// register a converter to convert between NMR frequency and ppm
 DCM.register({
 	convert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
 	{
 		var observeFreq = spectrum.getSpectrumParam('observeFrequency');
-		var value2 = fromUnitObj.convertValueTo(value, observeFreq.getUnit());
-		var pureRatio = value2 / observeFreq.getValue();  // in ppm * 1e10, in another word, the pure ratio
-		return Kekule.Unit.Ratio.ONE.convertValueTo(pureRatio, toUnitObj);
+		if (fromUnitObj.category === KUnit.Frequency)  // from Hz to ppm
+		{
+			var freq = fromUnitObj.convertValueTo(value, observeFreq.getUnit());
+			var pureRatio = freq / observeFreq.getValue();  // in ppm * 1e10, in another word, the pure ratio
+			return KUnit.Ratio.ONE.convertValueTo(pureRatio, toUnitObj);
+		}
+		else if (fromUnitObj.category === K.Unit.Ratio)  // from ppm to Hz
+		{
+			var value2 = fromUnitObj.convertValueToStandard(value);
+			var freq = value2 * observeFreq.getValue();
+			var freqUnit = KUnit.getUnit(observeFreq.getUnit());
+			return freqUnit.convertValueTo(freq, toUnitObj);
+		}
 	},
 	canConvert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
 	{
@@ -197,8 +208,36 @@ DCM.register({
 			var observeFreq = spectrum.getSpectrumParam('observeFrequency');
 			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
 			{
-				return (fromUnitObj.category === Kekule.Unit.Frequency && toUnitObj.category === Kekule.Unit.Ratio);
+				return (fromUnitObj.category === Kekule.Unit.Frequency && toUnitObj.category === Kekule.Unit.Ratio)
+					|| (fromUnitObj.category === Kekule.Unit.Ratio && toUnitObj.category === Kekule.Unit.Frequency);
 			}
+		}
+		return false;
+	}
+});
+// register a converter to convert between IR wave length and wave number
+DCM.register({
+	convert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
+	{
+		if (fromUnitObj.category === KUnit.Length)   // from wave length to wave number
+		{
+			var standardWaveLengthScalar = fromUnitObj.convertValueToStandardEx(value);
+			var standardWaveNumber = 1 / standardWaveLengthScalar.value;
+			return toUnitObj.convertValueFromStandard(standardWaveNumber);
+		}
+		else if (fromUnitObj.category === KUnit.WaveNumber)  // from wave number to wave length
+		{
+			var standardWaveNumberScalar = fromUnitObj.convertValueToStandardEx(value);
+			var standardWaveLength = 1 / standardWaveNumberScalar.value;
+			return toUnitObj.convertValueFromStandard(standardWaveLength);
+		}
+	},
+	canConvert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
+	{
+		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.IR)
+		{
+			return (fromUnitObj.category === Kekule.Unit.Length && toUnitObj.category === Kekule.Unit.WaveNumber)
+				|| (fromUnitObj.category === Kekule.Unit.WaveNumber && toUnitObj.category === Kekule.Unit.Length);
 		}
 		return false;
 	}
@@ -545,6 +584,13 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		{
 			var fname = fieldNames[i];
 			result[fname] = this._convertVarValueToExternal(result[fname], varIndex);
+		}
+		// after conversion, the min/max values may be reversed
+		if (result.min > result.max)
+		{
+			var temp = result.min;
+			result.min = result.max;
+			result.max = temp;
 		}
 		return result;
 	},
@@ -1963,11 +2009,12 @@ Kekule.ClassDefineUtils.addStandardSizeSupport(Kekule.Spectroscopy.Spectrum);
 (function(){
 	var register = Kekule.Unit.register;
 	// IR
-	register('transmittance', 'transmittance', 'Optics', null);  // IT/I0
-	register('reflectance', 'reflectance', 'Optics', null);  // IR/I0
-	register('absorbance', 'absorbance', 'Optics', null);  // log10(IR/I0)
-	register('Kubelka Munk', 'Kubelka_Munk', 'Optics', null);  // (1-R^2)/(2R)
-	register('1/cm', 'wave_number', 'Frequency', null);
+	register('transmittance', 'transmittance', 'OpticalTransmittance', 1);  // IT/I0
+	register('reflectance', 'reflectance', 'OpticalReflectance', 1);  // IR/I0
+	register('absorbance', 'absorbance', 'OpticalAbsorbance', 1);  // log10(IR/I0)
+	register('Kubelka Munk', 'Kubelka_Munk', 'OpticalKubelkaMunk', 1);  // (1-R^2)/(2R)
+	register('1/m', 'reciprocal_meter', 'WaveNumber', 1);
+	register('1/cm', 'reciprocal_centimeter', 'WaveNumber', 1e2);
 	// NMR
 	//register('ppm', 'nmr_ppm', 'Frequency', null);
 	// MS
