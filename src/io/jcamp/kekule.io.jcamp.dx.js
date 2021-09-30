@@ -15,6 +15,7 @@
 
 var AU = Kekule.ArrayUtils;
 var Jcamp = Kekule.IO.Jcamp;
+var KS = Kekule.Spectroscopy;
 
 var KU = Kekule.Unit;
 
@@ -40,10 +41,10 @@ Kekule.IO.Jcamp.DxUtils = {
 		'1/CM': KU.Frequency.WAVE_NUMBER,
 		'MICROMETERS': KU.Length.MICROMETER,
 		'NANOMETERS': KU.Length.NANOMETER,
-		'TRANSMITTANCE': KU.Optics.TRANSMITTANCE,
-		'REFLECTANCE': KU.Optics.REFLECTANCE,
-		'ABSORBANCE': KU.Optics.ABSORBANCE,
-		'KUBELKA-MUNK': KU.Optics.KUBELKA_MUNK,
+		'TRANSMITTANCE': KU.OpticalTransmittance.TRANSMITTANCE,
+		'REFLECTANCE': KU.OpticalReflectance.REFLECTANCE,
+		'ABSORBANCE': KU.OpticalAbsorbance.ABSORBANCE,
+		'KUBELKA-MUNK': KU.OpticalKubelkaMunk.KUBELKA_MUNK,
 		// MS
 		'CHANNEL NUMBER': null,
 		'COUNTS': KU.General.MS_COUNT,
@@ -73,7 +74,27 @@ Kekule.IO.Jcamp.DxUtils = {
 
 // create some ldr info for DX format
 Kekule.IO.Jcamp.LabelTypeInfos.createInfos([
-	['']
+	// IR
+	//['RESOLUTION', Jcamp.ValueType.STRING],  // already defined in jcamp.base.js
+	// MS
+	['SPECTROMETER TYPE', Jcamp.ValueType.STRING, null, KS.SpectrumType.MS],
+	['INLET', Jcamp.ValueType.STRING, null, KS.SpectrumType.MS],
+	['IONIZATION MODE', Jcamp.ValueType.STRING, null, KS.SpectrumType.MS],
+	// NMR
+	['OBSERVE FREQUENCY', Jcamp.ValueType.AFFN, null, KS.SpectrumType.NMR],  // in MHz
+	['OBSERVE NUCLEUS', Jcamp.ValueType.STRING, null, KS.SpectrumType.NMR],
+	['SOLVENT REFERENCE', Jcamp.ValueType.AFFN, null, KS.SpectrumType.NMR],  // Solvent lock signal in ppm
+	['DELAY', Jcamp.ValueType.SIMPLE_AFFN_GROUP, null, KS.SpectrumType.NMR],
+	['ACQUISITION MODE', Jcamp.ValueType.STRING, null, KS.SpectrumType.NMR],
+	// IMS
+	['IMS PRESSURE', Jcamp.ValueType.AFFN, null, KS.SpectrumType.IMS],  // in kilopascal
+	['CARRIER GAS', Jcamp.ValueType.STRING, null, KS.SpectrumType.IMS],
+	['DRIFT GAS', Jcamp.ValueType.STRING, null, KS.SpectrumType.IMS],
+	['ELECTRIC FIELD', Jcamp.ValueType.SIMPLE_AFFN_GROUP, null, KS.SpectrumType.IMS],  // actually a (AFFN, AFFN) pair
+	['ION POLARITY', Jcamp.ValueType.STRING, null, KS.SpectrumType.IMS],
+	['IONIZATION MODE', Jcamp.ValueType.STRING, null, KS.SpectrumType.IMS],
+	['IMS TEMPERATURE', Jcamp.ValueType.SIMPLE_AFFN_GROUP, null, KS.SpectrumType.IMS],   // actually (AFFN[, AFFN])
+	['SHUTTER OPENING TIME', Jcamp.ValueType.AFFN, null, KS.SpectrumType.IMS]
 ]);
 
 /**
@@ -121,21 +142,42 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	_initLdrHandlers: function()
 	{
 		var map = this.tryApplySuper('_initLdrHandlers');
-		map['DATATYPE'] = this.doStoreSpectrumDataTypeLdr.bind(this, 'DATA TYPE');
+
+		map[Jcamp.Consts.LABEL_BLOCK_BEGIN] = this.doStoreSpectrumTitleLdr.bind(this);
+
+		map['DATATYPE'] = this.doStoreSpectrumDataTypeLdr.bind(this, 'DATATYPE');
+		var doStoreSpectrumDataLdrBind = this.doStoreSpectrumDataLdr.bind(this);
 		var dataTableLdrNames = this._getDataTableLdrNames();
 		for (var i = 0, l = dataTableLdrNames.length; i < l; ++i)
-			map[dataTableLdrNames[i]] = this.doStoreSpectrumDataLdr.bind(this);
+			map[dataTableLdrNames[i]] = doStoreSpectrumDataLdrBind;
 		/*
 		map['PEAK TABLE'] = this.doStoreSpectrumDataLdr.bind(this, 'PEAK TABLE');
 		map['XYDATA'] = this.doStoreSpectrumDataLdr.bind(this, 'XYDATA');
 		*/
 		var varDefLdrNames = this._getDataTableVarDefLdrNames();
+		var doStoreDataVarInfoLdrBind = this.doStoreDataVarInfoLdr.bind(this);
 		for (var i = 0, l = varDefLdrNames.length; i < l; ++i)
-			map[varDefLdrNames[i]] = this.doStoreDataVarInfoLdr.bind(this);
+			map[varDefLdrNames[i]] = doStoreDataVarInfoLdrBind;
+
 		var ntuplesVarDefLdrNames = this._getNTuplesDefinitionLdrNames();
+		var doStoreNTuplesAttributeLdrBind = this.doStoreNTuplesAttributeLdr.bind(this)
 		for (var i = 0, l = ntuplesVarDefLdrNames.length; i < l; ++i)
-			map[ntuplesVarDefLdrNames[i]] = this.doStoreNTuplesAttributeLdr.bind(this);
+			map[ntuplesVarDefLdrNames[i]] = doStoreNTuplesAttributeLdrBind;
 		map['DATATABLE'] = this.doStoreNTuplesDataLdr.bind(this);   // NTuples data table
+
+		var spectrumParamLdrNames = this._getSpectrumParamLdrNames();
+		var spectrumNames = Kekule.ObjUtils.getOwnedFieldNames(spectrumParamLdrNames);
+		for (var i = 0, ii = spectrumNames.length; i < ii; ++i)
+		{
+			var spectrumName = spectrumNames[i];
+			var doStoreSpectrumParamLdrBindWithName = this.doStoreSpectrumParamLdr.bind(this, spectrumName);
+			var ldrNames = spectrumParamLdrNames[spectrumName];
+			for (var j = 0, jj = ldrNames.length; j < jj; ++j)
+			{
+				map[ldrNames[j]] = doStoreSpectrumParamLdrBindWithName;
+			}
+		}
+
 		return map;
 	},
 	/** @prviate */
@@ -162,6 +204,16 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	{
 		return this._getDataTableLdrNames().indexOf(labelName) >= 0;
 	},
+	/** @private */
+	_getSpectrumParamLdrNames: function()
+	{
+		return {
+			'ir': ['RESOLUTION'],
+			'nmr': ['.OBSERVEFREQUENCY', '.OBSERVENUCLEUS', '.SOLVENTREFERENCE', '.DELAY', '.ACQUISITIONMODE'],
+			'ms': ['.SPECTROMETERTYPE', '.INLET', '.IONIZATIONMODE'],
+			'ims': ['.IMSPRESSURE', '.CARRIERGAS', '.DRIFTGAS', '.ELECTRICFIELD', '.IONPOLARITY', '.IONIZATIONMODE', '.IMSTEMPERATURE', '.SHUTTEROPENINGTIME']
+		}
+	},
 
 	/** @ignore */
 	getLdrNamePrefixForInfoField: function(labelName, labelType, chemObj)
@@ -184,6 +236,11 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		return this.tryApplySuper('getPendingLdrNames').concat(this._getDataTableLdrNames());
 	},
 	*/
+	/** @private */
+	doStoreSpectrumTitleLdr: function(ldr, block, chemObj)
+	{
+		chemObj.setName(Jcamp.LdrValueParser.parseValue(ldr));
+	},
 	/** @private */
 	doStoreDataVarInfoLdr: function(ldr, block, chemObj)
 	{
@@ -345,10 +402,10 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 					continue;
 			}
 
-			var def = new Kekule.VarDefinition({
+			var def = new Kekule.Spectroscopy.SpectrumVarDefinition({
 				'name': (info.name || '').toLowerCase(),  // LDR values are often uppercased
 				'symbol': info.symbol,
-				'units': Jcamp.DxUtils.dxUnitToMetricsUnitSymbol(info.units),
+				'unit': Jcamp.DxUtils.dxUnitToMetricsUnitSymbol(info.units),
 				//'minValue': info.minValue,
 				//'maxValue': info.maxValue,
 				'dependency': Kekule.ObjUtils.notUnset(info.dependency)? info.dependency: Kekule.VarDependency.DEPENDENT
@@ -455,6 +512,71 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		return spectrumData.getVariables();
 	},
 	*/
+
+	/** @private */
+	doStoreSpectrumParamLdr: function(spectrumName, ldr, block, chemObj)  // save the spectrum specified key params
+	{
+		var spectrumType = spectrumName.toUpperCase();
+		// first ensure the spectrumName matches current spectrum type, if not, bypass this LDR
+		if (chemObj.getSpectrumType() && chemObj.getSpectrumType() !== spectrumType)
+			return;
+		else
+		{
+			var labelName = ldr.labelName;
+			var value = Jcamp.LdrValueParser.parseValue(ldr);
+			var defaultHandler = function()
+			{
+				chemObj.setSpectrumParam(labelName.toLowerCase(), value);
+			};
+			if (spectrumType === KS.SpectrumType.IR)
+			{
+				if (labelName === 'RESOLUTION')  // may be a number or R1,X1,; . . . ;Ri,Xi
+				{
+					var isSingleNum = value.indexOf(Jcamp.Consts.SIMPLE_VALUE_DELIMITER) < 0;
+					if (isSingleNum)
+						value = parseFloat(value) || value;
+					chemObj.setSpectrumParam('resolution', value);
+				}
+			}
+			else if (spectrumType === KS.SpectrumType.NMR)
+			{
+				if (labelName === '.OBSERVENUCLEUS')
+				{
+					var targetNucleus = (value.indexOf('C') >= 0 && value.indexOf('13') >= 0)? KS.SpectrumNMR.TargetNucleus.C13: KS.SpectrumNMR.TargetNucleus.H;
+					chemObj.setSpectrumParam('nucleus', targetNucleus);
+				}
+				else if (labelName === '.OBSERVEFREQUENCY')
+				{
+					chemObj.setSpectrumParam('observeFrequency', Kekule.Scalar.create(value, Kekule.Unit.Frequency.MEGAHERTZ.symbol)); // the value is stored in MHz in Jcamp-DX
+				}
+				else if (labelName === '.SOLVENTREFERENCE')
+				{
+					chemObj.setSpectrumParam('solventReference', Kekule.Scalar.create(value, Kekule.Unit.Ratio.PPM.symbol));
+				}
+				else if (labelName === '.DELAY')
+				{
+					chemObj.setSpectrumParam('dalays', Kekule.Scalar.create(value, Kekule.Unit.Time.MICROSECOND.symbol));
+				}
+				else if (labelName === '.ACQUISITIONMODE')
+				{
+					chemObj.setSpectrumParam('acquisitionMode', value.toLowerCase());
+				}
+				else
+					defaultHandler();
+			}
+			else if (spectrumType === KS.SpectrumType.MS)
+			{
+				defaultHandler();
+			}
+			else if (spectrumType === KS.SpectrumType.IMS)
+			{
+				defaultHandler();
+			}
+			else
+				defaultHandler();
+			// TODO: more spectrum type handlers
+		}
+	},
 
 	/** @private */
 	_calcActualVarValue: function(dataValue, varInfo)
