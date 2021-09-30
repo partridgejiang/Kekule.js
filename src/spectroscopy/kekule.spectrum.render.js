@@ -769,6 +769,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 
 		var rOptions = {};
 		var drawParams = {};
+		var self = this;
 
 		var createSubOptions = function(baseOption, extensions)
 		{
@@ -805,7 +806,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var getVarUnitLabel = function(spectrumObj, varSymbol)
 		{
 			var varDef = spectrumObj.getVariable(varSymbol);
-			var text = varDef.getUnit();       // TODO: here we may need to transform the unit to a propert rich text
+			var text = self.doGetVarDefUnit(varDef);       // TODO: here we may need to transform the unit to a propert rich text
 			if (!text)
 				return null;
 			else if (DataType.isObjectValue(text))  // already a rich text?
@@ -961,12 +962,12 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			if (varDef.getDependency() === Kekule.VarDependency.DEPENDENT)
 			{
 				varSymbols.dependant = varDef.getSymbol();
-				varUnitSymbols.dependant = varDef.getUnit();
+				varUnitSymbols.dependant = this.doGetVarDefUnit(varDef);
 			}
 			else
 			{
 				varSymbols.independant = varDef.getSymbol();
-				varUnitSymbols.independant = varDef.getUnit();
+				varUnitSymbols.independant = this.doGetVarDefUnit(varDef);
 			}
 			if (varSymbols.dependant && varSymbols.independant)
 				break;
@@ -978,6 +979,11 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			'varSymbols': varSymbols,
 			'varUnitSymbols': varUnitSymbols
 		};
+	},
+	/** @private */
+	doGetVarDefUnit: function(varDef)
+	{
+		return (varDef.getActualExternalUnit && varDef.getActualExternalUnit()) || varDef.getUnit();
 	},
 	/** @private */
 	doCalcSprectrumTransformMatrix: function(spectrum, targetDataSections, varSymbols, sectionDataRange, contextBox, renderOptions, axisDirectionAndAlignInfo)

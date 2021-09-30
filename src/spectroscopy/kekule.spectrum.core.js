@@ -109,6 +109,144 @@ Kekule.Spectroscopy.Utils = {
 };
 
 /**
+ * A util object to manage the registered spectrum data value converters.
+ * These converters are used to convert raw spectrum value from one unit to another (e.g., Hz to ppm in NMR).
+ * @class
+ */
+Kekule.Spectroscopy.DataValueConverterManager = {
+	/** @private */
+	_converters: [],
+	/**
+	 * Register a converter object.
+	 * The converter object should implement the following methods:
+	 * {
+	 *   convert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum) => newValue,
+	 *   canConvert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum) => Bool
+	 * }
+	 * @param {Object} converter
+	 */
+	register: function(converter)
+	{
+		DCM._converters.push(converter);
+	},
+	/**
+	 * Unregister a converter.
+	 * @param {Object} converter
+	 */
+	unregister: function(converter)
+	{
+		var index = DMC._converters.indexOf(converter);
+		if (index >= 0)
+			DMC._converters.splice(index, 1);
+	},
+
+	/** @private */
+	doConvert: function(value, fromUnit, toUnit, spectrumDataSection, spectrum)
+	{
+		if (fromUnit === toUnit)
+			return value;
+		if (!Kekule.NumUtils.isNormalNumber(value))
+			return value;
+		var converters = DCM._converters;
+		if (converters.length)
+		{
+			var fromUnitObj = Kekule.Unit.getUnit(fromUnit);
+			var toUnitObj = Kekule.Unit.getUnit(toUnit);
+			if (fromUnitObj && toUnitObj)
+			{
+				for (var i = converters.length - 1; i >= 0; --i)
+				{
+					var converter = converters[i];
+					if (converter.canConvert(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum))
+						return converter.convert(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum);
+				}
+			}
+		}
+		// no available converter found, can not convert
+		Kekule.error(Kekule.$L('ErrorMsg.UNABLE_TO_CONVERT_BETWEEN_UNITS').format(fromUnitObj.getKey(), toUnitObj.getKey()));
+		return null;
+	}
+};
+/** @ignore */
+var DCM = Kekule.Spectroscopy.DataValueConverterManager;
+
+// register the default data value converter
+DCM.register({
+	convert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
+	{
+		return fromUnitObj.convertValueTo(value, toUnitObj);
+	},
+  canConvert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
+	{
+		return fromUnitObj.canConvertValueTo(toUnitObj);
+	}
+});
+// register a converter to convert NMR frequency to ppm
+DCM.register({
+	convert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
+	{
+		var observeFreq = spectrum.getSpectrumParam('observeFrequency');
+		var value2 = fromUnitObj.convertValueTo(value, observeFreq.getUnit());
+		var pureRatio = value2 / observeFreq.getValue();  // in ppm * 1e10, in another word, the pure ratio
+		return Kekule.Unit.Ratio.ONE.convertValueTo(pureRatio, toUnitObj);
+	},
+	canConvert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
+	{
+		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)
+		{
+			var observeFreq = spectrum.getSpectrumParam('observeFrequency');
+			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
+			{
+				return (fromUnitObj.category === Kekule.Unit.Frequency && toUnitObj.category === Kekule.Unit.Ratio);
+			}
+		}
+		return false;
+	}
+});
+
+/**
+ * Variable used in spectrum.
+ * @class
+ * @augments Kekule.VarDefinition
+ *
+ * @property {String} internalUnit Unit that used in internal data storage.
+ * @property {String} externalUnit Unit that used to expose data to public.
+ */
+Kekule.Spectroscopy.SpectrumVarDefinition = Class.create(Kekule.VarDefinition,
+/** @lends Kekule.Spectroscopy.SpectrumVarDefinition# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumVarDefinition',
+	initProperties: function()
+	{
+		this.defineProp('internalUnit', {'dataType': DataType.STRING, 'serializable': false,
+			'getter': function() { return this.getUnit(); },
+			'setter': function(value) { this.setUnit(value); }
+		});
+		this.defineProp('externalUnit', {'dataType': DataType.STRING});
+	},
+	/**
+	 * Returns the actual external unit of var.
+	 * Usually this function returns the value of {@link Kekule.Spectroscopy.SpectrumVarDefinition.externalUnit}
+	 * If it is not set, the result will be the same as internalUnit.
+	 * @returns {String}
+	 */
+	getActualExternalUnit: function()
+	{
+		return this.getExternalUnit() || this.getInternalUnit();
+	},
+	/**
+	 * Whether the external unit setting of this var differs from the internal unit.
+	 * @returns {Bool}
+	 */
+	hasDifferentExternalUnit: function()
+	{
+		var externalUnit = this.getExternalUnit();
+		return !!(externalUnit && externalUnit !== this.getInternalUnit());
+	}
+});
+
+/**
  * Represent part of data in a spectrum.
  * @class
  *
@@ -117,8 +255,7 @@ Kekule.Spectroscopy.Utils = {
  * @param {Array} localVariables Array of variable definition objects or symbols.
  *
  * @property {Kekule.Spectroscopy.SpectrumData} parent Parent spectrum data object.
- * //@property {Array} variables Array of variables of data, each item is {@link Kekule.VarDefinition}.
- * @property {Array} localVarInfos Stores the local variable information. Each item is a hash containing fields {'varDef', 'range'}.
+ * @property {Array} localVarInfos Stores the local variable information. Each item is a hash containing fields {'varDef', 'range'(optional)}.
  * @property {Array} varSymbols Array of variable symbols such as ['X', 'Y'].
  * @property {Int} mode Data mode of section, continuous or peak.
  * @property {Hash} peakRoot
@@ -260,7 +397,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var localVarInfos = this.getLocalVarInfos();
 		if (typeof (varIndexOrNameOrDef) === 'number')
 			result = varIndexOrNameOrDef;
-		else // if (varIndexOrNameOrDef instanceof Kekule.VarDefinition)
+		else // if (varIndexOrNameOrDef instanceof Kekule.Spectroscopy.SpectrumVarDefinition)
 		{
 			for (var i = 0, l = localVarInfos.length; i < l; ++i)
 			{
@@ -288,7 +425,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var localVarInfos = this.getLocalVarInfos();
 		if (typeof (varIndexOrNameOrDef) === 'number')
 			result = localVarInfos[varIndexOrNameOrDef];
-		else // if (varIndexOrNameOrDef instanceof Kekule.VarDefinition)
+		else // if (varIndexOrNameOrDef instanceof Kekule.Spectroscopy.SpectrumVarDefinition)
 		{
 			for (var i = 0, l = localVarInfos.length; i < l; ++i)
 			{
@@ -324,6 +461,15 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	{
 		var info = this.getLocalVarInfo(varIndexOrNameOrDef);
 		info[key] = value;
+	},
+	/**
+	 * Returns the variable definition of a local variable.
+	 * @param {Variant} varIndexOrNameOrDef
+	 * @returns {Kekule.Spectroscopy.SpectrumVarDefinition}
+	 */
+	getLocalVarDef: function(varIndexOrNameOrDef)
+	{
+		return this.getLocalVarInfoValue(varIndexOrNameOrDef, 'varDef');
 	},
 	/**
 	 * Returns the from/to value of a continuous variable.
@@ -391,6 +537,15 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		}
 		if (!result && autoCalc)
 			result = this.calcDataRange(varIndexOrNameOrDef)[info.varDef.getSymbol()];
+		// do not forget to do unit conversion
+		var varDef = info.varDef;
+		var varIndex = this.getLocalVarInfoIndex(varIndexOrNameOrDef);
+		var fieldNames = Kekule.ObjUtils.getOwnedFieldNames(result);
+		for (var i = 0, l = fieldNames.length; i < l; ++i)
+		{
+			var fname = fieldNames[i];
+			result[fname] = this._convertVarValueToExternal(result[fname], varIndex);
+		}
 		return result;
 	},
 	/**
@@ -664,7 +819,33 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var symbols = this.getLocalVarSymbols();
 		for (var i = 0, l = Math.min(symbols.length, arrayValue.length); i < l; ++i)
 		{
-			result[symbols[i]] = arrayValue[i];
+			var value = this._convertVarValueToExternal(arrayValue[i], i);
+			result[symbols[i]] = value;
+		}
+		return result;
+	},
+	/** @private */
+	_convertVarValueToNewUnit: function(value, varDef, fromUnit, toUnit)
+	{
+		//return Kekule.UnitUtils.convertValue(value, fromUnit, toUnit);
+		return Kekule.Spectroscopy.DataValueConverterManager.doConvert(value, fromUnit, toUnit, this, this.getParent());
+	},
+	/**
+	 * Convert a raw value (storaged value) to the one exposed to external with a different unit.
+	 * @param {Number} value
+	 * @param {Int} varIndex
+	 * @returns {Number} value
+	 * @private
+	 */
+	_convertVarValueToExternal: function(value, varIndex)
+	{
+		var result = value;
+		if (!Kekule.NumUtils.isNormalNumber(value))  // not a number, usually can not be converted
+			return result;
+		var varDef = this.getLocalVarDef(varIndex);
+		if (varDef && varDef.hasDifferentExternalUnit && varDef.hasDifferentExternalUnit())  // need to do a value conversion
+		{
+			result = this._convertVarValueToNewUnit(value, varDef, varDef.getInternalUnit(), varDef.getActualExternalUnit());
 		}
 		return result;
 	},
@@ -926,9 +1107,9 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
  * @augments ObjectEx
  *
  * @param {String} id
- * @param {Array} variables Array of variables of data, each item is {@link Kekule.VarDefinition}.
+ * @param {Array} variables Array of variables of data, each item is {@link Kekule.Spectroscopy.SpectrumVarDefinition}.
  *
- * @property {Array} variables Array of variables of data, each item is {@link Kekule.VarDefinition}.
+ * @property {Array} variables Array of variables of data, each item is {@link Kekule.Spectroscopy.SpectrumVarDefinition}.
  * @property {Kekule.ChemObjList} sections Child data sections.
  * @property {Kekule.Spectroscopy.SpectrumData} activeSection Active data section to read/write data.
  * @property {Bool} autoCreateSection Whether create a initial data section automatically when inserting data.
@@ -1240,7 +1421,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	/**
 	 * Returns the variable definition by a index or variable name.
 	 * @param {Variant} varIndexOrNameOrDef
-	 * @returns {Kekule.VarDefinition}
+	 * @returns {Kekule.Spectroscopy.SpectrumVarDefinition}
 	 */
 	getVariable: function(varIndexOrNameOrDef)
 	{
@@ -1251,7 +1432,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	},
 	/**
 	 * Returns the index of a variable definition.
-	 * @param {Kekule.VarDefinition} varDef
+	 * @param {Kekule.Spectroscopy.SpectrumVarDefinition} varDef
 	 * @returns {Int}
 	 */
 	indexOfVariable: function(varDef)
@@ -1260,7 +1441,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	},
 	/**
 	 * Insert a new variable definition at a specified position.
-	 * @param {Kekule.VarDefinition} varDef
+	 * @param {Kekule.Spectroscopy.SpectrumVarDefinition} varDef
 	 * @param {Int} index
 	 */
 	insertVariableAt: function(varDef, index)
@@ -1273,8 +1454,8 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	},
 	/**
 	 * Insert a new variable definition before ref.
-	 * @param {Kekule.VarDefinition} varDef
-	 * @param {Kekule.VarDefinition} ref
+	 * @param {Kekule.Spectroscopy.SpectrumVarDefinition} varDef
+	 * @param {Kekule.Spectroscopy.SpectrumVarDefinition} ref
 	 */
 	insertVariableBefore: function(varDef, ref)
 	{
@@ -1283,7 +1464,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	},
 	/**
 	 * Append a new variable definition.
-	 * @param {Kekule.VarDefinition} varDef
+	 * @param {Kekule.Spectroscopy.SpectrumVarDefinition} varDef
 	 */
 	appendVariable: function(varDef)
 	{
@@ -1300,7 +1481,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	},
 	/**
 	 * Remove a variable definition.
-	 * @param {Kekule.VarDefinition} varDef
+	 * @param {Kekule.Spectroscopy.SpectrumVarDefinition} varDef
 	 */
 	removeVariable: function(varDef)
 	{
@@ -1558,12 +1739,33 @@ Kekule.Spectroscopy.SpectrumType = {
 };
 
 /**
+ * Some constants used by NMR spectrum.
+ * @object
+ */
+Kekule.Spectroscopy.SpectrumNMR = {
+	TargetNucleus: {
+		C13: 'C13',
+		H: 'H'
+	}
+};
+/**
+ * Some constants used by MS spectrum.
+ * @object
+ */
+Kekule.Spectroscopy.SpectrumMS = {
+	SpectrometerType: {
+
+	}
+};
+
+/**
  * The base spectrum class. Concrete spectrum classes should be inherited from this one.
  * @class
  * @augments Kekule.ChemObject
  *
  * @property {String} spectrumType Type of spectrum, value from {@link Kekule.Spectroscopy.SpectrumType}.
  * @property {Kekule.Spectroscopy.SpectrumData} data Spectrum data.
+ * @property {Hash} spectrumParams Key spectrum parameters, e,g. the frequency of NMR.
  */
 Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 /** @lends Kekule.Spectroscopy.Spectrum# */
@@ -1590,6 +1792,21 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	{
 		this.defineProp('spectrumType', {'dataType': DataType.STRING});
 		this.defineProp('data', {'dataType': 'Kekule.Spectroscopy.SpectrumData', 'setter': null});
+		this.defineProp('spectrumParams',
+			{
+				'dataType': DataType.HASH,
+				'getter': function(canCreate)
+				{
+					var r = this.getPropStoreFieldValue('spectrumParams');
+					if ((!r) && canCreate)
+					{
+						r = {};
+						this.setPropStoreFieldValue('spectrumParams', r);
+					}
+					return r;
+				},
+				'setter': null
+			});
 		//this.defineProp('title', {'dataType': DataType.STRING});
 		this._defineInfoProperty('title');
 		//this.defineProp('molecule', {'dataType': 'Kekule.Molecule'});
@@ -1694,7 +1911,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 			//console.log('call', methodName, arguments);
 			return this.getData()[dataMethodName].apply(this.getData(), arguments);
 		}
-	}
+	},
 
 	/*
 	 * Create the data object.
@@ -1709,6 +1926,33 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		return result;
 	}
 	*/
+	/**
+	 * Returns all keys in {@link Kekule.Spectroscopy.Spectrum#spectrumParams} property.
+	 * @returns {Array}
+	 */
+	getSpectrumParamKeys: function()
+	{
+		return this.getSpectrumParams()? Kekule.ObjUtils.getOwnedFieldNames(this.getSpectrumParams()): [];
+	},
+	/**
+	 * Get param value from {@link Kekule.Spectroscopy.Spectrum#spectrumParams}.
+	 * @param {String} key
+	 * @returns {Variant}
+	 */
+	getSpectrumParam: function(key)
+	{
+		return this.getSpectrumParams()? this.getSpectrumParams()[key]: null;
+	},
+	/**
+	 * Set value of a spectrum param. If key already exists, its value will be overwritten.
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setSpectrumParam: function(key, value)
+	{
+		this.doGetSpectrumParams(true)[key] = value;
+		this.notifyPropSet('spectrumParams', this.getPropStoreFieldValue('spectrumParams'));
+	}
 });
 
 Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.Spectroscopy.Spectrum);
