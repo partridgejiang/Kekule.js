@@ -254,7 +254,7 @@ register('V', 'volts', 'ElectricVoltage', 1);
 
 register('Hz', 'hertz', 'Frequency', 1);
 register('kHz', 'kilohertz', 'Frequency', 1e3);
-
+register('MHz', 'megahertz', 'Frequency', 1e6);
 
 
 })();
