@@ -53,7 +53,7 @@ Kekule.IO.Jcamp.Consts = {
 	DATA_FORMAT_SYMBOL_ASSIGNMENT: 'A',
 	DATA_FORMAT_PLOT_DESCRIPTOR_DELIMITER: ',',
 
-	NTUPLES_VAR_DEFINITION_VALUE_DELIMITER: ',',
+	SIMPLE_VALUE_DELIMITER: ',',
 
 	DATA_VARLIST_FORMAT_XYDATA: 1,
 	DATA_VARLIST_FORMAT_XYPOINTS: 2,
@@ -859,11 +859,17 @@ Kekule.IO.Jcamp.LabelTypeInfos = {
 Kekule.IO.Jcamp.LabelTypeInfos.createInfo = function(labelName, dataType, labelType, specificType)
 {
 	var name = JcampUtils.standardizeLdrLabelName(labelName);
-	var defaultDataType = specificType? Kekule.IO.Jcamp.LabelType.SPECIFIC: Kekule.IO.Jcamp.LabelType.GLOBAL;
+	var defaultLabelType = specificType? JLabelType.SPECIFIC: JLabelType.GLOBAL;
+	if (!labelType)
+		labelType = defaultLabelType;
+	if (labelType === JLabelType.SPECIFIC && !name.startsWith(JcampConsts.SPECIFIC_LABEL_PREFIX))
+		name = JcampConsts.SPECIFIC_LABEL_PREFIX + name;
+	else if (labelType === JLabelType.PRIVATE && !name.start(JcampConsts.PRIVATE_LABEL_PREFIX))
+		name = JcampConsts.PRIVATE_LABEL_PREFIX + name;
 	var result = {
 		'labelName': name,
 		'labelType': labelType,
-		'dataType': dataType || defaultDataType
+		'dataType': dataType
 	};
 	if (specificType)
 		result.specificType = specificType;
@@ -1035,7 +1041,8 @@ Kekule.IO.Jcamp.LdrValueParser = {
 	parseValue: function(ldr, options)
 	{
 		var func = JcampLdrValueParser.getParserFunc(ldr);
-		return func(ldr.valueLines, options);
+		var result = func(ldr.valueLines, options);
+		return result;
 	},
 
 	stringParser: function(lines, options)
@@ -1103,9 +1110,9 @@ Kekule.IO.Jcamp.LdrValueParser = {
 	stringGroupParser: function(lines, options)
 	{
 		var v = lines.join(' ').trim();
-		if (v.endsWith(JcampConsts.NTUPLES_VAR_DEFINITION_VALUE_DELIMITER))  // ignore the tailing delimiter
-			v = v.substr(0, v.length - JcampConsts.NTUPLES_VAR_DEFINITION_VALUE_DELIMITER.length);
-		var result = v.split(JcampConsts.NTUPLES_VAR_DEFINITION_VALUE_DELIMITER);
+		if (v.endsWith(JcampConsts.SIMPLE_VALUE_DELIMITER))  // ignore the tailing delimiter
+			v = v.substr(0, v.length - JcampConsts.SIMPLE_VALUE_DELIMITER.length);
+		var result = v.split(JcampConsts.SIMPLE_VALUE_DELIMITER);
 		for (var i = 0, l = result.length; i < l; ++i)
 		{
 			result[i] = result[i].trim();
@@ -1119,7 +1126,7 @@ Kekule.IO.Jcamp.LdrValueParser = {
 	simpleAffnGroupParser: function(lines)
 	{
 		var v = lines.join(' ');
-		var result = v.split(JcampConsts.NTUPLES_VAR_DEFINITION_VALUE_DELIMITER);
+		var result = v.split(JcampConsts.SIMPLE_VALUE_DELIMITER);
 		for (var i = 0, l = result.length; i < l; ++i)
 		{
 			result[i] = parseFloat(result[i].trim());
