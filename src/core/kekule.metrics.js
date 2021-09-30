@@ -146,7 +146,7 @@ Kekule.Unit._unitObjProto = {
 	},
 	/**
 	 * Returns the value with this unit can be converted to another unit.
-	 * @param {Pbject} toUnitObj
+	 * @param {Object} toUnitObj
 	 * @param {Hash} extraParams
 	 * @returns {Bool}
 	 */
@@ -222,7 +222,6 @@ register('', 'one', 'Ratio', 1);
 register('%', 'percent', 'Ratio', 1e-2);
 register('‰', 'thousandth', 'Ratio', 1e-3);
 register('ppm', 'millionth', 'Ratio', 1e-6);
-
 
 register('hr', 'hour', 'Time', 3600);
 register('min', 'minute', 'Time', 60);
