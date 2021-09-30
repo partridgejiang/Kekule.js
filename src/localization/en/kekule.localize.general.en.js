@@ -30,6 +30,7 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 
 	// core/kekule.metrics.js
 	UNIT_NOT_FOUND: 'Unit not found: {0}',
+	STANDARD_UNIT_OF_CATEGORY_NOT_FOUND: 'Standard unit of category {0} not found',
 	UNABLE_TO_CONVERT_BETWEEN_UNITS: 'Unable to convert between units {0} and {1}',
 
 	// utils/kekule.utils.js

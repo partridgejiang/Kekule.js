@@ -173,9 +173,49 @@ Kekule.Unit._unitObjProto = {
 			Kekule.error(Kekule.$L('ErrorMsg.UNIT_NOT_FOUND').format(toUnit.symbol || toUnit.name || toUnit));
 		}
 	},
+	/**
+	 * Convert a value with the standard unit of this category to this unit.
+	 * @param {Number} value
+	 * @param {Hash} extraParams
+	 * @return {Number}
+	 */
+	convertValueFromStandard: function(value, extraParams)
+	{
+		var sunit = this.category.getStandardUnit();
+		if (!sunit)
+			Kekule.error(Kekule.$L('ErrorMsg.STANDARD_UNIT_OF_CATEGORY_NOT_FOUND').format(this.category.name));
+		else
+			return sunit.convertValueTo(value, this, extraParams);
+	},
+	/**
+	 * Convert a value with this unit to the standard unit of this category.
+	 * @param {Number} value
+	 * @param {Hash} extraParams
+	 * @return {Number}
+	 */
+	convertValueToStandard: function(value, extraParams)
+	{
+		return this.convertValueToStandardEx(value, extraParams).value;
+	},
+	/**
+	 * Convert a value with this unit to the standard unit of this category.
+	 * @param {Number} value
+	 * @param {Hash} extraParams
+	 * @return {Hash} A {value, unit} hash.
+	 */
+	convertValueToStandardEx: function(value, extraParams)
+	{
+		var sunit = this.category.getStandardUnit();
+		if (!sunit)
+			Kekule.error(Kekule.$L('ErrorMsg.STANDARD_UNIT_OF_CATEGORY_NOT_FOUND').format(this.category.name));
+		else
+			return {'value': this.convertValueTo(value, sunit, extraParams), 'unit': sunit};
+	},
 	/** @private */
 	doConvertValueTo: function(value, toUnitObj, extraParams)
 	{
+		if (toUnitObj === this)
+			return value;
 		// check if category is same
 		if (/*toUnitObj.category !== this.category*/ !this.canConvertValueTo(toUnitObj, extraParams))  // defaultly we can not convert this
 			Kekule.error(Kekule.$L('ErrorMsg.UNABLE_TO_CONVERT_BETWEEN_UNITS').format(this.getKey(), toUnitObj.getKey()));
@@ -234,7 +274,7 @@ register('m', 'meter', 'Length', 1);
 register('cm', 'centimeter', 'Length', 1e-2);
 register('mm', 'millimeter', 'Length', 1e-3);
 register('μm', 'micrometer', 'Length', 1e-6);
-register('mm', 'nanometer', 'Length', 1e-9);
+register('nm', 'nanometer', 'Length', 1e-9);
 register('Å', 'angstrom', 'Length', 1e-10);
 
 register('mol', 'mole', 'AmountOfSubstance', 1);
