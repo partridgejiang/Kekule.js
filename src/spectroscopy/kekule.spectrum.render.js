@@ -1334,7 +1334,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var calcDataValueContextCoords = function(dataValues, dataVarSymbols, dataTransferMatrix, isReversedAxis)
 		{
 			var result = [];
-			for (var i = 0, l = dataValues.length - 1; i < l; ++i)
+			for (var i = 0, l = dataValues.length; i < l; ++i)
 			{
 				var coord = self._calcSectionDataValueContextCoord(dataValues[i], dataVarSymbols, dataTransferMatrix, isReversedAxis);
 				result.push(coord);
@@ -1355,6 +1355,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var pathArgs = [];
 		var lastSampleMergeIndex = null;
 		var valueBuffer = [];
+		//var totalValueBuffer = [];  // debug
 		var lastCoords;
 		var lastTypicalDataValues;
 		var contextBoxCornerCoords = [CU.create(contextBox.x1, contextBox.y1), CU.create(contextBox.x2, contextBox.y2)];
@@ -1366,27 +1367,36 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			if (dataValueIndep < visibleDataRange[dataVarSymbols.independant].min || dataValueIndep > visibleDataRange[dataVarSymbols.independant].max)
 				continue;
 
+			//totalValueBuffer.push(dataValue);
+
 			var mergeIndex = getSampleMergeGroupIndex(dataValue);
 			if (lastSampleMergeIndex === null)
 				lastSampleMergeIndex = mergeIndex;
 			//console.log('curr', mergeIndex, lastSampleMergeIndex, dataSampleMergeWidth);
 			if (i == l - 1 || mergeIndex !== lastSampleMergeIndex)  // mergeIndex different from last, need to handle the old buffer and create new one
 			{
+				if (i === l - 1)
+					valueBuffer.push(dataValue);
 				if (valueBuffer.length)
 				{
 					var typicalValues = this._getMergeSectionDataTypicalValues(valueBuffer, dataVarSymbols);
-					if (!typicalValues)  // no valid data in this merge section
-					{
-						continue;
-					}
+					//console.log(typicalValues, mergeIndex, valueBuffer.length);
+
 					// clear buffer first, avoid the following continue breaks
 					valueBuffer = [];
 					lastSampleMergeIndex = mergeIndex;
 					if (i < l - 1)
 						valueBuffer.push(dataValue);
 
+					if (!typicalValues)  // no valid data in this merge section
+					{
+						continue;
+					}
+
 					//var renderableTypicalValues = getRenderableTypicalValuePair(typicalValues);
 					var renderableTypicalValues = getRenderableTypicalValues(typicalValues);
+
+					//console.log(typicalValues, renderableTypicalValues, valueBuffer.length);
 
 					var currLineCoords = null, connectionToVisibleLineCoords = null, connectionToInvisibleLineCoords = null;
 					//console.log(mergeIndex, typicalValues[0], typicalValues[1], renderableTypicalValues);
@@ -1408,6 +1418,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 					{
 						var coords = calcDataValueContextCoords(renderableTypicalValues, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxises);
 						currLineCoords = coords;
+						//console.log(currLineCoords[0], currLineCoords[1]);
 						if (lastCoords)
 						{
 							connectionToVisibleLineCoords = [lastCoords[lastCoords.length - 1], coords[0]];
@@ -1434,7 +1445,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 							this.addToDrawGroup(line, result);
 							*/
 							pathArgs.push('L');
-							pathArgs.push(currLineCoords[i].x, currLineCoords[i].y);
+							pathArgs.push(currLineCoords[j].x, currLineCoords[j].y);
 						}
 					}
 					if (connectionToVisibleLineCoords)
@@ -1473,11 +1484,15 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				valueBuffer.push(dataValue);
 			}
 		}
+
+		//console.log('total', totalValueBuffer.length, this._getMergeSectionDataTypicalValues(totalValueBuffer, dataVarSymbols));
+
 		if (pathArgs.length)
 		{
 			var path = Kekule.Render.DrawPathUtils.makePath.apply(this, pathArgs);
 			result = this.drawPath(context, path, renderOptions);
 		}
+
 		return result;
 	},
 	/* @private */
