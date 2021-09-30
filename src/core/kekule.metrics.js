@@ -145,6 +145,16 @@ Kekule.Unit._unitObjProto = {
 		return this.rateToStandard === 1;
 	},
 	/**
+	 * Returns the value with this unit can be converted to another unit.
+	 * @param {Pbject} toUnitObj
+	 * @param {Hash} extraParams
+	 * @returns {Bool}
+	 */
+	canConvertValueTo: function(toUnitObj, extraParams)
+	{
+		return (toUnitObj.category === this.category);
+	},
+	/**
 	 * Convert a value with this unit to another one.
 	 * @param {Number} value
 	 * @param {Variant} toUnit Unit object or name.
@@ -167,7 +177,7 @@ Kekule.Unit._unitObjProto = {
 	doConvertValueTo: function(value, toUnitObj, extraParams)
 	{
 		// check if category is same
-		if (toUnitObj.category !== this.category)  // defaultly we can not convert this
+		if (/*toUnitObj.category !== this.category*/ !this.canConvertValueTo(toUnitObj, extraParams))  // defaultly we can not convert this
 			Kekule.error(Kekule.$L('ErrorMsg.UNABLE_TO_CONVERT_BETWEEN_UNITS').format(this.getKey(), toUnitObj.getKey()));
 		else
 		{
