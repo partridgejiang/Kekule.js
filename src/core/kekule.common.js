@@ -4155,6 +4155,20 @@ Kekule.Scalar = Class.create(Kekule.ChemObject,
 });
 
 /**
+ * A quick function to create a new scalar value.
+ * @param {Variant} value
+ * @param {String} unit
+ * @param {Variant} errorValue
+ */
+Kekule.Scalar.create = function(value, unit, errorValue)
+{
+	var result = new Kekule.Scalar(null, null, value, unit);
+	if (errorValue !== undefined)
+		result.setErrorValue(errorValue);
+	return result;
+}
+
+/**
  * A list to hold a set of other {@link Kekule.ChemObject}.
  * @class
  * @augments Kekule.ChemObject
