@@ -746,6 +746,18 @@ Kekule.CoordMode = {
 };
 
 /**
+ * Enumeration of the anchor point position of a chem object.
+ * @enum
+ */
+Kekule.ObjAnchorPosition = {
+	/** At the corner of object box (e.g., top left corner of 2D box). */
+	CORNER: 0,
+	/** At the center of object box. */
+	CENTER: 1,
+	DEFAULT: 0
+};
+
+/**
  * Class to help to define some classes with similar interfaces.
  * @class
  * @@private
@@ -1132,6 +1144,17 @@ Kekule.ClassDefineUtils = {
 	CommonCoordMethods:
 	/** @lends Kekule.ClassDefineUtils.CommonCoordMethods# */
 	{
+		/**
+		 * Returns the anchor position of this object.
+		 * @param {Int} coordMode
+		 * @returns {Int} Value from {@link Kekule.ObjAnchorPosition}
+		 */
+		getObjAnchorPosition: function(coordMode)
+		{
+			var result = this.doGetObjAnchorPosition && this.doGetObjAnchorPosition(coordMode);
+			result ||= Kekule.ObjAnchorPosition.DEFAULT;
+			return result;
+		},
 		/**
 		 * Returns the parent object that influences the abs coord of this object.
 		 * @param {Int} coordMode
@@ -3757,8 +3780,16 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			if (this.getSizeOfMode)
 			{
 				var size = this.getSizeOfMode(coordMode, allowCoordBorrow) || {};
+				var anchorPosition = this.getObjAnchorPosition(coordMode);
+				if (anchorPosition === Kekule.ObjAnchorPosition.CENTER)
+				{
+					var halfSize = Kekule.CoordUtils.divide(size, 2);
+					if (coordMode !== Kekule.CoordMode.COORD3D)
+						halfSize.y = -halfSize.y;
+					coord1 = Kekule.CoordUtils.substract(coord1, halfSize);
+				}
 				if (coordMode === Kekule.CoordMode.COORD3D)
-					var coord2 = Kekule.CoordUtils.add(coord1, this.getSizeOfMode(coordMode, allowCoordBorrow) || {});
+					coord2 = Kekule.CoordUtils.add(coord1, this.getSizeOfMode(coordMode, allowCoordBorrow) || {});
 				else // 2D
 				{
 					coord2 = {
