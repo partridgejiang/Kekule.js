@@ -156,8 +156,8 @@ Kekule.ContentBlock = Class.create(Kekule.ChemObject,
 		else // 2D
 		{
 			coord2 = {
-				x: coord1.x + size.x,
-				y: coord1.y - size.y
+				x: (coord1.x || 0) + (size.x || 0),
+				y: (coord1.y || 0) - (size.y || 0)
 			};
 		}
 		/*
