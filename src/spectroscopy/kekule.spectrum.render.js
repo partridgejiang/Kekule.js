@@ -980,7 +980,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var varSymbols = {};
 		for (var i = 0, l = varInfos.length; i < l; ++i)
 		{
-			var varDef = varInfos[i].varDef;
+			//var varDef = varInfos[i].varDef;
+			var varDef = targetDataSections[0].getLocalVarDef(i);
 			if (varDef.getDependency() === Kekule.VarDependency.DEPENDENT)
 			{
 				varSymbols.dependant = varDef.getSymbol();
