@@ -395,7 +395,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		});
 		this.defineProp('defPeakRoot', {'dataType': DataType.Hash});
 		// private, stores the data items, each item is a hash, e.g. {x: 1, y: 10, w: 2}
-		this.defineProp('dataItems', {'dataType': DataType.ARRAY, 'setter': null, 'scope1': PS.PRIVATE});
+		this.defineProp('dataItems', {'dataType': DataType.ARRAY, 'setter': null, 'scope': PS.PRIVATE});
 	},
 	/** @ignore */
 	initPropValues: function()
@@ -752,6 +752,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	},
 	/**
 	 * Iterate all data items and calculate the min/max value of each variable.
+	 * Note this function will always returns the value based on internal unit,
+	 * regardless of whether the external unit is set or not.
 	 * @param {Array} targetVariables Array of variable definition or symbol.
 	 *   If not set, all variables will be calculated.
 	 * @returns {Hash}
@@ -806,7 +808,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 						ranges[symbol].max = notNum(ranges[symbol].max) ? peakRootValue[symbol] : Math.max(ranges[symbol].max, peakRootValue[symbol]);
 					}
 				}
-			});
+			}, null, {keepInternalUnitValue: true});
 
 			// cache the range values
 			for (var i = 0, l = remainingVarSymbols.length; i < l; ++i)
@@ -839,6 +841,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 
 	/**
 	 * Iterate all data items and calculate the average value of each variable.
+	 * Note this function will always returns the value based on internal unit,
+	 * regardless of whether the external unit is set or not.
 	 * @param {Array} targetVariables Array of variable definition or symbol.
 	 *   If not set, all variables will be calculated.
 	 * @returns {Hash}
@@ -889,7 +893,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 					sums[symbol] += value;
 					++counts[symbol];
 				}
-			});
+			}, null, {keepInternalUnitValue: true});
 
 			// cache the average values
 			for (var i = 0, l = remainingVarSymbols.length; i < l; ++i)
@@ -933,7 +937,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		return result;
 	},
 	/** @private */
-	_itemArrayToHash: function(arrayValue)
+	_itemArrayToHash: function(arrayValue, options)
 	{
 		if (!arrayValue)
 			return null;
@@ -941,7 +945,11 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var symbols = this.getLocalVarSymbols();
 		for (var i = 0, l = Math.min(symbols.length, arrayValue.length); i < l; ++i)
 		{
-			var value = this._convertVarValueToExternal(arrayValue[i], i);
+			var value;
+			if (!options.keepInternalUnitValue)
+				value = this._convertVarValueToExternal(arrayValue[i], i);
+			else
+				value = arrayValue[i];
 			result[symbols[i]] = value;
 		}
 		return result;
@@ -1105,14 +1113,14 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		return result;
 	},
 	/** @private */
-	getHashValueAt: function(index)
+	getHashValueAt: function(index, options)
 	{
-		return this._itemArrayToHash(this.getRawValueAt(index));
+		return this._itemArrayToHash(this.getRawValueAt(index), options || {});
 	},
 	/** @private */
-	getValueAt: function(index)
+	getValueAt: function(index, options)
 	{
-		return this.getHashValueAt(index);
+		return this.getHashValueAt(index, options);
 	},
 
 	/**
@@ -1184,13 +1192,13 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var self = this;
 		var result = {
 			index: 0,
-			next: function()
+			next: function(options)
 			{
 				if (this.index >= dataItems.length)
 					return {'done': true};
 				else
 				{
-					var ret = {'done': false, 'value': /*self._itemArrayToHash(dataItems[this.index])*/self.getHashValueAt(this.index)};
+					var ret = {'done': false, 'value': /*self._itemArrayToHash(dataItems[this.index])*/self.getHashValueAt(this.index, options)};
 					++this.index;
 					return ret;
 				}
@@ -1201,16 +1209,16 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 
 	/**
 	 * Call function to each data item.
-	 * @param {Func} func With params: (hashValue [, index]).
+	 * @param {Func} func With params: (hashValue [, index, options]).
 	 */
-	forEach: function(func, thisArg)
+	forEach: function(func, thisArg, options)
 	{
 		var iterator = this.getIterator();
 		if (iterator)
 		{
 			//var dataItems = this.getDataItems();
 			var index = 0;
-			var nextItem = iterator.next();
+			var nextItem = iterator.next(options);
 			while (!nextItem.done)
 			{
 				func.apply(thisArg, [nextItem.value, index]);
