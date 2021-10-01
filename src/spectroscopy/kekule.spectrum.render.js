@@ -21,6 +21,7 @@ if (!Kekule.Render || !Kekule.Render.ChemObj2DRenderer)
 	return;
 
 var CU = Kekule.CoordUtils;
+var AU = Kekule.ArrayUtils;
 
 /**
  * Options to display a spectrum.
@@ -177,6 +178,79 @@ ClassEx.extendMethod(Kekule.Spectroscopy.Spectrum, 'doGetObjAnchorPosition',
 		return Kekule.ObjAnchorPosition.CENTER;
 	});
 
+// extend Kekule.Render.RenderOptionUtils.getOptionDefinitions for property editors for spectrum objects
+/** @ignore */
+(function extendRenderOptionPropEditors()
+{
+	var appendDefinitionItem = function(definitions, fieldName, dataType, targetClasses, fieldNamePrefixes)
+	{
+		var classes = AU.toArray(targetClasses);
+		var prefixes = fieldNamePrefixes || [''];
+		for (var i = 0, l = classes.length; i < l; ++i)
+		{
+			for (var j = 0, k = prefixes.length; j < k; ++j)
+			{
+				var name = prefixes[j]? (prefixes[j] + fieldName.upperFirst()): fieldName;
+				definitions.push({'name': 'spectrum_' + name, 'dataType': dataType, 'targetClass': classes[i]});
+			}
+		}
+	};
+
+	//Kekule.Render.RenderOptionUtils.getOptionDefinitions = function()
+	var getSpectrumObjRenderOptionFieldList = function()
+	{
+		//var result = Kekule.Render.RenderOptionUtils.getOptionDefinitions();
+		var result = [];
+		var SpectrumClass = Kekule.Spectroscopy.Spectrum;
+		var SpectrumDataSectionClass = Kekule.Spectroscopy.SpectrumDataSection;
+		var axisPrefixes = ['', 'independent', 'dependent'];
+
+		appendDefinitionItem(result, 'reversedAxises', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'reverseIndependentDataDirection', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'reverseDependentDataDirection', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'reverseIndependentAxisAlign', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'reverseDependentAxisAlign', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'dataColor', DataType.STRING, [SpectrumClass, SpectrumDataSectionClass]);
+		appendDefinitionItem(result, 'dataStrokeWidthRatio', DataType.FLOAT, [SpectrumClass, SpectrumDataSectionClass]);
+		appendDefinitionItem(result, 'dataStrokeWidthMin', DataType.NUMBER, [SpectrumClass, SpectrumDataSectionClass]);
+		appendDefinitionItem(result, 'visibleIndependentDataRangeFrom', DataType.FLOAT, SpectrumClass);
+		appendDefinitionItem(result, 'visibleIndependentDataRangeTo', DataType.FLOAT, SpectrumClass);
+		appendDefinitionItem(result, 'visibleDependentDataRangeFrom', DataType.FLOAT, SpectrumClass);
+		appendDefinitionItem(result, 'visibleDependentDataRangeTo', DataType.FLOAT, SpectrumClass);
+		appendDefinitionItem(result, 'visibleIndependentDataRangeFrom', DataType.BOOL, SpectrumClass);
+
+		appendDefinitionItem(result, 'displayIndependentAxis', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'displayIndependentAxisScales', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'displayIndependentAxisLabel', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'displayIndependentAxisUnit', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'displayDependentAxis', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'displayDependentAxisScales', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'displayDependentAxisLabel', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'displayDependentAxisUnit', DataType.BOOL, SpectrumClass);
+
+		appendDefinitionItem(result, 'axisScaleLabelFontFamily', DataType.STRING, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisScaleLabelFontSize', DataType.NUMBER, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisScaleLabelColor', DataType.STRING, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisLabelFontFamily', DataType.STRING, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisLabelFontSize', DataType.NUMBER, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisLabelColor', DataType.STRING, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisColor', DataType.STRING, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisWidthRatio', DataType.FLOAT, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisWidthMin', DataType.NUMBER, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisScaleMarkSizeRatio', DataType.FLOAT, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisScaleMarkSizeMin', DataType.NUMBER, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisUnlabeledScaleSizeRatio', DataType.FLOAT, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisScaleMarkPreferredCount', DataType.NUMBER, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisLabelPaddingRatio', DataType.FLOAT, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisScaleLabelPaddingRatio', DataType.NUMBER, SpectrumClass, axisPrefixes);
+
+		return result;
+	}
+
+	// hack
+	var proto = ClassEx.getPrototype(Kekule.PropertyEditor.ChemRender2DOptionsEditor);
+	proto.CHILD_FIELD_INFOS = proto.CHILD_FIELD_INFOS.concat(getSpectrumObjRenderOptionFieldList());
+})();
 
 /**
  * Helper Util class to render coordinate axises in spectrum.
@@ -410,7 +484,12 @@ Kekule.Render.CoordAxisRender2DUtils = {
 			drawBridge.addToGroup(elem, result);
 			occupiedSizeOnSecondaryDir += elementSizes.axisLabel[secondaryAxis] + elementSizes.axisLabelPadding[secondaryAxis] * 2;
 		}
-		var axisRenderOptions = rOptions.axis;
+		var axisRenderOptions = Object.create(rOptions.axis);
+		if (!axisRenderOptions.strokeColor)
+			axisRenderOptions.strokeColor = axisRenderOptions.color;
+		if (!axisRenderOptions.fillColor)
+			axisRenderOptions.fillColor = axisRenderOptions.color;
+
 		// draw scale markers and scale labels
 		if (scales && scaleLabels)
 		{
@@ -802,7 +881,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		};
 		var getAxisRenderOptionValue = function(options, fieldName, axisPrefix)
 		{
-			return oneOf(ops['spectrum_' + axisPrefix + fieldName], ops['spectrum_' + fieldName]);
+			return oneOf(options['spectrum_' + axisPrefix + fieldName.upperFirst()], options['spectrum_' + fieldName]);
 		};
 		var getActualSpectrumLengthValue = function(options, fieldName, axisPrefix, refLength, unitLength)
 		{
