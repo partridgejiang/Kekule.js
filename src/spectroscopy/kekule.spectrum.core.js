@@ -1014,7 +1014,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			for (var i = 0, l = result.length; i < l; ++i)
 			{
 				var v = result[i];
-				if (DataType.isUndefinedValue(v))  // maybe omitted? check if it is a continous variable
+				if (DataType.isUndefinedValue(v) || DataType.isNullValue(v))  // maybe omitted? check if it is a continous variable
 				{
 					var range = this.getContinuousVarRange(i);
 					if (range)
