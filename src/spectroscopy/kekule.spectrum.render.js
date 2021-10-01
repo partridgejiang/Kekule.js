@@ -1076,7 +1076,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	/** @private */
 	_getDisplayRangeOfSections: function(spectrum, spectrumData, sections, varInfos, renderOptions)
 	{
-		var dataRange = spectrumData.getDisplayRangeOfSections(sections, null, true);
+		var dataRange = spectrumData.getDisplayRangeOfSections(sections, null, {autoCalc: true});
 
 		// adjust the dataRange with render options
 		var calcVisibleRange = function(dataRangeOfVar, varSymbol, isDependentVar, renderOptions)

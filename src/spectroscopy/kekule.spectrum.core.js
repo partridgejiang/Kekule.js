@@ -630,11 +630,16 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	/**
 	 * Returns the range when displaying spectrum of a variable.
 	 * @param {Variant} varNameOrIndexOrDef
-	 * @param {Bool} autoCalc If true, when explicit display range is not set, the number range of variable will be calculated and returned.
-	 * @returns {Hash} Hash of {fromValue, toValue}
+	 * @param {Hash} options May include fields:
+	 *  {
+	 *    autoCalc: Bool. If true, when explicit display range is not set, the number range of variable will be calculated and returned.
+	 *    basedOnInternalUnit: Bool. If true, the returned value will be based on internal unit rather than the external unit of variable.
+	 *  }
+	 * @returns {Hash} Hash of {min, max}
 	 */
-	getVarDisplayRange: function(varIndexOrNameOrDef, autoCalc)
+	getVarDisplayRange: function(varIndexOrNameOrDef, options)
 	{
+		var op = options || {};
 		//var varDef = this.getVar
 		var varIndex = this.getLocalVarInfoIndex(varIndexOrNameOrDef);
 		var info = this.getLocalVarInfo(varIndex);
@@ -645,34 +650,52 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			var varDef = this.getLocalVarDef(varIndex);
 			result = varDef.getInfoValue('displayRange');
 		}
-		if (!result && autoCalc)
-			result = this.calcDataRange(varIndex)[info.symbol];
+		/*
+		if (!result && op.autoCalc)
+			result = this.calcDataRange(varIndex, {basedOnInternalUnit: true})[info.symbol];  // get range with internal unit first
 			//result = this.calcDataRange(varIndexOrNameOrDef)[info.varDef.getSymbol()];
-		// do not forget to do unit conversion
-		var fieldNames = Kekule.ObjUtils.getOwnedFieldNames(result);
-		for (var i = 0, l = fieldNames.length; i < l; ++i)
+		// do not forget to do unit conversion if necessary
+		if (!op.basedOnInternalUnit)
 		{
-			var fname = fieldNames[i];
-			result[fname] = this._convertVarValueToExternal(result[fname], varIndex);
+			var fieldNames = Kekule.ObjUtils.getOwnedFieldNames(result);
+			for (var i = 0, l = fieldNames.length; i < l; ++i)
+			{
+				var fname = fieldNames[i];
+				result[fname] = this._convertVarValueToExternal(result[fname], varIndex);
+			}
+			// after conversion, the min/max values may be reversed
+			if (result && result.min > result.max)
+			{
+				var temp = result.min;
+				result.min = result.max;
+				result.max = temp;
+			}
 		}
-		// after conversion, the min/max values may be reversed
-		if (result && result.min > result.max)
-		{
-			var temp = result.min;
-			result.min = result.max;
-			result.max = temp;
-		}
+		*/
+		if (!result && op.autoCalc)
+			result = this.calcDataRange(varIndex, options)[info.symbol];
 		return result;
 	},
 	/**
 	 * Set the range when displaying spectrum of a variable.
 	 * @param {Variant} varNameOrIndexOrDef
-	 * @param {Number} fromValue
-	 * @param {Number} toValue
+	 * @param {Number} minValue
+	 * @param {Number} maxValue
+	 * @param {Hash} options Extra options, may include fields:
+	 *   {
+	 *     basedOnExternalUnit: Bool
+	 *   }
 	 */
-	setVarDisplayRange: function(varIndexOrNameOrDef, fromValue, toValue)
+	setVarDisplayRange: function(varIndexOrNameOrDef, minValue, maxValue, options)
 	{
-		this.setLocalVarInfoValue(varIndexOrNameOrDef, 'displayRange', {'fromValue': fromValue, 'toValue': toValue});
+		var op = options || {};
+		var range = {'min': minValue, 'max': maxValue};
+		if (op.basedOnExternalUnit)  // need to convert values to internal unit first
+		{
+			var varIndex = this.getLocalVarInfoIndex(varIndexOrNameOrDef);
+			range = this._convertDataRangeToInternalUnit(range, varIndex);
+		}
+		this.setLocalVarInfoValue(varIndexOrNameOrDef, 'displayRange', range);
 		return this;
 	},
 	/**
@@ -688,10 +711,14 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 * Returns display range of variables.
 	 * @param {Array} targetVariables Array of variable definition or symbol.
 	 *   If not set, all variables will be considered.
-	 * @param {Bool} autoCalc If true, when explicit display range is not set, the number range of variable will be calculated and returned.
+	 * @param {Hash} options May include fields:
+	 *  {
+	 *    autoCalc: Bool. If true, when explicit display range is not set, the number range of variable will be calculated and returned.
+	 *    basedOnInternalUnit: Bool. If true, the returned value will be based on internal unit rather than the external unit of variable.
+	 *  }
 	 * @returns {Hash}
 	 */
-	getDisplayRangeOfVars: function(targetVariables, autoCalc)
+	getDisplayRangeOfVars: function(targetVariables, options)
 	{
 		var result = {};
 		if (!targetVariables)
@@ -699,7 +726,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		for (var i = 0, l = targetVariables.length; i < l; ++i)
 		{
 			var symbol = this._varToVarSymbol(targetVariables[i]);
-			result[symbol] = this.getVarDisplayRange(targetVariables[i], autoCalc);
+			result[symbol] = this.getVarDisplayRange(targetVariables[i], options);
 		}
 		return result;
 	},
@@ -756,10 +783,15 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 * regardless of whether the external unit is set or not.
 	 * @param {Array} targetVariables Array of variable definition or symbol.
 	 *   If not set, all variables will be calculated.
+	 * @param {Hash} options Extra calculation options, may include fields:
+	 *   {
+	 *    basedOnInternalUnit: Bool. If true, the returned value will be based on internal unit rather than the external unit of variable.
+	 *  }
 	 * @returns {Hash}
 	 */
-	calcDataRange: function(targetVariables)
+	calcDataRange: function(targetVariables, options)
 	{
+		var op = options || {};
 		// since calculation of data range is a time-consuming job, here we cache the result
 		var targetVarSymbols = this._varToVarSymbols(targetVariables);
 
@@ -808,7 +840,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 						ranges[symbol].max = notNum(ranges[symbol].max) ? peakRootValue[symbol] : Math.max(ranges[symbol].max, peakRootValue[symbol]);
 					}
 				}
-			}, null, {keepInternalUnitValue: true});
+			}, null, {basedOnInternalUnit: true}); // here we use the internal unit, to keep the cache with the same unit
 
 			// cache the range values
 			for (var i = 0, l = remainingVarSymbols.length; i < l; ++i)
@@ -836,7 +868,56 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		*/
 		//console.log(this.getMode(), peakRoot, ranges);
 
+		if (!op.basedOnInternalUnit)
+		{
+			for (var i = 0, l = targetVarSymbols.length; i < l; ++i)
+			{
+				var symbol = targetVarSymbols[i];
+				ranges[symbol] = this._convertDataRangeToExternalUnit(ranges[symbol], i);
+			}
+		}
+
 		return ranges;
+	},
+	/** @private */
+	_convertDataRangeToExternalUnit: function(range, varIndex)
+	{
+		if (!range)
+			return range;
+		var fieldNames = ['min', 'max'];
+		for (var i = 0, l = fieldNames.length; i < l; ++i)
+		{
+			var fname = fieldNames[i];
+			range[fname] = this._convertVarValueToExternal(range[fname], varIndex);
+		}
+		// after conversion, the min/max values may be reversed
+		if (range.min > range.max)
+		{
+			var temp = range.min;
+			range.min = range.max;
+			range.max = temp;
+		}
+		return range;
+	},
+	/** @private */
+	_convertDataRangeToInternalUnit: function(range, varIndex)
+	{
+		if (!range)
+			return range;
+		var fieldNames = ['min', 'max'];
+		for (var i = 0, l = fieldNames.length; i < l; ++i)
+		{
+			var fname = fieldNames[i];
+			range[fname] = this._convertVarValueToInternal(range[fname], varIndex);
+		}
+		// after conversion, the min/max values may be reversed
+		if (range.min > range.max)
+		{
+			var temp = range.min;
+			range.min = range.max;
+			range.max = temp;
+		}
+		return range;
 	},
 
 	/**
@@ -845,10 +926,15 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 * regardless of whether the external unit is set or not.
 	 * @param {Array} targetVariables Array of variable definition or symbol.
 	 *   If not set, all variables will be calculated.
+	 * @param {Hash} options Extra calculation options, may include fields:
+	 *  {
+	 *    basedOnInternalUnit: Bool. If true, the returned value will be based on internal unit rather than the external unit of variable.
+	 *  }
 	 * @returns {Hash}
 	 */
-	calcDataAverage: function(targetVariables)
+	calcDataAverage: function(targetVariables, options)
 	{
+		var op = options || {};
 		var targetVarSymbols = this._varToVarSymbols(targetVariables);
 		var averages = {};
 		var averageCache = this._cache.averages;
@@ -893,7 +979,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 					sums[symbol] += value;
 					++counts[symbol];
 				}
-			}, null, {keepInternalUnitValue: true});
+			}, null, {basedOnInternalUnit: true});
 
 			// cache the average values
 			for (var i = 0, l = remainingVarSymbols.length; i < l; ++i)
@@ -901,6 +987,15 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 				var symbol = remainingVarSymbols[i];
 				averages[symbol] = sums[symbol] / counts[symbol];
 				averageCache[symbol] = averages[symbol];
+			}
+		}
+
+		if (!op.basedOnInternalUnit)
+		{
+			for (var i = 0, l = targetVarSymbols.length; i < l; ++i)
+			{
+				var symbol = targetVarSymbols[i]
+				averages[symbol] = this._convertVarValueToExternal(averages[symbol, i]);
 			}
 		}
 
@@ -946,7 +1041,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		for (var i = 0, l = Math.min(symbols.length, arrayValue.length); i < l; ++i)
 		{
 			var value;
-			if (!options.keepInternalUnitValue)
+			if (!options.basedOnInternalUnit)
 				value = this._convertVarValueToExternal(arrayValue[i], i);
 			else
 				value = arrayValue[i];
@@ -957,6 +1052,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	/** @private */
 	_convertVarValueToNewUnit: function(value, varDef, fromUnit, toUnit)
 	{
+		if (!Kekule.NumUtils.isNormalNumber(value))  // not a number, usually can not be converted
+			return value;
 		//return Kekule.UnitUtils.convertValue(value, fromUnit, toUnit);
 		return Kekule.Spectroscopy.DataValueConverterManager.doConvert(value, fromUnit, toUnit, this, this.getParent());
 	},
@@ -970,12 +1067,27 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	_convertVarValueToExternal: function(value, varIndex)
 	{
 		var result = value;
-		if (!Kekule.NumUtils.isNormalNumber(value))  // not a number, usually can not be converted
-			return result;
 		var varDef = this.getLocalVarDef(varIndex);
 		if (varDef && varDef.hasDifferentExternalUnit && varDef.hasDifferentExternalUnit())  // need to do a value conversion
 		{
 			result = this._convertVarValueToNewUnit(value, varDef, varDef.getInternalUnit(), varDef.getActualExternalUnit());
+		}
+		return result;
+	},
+	/**
+	 * Convert a value with external unit to the one with internal unit.
+	 * @param {Number} value
+	 * @param {Int} varIndex
+	 * @returns {Number} value
+	 * @private
+	 */
+	_convertVarValueToInternal: function(value, varIndex)
+	{
+		var result = value;
+		var varDef = this.getLocalVarDef(varIndex);
+		if (varDef && varDef.hasDifferentExternalUnit && varDef.hasDifferentExternalUnit())  // need to do a value conversion
+		{
+			result = this._convertVarValueToNewUnit(value, varDef, varDef.getActualExternalUnit(), varDef.getInternalUnit());
 		}
 		return result;
 	},
@@ -1535,27 +1647,35 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	 * @param {Kekule.Spectroscopy.SpectrumDataSection} section
 	 * @param {Array} targetVariables Array of variable definition or symbol.
 	 *   If not set, all variables will be calculated.
-	 * @param {Bool} autoCalc If true, when explicit display range is not set, the number range of variable will be calculated and returned.
+	 * @param {Hash} options May include fields:
+	 *  {
+	 *    autoCalc: Bool. If true, when explicit display range is not set, the number range of variable will be calculated and returned.
+	 *    basedOnInternalUnit: Bool. If true, the returned value will be based on internal unit rather than the external unit of variable.
+	 *  }
 	 * @returns {Hash}
 	 */
-	getDisplayRangeOfSection: function(section, targetVariables, autoCalc)
+	getDisplayRangeOfSection: function(section, targetVariables, options)
 	{
-		return section.getDisplayRangeOfVars(targetVariables, autoCalc);
+		return section.getDisplayRangeOfVars(targetVariables, options);
 	},
 	/**
 	 * Returns the display range of a set of sections.
 	 * @param {Array} sections
 	 * @param {Array} targetVariables Array of variable definition or symbol.
 	 *   If not set, all variables will be calculated.
-	 * @param {Bool} autoCalc If true, when explicit display range is not set, the number range of variable will be calculated and returned.
+	 * @param {Hash} options May include fields:
+	 *  {
+	 *    autoCalc: Bool. If true, when explicit display range is not set, the number range of variable will be calculated and returned.
+	 *    basedOnInternalUnit: Bool. If true, the returned value will be based on internal unit rather than the external unit of variable.
+	 *  }
 	 * @returns {Hash}
 	 */
-	getDisplayRangeOfSections: function(sections, targetVariables, autoCalc)
+	getDisplayRangeOfSections: function(sections, targetVariables, options)
 	{
 		var result = {};
 		for (var i = 0, l = sections.length; i < l; ++i)
 		{
-			var range = sections[i].getDisplayRangeOfVars(targetVariables, autoCalc);
+			var range = sections[i].getDisplayRangeOfVars(targetVariables, options);
 			result = Kekule.Spectroscopy.Utils.mergeDataRange(result, range);
 		}
 		return result;
