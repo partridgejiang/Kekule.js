@@ -41,7 +41,7 @@ Kekule.IO.Jcamp.DxUtils = {
 		'1/CM': KU.Frequency.WAVE_NUMBER,
 		'MICROMETERS': KU.Length.MICROMETER,
 		'NANOMETERS': KU.Length.NANOMETER,
-		'TRANSMITTANCE': KU.OpticalTransmittance.TRANSMITTANCE,
+		'TRANSMITTANCE': KU.OpticalTransmittance.TRANSMITTANCE_PERCENT,
 		'REFLECTANCE': KU.OpticalReflectance.REFLECTANCE,
 		'ABSORBANCE': KU.OpticalAbsorbance.ABSORBANCE,
 		'KUBELKA-MUNK': KU.OpticalKubelkaMunk.KUBELKA_MUNK,
@@ -239,7 +239,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	/** @private */
 	doStoreSpectrumTitleLdr: function(ldr, block, chemObj)
 	{
-		chemObj.setName(Jcamp.LdrValueParser.parseValue(ldr));
+		chemObj.setTitle(Jcamp.LdrValueParser.parseValue(ldr));
 	},
 	/** @private */
 	doStoreDataVarInfoLdr: function(ldr, block, chemObj)
