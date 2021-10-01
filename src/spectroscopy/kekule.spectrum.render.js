@@ -155,6 +155,23 @@ ClassEx.extendMethod(Kekule.Render.Render2DConfigs, 'initPropDefValues',
 		this.setPropStoreFieldValue('spectrumDisplayConfigs', new Kekule.Render.SpectrumDisplayConfigs());
 	});
 
+// extents Spectrum class to init with the default size
+ClassEx.extendMethod(Kekule.Spectroscopy.Spectrum, 'initPropValues',
+	function(originMethod)
+	{
+		originMethod();
+		var size2D = this.getSize2D();
+		if (!size2D)  // initial a default 2D size of spectrum
+		{
+			var configs = Kekule.Render.Render2DConfigs.getInstance();
+			var sizeRatio = configs.getSpectrumDisplayConfigs().getDefSize2DRatio();
+			var refLength = configs.getLengthConfigs().getDefScaleRefLength();
+			if (sizeRatio && refLength)
+				size2D = CU.multiply(sizeRatio, refLength);
+			this.setSize2D(size2D);
+		}
+	});
+
 
 /**
  * Helper Util class to render coordinate axises in spectrum.
@@ -668,8 +685,10 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var contextCoord2 = this.transformCoordToContext(context, chemObj, coord2);
 		var size = Kekule.CoordUtils.substract(contextCoord2, contextCoord1);
 
-		// since baseCoord is at the center of object, we need calculate out the corner coord
-		var drawCoord = {x: baseCoord.x - size.x / 2, y: baseCoord.y - size.y / 2};
+		// deprecated: since baseCoord is at the center of object, we need calculate out the corner coord
+		// var drawCoord = {x: baseCoord.x - size.x / 2, y: baseCoord.y - size.y / 2};
+		// draw from the corner coord of spectrum
+		var drawCoord = baseCoord;
 		var contextBoxCoord1 = drawCoord;
 		var contextBoxCoord2 = Kekule.CoordUtils.add(drawCoord, size);
 		var contextBox = Kekule.BoxUtils.createBox(contextBoxCoord1, contextBoxCoord2);
