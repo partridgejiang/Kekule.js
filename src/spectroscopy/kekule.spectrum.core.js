@@ -294,7 +294,7 @@ Kekule.Spectroscopy.SpectrumVarDefinition = Class.create(Kekule.VarDefinition,
  * @param {Array} localVariables Array of variable definition objects or symbols.
  *
  * @property {Kekule.Spectroscopy.SpectrumData} parent Parent spectrum data object.
- * @property {Array} localVarInfos Stores the local variable information. Each item is a hash containing fields {'varDef', 'range'(optional)}.
+ * @property {Array} localVarInfos Stores the local variable information. Each item is a hash containing fields {'symbol', 'range'(optional)}.
  * @property {Array} varSymbols Array of variable symbols such as ['X', 'Y'].
  * @property {Int} mode Data mode of section, continuous or peak.
  * @property {Hash} peakRoot
@@ -355,28 +355,31 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 				return result;
 			}});
 		*/
-		this.defineProp('localVarInfos', {'dataType': DataType.ARRAY, 'setter': null, 'serializable': false});
-		this.defineProp('localVarSymbols', {'dataType': DataType.ARRAY, 'scope': PS.PRIVATE,
+		this.defineProp('localVarInfos', {'dataType': DataType.ARRAY, 'setter': null});
+		this.defineProp('localVarSymbols', {'dataType': DataType.ARRAY, 'scope': PS.PRIVATE, 'serializable': false,
 			'getter': function() {
 				var result = [];
 				var list = this.getLocalVarInfos();
-				for (var j = 0, jj = list.length; j < jj; ++j)
+				if (list && list.length)
 				{
-					var info = list[j];
-					result.push(info.varDef.getSymbol());
+					for (var j = 0, jj = list.length; j < jj; ++j)
+					{
+						var info = list[j];
+						//result.push(info.varDef.getSymbol());
+						result.push(info.symbol);
+					}
 				}
+				/*
+				else // localVarInfos is not initialized yet, read from the storage
+					result = this.getPropStoreFieldValue('localVarSymbols');
+				*/
 				return result;
 			},
 			'setter': function(value)
 			{
 				var v = value || [];
-				var infos = [];
-				for (var i = 0, l = v.length; i < l; ++i)
-				{
-					var item = v[i];
-					this._pushLocalVariable(item, infos);
-				}
-				this.setPropStoreFieldValue('localVarInfos', infos);
+				//this.setPropStoreFieldValue('localVarSymbols', v);
+				this._updateLocalVarInfosFromSymbols(v);
 			}
 		});
 		this.defineProp('mode', {'dataType': DataType.INT, 'enumSource': Kekule.Spectroscopy.DataMode,
@@ -401,6 +404,32 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		this.setMode(Kekule.Spectroscopy.DataMode.CONTINUOUS);
 	},
 
+	/* @ignore */
+	/*
+	parentChanged: function(newParent, oldParent)
+	{
+		//console.log('parent changed', newParent && newParent.getClassName(), oldParent);
+		var result = this.tryApplySuper('parentChanged', newParent, oldParent);
+		// after changing of parent the local var info may be changed as well
+		this._updateLocalVarInfosFromSymbols(this.getLocalVarSymbols());
+		return result;
+	},
+	*/
+
+	/**
+	 * Returns the actual parent SpectrumData object.
+	 * @returns {Kekule.Spectroscopy.Spectrum}
+	 * @private
+	 */
+	getParentSpectrum: function()
+	{
+		var p = this.getParent();
+		while (p && !(p instanceof Kekule.Spectroscopy.Spectrum) && p.getParent)
+		{
+			p = p.getParent();
+		}
+		return p;
+	},
 	/**
 	 * Returns the variable definition of parent spectrum data.
 	 * @returns {Array}
@@ -411,17 +440,33 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		return (parent && parent.getVariable()) || [];
 	},
 	/** @private */
-	_pushLocalVariable: function(varDefOrSymbol, targetArray)
+	_updateLocalVarInfosFromSymbols: function(varSymbols, silent)
+	{
+		var v = varSymbols || [];
+		var infos = [];
+		var parent = this.getParentSpectrum();
+		for (var i = 0, l = v.length; i < l; ++i)
+		{
+			var item = v[i];
+			this._pushLocalVariable(parent, item, infos);
+		}
+		//console.log('update local var infos', varSymbols, infos, parent);
+		this.setPropStoreFieldValue('localVarInfos', infos);
+		//this.setLocalVarInfos(infos);
+		this.notifyPropSet('localVarInfos', infos, silent);
+	},
+	/** @private */
+	_pushLocalVariable: function(parent, varSymbol, targetArray)
 	{
 		if (!targetArray)
 			targetArray = this.getLocalVarInfos();
-		var parent = this.getParent();
-		if (parent)
+		//var parent = this.getParent();
+		if (parent && parent.getVariable)
 		{
-			var varDef = parent.getVariable(varDefOrSymbol);
+			var varDef = parent.getVariable(varSymbol);
 			if (varDef)
 			{
-				targetArray.push({'varDef': varDef});
+				targetArray.push({/*'varDef': varDef,*/ 'symbol': varSymbol});
 			}
 		}
 	},
@@ -438,10 +483,18 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			result = varIndexOrNameOrDef;
 		else // if (varIndexOrNameOrDef instanceof Kekule.Spectroscopy.SpectrumVarDefinition)
 		{
+			var symbol = varIndexOrNameOrDef.getSymbol? varIndexOrNameOrDef.getSymbol(): varIndexOrNameOrDef;
 			for (var i = 0, l = localVarInfos.length; i < l; ++i)
 			{
+				/*
 				var varDef = localVarInfos[i].varDef;
 				if (varDef === varIndexOrNameOrDef || varDef.getSymbol() === varIndexOrNameOrDef)
+				{
+					result = i;
+					break;
+				}
+				*/
+				if (symbol === localVarInfos[i].symbol)
 				{
 					result = i;
 					break;
@@ -458,7 +511,20 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	getLocalVarInfo: function(varIndexOrNameOrDef)
 	{
 		var index = this.getLocalVarInfoIndex(varIndexOrNameOrDef);
-		return (index >= 0)? this.getLocalVarInfos()[index]: null;
+		var result = (index >= 0)? this.getLocalVarInfos()[index]: null;
+		/*
+		if (result)
+		{
+			var parent = this.getParentSpectrum();
+			if (parent)
+			{
+				var symbol = result.symbol;
+				result = Object.create(result);  // avoid affect the original hash object
+				result.varDef = parent.getVariable(symbol);
+			}
+		}
+		*/
+		return result;
 		/*
 		var result;
 		var localVarInfos = this.getLocalVarInfos();
@@ -508,7 +574,10 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	getLocalVarDef: function(varIndexOrNameOrDef)
 	{
-		return this.getLocalVarInfoValue(varIndexOrNameOrDef, 'varDef');
+		//return this.getLocalVarInfoValue(varIndexOrNameOrDef, 'varDef');
+		var symbol = this.getLocalVarInfoValue(varIndexOrNameOrDef, 'symbol');
+		var parent = this.getParentSpectrum();
+		return parent && parent.getVariable(symbol);
 	},
 	/**
 	 * Returns the from/to value of a continuous variable.
@@ -567,18 +636,19 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	getVarDisplayRange: function(varIndexOrNameOrDef, autoCalc)
 	{
 		//var varDef = this.getVar
-		var info = this.getLocalVarInfo(varIndexOrNameOrDef);
+		var varIndex = this.getLocalVarInfoIndex(varIndexOrNameOrDef);
+		var info = this.getLocalVarInfo(varIndex);
 		var result = info.displayRange; // this.getLocalVarInfoValue(varIndexOrNameOrDef, 'displayRange');
 		if (!result)  // check the var definition
 		{
-			var varDef = info.varDef;
+			//var varDef = info.varDef;
+			var varDef = this.getLocalVarDef(varIndex);
 			result = varDef.getInfoValue('displayRange');
 		}
 		if (!result && autoCalc)
-			result = this.calcDataRange(varIndexOrNameOrDef)[info.varDef.getSymbol()];
+			result = this.calcDataRange(varIndex)[info.symbol];
+			//result = this.calcDataRange(varIndexOrNameOrDef)[info.varDef.getSymbol()];
 		// do not forget to do unit conversion
-		var varDef = info.varDef;
-		var varIndex = this.getLocalVarInfoIndex(varIndexOrNameOrDef);
 		var fieldNames = Kekule.ObjUtils.getOwnedFieldNames(result);
 		for (var i = 0, l = fieldNames.length; i < l; ++i)
 		{
@@ -586,7 +656,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			result[fname] = this._convertVarValueToExternal(result[fname], varIndex);
 		}
 		// after conversion, the min/max values may be reversed
-		if (result.min > result.max)
+		if (result && result.min > result.max)
 		{
 			var temp = result.min;
 			result.min = result.max;
@@ -637,9 +707,14 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	/** @private */
 	_varToVarSymbol: function(targetVar)
 	{
+		/*
 		var info = this.getLocalVarInfo(targetVar);
 		if (info)
 			return info.varDef.getSymbol();
+		*/
+		var varDef = this.getLocalVarDef(targetVar);
+		if (varDef)
+			return varDef.getSymbol();
 		else
 			return null;
 	},
@@ -666,7 +741,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var varInfos = this.getLocalVarInfos();
 		for (var i = 0, l = varInfos.length; i < l; ++i)
 		{
-			var varDef = varInfos[i].varDef;
+			//var varDef = varInfos[i].varDef;
+			var varDef = this.getLocalVarDef(i);
 			if (varDef.getDependency() !== Kekule.VarDependency.INDEPENDENT)
 			{
 				result[varDef.getSymbol()] = 0;
@@ -834,11 +910,11 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	getContinuousVarSymbols: function()
 	{
 		var result = [];
-		var varInfos = this.getLocalVarInfos(varIndexOrNameOrDef);
+		var varInfos = this.getLocalVarInfos();
 		for (var i = 0, l = varInfos.length; i < l; ++i)
 		{
 			if (this.getContinuousVarRange(i))
-				result.push(varInfos[i].varDef.getSymbol());
+				result.push(varInfos[i].symbol);
 		}
 		return result;
 	},
@@ -1170,19 +1246,17 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	{
 		//this.setPropStoreFieldValue('dataItems', []);
 		this.tryApplySuper('initialize', [id]);
-		if (variables)
-			this.setPropStoreFieldValue('variables', variables? AU.clone(variables): []);
+		this.setPropStoreFieldValue('variables', variables? AU.clone(variables): []);
 		var sections = new Kekule.ChemObjList(null, Kekule.Spectroscopy.SpectrumDataSection, true);
 		this.setPropStoreFieldValue('sections', sections);
-		this.setPropStoreFieldValue('parent', parent);
-		sections.setParent(parent || this);
+		this.setParent(parent);
 		//this.createSection(this.getVariables());  // create a default section
 	},
 	doFinalize: function()
 	{
 		//this.clear();
 		this.getSections().finalize();
-		var variables = this.getVariables();
+		var variables = this.getVariables() || [];
 		for (var i = 0, l = variables.length; i < l; ++i)
 		{
 			variables[i].finalize();
@@ -1193,8 +1267,31 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('parent', {'dataType': 'Kekule.Spectroscopy.Spectrum', 'setter': null, 'serializable': false});
-		this.defineProp('sections', {'dataType': 'Kekule.ChemObjList', 'setter': null});
+		this.defineProp('parent', {'dataType': 'Kekule.Spectroscopy.Spectrum', 'serializable': false,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('parent', value);
+				var sections = this.getSections();
+				if (sections)
+					sections.setParent(this.getParent() || this);
+			}
+		});
+		this.defineProp('sections', {'dataType': 'Kekule.ChemObjList',
+			'setter': function(value)
+			{
+				var old = this.getSections();
+				if (old)
+				{
+					old.finalize();
+				}
+				if (value)
+				{
+					value._transparent = true;  // force the obj list be transparent
+					value.setParent(this.getParent() || this);
+				}
+				this.setPropStoreFieldValue('sections', value);
+			}
+		});
 		this.defineProp('autoCreateSection', {'dataType': DataType.BOOL});
 		this.defineProp('activeSectionIndex', {'dataType': DataType.INT,
 			'getter': function()
@@ -1839,7 +1936,21 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	{
 		this.defineProp('spectrumType', {'dataType': DataType.STRING});
 		this.defineProp('name', {'dataType': DataType.STRING});
-		this.defineProp('data', {'dataType': 'Kekule.Spectroscopy.SpectrumData', 'setter': null});
+		this.defineProp('data', {'dataType': 'Kekule.Spectroscopy.SpectrumData',
+			'setter': function(value)
+			{
+				var old = this.getData();
+				if (old)
+				{
+					old.finalize();
+				}
+				if (value)
+				{
+					value.setPropValue('parent', this, true);
+				}
+				this.setPropStoreFieldValue('data', value);
+			}
+		});
 		this.defineProp('spectrumParams',
 			{
 				'dataType': DataType.HASH,
@@ -1929,6 +2040,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		var propOptions = Object.create(dataPropInfo);
 		propOptions.getter = null;
 		propOptions.setter = null;
+		propOptions.serializable = false;
 		if (dataPropInfo.getter)
 		{
 			propOptions.getter = function()
