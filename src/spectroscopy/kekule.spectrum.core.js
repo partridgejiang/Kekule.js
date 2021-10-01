@@ -1856,7 +1856,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 				'setter': null
 			});
 		//this.defineProp('title', {'dataType': DataType.STRING});
-		this._defineInfoProperty('title');
+		//this._defineInfoProperty('title');
 		//this.defineProp('molecule', {'dataType': 'Kekule.Molecule'});
 		this._defineDataDelegatedProperty('variables');
 		this._defineDataDelegatedProperty('dataSections', 'sections');
@@ -1891,13 +1891,14 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		this._defineDataDelegatedMethod('setContinuousVarRange');
 		this._defineDataDelegatedMethod('clearContinuousVarRange');
 	},
-	/**
+	/*
 	 * Defines property which storing value in {@link Kekule.ChemObject.info}.
 	 * @param {String} propName
 	 * @param {String} infoFieldName
 	 * @param {Hash} options
 	 * @private
 	 */
+	/*
 	_defineInfoProperty: function(propName, infoFieldName, options)
 	{
 		var defs;
@@ -1913,6 +1914,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		})();
 		return this.defineProp(propName, defs);
 	},
+	*/
 	/**
 	 * Defines property which reflecting the property values in {@link Kekule.Spectroscopy.Spectrum.data}.
 	 * @param {String} propName
