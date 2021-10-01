@@ -643,25 +643,29 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		//var varDef = this.getVar
 		var varIndex = this.getLocalVarInfoIndex(varIndexOrNameOrDef);
 		var info = this.getLocalVarInfo(varIndex);
-		var result = info.displayRange; // this.getLocalVarInfoValue(varIndexOrNameOrDef, 'displayRange');
+		var result = info.displayRange? Object.extend({}, info.displayRange): null;  // avoid affect the original values
 		if (!result)  // check the var definition
 		{
 			//var varDef = info.varDef;
 			var varDef = this.getLocalVarDef(varIndex);
-			result = varDef.getInfoValue('displayRange');
+			var varDefRange = varDef.getInfoValue('displayRange');
+			if (varDefRange)
+				result = Object.extend({}, varDefRange);   // avoid affecting the original values
 		}
-		/*
+
 		if (!result && op.autoCalc)
 			result = this.calcDataRange(varIndex, {basedOnInternalUnit: true})[info.symbol];  // get range with internal unit first
 			//result = this.calcDataRange(varIndexOrNameOrDef)[info.varDef.getSymbol()];
 		// do not forget to do unit conversion if necessary
 		if (!op.basedOnInternalUnit)
 		{
+			result = this._convertDataRangeToExternalUnit(result, varIndex);
+			/*
 			var fieldNames = Kekule.ObjUtils.getOwnedFieldNames(result);
 			for (var i = 0, l = fieldNames.length; i < l; ++i)
 			{
 				var fname = fieldNames[i];
-				result[fname] = this._convertVarValueToExternal(result[fname], varIndex);
+				//result[fname] = this._convertVarValueToExternal(result[fname], varIndex);
 			}
 			// after conversion, the min/max values may be reversed
 			if (result && result.min > result.max)
@@ -670,10 +674,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 				result.min = result.max;
 				result.max = temp;
 			}
+			*/
 		}
-		*/
-		if (!result && op.autoCalc)
-			result = this.calcDataRange(varIndex, options)[info.symbol];
 		return result;
 	},
 	/**
@@ -2254,6 +2256,7 @@ Kekule.ClassDefineUtils.addStandardSizeSupport(Kekule.Spectroscopy.Spectrum);
 	var register = Kekule.Unit.register;
 	// IR
 	register('transmittance', 'transmittance', 'OpticalTransmittance', 1);  // IT/I0
+	register('transmittance%', 'transmittance_percent', 'OpticalTransmittance', 1e-2);  // IT/I0
 	register('reflectance', 'reflectance', 'OpticalReflectance', 1);  // IR/I0
 	register('absorbance', 'absorbance', 'OpticalAbsorbance', 1);  // log10(IR/I0)
 	register('Kubelka Munk', 'Kubelka_Munk', 'OpticalKubelkaMunk', 1);  // (1-R^2)/(2R)
