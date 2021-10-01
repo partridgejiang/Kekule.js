@@ -2038,6 +2038,7 @@ Kekule.Spectroscopy.SpectrumMS = {
  *
  * @property {String} spectrumType Type of spectrum, value from {@link Kekule.Spectroscopy.SpectrumType}.
  * @property {String} name Name of spectrum.
+ * @property {String} title Title of spectrum.
  * @property {Kekule.Spectroscopy.SpectrumData} data Spectrum data.
  * @property {Hash} spectrumParams Key spectrum parameters, e,g. the frequency of NMR.
  */
@@ -2066,6 +2067,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	{
 		this.defineProp('spectrumType', {'dataType': DataType.STRING});
 		this.defineProp('name', {'dataType': DataType.STRING});
+		this.defineProp('title', {'dataType': DataType.STRING});
 		this.defineProp('data', {'dataType': 'Kekule.Spectroscopy.SpectrumData',
 			'setter': function(value)
 			{
