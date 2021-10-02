@@ -1545,9 +1545,9 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 	doReadBlock: function(block, options)
 	{
 		var result;
-		if (block.blocks.length <= 0)  // less than 2 child blocks, no need to create object list
+		if (block.blocks.length <= 0)  // no child block, nothing will be returned
 		{
-			result = null;
+			return null;
 		}
 		else  // create obj list
 		{
@@ -1568,10 +1568,13 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 					var childObj = reader.doReadData(childBlock, options);    // use doReadData instead of readData, since child readers do not need to store srcInfo
 					if (childObj)
 					{
+						/*
 						if (!result)  // only one child block, returns this childObj directly
 							result = childObj;
 						else
 							result.appendChild(childObj);
+						*/
+						childObjs.push(childObj);
 					}
 				}
 				finally
@@ -1580,7 +1583,18 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 				}
 			}
 		}
-		return result;
+
+		if (childObjs.length <= 1)  // no need to return list, just an object only
+		{
+			result.finalize();
+			return childObjs[0];
+		}
+		else
+		{
+			for (var i = 0, l = childObjs.length; i < l; ++i)
+				result.appendChild(childObjs[i]);
+			return result;
+		}
 	},
 });
 jcampBlockReaderManager.register(Jcamp.BlockType.LINK, '*', Kekule.IO.Jcamp.LinkBlockReader);  // register
