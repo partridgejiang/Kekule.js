@@ -63,6 +63,8 @@ Kekule.IO.Jcamp.DxUtils = {
 	 */
 	dxUnitToMetricsUnitSymbol: function(unitStr)
 	{
+		if (!unitStr)
+			return '';
 		var map = Jcamp.DxUtils._dxUnitToMetricsObjMap;
 		var metricsObj = map[unitStr];
 		var result = metricsObj && metricsObj.symbol;
@@ -551,7 +553,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				}
 				else if (labelName === '.SOLVENTREFERENCE')
 				{
-					chemObj.setSpectrumParam('solventReference', Kekule.Scalar.create(value, Kekule.Unit.Ratio.PPM.symbol));
+					chemObj.setSpectrumParam('solventReference', Kekule.Scalar.create(value, Kekule.Unit.Ratio.MILLIONTH.symbol));
 				}
 				else if (labelName === '.DELAY')
 				{

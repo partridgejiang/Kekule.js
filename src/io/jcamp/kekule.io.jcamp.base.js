@@ -177,6 +177,7 @@ Kekule.IO.Jcamp.Utils = {
 		do
 		{
 			result = (lines[index] || '').trim();
+			++index;
 		}
 		while (!result && index < lines.length)
 		return result || '';
@@ -1445,7 +1446,7 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		var handlerMap = this.getLdrHandlerMap();
 		var handler = handlerMap[labelName] || handlerMap['_default'];
 		if (handler)
-		  handler(ldr, block, chemObj);
+			handler(ldr, block, chemObj);
 	},
 	/**
 	 * Process a block in the analysis tree.
