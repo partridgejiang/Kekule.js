@@ -359,7 +359,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		this.defineProp('localVarSymbols', {'dataType': DataType.ARRAY, 'scope': PS.PRIVATE, 'serializable': false,
 			'getter': function() {
 				var result = [];
-				var list = this.getLocalVarInfos();
+				var list = this.getActualLocalVarInfos();
 				if (list && list.length)
 				{
 					for (var j = 0, jj = list.length; j < jj; ++j)
@@ -437,7 +437,25 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	getParentVariables: function()
 	{
 		var parent = this.getParent();
-		return (parent && parent.getVariable()) || [];
+		return (parent && parent.getVariables()) || [];
+	},
+	/**
+	 * Returns the actual local variable infos.
+	 * User should use this method rather than ref to localVarInfos property.
+	 * @returns {Array}
+	 */
+	getActualLocalVarInfos: function()
+	{
+		var result = this.getLocalVarInfos();
+		if (!result || !result.length)  // inherit all from parent spectrum
+		{
+			var vars = this.getParentVariables();
+			for (var i = 0, l = vars.length; i < l; ++i)
+			{
+				result.push({'symbol': vars[i].symbol});
+			}
+		}
+		return result;
 	},
 	/** @private */
 	_updateLocalVarInfosFromSymbols: function(varSymbols, silent)
@@ -478,7 +496,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	getLocalVarInfoIndex: function(varIndexOrNameOrDef)
 	{
 		var result = -1;
-		var localVarInfos = this.getLocalVarInfos();
+		var localVarInfos = this.getActualLocalVarInfos();
 		if (typeof (varIndexOrNameOrDef) === 'number')
 			result = varIndexOrNameOrDef;
 		else // if (varIndexOrNameOrDef instanceof Kekule.Spectroscopy.SpectrumVarDefinition)
@@ -511,7 +529,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	getLocalVarInfo: function(varIndexOrNameOrDef)
 	{
 		var index = this.getLocalVarInfoIndex(varIndexOrNameOrDef);
-		var result = (index >= 0)? this.getLocalVarInfos()[index]: null;
+		var result = (index >= 0)? this.getActualLocalVarInfos()[index]: null;
 		/*
 		if (result)
 		{
@@ -527,7 +545,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		return result;
 		/*
 		var result;
-		var localVarInfos = this.getLocalVarInfos();
+		var localVarInfos = this.getActualLocalVarInfos();
 		if (typeof (varIndexOrNameOrDef) === 'number')
 			result = localVarInfos[varIndexOrNameOrDef];
 		else // if (varIndexOrNameOrDef instanceof Kekule.Spectroscopy.SpectrumVarDefinition)
@@ -588,7 +606,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	{
 		var parent = this.getParent();
 		var varInfo = this.getLocalVarInfo(varIndexOrNameOrDef);
-		return varInfo.continuousRange || (parent && parent.getContinuousVarRange && parent.getContinuousVarRange(varInfo.varDef));
+		return varInfo.continuousRange || (parent && parent.getContinuousVarRange && parent.getContinuousVarRange(varInfo.symbol));
 		/*
 		var result = this.getLocalVarInfoValue(varIndexOrNameOrDef, 'continuousRange');
 		if (!result)
@@ -767,7 +785,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	_getDefaultPeakRoot: function()
 	{
 		var result = {};
-		var varInfos = this.getLocalVarInfos();
+		var varInfos = this.getActualLocalVarInfos();
 		for (var i = 0, l = varInfos.length; i < l; ++i)
 		{
 			//var varDef = varInfos[i].varDef;
@@ -1011,7 +1029,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	getContinuousVarSymbols: function()
 	{
 		var result = [];
-		var varInfos = this.getLocalVarInfos();
+		var varInfos = this.getActualLocalVarInfos();
 		for (var i = 0, l = varInfos.length; i < l; ++i)
 		{
 			if (this.getContinuousVarRange(i))
