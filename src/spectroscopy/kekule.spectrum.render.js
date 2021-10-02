@@ -477,7 +477,6 @@ Kekule.Render.CoordAxisRender2DUtils = {
 				{'textBoxXAlignment': BXA.LEFT, 'textBoxYAlignment': BYA.CENTER});
 			if (!isAbscissa)
 				drawLabelOptions.transforms = [{'rotate': -Math.PI / 2, 'center': Object.extend({}, coord)}];
-			//console.log('draw axis label', coord);
 			//elem = drawBridge.drawRichText(context, coord, axisLabel, drawLabelOptions);
 			var textDrawResult = richTextDrawer.drawEx(context, coord, axisLabel, drawLabelOptions);
 			elem = textDrawResult.drawnObj;
@@ -613,7 +612,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 			else  // for ordinate axis, we need to draw the label with 90 deg rotation
 				axisLabelSize = {'y': axisLabelDim.width, 'x': axisLabelDim.height};
 			// console.log('axisLabelSize', Kekule.Render.RichTextUtils.toText(axisLabel), axisLabelSize);
-			axisLabelPaddingSize = {'x': (rOptions.axisLabel.padding || 0), 'y': (rOptions.axisLabel.padding || 0)};
+			axisLabelPaddingSize = {'x': (rOptions.axisLabel && rOptions.axisLabel.padding || 0), 'y': (rOptions.axisLabel && rOptions.axisLabel.padding || 0)};
 		}
 		// the scale marks
 		var axisOptions = rOptions.axis;
@@ -933,7 +932,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				'color': oneOf(getAxisRenderOptionValue(ops, 'axisColor', 'independent'), ops['color'])
 			});
 
-			if (ops['spectrum_displayIndependentAxisLabel'])
+			if (ops['spectrum_displayIndependentAxisLabel'] || ops['spectrum_displayIndependentAxisUnit'])
 			{
 				independentAxisOps['axisLabel'] = createSubOptions(ops, {
 					'fontFamily': getAxisRenderOptionValue(ops, 'axisLabelFontFamily', 'independent'),
@@ -994,7 +993,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				'color': oneOf(getAxisRenderOptionValue(ops, 'axisColor', 'dependent'), ops['color'])
 			});
 
-			if (ops['spectrum_displayDependentAxisLabel'])
+			if (ops['spectrum_displayDependentAxisLabel'] || ops['spectrum_displayDependentAxisUnit'])
 			{
 				dependentAxisOps['axisLabel'] = createSubOptions(ops, {
 					'fontFamily': getAxisRenderOptionValue(ops, 'axisLabelFontFamily', 'dependent'),
