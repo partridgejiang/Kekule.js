@@ -123,6 +123,25 @@ Kekule.Unit._categoryObjProto = {
 	setStandardUnit: function(unitObj)
 	{
 		this._standardUnit = unitObj;
+	},
+	/**
+	 * Returns all unit objects of this category.
+	 * @returns {Array}
+	 */
+	getAllUnits: function()
+	{
+		var keys = Kekule.ObjUtils.getOwnedFieldNames(this, false);
+		var result = [];
+		for (var i = 0, l = keys.length; i < l; ++i)
+		{
+			if (keys[i] !== '_standardUnit')
+			{
+				var v = this[keys[i]];
+				if (Kekule.ObjUtils.getPrototypeOf(v) === Kekule.Unit._unitObjProto)
+					result.push(v);
+			}
+		}
+		return result;
 	}
 };
 
