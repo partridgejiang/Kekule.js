@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Spectrum Viewer Test</title>
+	<script src="../../../src/kekule.js?locals=en,zh&language1=en_us&modules=chemWidget,spectroscopy&min=false"></script>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+	<style>
+		#chemViewer
+		{
+				width: 800px;
+				height: 600px;
+		}
+		#objInspector
+		{
+				width: 400px;
+		}
+    #objInspector .K-ValueListEditor-KeyCell
+		{
+				width: 300px;
+		}
+		section
+		{
+        border: 1px solid #ccc;
+				margin: 0.5em;
+				float: left;
+		}
+		input[type="number"], input[type="text"]
+		{
+				width: 8em;
+		}
+	</style>
+	<script>
+		var viewer, objInspector;
+		var initialConfigValues = {};
+
+		function getSpectrumDisplayConfigs()
+		{
+			return viewer.getRenderConfigs().getSpectrumDisplayConfigs();
+		}
+
+		function $(id)
+		{
+			return document.getElementById(id);
+		}
+		function getInputElemValue(elem)
+		{
+			var widget = Kekule.Widget.getWidgetOnElem(elem);
+			if (widget)
+				return widget.getValue();
+			else
+			{
+				if (elem.getAttribute('type') === 'checkbox')
+					return !!elem.checked;
+				else if (elem.getAttribute('type') === 'number')
+					return parseFloat(elem.value);
+				else
+					return elem.value;
+			}
+		}
+		function setInputElemValue(elem, value)
+		{
+			var widget = Kekule.Widget.getWidgetOnElem(elem);
+			if (widget)
+				return widget.setValue(value);
+			else
+			{
+				if (elem.getAttribute('type') === 'checkbox')
+					elem.checked = !!value;
+				else
+					elem.value = value;
+			}
+		}
+		function getAllConfigInputElems()
+		{
+			var rootElem = $('secController');
+			var configInputElems = rootElem.querySelectorAll('[data-config-prop]');
+			return configInputElems;
+		}
+
+		function reactInputElemChange(e)
+		{
+			var elem = e.target;
+			var widget = Kekule.Widget.getBelongedWidget(elem);
+			if (widget)
+			{
+				elem = widget.getElement();
+			}
+			var configPropName = elem.getAttribute('data-config-prop');
+			var value = getInputElemValue(elem);
+			getSpectrumDisplayConfigs().setPropValue(configPropName, value);
+			if (viewer.getChemObj())
+				viewer.repaint();
+		}
+
+		function resetConfigInputElemValues()
+		{
+			var configInputElems = getAllConfigInputElems();
+
+			configInputElems.forEach(function(elem) {
+				var configPropName = elem.getAttribute('data-config-prop');
+				var value = initialConfigValues[configPropName];
+				setInputElemValue(elem, value);
+			});
+
+			if (viewer.getChemObj())
+				viewer.repaint();
+		}
+
+		function initConfigValues(config)
+		{
+			if (!config)
+				config = getSpectrumDisplayConfigs();
+
+			var configInputElems = getAllConfigInputElems();
+
+			configInputElems.forEach(function(elem){
+				var configPropName = elem.getAttribute('data-config-prop');
+				if (!configPropName)
+				{
+					console.warn('Config prop name not set', elem);
+				}
+				else
+				{
+					if (!config.getPropInfo(configPropName))
+						console.warn('Config prop name not found', configPropName);
+					var value = config.getPropValue(configPropName);
+					initialConfigValues[configPropName] = value;
+					setInputElemValue(elem, value);
+				}
+			});
+		}
+
+		function init()
+		{
+			viewer = Kekule.Widget.getWidgetById('chemViewer');
+			objInspector = Kekule.Widget.getWidgetById('objInspector');
+
+			viewer.on('load', function(e){
+				var chemObj = viewer.getChemObj();
+				objInspector.setObjects(viewer.getChemObj());
+			});
+			objInspector.on('propertyChange', function(e){
+				viewer.repaint();
+			});
+
+			Kekule.X.Event.addListener($('formController'), 'change', reactInputElemChange);
+			Kekule.X.Event.addListener($('btnResetValues'), 'click', resetConfigInputElemValues);
+
+			initConfigValues();
+		}
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>
+	<section id="secDisplayer">
+		<div id="chemViewer" data-widget="Kekule.ChemWidget.Viewer" data-chem-obj1="" data-autofit="true" data-predefined-setting="fullFunc"></div>
+	</section>
+	<section id="secController">
+		<form id="formController" action="#" onsubmit="javascript:void();">
+			<fieldset>
+				<legend>Spectrum</legend>
+				<label>Visible independent data range ratio from: </label><input id="inputVisibleIndepDataRangeFrom" data-config-prop="visibleIndependentDataRangeFrom" type="number" step="0.05" />
+				<label>to: </label><input id="inputVisibleIndepDataRangeTo" data-config-prop="visibleIndependentDataRangeTo" type="number"  step="0.05" />
+				<br />
+				<label>Visible dependent data range ratio from: </label><input id="inputVisibleDepDataRangeFrom" data-config-prop="visibleDependentDataRangeFrom" type="number" step="0.05" />
+				<label>to: </label><input id="inputVisibleDepDataRangeTo" data-config-prop="visibleDependentDataRangeTo" type="number" step="0.05" />
+			</fieldset>
+			<fieldset>
+				<legend>Data render</legend>
+				<label>Data color: </label><input id="inputDataColor" data-config-prop="dataColor" type="color"></input>
+				<br />
+				<label>Data stroke width ratio: </label><input id="inputDataStrokeWidthRatio" data-config-prop="dataStrokeWidthRatio" type="number" step="0.025" />
+				<label>min: </label><input id="inputDataStrokeWidthMin" data-config-prop="dataStrokeWidthMin" type="number" step="0.5" />
+			</fieldset>
+			<fieldset>
+				<legend>Axis render</legend>
+				<fieldset>
+					<legend>General</legend>
+					<label>Axis width ratio: </label><input id="inputAxisWidthRatio" data-config-prop="axisWidthRatio" type="number" step="0.025" />
+					<label>min: </label><input id="inputAxisWidthMin" data-config-prop="axisWidthMin" type="number" step="0.5" />
+					<br />
+					<label>Axis color: </label><input id="inputAxisColor" type="color" data-config-prop="axisColor"></input>
+					<br />
+					<label>Axis scale mark size ratio: </label><input id="inputScaleSizeRatio" data-config-prop="axisScaleMarkSizeRatio" type="number" step="0.05" />
+					<label>min: </label><input id="inputScaleSizeMin" data-config-prop="axisScaleMarkSizeMin" type="number" step="0.5" />
+					<label>Unlabeled ratio: </label><input id="inputUnlabeledScaleSizeRatio" data-config-prop="axisUnlabeledScaleSizeRatio" type="number" step="0.05" />
+					<br />
+					<label>Scale mark preferred count: </label><input id="inputScaleMarkPreferredCount" data-config-prop="axisScaleMarkPreferredCount" type="number" />
+					<br />
+					<label>Axis label font family: </label><input id="inputAxisLabelFontFamily" data-config-prop="axisLabelFontFamily" type="text" />
+					<label>Axis label font size: </label><input id="inputAxisLabelFontSize" data-config-prop="axisLabelFontSize" type="number" />
+					<br />
+					<label>Axis label color: </label><input id="inputAxisLabelFontColor" type="color" data-config-prop="axisLabelColor" ></input>
+					<br />
+					<label>Scale label font family: </label><input id="inputScaleLabelFontFamily" data-config-prop="axisScaleLabelFontFamily" type="text" />
+					<label>Scale label font size: </label><input id="inputScaleLabelFontSize" data-config-prop="axisScaleLabelFontSize" type="number" />
+					<br />
+					<label>Scale label color: </label><input type="color" id="inputScaleLabelFontColor" data-config-prop="axisScaleLabelColor" ></input>
+					<br />
+					<label>Axis label padding ratio: </label><input id="inputAxisLabelPaddingRatio" data-config-prop="axisLabelPaddingRatio" type="number" step="0.025" />
+					<label>Axis scale label padding ratio: </label><input id="inputAxisScaleLabelPaddingRatio" data-config-prop="axisScaleLabelPaddingRatio" type="number" step="0.025" />
+				</fieldset>
+				<br />
+				<fieldset>
+					<legend>Independent axis</legend>
+					<label>Display axis</label><input id="inputDisplayIndepAxis" data-config-prop="displayIndependentAxis" type="checkbox" />
+					<label>Reversed data direction</label><input id="inputReversedIndepDataDir" data-config-prop="reverseIndependentDataDirection" type="checkbox" />
+					<label>Reversed axis align</label><input id="inputReversedIndepAxisAlign" data-config-prop="reverseIndependentAxisAlign" type="checkbox" />
+					<br />
+					<label>Display scales</label><input id="inputDisplayIndepAxisScales" data-config-prop="displayIndependentAxisScales" type="checkbox" />
+					<label>Display label</label><input id="inputDisplayIndepAxisLabel" data-config-prop="displayIndependentAxisLabel" type="checkbox" />
+					<label>Display unit</label><input id="inputDisplayIndepAxisUnit" data-config-prop="displayIndependentAxisUnit" type="checkbox" />
+				</fieldset>
+				<fieldset>
+					<legend>Dependent axis</legend>
+					<label>Display axis</label><input id="inputDisplayDepAxis" data-config-prop="displayDependentAxis" type="checkbox" />
+					<label>Reversed data direction</label><input id="inputReversedDepDataDir" data-config-prop="reverseDependentDataDirection" type="checkbox" />
+					<label>Reversed axis align</label><input id="inputReversedDepAxisAlign" data-config-prop="reverseDependentAxisAlign" type="checkbox" />
+					<br />
+					<label>Display scales</label><input id="inputDisplayDepAxisScales" data-config-prop="displayDependentAxisScales" type="checkbox" />
+					<label>Display label</label><input id="inputDisplayDepAxisLabel" data-config-prop="displayDependentAxisLabel" type="checkbox" />
+					<label>Display unit</label><input id="inputDisplayDepAxisUnit" data-config-prop="displayDependentAxisUnit" type="checkbox" />
+				</fieldset>
+			</fieldset>
+			<button id="btnResetValues" type="button">Reset values</button>
+		</form>
+	</section>
+	<section id="secObjInspector">
+		<div id="objInspector" data-widget="Kekule.Widget.ObjectInspector"></div>
+	</section>
+</body>
+</html>
