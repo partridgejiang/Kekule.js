@@ -127,7 +127,7 @@ Kekule.IO.Jcamp.Utils = {
 	compareFloat: function(v1, v2, allowedError)
 	{
 		if (Kekule.ObjUtils.isUnset(allowedError))
-			allowedError = Math.min(Math.abs(v1), Math.abs(v2)) * 0.001;  // TODO: current fixed to 0.1% of error
+			allowedError = Math.min(Math.abs(v1), Math.abs(v2)) * 0.01;  // TODO: current fixed to 1% of error
 		return Kekule.NumUtils.compareFloat(v1, v2, allowedError);
 	},
 	/**
@@ -338,6 +338,9 @@ Kekule.IO.Jcamp.Utils = {
 					// seq.push(lastValue);
 					result = JcampUtils._pushAsdfNumberToSeq(seq, prevNumInfo, null);
 				}
+				// when DUP, the lastValueType should returns the one of prevNumInfo
+				if (prevNumInfo)
+					result.lastValueType = prevNumInfo.digitType;
 			}
 			else  // unknown type
 				return false;
@@ -442,8 +445,8 @@ Kekule.IO.Jcamp.Utils = {
 						&& (typeof(currHeadOrdinateValue) === 'number' && Kekule.ObjUtils.notUnset(currHeadOrdinateValue)))
 					{
 						if (!Kekule.NumUtils.isFloatEqual(prevEndOrdinateValue, currHeadOrdinateValue))
-							Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VALUE_CHECK_ERROR'));
-						else  // check passed, remove the tailing check value of previous line
+							Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_Y_VALUE_CHECK_ERROR'));
+						else  // check passed, remove the tailing check value of previous line, not the heading Y value of this line!
 						{
 							lastValues.pop();
 						}
@@ -452,6 +455,10 @@ Kekule.IO.Jcamp.Utils = {
 			}
 			if (doAbscissaValueCheck)
 				checkAbscissaInterval(buffer, result[result.length - 1]);
+			/*
+			if (result[result.length - 1])
+				console.log('push buffer', result[result.length - 1], (buffer[0] - result[result.length - 1][0]) / (result[result.length - 1].length - 1));
+			*/
 			result.push(buffer);
 		}
 		var checkAbscissaInterval = function(currGroup, prevGroup)
@@ -460,14 +467,17 @@ Kekule.IO.Jcamp.Utils = {
 			{
 				var curr = currGroup[0];
 				var prev = prevGroup[0];
-				var currInterval = (curr - prev) / (prevGroup.length - 1);
+				var currInterval = (curr - prev) / (prevGroup.length - 1);  // the first item in prevGroup is X, so here we use length-1
 				// console.log('prev interval', abscissaInterval, 'curr', currInterval);
 				if (abscissaInterval)
 				{
 					//var allowedError = Math.max(Math.abs(currInterval)) * 0.001;  // TODO: current fixed to 0.1% of error
 					//if (!Kekule.NumUtils.isFloatEqual(currInterval, abscissaInterval, allowedError))
 					if (JcampUtils.compareFloat(currInterval, abscissaInterval) !== 0)
-						Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VALUE_CHECK_ERROR'));
+					{
+						//console.log('X check error', currInterval, abscissaInterval);
+						Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_X_VALUE_CHECK_ERROR'));
+					}
 				}
 				else
 					abscissaInterval = currInterval;
@@ -478,6 +488,8 @@ Kekule.IO.Jcamp.Utils = {
 		for (var i = 0, l = strLines.length; i < l; ++i)
 		{
 			var currLine = strLines[i].trim();
+			if (!currLine)
+				continue;
 			var endWithContiMark = (currLine.endsWith(JcampConsts.TABLE_LINE_CONTI_MARK));  // end with a conti-mark?
 			if (endWithContiMark)
 				currLine = currLine.substr(0, currLine.length - JcampConsts.TABLE_LINE_CONTI_MARK.length);
