@@ -96,7 +96,7 @@ Kekule.IO.Jcamp.LabelTypeInfos.createInfos([
 	['ION POLARITY', Jcamp.ValueType.STRING, null, KS.SpectrumType.IMS],
 	['IONIZATION MODE', Jcamp.ValueType.STRING, null, KS.SpectrumType.IMS],
 	['IMS TEMPERATURE', Jcamp.ValueType.SIMPLE_AFFN_GROUP, null, KS.SpectrumType.IMS],   // actually (AFFN[, AFFN])
-	['SHUTTER OPENING TIME', Jcamp.ValueType.AFFN, null, KS.SpectrumType.IMS]
+	['SHUTTER OPENING TIME', Jcamp.ValueType.AFFN, null, KS.SpectrumType.IMS],
 	// chromatography/ms
 	['MASS ANALYSER', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY],
 	['TANDEM SCANNING METHOD', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY], // actually (STRING, {AFFN})
