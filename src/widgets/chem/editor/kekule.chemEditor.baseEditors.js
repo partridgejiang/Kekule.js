@@ -7858,21 +7858,6 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		this.setBaseCoord(currCoord);
 		this.setStartCoord(currCoord);
 
-		// check if mouse just on an object, if so, direct manipulation mode
-		var hoveredObj = this.getEditor().getTopmostBasicObjectAtCoord(currCoord, this.getCurrBoundInflation());
-		if (hoveredObj && !evokedByTouch)  // mouse down directly on a object
-		{
-			//hoveredObj = hoveredObj.getNearestSelectableObject();
-			if (this.isInAncestorSelectMode())
-				hoveredObj = this.getStandaloneAncestor(hoveredObj);
-			hoveredObj = hoveredObj.getNearestMovableObject();
-			if (this.getEnableMove())
-			{
-				this.doStartDirectManipulate(null, hoveredObj, currCoord);  // call doStartDirectManipulate rather than startDirectManipulate, avoid calling doStartDirectManipulate twice
-				return;
-			}
-		}
-
 		this._lastTransformParams = null;
 
 		var coordRegion = currCoord && this.getEditor().getCoordRegionInSelectionMarker(currCoord);
@@ -7898,6 +7883,24 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		else // transform
 		{
 			this._availTransformTypes = availManipulationTypes;  // stores the available transform types
+		}
+
+		if (!isTransform && !isResize && !isRotate)  // when pointer not at resize or rotate position, check if it is directly on an object to evoke direct manipulation
+		{
+			// check if mouse just on an object, if so, direct manipulation mode
+			var hoveredObj = this.getEditor().getTopmostBasicObjectAtCoord(currCoord, this.getCurrBoundInflation());
+			if (hoveredObj && !evokedByTouch)  // mouse down directly on a object
+			{
+				//hoveredObj = hoveredObj.getNearestSelectableObject();
+				if (this.isInAncestorSelectMode())
+					hoveredObj = this.getStandaloneAncestor(hoveredObj);
+				hoveredObj = hoveredObj.getNearestMovableObject();
+				if (this.getEnableMove())
+				{
+					this.doStartDirectManipulate(null, hoveredObj, currCoord);  // call doStartDirectManipulate rather than startDirectManipulate, avoid calling doStartDirectManipulate twice
+					return;
+				}
+			}
 		}
 
 		// check if already has selection and mouse in selection rect first
