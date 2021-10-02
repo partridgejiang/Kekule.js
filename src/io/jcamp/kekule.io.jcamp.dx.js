@@ -549,15 +549,18 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				}
 				else if (labelName === '.OBSERVEFREQUENCY')
 				{
-					chemObj.setSpectrumParam('observeFrequency', Kekule.Scalar.create(value, Kekule.Unit.Frequency.MEGAHERTZ.symbol)); // the value is stored in MHz in Jcamp-DX
+					if (Kekule.NumUtils.isNormalNumber(value))
+						chemObj.setSpectrumParam('observeFrequency', Kekule.Scalar.create(value, Kekule.Unit.Frequency.MEGAHERTZ.symbol)); // the value is stored in MHz in Jcamp-DX
 				}
 				else if (labelName === '.SOLVENTREFERENCE')
 				{
-					chemObj.setSpectrumParam('solventReference', Kekule.Scalar.create(value, Kekule.Unit.Ratio.MILLIONTH.symbol));
+					if (Kekule.NumUtils.isNormalNumber(value))
+						chemObj.setSpectrumParam('solventReference', Kekule.Scalar.create(value, Kekule.Unit.Ratio.MILLIONTH.symbol));
 				}
 				else if (labelName === '.DELAY')
 				{
-					chemObj.setSpectrumParam('dalays', Kekule.Scalar.create(value, Kekule.Unit.Time.MICROSECOND.symbol));
+					if (Kekule.NumUtils.isNormalNumber(value))
+						chemObj.setSpectrumParam('dalays', Kekule.Scalar.create(value, Kekule.Unit.Time.MICROSECOND.symbol));
 				}
 				else if (labelName === '.ACQUISITIONMODE')
 				{
