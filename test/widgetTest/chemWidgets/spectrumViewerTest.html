@@ -86,11 +86,83 @@
 			{
 				elem = widget.getElement();
 			}
-			var configPropName = elem.getAttribute('data-config-prop');
 			var value = getInputElemValue(elem);
-			getSpectrumDisplayConfigs().setPropValue(configPropName, value);
+			var configPropName = elem.getAttribute('data-config-prop');
+			if (configPropName)
+				getSpectrumDisplayConfigs().setPropValue(configPropName, value);
+			else if (elem.tagName.toLowerCase() === 'select')  // var unit
+			{
+				doReactSpectrumVarUnitChange(elem);
+			}
 			if (viewer.getChemObj())
 				viewer.repaint();
+		}
+
+		function doReactSpectrumVarUnitChange(elem)
+		{
+			var varInfos = getSpectrumIndepAndDepVarInfos();
+			var varDef;
+			if (elem === $('selIndepUnit'))
+				varDef = varInfos.independent && varInfos.independent.varDef;
+			else if (elem === $('selDepUnit'))
+				varDef = varInfos.dependent && varInfos.dependent.varDef;
+			if (varDef)
+			{
+				var value = elem.value;
+				varDef.setExternalUnit(value);
+			}
+		}
+
+		function getSpectrumIndepAndDepVarInfos()
+		{
+			var result = {};
+			var spectrum = viewer.getChemObj();
+			if (spectrum)
+			{
+				var section = spectrum.getActiveDataSection();
+				if (section)
+				{
+					result.independent = section.getLocalVarInfoOfDependency(Kekule.VarDependency.INDEPENDENT)[0];
+					result.dependent = section.getLocalVarInfoOfDependency(Kekule.VarDependency.DEPENDENT)[0];
+				}
+			}
+			return result;
+		}
+		function updateSelectElemItems(selElem, itemStrs, currValue)
+		{
+			selElem.innerHTML = '';
+			var items = Kekule.ArrayUtils.clone(itemStrs);
+			if (currValue && items.indexOf(currValue) < 0)
+				items.unshift(currValue);
+			for (var i = 0, l = items.length; i < l; ++i)
+			{
+				var child = selElem.ownerDocument.createElement('option');
+				child.value = items[i];
+				child.innerHTML = items[i];
+				if (items[i] === currValue)
+					child.selected = true;
+				selElem.appendChild(child);
+			}
+		}
+		function updateAvailableVarUnits()
+		{
+			var spectrum = viewer.getChemObj();
+			if (spectrum)
+			{
+				var varInfos = getSpectrumIndepAndDepVarInfos();
+				if (varInfos.independent)
+				{
+					var unitSymbols = spectrum.getVarAvailableExternalUnitSymbols(varInfos.independent.varDef);
+					var currSymbol = varInfos.independent.varDef.getExternalUnit() || varInfos.independent.varDef.getInternalUnit();
+					updateSelectElemItems($('selIndepUnit'), unitSymbols, currSymbol);
+				}
+				if (varInfos.dependent)
+				{
+					var unitSymbols = spectrum.getVarAvailableExternalUnitSymbols(varInfos.dependent.varDef);
+					var currSymbol = varInfos.dependent.varDef.getExternalUnit() || varInfos.dependent.varDef.getInternalUnit();
+					updateSelectElemItems($('selDepUnit'), unitSymbols, currSymbol);
+				}
+			}
 		}
 
 		function resetConfigInputElemValues()
@@ -139,6 +211,7 @@
 			viewer.on('load', function(e){
 				var chemObj = viewer.getChemObj();
 				objInspector.setObjects(viewer.getChemObj());
+				updateAvailableVarUnits();
 			});
 			objInspector.on('propertyChange', function(e){
 				viewer.repaint();
@@ -165,6 +238,9 @@
 				<br />
 				<label>Visible dependent data range ratio from: </label><input id="inputVisibleDepDataRangeFrom" data-config-prop="visibleDependentDataRangeFrom" type="number" step="0.05" />
 				<label>to: </label><input id="inputVisibleDepDataRangeTo" data-config-prop="visibleDependentDataRangeTo" type="number" step="0.05" />
+				<br />
+				<label>Independent variable unit: <select id="selIndepUnit"></select></label>
+				<label>Dependent variable unit: <select id="selDepUnit"></select></label>
 			</fieldset>
 			<fieldset>
 				<legend>Data render</legend>
