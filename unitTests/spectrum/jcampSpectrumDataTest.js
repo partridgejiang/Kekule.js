@@ -29,6 +29,8 @@ describe('Test of some core data and functions of spectra module', function(){
 			expect(spectrumData.getSectionAt(0).getMode()).toEqual(Kekule.Spectroscopy.DataMode.PEAK);
 			expect(spectrumData.getDataCount()).toEqual(dataCount);
 
+			chemObj.finalize();
+
 			done();
 		});
 	});
@@ -94,6 +96,9 @@ describe('Test of some core data and functions of spectra module', function(){
 					expect(xEqual).toEqual(true);
 					expect(yEqual).toEqual(true);
 				}
+
+				obj1.finalize();
+				obj2.finalize();
 
 				done();
 			});
@@ -164,6 +169,9 @@ describe('Test of some core data and functions of spectra module', function(){
 				}
 				*/
 
+				obj1.finalize();
+				obj2.finalize();
+
 				done();
 			});
 		});
@@ -198,6 +206,8 @@ describe('Test of some core data and functions of spectra module', function(){
 			expect(section.getLocalVarSymbols()).toEqual(['X','I']);
 			expect(section.getDataCount()).toEqual(dataCount);
 
+			chemObj.finalize();
+
 			done();
 		});
 	});
@@ -230,6 +240,8 @@ describe('Test of some core data and functions of spectra module', function(){
 				expect(section.getDataCount()).toEqual(nPoints[i]);
 			}
 
+			chemObj.finalize();
+
 			done();
 		});
 	});
@@ -240,8 +252,9 @@ describe('Test of some core data and functions of spectra module', function(){
 			//console.log(chemObj);
 
 			// basic test
-			expect(chemObj instanceof Kekule.ChemObjList).toEqual(true);
-			var spectrum;
+			expect(chemObj instanceof Kekule.ChemObjList || chemObj instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
+			var spectrum = (chemObj instanceof Kekule.Spectroscopy.Spectrum)? chemObj: null;
+			if (!spectrum)
 			for (var i = 0, l = chemObj.getChildCount(); i < l; ++i)
 			{
 				var o = chemObj.getChildAt(i);
@@ -268,6 +281,8 @@ describe('Test of some core data and functions of spectra module', function(){
 			expect(spectrumData.getSectionCount()).toEqual(1);
 			expect(spectrumData.getSectionAt(0).getMode()).toEqual(Kekule.Spectroscopy.DataMode.PEAK);
 			expect(spectrumData.getDataCount()).toEqual(dataCount);
+
+			chemObj.finalize();
 
 			done();
 		});
