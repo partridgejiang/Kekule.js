@@ -97,6 +97,14 @@ Kekule.IO.Jcamp.LabelTypeInfos.createInfos([
 	['IONIZATION MODE', Jcamp.ValueType.STRING, null, KS.SpectrumType.IMS],
 	['IMS TEMPERATURE', Jcamp.ValueType.SIMPLE_AFFN_GROUP, null, KS.SpectrumType.IMS],   // actually (AFFN[, AFFN])
 	['SHUTTER OPENING TIME', Jcamp.ValueType.AFFN, null, KS.SpectrumType.IMS]
+	// chromatography/ms
+	['MASS ANALYSER', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY],
+	['TANDEM SCANNING METHOD', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY], // actually (STRING, {AFFN})
+	['INTERFACE', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY],
+	['CHROMATOGRAPHY TYPE', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY],
+	['CHROMATOGRAPHY SOLVENTS', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY],  // actually lines of (N,C,U)
+	['ADDITIVES', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY],   // actually lines of (N,C,U)
+	['DIMENSIONALITY', Jcamp.ValueType.AFFN, null, KS.SpectrumType.CHROMATOGRAPHY]
 ]);
 
 /**
@@ -213,7 +221,8 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			'ir': ['RESOLUTION'],
 			'nmr': ['.OBSERVEFREQUENCY', '.OBSERVENUCLEUS', '.SOLVENTREFERENCE', '.DELAY', '.ACQUISITIONMODE'],
 			'ms': ['.SPECTROMETERTYPE', '.INLET', '.IONIZATIONMODE'],
-			'ims': ['.IMSPRESSURE', '.CARRIERGAS', '.DRIFTGAS', '.ELECTRICFIELD', '.IONPOLARITY', '.IONIZATIONMODE', '.IMSTEMPERATURE', '.SHUTTEROPENINGTIME']
+			'ims': ['.IMSPRESSURE', '.CARRIERGAS', '.DRIFTGAS', '.ELECTRICFIELD', '.IONPOLARITY', '.IONIZATIONMODE', '.IMSTEMPERATURE', '.SHUTTEROPENINGTIME'],
+			'chromatography': ['.MASSANALYSER', '.TANDEMSCANNINGMETHOD', '.INTERFACE', '.CHROMATOGRAPHYTYPE', '.CHROMATOGRAPHYSOLVENTS', '.ADDITIVES', '.DIMENSIONALITY']
 		}
 	},
 

@@ -2121,6 +2121,7 @@ Kekule.Spectroscopy.SpectrumType = {
 	UV: 'UV',
 	IMS: 'IMS',   // ION MOBILITY SPECTRUM
 	RAMAN: 'Raman',
+	CHROMATOGRAPHY: 'chromatography',
 	GENERAL: 'general'   // unknown type
 };
 
