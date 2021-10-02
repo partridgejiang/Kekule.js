@@ -1053,7 +1053,7 @@ Kekule.IO.Jcamp.LdrValueParser = {
 	affnParser: function(lines, options)  // parse to a simple number value
 	{
 		var text = JcampUtils.getFirstNonemptyLine(lines);
-		return parseFloat(text) || 0;
+		return parseFloat(text) || NaN;
 	},
 	asdfParser: function(lines, options)
 	{
