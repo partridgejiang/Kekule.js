@@ -121,8 +121,9 @@ Kekule.Spectroscopy.DataValueConverterManager = {
 	 * Register a converter object.
 	 * The converter object should implement the following methods:
 	 * {
-	 *   convert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum) => newValue,
-	 *   canConvert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum) => Bool
+	 *   convert: function(value, varDef, fromUnitObj, toUnitObj, spectrumDataSection, spectrum) => newValue,
+	 *   canConvert: function(value, varDef, fromUnitObj, toUnitObj, spectrumDataSection, spectrum) => Bool,
+	 *   getAltUnits: function(varDef, fromUnitObj, spectrumDataSection, spectrum) -> array (optional), returns the recommended alternative unitObjs for spectrum
 	 * }
 	 * @param {Object} converter
 	 */
@@ -142,7 +143,7 @@ Kekule.Spectroscopy.DataValueConverterManager = {
 	},
 
 	/** @private */
-	doConvert: function(value, fromUnit, toUnit, spectrumDataSection, spectrum)
+	doConvert: function(value, varDef, fromUnit, toUnit, spectrumDataSection, spectrum)
 	{
 		if (fromUnit === toUnit)
 			return value;
@@ -158,14 +159,34 @@ Kekule.Spectroscopy.DataValueConverterManager = {
 				for (var i = converters.length - 1; i >= 0; --i)
 				{
 					var converter = converters[i];
-					if (converter.canConvert(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum))
-						return converter.convert(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum);
+					if (converter.canConvert(value, varDef, fromUnitObj, toUnitObj, spectrumDataSection, spectrum))
+						return converter.convert(value, varDef, fromUnitObj, toUnitObj, spectrumDataSection, spectrum);
 				}
 			}
 		}
 		// no available converter found, can not convert
 		Kekule.error(Kekule.$L('ErrorMsg.UNABLE_TO_CONVERT_BETWEEN_UNITS').format(fromUnitObj.getKey(), toUnitObj.getKey()));
 		return null;
+	},
+	/** @private */
+	getAltUnits: function(varDef, fromUnit, spectrumDataSection, spectrum)
+	{
+		var result = [];
+		var converters = DCM._converters;
+		if (converters.length)
+		{
+			var fromUnitObj = Kekule.Unit.getUnit(fromUnit);
+			if (fromUnitObj)
+			{
+				for (var i = converters.length - 1; i >= 0; --i)
+				{
+					var converter = converters[i];
+					var subResult = converter.getAltUnits(varDef, fromUnitObj, spectrumDataSection, spectrum) || [];
+					AU.pushUnique(result, subResult);
+				}
+			}
+		}
+		return result;
 	}
 };
 /** @ignore */
@@ -173,18 +194,23 @@ var DCM = Kekule.Spectroscopy.DataValueConverterManager;
 
 // register the default data value converter
 DCM.register({
-	convert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
+	convert: function(value, varDef, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
 	{
 		return fromUnitObj.convertValueTo(value, toUnitObj);
 	},
-  canConvert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
+  canConvert: function(value, varDef, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
 	{
 		return fromUnitObj.canConvertValueTo(toUnitObj);
+	},
+	getAltUnits: function(varDef, fromUnitObj, spectrumDataSection, spectrum)
+	{
+		var category = fromUnitObj.category;
+		return category.getAllUnits();
 	}
 });
 // register a converter to convert between NMR frequency and ppm
 DCM.register({
-	convert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
+	convert: function(value, varDef, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
 	{
 		var observeFreq = spectrum.getSpectrumParam('observeFrequency');
 		if (fromUnitObj.category === KUnit.Frequency)  // from Hz to ppm
@@ -201,7 +227,7 @@ DCM.register({
 			return freqUnit.convertValueTo(freq, toUnitObj);
 		}
 	},
-	canConvert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
+	canConvert: function(value, varDef, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
 	{
 		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)
 		{
@@ -213,11 +239,27 @@ DCM.register({
 			}
 		}
 		return false;
+	},
+	getAltUnits: function(varDef, fromUnitObj, spectrumDataSection, spectrum)
+	{
+		var result = [];
+		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)
+		{
+			var observeFreq = spectrum.getSpectrumParam('observeFrequency');
+			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
+			{
+				if (fromUnitObj.category === Kekule.Unit.Frequency)
+					result.push(Kekule.Unit.Ratio.MILLIONTH);
+				else if (fromUnitObj.category === Kekule.Unit.Ratio)
+					result = result.concat(Kekule.Unit.Frequency.getAllUnits());
+			}
+		}
+		return result;
 	}
 });
 // register a converter to convert between IR wave length and wave number
 DCM.register({
-	convert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
+	convert: function(value, varDef, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
 	{
 		if (fromUnitObj.category === KUnit.Length)   // from wave length to wave number
 		{
@@ -232,7 +274,7 @@ DCM.register({
 			return toUnitObj.convertValueFromStandard(standardWaveLength);
 		}
 	},
-	canConvert: function(value, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
+	canConvert: function(value, varDef, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
 	{
 		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.IR)
 		{
@@ -240,6 +282,18 @@ DCM.register({
 				|| (fromUnitObj.category === Kekule.Unit.WaveNumber && toUnitObj.category === Kekule.Unit.Length);
 		}
 		return false;
+	},
+	getAltUnits: function(varDef, fromUnitObj, spectrumDataSection, spectrum)
+	{
+		var result;
+		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.IR)
+		{
+			if (fromUnitObj.category === Kekule.Unit.Length)
+				result = [Kekule.Unit.WaveNumber.RECIPROCAL_CENTIMETER];
+			else if (fromUnitObj.category === Kekule.Unit.WaveNumber)
+				result = [Kekule.Unit.Length.getAllUnits()];
+		}
+		return result;
 	}
 });
 
@@ -597,6 +651,29 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var parent = this.getParentSpectrum();
 		return parent && parent.getVariable(symbol);
 	},
+
+	/**
+	 * Returns the local variable info of certain dependency.
+	 * @param {Int} dependency
+	 * @returns {Array}
+	 */
+	getLocalVarInfoOfDependency: function(dependency)
+	{
+		var result = [];
+		var localVarInfos = this.getActualLocalVarInfos();
+		for (var i = 0, l = localVarInfos.length; i < l; ++i)
+		{
+			var varDef = this.getLocalVarDef(i);
+			if (varDef.getDependency() === dependency)
+			{
+				var info = Object.extend({}, localVarInfos[i]);
+				info.varDef = varDef;
+				result.push(info);
+			}
+		}
+		return result;
+	},
+
 	/**
 	 * Returns the from/to value of a continuous variable.
 	 * @param {Variant} varNameOrIndexOrDef
@@ -1075,7 +1152,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		if (!Kekule.NumUtils.isNormalNumber(value))  // not a number, usually can not be converted
 			return value;
 		//return Kekule.UnitUtils.convertValue(value, fromUnit, toUnit);
-		return Kekule.Spectroscopy.DataValueConverterManager.doConvert(value, fromUnit, toUnit, this, this.getParent());
+		return Kekule.Spectroscopy.DataValueConverterManager.doConvert(value, varDef, fromUnit, toUnit, this, this.getParent());
 	},
 	/**
 	 * Convert a raw value (storaged value) to the one exposed to external with a different unit.
@@ -1781,6 +1858,24 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 			this.removeVariableAt(index);
 		return this;
 	},
+
+	/**
+	 * Returns variables of certain dependency.
+	 * @param {Int} dependency Value from {@link Kekule.VarDependency}
+	 * @returns {Array} Array of var definition.
+	 */
+	getVariablesOfDependency: function(dependency)
+	{
+		var result = [];
+		for (var i = 0, l = this.getVariableCount(); i < l; ++i)
+		{
+			var varDef = this.getVariable(i);
+			if (varDef && varDef.getDependency() === dependency)
+				result.push(varDef);
+		}
+		return result;
+	},
+
 	/**
 	 * Returns the first/last value of a continuous variable.
 	 * @param {Variant} varNameOrIndexOrDef
@@ -2148,6 +2243,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		this._defineDataDelegatedMethod('appendVariable');
 		this._defineDataDelegatedMethod('removeVariableAt');
 		this._defineDataDelegatedMethod('removeVariable');
+		this._defineDataDelegatedMethod('getVariablesOfDependency');
 		this._defineDataDelegatedMethod('getContinuousVarRange');
 		this._defineDataDelegatedMethod('setContinuousVarRange');
 		this._defineDataDelegatedMethod('clearContinuousVarRange');
@@ -2238,6 +2334,32 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		return result;
 	}
 	*/
+
+	/**
+	 * Returns the recommended external units that can be converted from internal unit for this variable.
+	 * @param {Kekule.Spectroscopy.SpectrumVarDefinition} varDef
+	 * @returns {Array} Array of unit objects.
+	 */
+	getVarAvailableExternalUnitObjs: function(varDef)
+	{
+		return Kekule.Spectroscopy.DataValueConverterManager.getAltUnits(varDef, varDef.getInternalUnit? varDef.getInternalUnit(): varDef.getUnit(), null, this);
+	},
+	/**
+	 * Returns the recommended external units that can be converted from internal unit for this variable.
+	 * @param {Kekule.Spectroscopy.SpectrumVarDefinition} varDef
+	 * @returns {Array} Array of unit symbols (string).
+	 */
+	getVarAvailableExternalUnitSymbols: function(varDef)
+	{
+		var unitObjs = Kekule.Spectroscopy.DataValueConverterManager.getAltUnits(varDef, varDef.getInternalUnit? varDef.getInternalUnit(): varDef.getUnit(), null, this);
+		var result = [];
+		for (var i = 0, l = unitObjs.length; i < l; ++i)
+		{
+			result.push(unitObjs[i].symbol);
+		}
+		return result;
+	},
+
 	/**
 	 * Returns all keys in {@link Kekule.Spectroscopy.Spectrum#spectrumParams} property.
 	 * @returns {Array}
