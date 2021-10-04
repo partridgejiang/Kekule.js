@@ -787,7 +787,7 @@ Kekule.IO.CmlElementReaderFactory = {
 				Kekule.IO.CmlElementReaderFactory.register(elemLocalName[i], readerClass);
 		}
 		else
-			Kekule.IO.CmlElementReaderFactory._readers[elemLocalName] = readerClass;
+			Kekule.IO.CmlElementReaderFactory._readers[elemLocalName.toLowerCase()] = readerClass;
 	},
 	/**
 	 * Returns suitable reader for an CML element.
@@ -801,7 +801,7 @@ Kekule.IO.CmlElementReaderFactory = {
 			name = Kekule.DomUtils.getLocalName(elemOrLocalName);
 		else
 			name = elemOrLocalName;
-		var readerClass = Kekule.IO.CmlElementReaderFactory._readers[name];
+		var readerClass = Kekule.IO.CmlElementReaderFactory._readers[name.toLowerCase()];
 		if (readerClass)
 			return new readerClass();
 		else
@@ -946,12 +946,13 @@ Kekule.IO.CmlElementReader = Class.create(Kekule.IO.CmlElementHandler,
 	CLASS_NAME: 'Kekule.IO.CmlElementReader',
 
 	/**
-	 * Read an element in CML document and returns a proper Kekule object or insert something into parentObj.
+	 * Read an element in CML document and returns a proper Kekule object for parent reader or insert something into parentObj (if parentObj is set).
 	 * @param {Object} elem
 	 * @param {Kekule.ChemObject} parentObj
+	 * @param {Kekule.IO.CmdElementReader} parentReader
 	 * @returns {Variant}
 	 */
-	readElement: function(elem, parentObj)
+	readElement: function(elem, parentObj, parentReader)
 	{
 		var result = this.doReadElement(elem, parentObj);
 		if (result && result.getId && (!result.getId()))
@@ -969,10 +970,11 @@ Kekule.IO.CmlElementReader = Class.create(Kekule.IO.CmlElementHandler,
 	 * Method to do the actual readElement job. Descendants should override this method.
 	 * @param {Object} elem
 	 * @param {Object} parentObj
+	 * @param {Kekule.IO.CmdElementReader} parentReader
 	 * @returns {Variant}
 	 * @private
 	 */
-	doReadElement: function(elem, parentObj)
+	doReadElement: function(elem, parentObj, parentReader)
 	{
 		// do nothing here
 	},
@@ -981,9 +983,10 @@ Kekule.IO.CmlElementReader = Class.create(Kekule.IO.CmlElementHandler,
 	 * Read and handle child elements,
 	 * @param {Object} elem
 	 * @param {Object} parentObj
+	 * @param {Kekule.IO.CmdElementReader} parentReader
 	 * @returns {Variant}
 	 */
-	readChildElement: function(elem, parentObj)
+	readChildElement: function(elem, parentObj, parentReader)
 	{
 		return this.doReadChildElement(elem, parentObj);
 	},
@@ -991,10 +994,11 @@ Kekule.IO.CmlElementReader = Class.create(Kekule.IO.CmlElementHandler,
 	 * The real job of readChildElem is done here. Descendants may override this.
 	 * @param {Object} elem
 	 * @param {Object} parentObj
+	 * @param {Kekule.IO.CmdElementReader} parentReader
 	 * @returns {Variant}
 	 * @private
 	 */
-	doReadChildElement: function(elem, parentObj)
+	doReadChildElement: function(elem, parentObj, parentReader)
 	{
 		return this.doReadChildElementDef(elem, parentObj);
 	},
@@ -1004,27 +1008,29 @@ Kekule.IO.CmlElementReader = Class.create(Kekule.IO.CmlElementHandler,
 	 *   just ask CmlElementReaderFactory to create a suitable reader and use the reader to read.
 	 * @param {Object} elem
 	 * @param {Object} parentObj
+	 * @param {Kekule.IO.CmdElementReader} parentReader
 	 * @returns {Variant}
 	 */
-	readChildElementDef: function(elem, parentObj)
+	readChildElementDef: function(elem, parentObj, parentReader)
 	{
-		return this.doReadChildElementDef(elem, parentObj);
+		return this.doReadChildElementDef(elem, parentObj, parentReader);
 	},
 	/**
 	 * The real job of readChildElementDef is done here. Descendants may override this.
 	 * @param {Object} elem
 	 * @param {Object} parentObj
+	 * @param {Kekule.IO.CmdElementReader} parentReader
 	 * @returns {Variant}
 	 * @private
 	 */
-	doReadChildElementDef: function(elem, parentObj)
+	doReadChildElementDef: function(elem, parentObj, parentReader)
 	{
 		var reader = Kekule.IO.CmlElementReaderFactory.getReader(elem);
 		if (reader)
 		{
 			//reader.setCoreNamespaceURI(this.getCoreNamespaceURI());
 			this.copySettingsToChildHandler(reader);
-			return reader.readElement(elem, parentObj);
+			return reader.readElement(elem, parentObj, parentReader);
 		}
 		else
 			return null;
@@ -1033,13 +1039,15 @@ Kekule.IO.CmlElementReader = Class.create(Kekule.IO.CmlElementHandler,
 	 * Iterate through and read all direct children of elem.
 	 * @param {Object} elem
 	 * @param {Object} parentObj
+	 * @param {Kekule.IO.CmdElementReader} parentReader
+	 * @private
 	 */
-	iterateChildElements: function(elem, parentObj)
+	iterateChildElements: function(elem, parentObj, parentReader)
 	{
 		var children = Kekule.DomUtils.getDirectChildElems(elem, null, null, this.getCoreNamespaceURI());
 		for (var i = 0, l = children.length; i < l; ++i)
 		{
-			this.readChildElement(children[i], parentObj);
+			this.readChildElement(children[i], parentObj, parentReader);
 		}
 	}
 });
@@ -1211,6 +1219,159 @@ Kekule.IO.CmlElementWriter = Class.create(Kekule.IO.CmlElementHandler,
 });
 
 /**
+ * Base reader to read list (<list>/<moleculeList>/<reactionList>...) element of CML.
+ * @class
+ * @augments Kekule.IO.CmlElementReader
+ */
+Kekule.IO.CmlBaseListReader = Class.create(Kekule.IO.CmlElementReader,
+/** @lends Kekule.IO.CmlBaseListReader# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlBaseListReader',
+	/** @private */
+	doReadElement: function(elem, parentObj, parentReader)
+	{
+		var result = this.doCreateList(elem);
+		result = this.doReadList(result, elem, parentObj, parentReader, this.getDomHelper());
+		return result;
+	},
+	/**
+	 * Create a suitable list object for CML elem.
+	 * An simple array may be created to hold the created chem objects and passed to parent reader to do cocrete handling.
+	 * Desendants should override this method.
+	 * @returns {Kekule.ChemObject}
+	 * @private
+	 */
+	doCreateList: function(elem)
+	{
+		/*
+		switch (Kekule.DomUtils.getLocalName(elem))
+		{
+			case 'moleculeList': return new Kekule.MoleculeList(); break;
+			case 'reactionList': return new Kekule.ReactionList(); break;
+			default:
+				return new Kekule.ChemObjList();
+		}
+		*/
+		return [];  // return an simple array.
+	},
+	/**
+	 * Append child chem object to list object created by doCreateList method.
+	 * Desendants should override this method.
+	 * @param {Object} obj
+	 * @param {Variant} list
+	 * @private
+	 */
+	doAppendObjToList: function(obj, list)
+	{
+		if (list && list.push)
+			list.push(obj);
+		return list;
+	},
+	/**
+	 * Read the child object from a child element.
+	 * Decendants may override this method.
+	 * @private
+	 */
+	doReadChildElem: function(childElem, childReader, parentObj, parentReader, listObj)
+	{
+		var obj = childReader.readElement(childElem, listObj, this);
+		return obj;
+	},
+	/** @private */
+	doReadList: function(list, elem, parentObj, parentReader, domHelper)
+	{
+		var children = Kekule.DomUtils.getDirectChildElems(elem, null, null, this.getCoreNamespaceURI());
+		if (children)
+		{
+			for (var i = 0, l = children.length; i < l; ++i)
+			{
+				var child = children[i];
+				var reader = Kekule.IO.CmlElementReaderFactory.getReader(child);
+				if (reader)
+				{
+					this.copySettingsToChildHandler(reader);
+					//var obj = reader.readElement(child, list, this);
+					var obj = this.doReadChildElem(child, reader, parentObj, parentReader, list);
+					if (obj)
+					{
+						//list.append(obj);
+						this.doAppendObjToList(obj, list);
+					}
+				}
+			}
+		}
+		return list;
+	}
+});
+
+/**
+ * Base writer to write list ({@link Kekule.MoleculeList}, {@link Kekule.ReactionList}) or array object to corresponding CML <list> series elements.
+ * @class
+ * @augments Kekule.IO.CmlElementWriter
+ */
+Kekule.IO.CmlBaseListWriter = Class.create(Kekule.IO.CmlElementWriter,
+/** @lends Kekule.IO.CmlBaseListWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlBaseListWriter',
+	/**
+	 * Create a suitable CML element to hold the obj.
+	 * @param {Kekule.ChemObject} obj List object.
+	 * @param {Element} parentElem
+	 * @returns {Element}
+	 * @private
+	 */
+	doCreateElem: function(obj, parentElem)
+	{
+		var tagName = this.doGetListElemTagName(obj, parentElem);
+		if (tagName)
+			return this.createChildElem(tagName, parentElem);
+		else
+			return null;
+	},
+	/**
+	 * Returns a suitable tag name for element to hold the data of list object.
+	 * Decendants should override this method.
+	 * @param {Kekule.ChemObject} obj List object.
+	 * @param {Element} parentElem
+	 * @returns {String}
+	 * @private
+	 */
+	doGetListElemTagName: function(obj, parentElem)
+	{
+		return 'list';  // return a general list tag name
+	},
+	/** @private */
+	doWriteObject: function(obj, targetElem)
+	{
+		var list = Kekule.ChemStructureUtils.getChildStructureObjs(obj, false);
+		return this.writeList(list, targetElem);
+	},
+	/**
+	 * Write list items to listElem.
+	 * @private
+	 */
+	writeList: function(list, listElem)
+	{
+		for (var i = 0, l = list.length; i < l; ++i)
+		{
+			var item = list[i];
+			if (item)
+			{
+				var writer = Kekule.IO.CmlElementWriterFactory.getWriter(item);
+				if (writer)
+				{
+					this.copySettingsToChildHandler(writer);
+					writer.writeObject(item, listElem);
+				}
+			}
+		}
+		return listElem;
+	}
+});
+
+/**
  * CML <name> element reader.
  * @class
  * @augments Kekule.IO.CmlElementReader
@@ -1232,7 +1393,7 @@ Kekule.IO.CmlNameReader = Class.create(Kekule.IO.CmlElementReader,
 	 * @returns {Hash} A hash of {name, convention}
 	 * @private
 	 */
-	doReadElement: function(elem, parentObj)
+	doReadElement: function(elem, parentObj, parentReader)
 	{
 		var name = Kekule.DomUtils.getElementText(elem);
 		var convention = Kekule.IO.CmlDomUtils.getCmlElemAttribute(elem, 'convention');
@@ -1244,7 +1405,7 @@ Kekule.IO.CmlNameReader = Class.create(Kekule.IO.CmlElementReader,
 				result.convention = convention;
 			else  // no convertion, regard it as a default name as insert to parentObj
 			{
-				if (parentObj.setName)
+				if (parentObj && parentObj.setName)
 					parentObj.setName(name);
 			}
 			return result;
@@ -1268,7 +1429,7 @@ Kekule.IO.CmlScalarReader = Class.create(Kekule.IO.CmlElementReader,
 	 * @param {Object} elem
 	 * @private
 	 */
-	doReadElement: function(elem, parentObj)
+	doReadElement: function(elem, parentObj, parentReader)
 	{
 		/*
 		var scalarInfo = this.readScalar(elem);
@@ -1419,6 +1580,8 @@ Kekule.IO.CmlScalarWriter = Class.create(Kekule.IO.CmlElementWriter,
 	}
 });
 
+
+
 /**
  * CML <meta> element reader.
  * @class
@@ -1430,7 +1593,7 @@ Kekule.IO.CmlMetaDataReader = Class.create(Kekule.IO.CmlElementReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.CmlMetaReader',
 	/** @private */
-	doReadElement: function(elem, parentObj)
+	doReadElement: function(elem, parentObj, parentReader)
 	{
 		var meta = this.readMeta(elem);
 		if (parentObj && parentObj.setInfoValue)  // parent is a ChemObject and can insert info
@@ -1454,16 +1617,18 @@ Kekule.IO.CmlMetaDataReader = Class.create(Kekule.IO.CmlElementReader,
 /**
  * CML <metaList> element reader.
  * @class
- * @augments Kekule.IO.CmlElementReader
+ * @augments Kekule.IO.CmlBaseListReader
  */
-Kekule.IO.CmlMetaDataListReader = Class.create(Kekule.IO.CmlElementReader,
+Kekule.IO.CmlMetaDataListReader = Class.create(Kekule.IO.CmlBaseListReader,
 /** @lends Kekule.IO.CmlMetaListReader# */
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.CmlMetaListReader',
-	/** @private */
-	doReadElement: function(elem, parentObj)
+	/* @private */
+	/*
+	doReadElement: function(elem, parentObj, parentReader)
 	{
+		var result = [];
 		var metaElems = Kekule.DomUtils.getDirectChildElems(elem, null, 'metaData', this.getCoreNamespaceURI());
 		for (var i = 0, l = metaElems.length; i < l; ++i)
 		{
@@ -1472,9 +1637,19 @@ Kekule.IO.CmlMetaDataListReader = Class.create(Kekule.IO.CmlElementReader,
 			if (reader)
 			{
 				this.copySettingsToChildHandler(reader);
-				reader.readElement(metaElem, parentObj);
+				var metaData = reader.readElement(metaElem, parentObj, parentReader);
+				if (metaData)
+					result.push(metaData);
 			}
 		}
+		return result;
+	}
+	*/
+	/** @ignore */
+	doReadChildElem: function(childElem, childReader, parentObj, parentReader, listObj)
+	{
+		var obj = childReader.readElement(childElem, parentObj, this);
+		return obj;
 	}
 });
 
@@ -1588,7 +1763,7 @@ Kekule.IO.CmlFormulaReader = Class.create(Kekule.IO.CmlChemStructureReader,
 	 * @returns {Kekule.MolecularFormula}
 	 * @private
 	 */
-	doReadElement: function(elem, parentObj)
+	doReadElement: function(elem, parentObj, parentReader)
 	{
 		return this.readFormula(elem, this.getDomHelper());
 	},
@@ -1865,22 +2040,22 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 	 * @returns {Variant}
 	 * @private
 	 */
-	doReadElement: function(elem, parentObj)
+	doReadElement: function(elem, parentObj, parentReader)
 	{
-		return this.readMolecule(elem, this.getDomHelper());
+		return this.readMolecule(elem, parentReader, this.getDomHelper());
 	},
 
 	/**
 	 * Override to handle child elements of molecule.
 	 * @private
 	 */
-	doReadChildElement: function(/*$super, */elem, parentObj)
+	doReadChildElement: function(/*$super, */elem, parentObj, parentReader)
 	{
 		if ((Kekule.DomUtils.getLocalName(elem) == 'molecule') && (this.matchCoreNamespace(elem))) // has sub molecule
 		{
-			if (parentObj.getSubMolecules)
+			if (parentObj && parentObj.getSubMolecules)
 			{
-				var result = this.readElement(elem, parentObj);
+				var result = this.readElement(elem, parentObj, parentReader);
 				if (result)
 				{
 					// sub molecule element should has amount attribute
@@ -1896,12 +2071,13 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 				return null;
 		}
 		else
-			return this.tryApplySuper('doReadChildElement', [elem, parentObj])  /* $super(elem, parentObj) */;
+			return this.tryApplySuper('doReadChildElement', [elem, parentObj, parentReader])  /* $super(elem, parentObj) */;
 	},
 
 	/**
 	 * check if a <molecule> elemen has sub molecules
 	 * @param {Object} elem
+	 * @private
 	 */
 	hasSubMolecule: function(elem)
 	{
@@ -1912,15 +2088,17 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 	/**
 	 * Read an molecule structure from a CML molecule element. This function can handle sub molecules.
 	 * @param {Object} elem
+	 * @param {Object} parentReader
 	 * @param {Object} domHelper
+	 * @private
 	 */
-	readMolecule: function(elem, domHelper)
+	readMolecule: function(elem, parentReader, domHelper)
 	{
 		var result;
 		if (this.hasSubMolecule(elem))
 		{
 			result = new Kekule.CompositeMolecule();
-			this.iterateChildElements(elem, result);
+			this.iterateChildElements(elem, result, parentReader);
 		}
 		else  // a pure molecule
 		{
@@ -2763,7 +2941,7 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 			//reader.setCoreNamespaceURI(this.getCoreNamespaceURI());
 			this.copySettingsToChildHandler(reader);
 			//reader.setDomHelper(domHelper);
-			var formula = reader.readElement(elem, molecule);
+			var formula = reader.readElement(elem, molecule, this);
 			if (formula)
 				molecule.setFormula(formula);
 		}
@@ -3119,12 +3297,12 @@ Kekule.IO.CmlReactionReagentReader = Class.create(Kekule.IO.CmlElementReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.CmlReactionReagentReader',
 	/** @private */
-	doReadElement: function(elem, parentObj)
+	doReadElement: function(elem, parentObj, parentReadr)
 	{
-		return this.readReagent(elem, this.getDomHelper());
+		return this.readReagent(elem, parentReadr, this.getDomHelper());
 	},
 	/** @private */
-	readReagent: function(elem, domHelper)
+	readReagent: function(elem, parentReadr, domHelper)
 	{
 		var map = null;
 		// read sub <molecule> element first
@@ -3134,7 +3312,7 @@ Kekule.IO.CmlReactionReagentReader = Class.create(Kekule.IO.CmlElementReader,
 			var molElem = molElems[molElems.length - 1];
 			var reader = Kekule.IO.CmlElementReaderFactory.getReader(molElem);
 			this.copySettingsToChildHandler(reader);
-			var molecule = reader.readElement(molElem, null);
+			var molecule = reader.readElement(molElem, null, this);
 			if (molecule)
 			{
 				map = {};
@@ -3411,22 +3589,24 @@ Kekule.IO.CmlReactionWriter = Class.create(Kekule.IO.CmlElementWriter,
 /**
  * Reader to read list (<list>/<moleculeList>/<reactionList>...) element of CML.
  * @class
- * @augments Kekule.IO.CmlElementReader
+ * @augments Kekule.IO.CmlBaseListReader
  */
-Kekule.IO.CmlListReader = Class.create(Kekule.IO.CmlElementReader,
+Kekule.IO.CmlListReader = Class.create(Kekule.IO.CmlBaseListReader,
 /** @lends Kekule.IO.CmlListReader# */
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.CmlListReader',
-	/** @private */
-	doReadElement: function(elem, parentObj)
+	/* @private */
+	/*
+	doReadElement: function(elem, parentObj, parentReadr)
 	{
 		var result = this.createList(elem);
-		result = this.readList(result, elem, this.getDomHelper());
+		result = this.readList(result, elem, parentReadr, this.getDomHelper());
 		return result;
 	},
-	/** Create a suitable list for elem */
-	createList: function(elem)
+	*/
+	/** @ignore */
+	doCreateList: function(elem)
 	{
 		switch (Kekule.DomUtils.getLocalName(elem))
 		{
@@ -3436,8 +3616,18 @@ Kekule.IO.CmlListReader = Class.create(Kekule.IO.CmlElementReader,
 				return new Kekule.ChemObjList();
 		}
 	},
-	/** @private */
-	readList: function(list, elem, domHelper)
+	/** @ignore */
+	doAppendObjToList: function(obj, list)
+	{
+		if (list && list.append)
+			list.append(obj);
+		else
+			this.tryApplySuper('doAppendObjToList', [obj, list]);
+		return list;
+	}
+	/* @private */
+	/*
+	readList: function(list, elem, parentReadr, domHelper)
 	{
 		var children = Kekule.DomUtils.getDirectChildElems(elem, null, null, this.getCoreNamespaceURI());
 		if (children)
@@ -3449,7 +3639,7 @@ Kekule.IO.CmlListReader = Class.create(Kekule.IO.CmlElementReader,
 				if (reader)
 				{
 					this.copySettingsToChildHandler(reader);
-					var obj = reader.readElement(child, null);
+					var obj = reader.readElement(child, null, this);
 					if (obj)
 						list.append(obj);
 				}
@@ -3457,19 +3647,21 @@ Kekule.IO.CmlListReader = Class.create(Kekule.IO.CmlElementReader,
 		}
 		return list;
 	}
+	*/
 });
 
 /**
  * Reader to write {@link Kekule.MoleculeList}, {@link Kekule.ReactionList} and so on to CML <list> series elements.
  * @class
- * @augments Kekule.IO.CmlElementWriter
+ * @augments Kekule.IO.CmlBaseListWriter
  */
-Kekule.IO.CmlListWriter = Class.create(Kekule.IO.CmlElementWriter,
+Kekule.IO.CmlListWriter = Class.create(Kekule.IO.CmlBaseListWriter,
 /** @lends Kekule.IO.CmlListWriter# */
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.CmlListWriter',
-	/** @private */
+	/* @private */
+	/*
 	doCreateElem: function(obj, parentElem)
 	{
 		var tagName;
@@ -3481,16 +3673,32 @@ Kekule.IO.CmlListWriter = Class.create(Kekule.IO.CmlElementWriter,
 		}
 		return this.createChildElem(tagName, parentElem);
 	},
-	/** @private */
+	*/
+	/** @ignore */
+	doGetListElemTagName: function(obj, parentElem)
+	{
+		var tagName;
+		switch (DataType.getType(obj))
+		{
+			case 'Kekule.MoleculeList': tagName = 'moleculeList'; break;
+			case 'Kekule.ReactionList': tagName = 'reactionList'; break;
+			default: tagName = this.tryApplySuper('doGetListElemTagName', [obj, parentElem]);  // ChemObjList
+		}
+		return tagName;
+	}
+	/* @private */
+	/*
 	doWriteObject: function(obj, targetElem)
 	{
 		var list = Kekule.ChemStructureUtils.getChildStructureObjs(obj, false);
 		return this.writeList(list, targetElem);
 	},
-	/**
+	*/
+	/*
 	 * Write list items to listElem.
 	 * @private
 	 */
+	/*
 	writeList: function(list, listElem)
 	{
 		for (var i = 0, l = list.length; i < l; ++i)
@@ -3508,6 +3716,7 @@ Kekule.IO.CmlListWriter = Class.create(Kekule.IO.CmlElementWriter,
 		}
 		return listElem;
 	}
+	*/
 });
 
 /**
@@ -3521,7 +3730,7 @@ Kekule.IO.CmlRootReader = Class.create(Kekule.IO.CmlElementReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.CmlRootReader',
 	/** @private */
-	doReadElement: function(elem, parentObj)
+	doReadElement: function(elem, parentObj, parentReader)
 	{
 		this.analysisElem(elem);
 		// iterate through elem and direct children and find first readable one
@@ -3529,7 +3738,7 @@ Kekule.IO.CmlRootReader = Class.create(Kekule.IO.CmlElementReader,
 		if (Kekule.DomUtils.getLocalName(elem) != 'cml')
 			reader = this.getReader(elem);
 		if (reader)
-			return reader.readElement(elem, null);
+			return reader.readElement(elem, null, this);
 		else
 		{
 			var children = Kekule.DomUtils.getDirectChildElems(elem, null, null, this.getCoreNamespaceURI());
@@ -3540,7 +3749,7 @@ Kekule.IO.CmlRootReader = Class.create(Kekule.IO.CmlElementReader,
 					reader = this.getReader(children[i]);
 					if (reader)
 					{
-						return reader.readElement(children[i], null);
+						return reader.readElement(children[i], null, this);
 						break;
 					}
 				}
