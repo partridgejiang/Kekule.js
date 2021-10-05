@@ -38,7 +38,8 @@ Kekule.IO.CML = {
 	TYPED_ELEM_NAMES: ['string', 'integer', 'float'],
 	TYPED_ARRAY_ELEM_NAMES: ['stringArray', 'integerArray', 'floatArray'],
 	ATOMS_REF_ATTRIBS: ['atomRef', 'atomRefs2', 'atomRefs3', 'atomRefs4', 'atomRefs', 'atomRefArray'],
-	BONDS_REF_ATTRIBS: ['bondRef', 'bondRefs', 'bondRefArray']
+	BONDS_REF_ATTRIBS: ['bondRef', 'bondRefs', 'bondRefArray'],
+	DEFAULT_VALUE_DELIMITER_PATTERN: /\s+/gm,
 };
 Kekule.IO.CML.LEGAL_CORE_NAMESPACE_URIS = [
 	Kekule.IO.CML.CML2CORE_NAMESPACE_URI,
@@ -66,6 +67,53 @@ Kekule.IO.CmlUtils = {
 				null;
 	}
 	*/
+	/**
+	 * Based on cml datatype attribute, convert a simple string value to a proper js value.
+	 * @param {String} sValue
+	 * @param {String} xmlDataType
+	 * @param {Bool} forceAllNumTypesToFloat If true, numbers will always be converted with parseFloat rather than parseInt for integer types.
+	 * @returns {Variant}
+	 */
+	convertSimpleValueByDataType: function(sValue, xmlDataType, forceAllNumTypesToFloat)
+	{
+		var value;
+		switch (xmlDataType)
+		{
+			case 'xsd:boolean':
+			{
+				value = Kekule.StrUtils.strToBool(sValue);
+				break;
+			}
+			case 'xsd:float':
+			case 'xsd:double':
+			case 'xsd:duration':
+			case 'xsd:decimal':
+			{
+				value = parseFloat(sValue);
+				break;
+			}
+			case 'xsd:integer':
+			case 'xsd:nonPositiveInteger':
+			case 'xsd:negativeInteger':
+			case 'xsd:long':
+			case 'xsd:int':
+			case 'xsd:short':
+			case 'xsd:byte':
+			case 'xsd:nonNegativeInteger':
+			case 'xsd:unsignedLong':
+			case 'xsd:unsignedInt':
+			case 'xsd:unsignedShort':
+			case 'xsd:unsignedByte':
+			case 'xsd:positiveInteger':
+			{
+				value = parseInt(sValue);
+				break;
+			}
+			default:
+				value = sValue;
+		}
+		return value;
+	},
 	/**
 	 * Turn a CML bond order value to a Kekule one.
 	 * @param {String} cmlOrder
@@ -1044,11 +1092,17 @@ Kekule.IO.CmlElementReader = Class.create(Kekule.IO.CmlElementHandler,
 	 */
 	iterateChildElements: function(elem, parentObj, parentReader)
 	{
+		var result = [];
 		var children = Kekule.DomUtils.getDirectChildElems(elem, null, null, this.getCoreNamespaceURI());
 		for (var i = 0, l = children.length; i < l; ++i)
 		{
-			this.readChildElement(children[i], parentObj, parentReader);
+			var subResult = this.readChildElement(children[i], parentObj, parentReader);
+			if (subResult)
+			{
+				result.push({'element': children[i], 'result': subResult});
+			}
 		}
+		return result;
 	}
 });
 
@@ -1471,6 +1525,7 @@ Kekule.IO.CmlScalarReader = Class.create(Kekule.IO.CmlElementReader,
 		{
 			if (jsonObj.dataType)
 			{
+				/*
 				switch (jsonObj.dataType)
 				{
 					case 'xsd:boolean':
@@ -1502,6 +1557,12 @@ Kekule.IO.CmlScalarReader = Class.create(Kekule.IO.CmlElementReader,
 						break;
 					}
 				}
+				*/
+				jsonObj.value = Kekule.IO.CmlUtils.convertSimpleValueByDataType(jsonObj.value, jsonObj.dataType);
+				if (jsonObj.errorValue)
+				{
+					jsonObj.errorValue = Kekule.IO.CmlUtils.convertSimpleValueByDataType(jsonObj.errorValue, jsonObj.dataType, true);
+				}
 			}
 		}
 		// turn jsonObj to Kekule.Scalar instance
@@ -1526,6 +1587,132 @@ Kekule.IO.CmlScalarReader = Class.create(Kekule.IO.CmlElementReader,
 			}
 		}
 		return result;
+	}
+});
+
+/**
+ * CML <array> element reader.
+ * @class
+ * @augments Kekule.IO.CmlElementReader
+ */
+Kekule.IO.CmlArrayReader = Class.create(Kekule.IO.CmlElementReader,
+/** @lends Kekule.IO.CmlArrayReader# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlArrayReader',
+	/** @private */
+	initProperties: function()
+	{
+		// a private property, whether expand the stepped array with concrete array values when reading
+		this.defineProp('expandSteppedArray', {'dataType': DataType.BOOL, 'serializable': false});
+		// a private property, the implicit XML data type of child items of array
+		this.defineProp('defaultItemDataType', {'dataType': DataType.STRING, 'serializable': false});
+	},
+	/**
+	 * Read an <array> element in CML document.
+	 * @ignore
+	 */
+	doReadElement: function(elem, parentObj, parentReader)
+	{
+		return this.readArray(elem);
+	},
+	/** @private */
+	readArray: function(elem)
+	{
+		var result = Kekule.DomUtils.fetchAttributeValuesToJson(elem, this.getCoreNamespaceURI(), true);
+		if (result.size)  // size attrib may still exists without start/end attribs
+			result.size = parseInt(result.size);
+		if (result.start && result.end)  // stepped array
+		{
+			result.start = parseFloat(result.start);
+			result.end = parseFloat(result.end);
+			if (result.stepSize)
+				result.stepSize = parseFloat(result.stepSize);
+
+			if (!result.size && result.stepSize)  // size = 0 or stepSize = 0 is illegal for an array
+			{
+				result.size = Math.round(Math.abs((arrayJson.end - arrayJson.start) / result.stepSize));
+			}
+			else if　(result.size && !result.stepSize)
+			{
+				result.stepSize = (result.end - result.start) / result.size;
+			}
+			//result.values = this._generateExplicitArray(result);
+		}
+		else  // explicit array
+		{
+			var innerText = Kekule.DomUtils.getElementText(elem);
+			result.values = this._generateExplicitArray(result, innerText);
+		}
+		return result;
+	},
+	/**
+	 * Generate object for array element with start/end/size(or stepSize) attributes.
+	 * The array item should be number.
+	 * @param {Hash} arrayJson
+	 * @private
+	 */
+	_generateSteppedArray: function(arrayJson)
+	{
+		var result = null;
+		var expandToConcrete = this.getExpandSteppedArray();
+		if (expandToConcrete)
+		{
+			var arraySize = arrayJson.size;
+			var stepSize = arrayJson.stepSize;
+			var curr = arrayJson.start;
+			result = [curr];
+			for (var i = 0; i < arraySize; ++i)
+			{
+				curr += stepSize;
+				if (curr > arrayJson.end)  // avoid float calculation errors
+				{
+					result.push(arrayJson.end);
+					break;
+				}
+				else
+					result.push(curr);
+			}
+		}
+		return result;
+	},
+	/**
+	 * Generate object for array element with explicit value text.
+	 * The item of arrays should be read from those text.
+	 * @param {Hash} arrayJson
+	 * @param {String} valueText
+	 * @private
+	 */
+	_generateExplicitArray: function(arrayJson, valueText)
+	{
+		var withCustomDelimiter = !!arrayJson.delimiter;
+		var delimiter = withCustomDelimiter? arrayJson.delimiter: Kekule.IO.CML.DEFAULT_VALUE_DELIMITER_PATTERN;
+		var svalues = valueText.split(delimiter);
+		if (withCustomDelimiter)
+		{
+			// custom delimiter are used like <array delimiter)“|”>|3.0|4.0|5.0|6.0|7.0|8.0|9.0|10.0|</array>
+			// the leading and trailing delimiters which ensure that XML prettifiers do not add whitespace.
+			// So when parsing, we need to remove the first and last splitted value
+			svalues.shift();
+			svalues.pop();
+		}
+		var dataType = arrayJson.dataType || this.getDefaultItemDataType();
+		//if (dataType)
+		{
+			var result = [];
+			for (var i = 0, l = svalues.length; i < l; ++i)
+			{
+				var sItem = svalues[i].trim();
+				if (!withCustomDelimiter && sItem)  // default delimiter, ignore all empty string items
+				{
+					if (dataType)
+						result.push(Kekule.IO.CmlUtils.convertSimpleValueByDataType(sItem, dataType));
+					else
+						result.push(sItem)
+				}
+			}
+			return result;
+		}
 	}
 });
 
@@ -3978,6 +4165,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	RF.register(['reactant', 'product', 'substance'], Kekule.IO.CmlReactionReagentReader);
 	RF.register('reaction', Kekule.IO.CmlReactionReader);
 	RF.register(['list', 'moleculeList', 'reactionList'], Kekule.IO.CmlListReader);
+	RF.register(['array'], Kekule.IO.CmlArrayReader);
 	RF.register('cml', Kekule.IO.CmlRootReader);
 
 	var WF = Kekule.IO.CmlElementWriterFactory;
