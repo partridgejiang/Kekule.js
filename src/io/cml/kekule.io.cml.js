@@ -115,6 +115,39 @@ Kekule.IO.CmlUtils = {
 		return value;
 	},
 	/**
+	 * Get the suitable metric unit symbol for CML unit string.
+	 * @param {String} sunit
+	 * @returns {String}
+	 */
+	cmlUnitStrToMetricsUnitSymbol: function(sunit)
+	{
+		var coreUnit = Kekule.IO.CmlSpectUtils.getCmlUnitCorePart(sunit);
+		var coreUnitLower = coreUnit.toLowerCase();
+		var KU = Kekule.Unit;
+		var maps = [
+			['arbitrary', KU.General.ARBITRARY],
+			['counts', KU.Counts.COUNTS],
+			['cm-1', KU.WaveNumber.RECIPROCAL_CENTIMETER]
+		];
+		var unitObj;
+		for (var i = 0, l = maps.length; i < l; ++i)
+		{
+			if (coreUnitLower === maps[i][0].toLowerCase())
+			{
+				unitObj = maps[i][1];
+				break;
+			}
+		}
+		if (!unitObj)
+		{
+			unitObj = Kekule.Unit.getUnit(coreUnit, true);  // ignore case
+		}
+		if (unitObj)
+			return unitObj.symbol;
+		else
+			return coreUnit; // if unit not found, returns the core unit string directly
+	},
+	/**
 	 * Turn a CML bond order value to a Kekule one.
 	 * @param {String} cmlOrder
 	 * @returns {Int} Value from {Kekule.BondOrder}
@@ -1600,7 +1633,7 @@ Kekule.IO.CmlScalarReader = Class.create(Kekule.IO.CmlElementReader,
 				{
 					case 'value': result.setValue(value); break;
 					case 'errorValue': result.setErrorValue(value); break;
-					case 'units': result.setUnit(value); break;
+					case 'units': result.setUnit(Kekule.IO.CmlUtils.cmlUnitStrToMetricsUnitSymbol(value)); break;
 					case 'title': result.setTitle(value); break;
 					case 'dictRef': result.setName(value); break;
 					default: result.setInfoValue(key, value);
@@ -1608,6 +1641,57 @@ Kekule.IO.CmlScalarReader = Class.create(Kekule.IO.CmlElementReader,
 			}
 		}
 		return result;
+	}
+});
+
+/**
+ * CML <scalar> element writer, save {@link Kekule.Scalar}.
+ * @class
+ * @augments Kekule.IO.CmlElementWriter
+ */
+Kekule.IO.CmlScalarWriter = Class.create(Kekule.IO.CmlElementWriter,
+/** @lends Kekule.IO.CmlScalarWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlScalarWriter',
+	/** @private */
+	doCreateElem: function(obj, parentElem)
+	{
+		return this.createChildElem('scalar', parentElem);
+	},
+	/** @private */
+	doWriteObject: function(obj, targetElem)
+	{
+		if (!(obj instanceof Kekule.Scalar))
+		{
+			this.reportTypeMismatchError(obj);
+			return null;
+		}
+		var sValueType;
+		if (!Kekule.ObjUtils.isUnset(obj.getValue()))
+		{
+			Kekule.DomUtils.setElementText(targetElem, obj.getValue());
+			sValueType = DataType.getType(obj.getValue());
+		}
+		if (obj.getName())
+			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'dictRef', obj.getName(), this.getDomHelper());
+		if (obj.getErrorValue())
+			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'errorValue', obj.getErrorValue(), this.getDomHelper());
+		if (obj.getUnit())
+			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'units', obj.getUnit(), this.getDomHelper());
+		if (obj.getTitle())
+			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'title', obj.getTitle(), this.getDomHelper());
+		// dataType
+		if (sValueType)
+		{
+			var sDataType =
+				(sValueType == DataType.INT)? 'xsd:integer':
+				(sValueType == DataType.FLOAT)? 'xsd:float':
+				(sValueType == DataType.BOOL)? 'xsd:boolean':
+				null;
+			if (sDataType)
+				Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'datatype', sDataType, this.getDomHelper());
+		}
 	}
 });
 
@@ -1738,59 +1822,6 @@ Kekule.IO.CmlArrayReader = Class.create(Kekule.IO.CmlElementReader,
 });
 
 /**
- * CML <scalar> element writer, save {@link Kekule.Scalar}.
- * @class
- * @augments Kekule.IO.CmlElementWriter
- */
-Kekule.IO.CmlScalarWriter = Class.create(Kekule.IO.CmlElementWriter,
-/** @lends Kekule.IO.CmlScalarWriter# */
-{
-	/** @private */
-	CLASS_NAME: 'Kekule.IO.CmlScalarWriter',
-	/** @private */
-	doCreateElem: function(obj, parentElem)
-	{
-		return this.createChildElem('scalar', parentElem);
-	},
-	/** @private */
-	doWriteObject: function(obj, targetElem)
-	{
-		if (!(obj instanceof Kekule.Scalar))
-		{
-			this.reportTypeMismatchError(obj);
-			return null;
-		}
-		var sValueType;
-		if (!Kekule.ObjUtils.isUnset(obj.getValue()))
-		{
-			Kekule.DomUtils.setElementText(targetElem, obj.getValue());
-			sValueType = DataType.getType(obj.getValue());
-		}
-		if (obj.getName())
-			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'dictRef', obj.getName(), this.getDomHelper());
-		if (obj.getErrorValue())
-			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'errorValue', obj.getErrorValue(), this.getDomHelper());
-		if (obj.getUnit())
-			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'units', obj.getUnit(), this.getDomHelper());
-		if (obj.getTitle())
-			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'title', obj.getTitle(), this.getDomHelper());
-		// dataType
-		if (sValueType)
-		{
-			var sDataType =
-				(sValueType == DataType.INT)? 'xsd:integer':
-				(sValueType == DataType.FLOAT)? 'xsd:float':
-				(sValueType == DataType.BOOL)? 'xsd:boolean':
-				null;
-			if (sDataType)
-				Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'datatype', sDataType, this.getDomHelper());
-		}
-	}
-});
-
-
-
-/**
  * CML <meta> element reader.
  * @class
  * @augments Kekule.IO.CmlElementReader
@@ -1859,6 +1890,64 @@ Kekule.IO.CmlMetaDataListReader = Class.create(Kekule.IO.CmlBaseListReader,
 		var obj = childReader.readElement(childElem, parentObj, this);
 		return obj;
 	}
+});
+
+/**
+ * CML <conditionList> element reader.
+ * @class
+ * @augments Kekule.IO.CmlBaseListReader
+ */
+Kekule.IO.CmlConditionListReader = Class.create(Kekule.IO.CmlBaseListReader,
+/** @lends Kekule.IO.CmlConditionListReader# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlConditionListReader'
+});
+
+/**
+ * CML <parameter> element reader.
+ * @class
+ * @augments Kekule.IO.CmlBaseListReader
+ */
+Kekule.IO.CmlParameterReader = Class.create(Kekule.IO.CmlElementReader,
+/** @lends Kekule.IO.CmlParameterReader# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlParameterReader',
+	/** @private */
+	doReadElement: function(elem, parentObj, parentReader)
+	{
+		var result = this.readParameter(elem, parentObj, parentReader);
+		return result;  // simply returns the result, do not modify parentObj directly
+	},
+	/** @private */
+	readParameter: function(elem, parentObj, parentReader)
+	{
+		var jsonObj = Kekule.DomUtils.fetchAttributeValuesToJson(elem, this.getCoreNamespaceURI(), true);
+		var result = {'key': jsonObj.name || jsonObj.dictRef, 'value': DataType.StringUtils.deserializeValue(jsonObj.value), 'title': jsonObj.title};
+		var childResults = this.iterateChildElements(elem, parentObj, parentReader);
+		// may containing <scale> element as value
+		for (var i = 0, l = childResults.length; i < l; ++i)
+		{
+			if (Kekule.DomUtils.getLocalName(childResults[i].element).toLowerCase() === 'scalar')
+			{
+				result.value = childResults[i].result;
+			}
+		}
+		return result;
+	}
+});
+
+/**
+ * CML <parameterList> element reader.
+ * @class
+ * @augments Kekule.IO.CmlBaseListReader
+ */
+Kekule.IO.CmlParameterListReader = Class.create(Kekule.IO.CmlBaseListReader,
+/** @lends Kekule.IO.CmlParameterListReader# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlParameterListReader'
 });
 
 /**
@@ -4186,6 +4275,9 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	RF.register(['reactant', 'product', 'substance'], Kekule.IO.CmlReactionReagentReader);
 	RF.register('reaction', Kekule.IO.CmlReactionReader);
 	RF.register(['list', 'moleculeList', 'reactionList'], Kekule.IO.CmlListReader);
+	RF.register(['conditionlist'], Kekule.IO.CmlConditionListReader);
+	RF.register(['parameter'], Kekule.IO.CmlParameterReader);
+	RF.register(['parameterlist'], Kekule.IO.CmlParameterListReader);
 	RF.register(['array'], Kekule.IO.CmlArrayReader);
 	RF.register('cml', Kekule.IO.CmlRootReader);
 
