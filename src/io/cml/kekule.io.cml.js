@@ -1073,15 +1073,36 @@ Kekule.IO.CmlElementReader = Class.create(Kekule.IO.CmlElementHandler,
 	 */
 	doReadChildElementDef: function(elem, parentObj, parentReader)
 	{
-		var reader = Kekule.IO.CmlElementReaderFactory.getReader(elem);
+		var reader = this.doGetChildElementReader(elem, parentObj, parentReader); //Kekule.IO.CmlElementReaderFactory.getReader(elem);
 		if (reader)
 		{
-			//reader.setCoreNamespaceURI(this.getCoreNamespaceURI());
-			this.copySettingsToChildHandler(reader);
-			return reader.readElement(elem, parentObj, parentReader);
+			try
+			{
+				//reader.setCoreNamespaceURI(this.getCoreNamespaceURI());
+				this.copySettingsToChildHandler(reader);
+				var result = reader.readElement(elem, parentObj, parentReader);
+				return result;
+			}
+			finally
+			{
+				reader.finalize();
+			}
 		}
 		else
 			return null;
+	},
+	/**
+	 * Get a reader instance to read CML data from child element.
+	 * Descendants may override this method to returns customized reader.
+	 * @param {Element} elem
+	 * @param {Object} parentObj
+	 * @param {Kekule.IO.CmdElementReader} parentReader
+	 * @returns {Kekule.CmlElementReader}
+	 * @private
+	 */
+	doGetChildElementReader: function(element, parentObj, parentReader)
+	{
+		return Kekule.IO.CmlElementReaderFactory.getReader(element);
 	},
 	/**
 	 * Iterate through and read all direct children of elem.
