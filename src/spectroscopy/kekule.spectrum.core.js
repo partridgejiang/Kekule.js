@@ -471,6 +471,15 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	*/
 
 	/**
+	 * Returns whether this data section containing the peak data.
+	 * @returns {Bool}
+	 */
+	isPeakSection: function()
+	{
+		return this.getMode() === Kekule.Spectroscopy.DataMode.PEAK;
+	},
+
+	/**
 	 * Returns the actual parent SpectrumData object.
 	 * @returns {Kekule.Spectroscopy.Spectrum}
 	 * @private
@@ -1126,6 +1135,14 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		{
 			result.push(hashValue[symbols[i]]);
 		}
+		// then the remaining fields of hashValue, storing in _extra field of array item
+		var remainingFields = AU.exclude(Kekule.ObjUtils.getOwnedFieldNames(hashValue, false), symbols);
+		if (remainingFields.length)
+			result._extra = {};
+		for (var i = 0, l = remainingFields.length; i < l; ++i)
+		{
+			result._extra[remainingFields[i]] = hashValue[remainingFields[i]];
+		}
 		return result;
 	},
 	/** @private */
@@ -1143,6 +1160,10 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			else
 				value = arrayValue[i];
 			result[symbols[i]] = value;
+		}//
+		if (arrayValue._extra)
+		{
+			result = Object.extend(result, arrayValue._extra);
 		}
 		return result;
 	},
