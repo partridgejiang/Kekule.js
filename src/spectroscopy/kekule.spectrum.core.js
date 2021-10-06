@@ -205,7 +205,7 @@ DCM.register({
 	getAltUnits: function(varDef, fromUnitObj, spectrumDataSection, spectrum)
 	{
 		var category = fromUnitObj.category;
-		return category.getAllUnits();
+		return category.getConvertableUnits();
 	}
 });
 // register a converter to convert between NMR frequency and ppm
@@ -251,7 +251,7 @@ DCM.register({
 				if (fromUnitObj.category === Kekule.Unit.Frequency)
 					result.push(Kekule.Unit.Ratio.MILLIONTH);
 				else if (fromUnitObj.category === Kekule.Unit.Ratio)
-					result = result.concat(Kekule.Unit.Frequency.getAllUnits());
+					result = result.concat(Kekule.Unit.Frequency.getConvertableUnits());
 			}
 		}
 		return result;
@@ -291,7 +291,7 @@ DCM.register({
 			if (fromUnitObj.category === Kekule.Unit.Length)
 				result = [Kekule.Unit.WaveNumber.RECIPROCAL_CENTIMETER];
 			else if (fromUnitObj.category === Kekule.Unit.WaveNumber)
-				result = [Kekule.Unit.Length.getAllUnits()];
+				result = [Kekule.Unit.Length.getConvertableUnits()];
 		}
 		return result;
 	}
@@ -1836,7 +1836,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	 */
 	appendVariable: function(varDef)
 	{
-		return this.insertVarDefinitionAt(varDef, -1);
+		return this.insertVariableAt(varDef, -1);
 	},
 	/**
 	 * Remove a variable definition at index.
@@ -2118,7 +2118,7 @@ Kekule.Spectroscopy.SpectrumType = {
 	NMR: 'NMR',
 	IR: 'IR',
 	MS: 'MS',
-	UV: 'UV',
+	UV_VIS: 'UV_VIS',
 	IMS: 'IMS',   // ION MOBILITY SPECTRUM
 	RAMAN: 'Raman',
 	CHROMATOGRAPHY: 'chromatography',
