@@ -1142,9 +1142,11 @@ Kekule.IO.CmlElementReader = Class.create(Kekule.IO.CmlElementHandler,
 	 * @param {Object} elem
 	 * @param {Object} parentObj
 	 * @param {Kekule.IO.CmdElementReader} parentReader
+	 * @param {Func} callback An optional callback function evoked when a child element is iterated and returned with a result.
+	 *   The function has arguments (childElem, childResult, parentObj, parentReader).
 	 * @private
 	 */
-	iterateChildElements: function(elem, parentObj, parentReader)
+	iterateChildElements: function(elem, parentObj, parentReader, callback)
 	{
 		var result = [];
 		var children = Kekule.DomUtils.getDirectChildElems(elem, null, null, this.getCoreNamespaceURI());
@@ -1154,6 +1156,8 @@ Kekule.IO.CmlElementReader = Class.create(Kekule.IO.CmlElementHandler,
 			if (subResult)
 			{
 				result.push({'element': children[i], 'result': subResult});
+				if (callback)
+					callback(children[i], subResult, parentObj, parentReader);
 			}
 		}
 		return result;
@@ -1925,15 +1929,13 @@ Kekule.IO.CmlParameterReader = Class.create(Kekule.IO.CmlElementReader,
 	{
 		var jsonObj = Kekule.DomUtils.fetchAttributeValuesToJson(elem, this.getCoreNamespaceURI(), true);
 		var result = {'key': jsonObj.name || jsonObj.dictRef, 'value': DataType.StringUtils.deserializeValue(jsonObj.value), 'title': jsonObj.title};
-		var childResults = this.iterateChildElements(elem, parentObj, parentReader);
 		// may containing <scale> element as value
-		for (var i = 0, l = childResults.length; i < l; ++i)
-		{
+		var childResults = this.iterateChildElements(elem, parentObj, parentReader, function(childElem, childResult){
 			if (Kekule.DomUtils.getLocalName(childResults[i].element).toLowerCase() === 'scalar')
 			{
 				result.value = childResults[i].result;
 			}
-		}
+		});
 		return result;
 	}
 });
