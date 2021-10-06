@@ -72,14 +72,31 @@ Kekule.Unit = {
 	/**
 	 * Returns an unit object.
 	 * @param {String} key
+	 * @param {Bool} ignoreCase Whether ignore the case of key in searching for unit objects.
 	 * @returns {Object}
 	 */
-	getUnit: function(key)
+	getUnit: function(key, ignoreCase)
 	{
 		if (typeof(key) === 'object')  // already an object?
 			return key.getKey? key: null;
 		else
-			return KU._KEY_MAP[key];
+		{
+			var result = KU._KEY_MAP[key];
+			if (!result && ignoreCase)
+			{
+				var keyLower = key.toLowerCase();
+				var names = Kekule.ObjUtils.getOwnedFieldNames(KU._KEY_MAP);
+				for (var i = 0, l = names.length; i < l; ++i)
+				{
+					if (keyLower === names[i].toLowerCase())
+					{
+						result = KU._KEY_MAP[names[i]];
+						break;
+					}
+				}
+			}
+			return result;
+		}
 	},
 
 	/** @private */
@@ -125,10 +142,11 @@ Kekule.Unit._categoryObjProto = {
 		this._standardUnit = unitObj;
 	},
 	/**
-	 * Returns all unit objects of this category.
+	 * Returns all unit objects matches filter in this category.
+	 * @param {Func} filter With param (unitObj), returns a bool value.
 	 * @returns {Array}
 	 */
-	getAllUnits: function()
+	getUnitsOf: function(filter)
 	{
 		var keys = Kekule.ObjUtils.getOwnedFieldNames(this, false);
 		var result = [];
@@ -137,11 +155,29 @@ Kekule.Unit._categoryObjProto = {
 			if (keys[i] !== '_standardUnit')
 			{
 				var v = this[keys[i]];
-				if (Kekule.ObjUtils.getPrototypeOf(v) === Kekule.Unit._unitObjProto)
+				if (Kekule.ObjUtils.getPrototypeOf(v) === Kekule.Unit._unitObjProto && (!filter || filter(v)))
 					result.push(v);
 			}
 		}
 		return result;
+	},
+	/**
+	 * Returns all unit objects of this category.
+	 * @returns {Array}
+	 */
+	getAllUnits: function()
+	{
+		return this.getUnitsOf();
+	},
+	/**
+	 * Returns all unit objects which can be converted between each other with a simple ratio multiplier of this category.
+	 * @returns {Array}
+	 */
+	getConvertableUnits: function()
+	{
+		return this.getUnitsOf(function(unit){
+			return !!unit.rateToStandard;
+		});
 	}
 };
 
@@ -276,6 +312,7 @@ var register = KU.register;
 
 // register common used units
 register('', 'arbitrary', 'General', null);
+register('', 'counts', 'Counts', 1);
 
 register('', 'one', 'Ratio', 1);
 register('%', 'percent', 'Ratio', 1e-2);
