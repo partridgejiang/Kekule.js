@@ -1287,11 +1287,9 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	},
 
 	/** @private */
-	_prepareSectionDataActualRenderOptions: function(spectrum, section, context, options)
+	_mergeParentAndLocalSpectrumDataRenderOptions: function(parentOptions, localOptions)
 	{
 		var oneOf = Kekule.oneOf;
-		var parentOptions = options;
-		var localOptions = section.getRenderOptions() || {};
 		var refLength = parentOptions.contextRefLengthes.xy;
 		var unitLength = oneOf(localOptions.unitLength, parentOptions.unitLength, 1);
 
@@ -1304,6 +1302,34 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			'strokeWidth': strokeWidth
 		});
 		return result;
+	},
+	/** @private */
+	_prepareSectionDataActualRenderOptions: function(spectrum, section, context, options)
+	{
+		//var oneOf = Kekule.oneOf;
+		var parentOptions = options;
+		var localOptions = section.getRenderOptions() || {};
+		/*
+		var refLength = parentOptions.contextRefLengthes.xy;
+		var unitLength = oneOf(localOptions.unitLength, parentOptions.unitLength, 1);
+
+		var dataStrokeWidthRatio = oneOf(localOptions.spectrum_dataStrokeWidthRatio, parentOptions.spectrum_dataStrokeWidthRatio) || 0;
+		var dataStrokeWidthMin = oneOf(localOptions.spectrum_dataStrokeWidthMin, parentOptions.spectrum_dataStrokeWidthMin) || 0;
+		var strokeWidth = (Math.max(dataStrokeWidthRatio * refLength, dataStrokeWidthMin) || oneOf(localOptions.strokeWidth, parentOptions.strokeWidth, 1)) * unitLength;
+		var result = Object.create(parentOptions);
+		var result = Object.extend(result, {
+			'strokeColor': oneOf(localOptions.spectrum_dataColor, localOptions.color, parentOptions.spectrum_dataColor, parentOptions.color),
+			'strokeWidth': strokeWidth
+		});
+		return result;
+		*/
+		return this._mergeParentAndLocalSpectrumDataRenderOptions(parentOptions, localOptions);
+	},
+	/** @private */
+	_getSpectrumDataValueItemRenderOptions: function(spectrum, section, dataValue) // returns the renderOptions setting of a single data value
+	{
+		var extra = section.getExtraInfoOf(dataValue);
+		return extra && extra.renderOptions;
 	},
 
 	/** @private */
@@ -1330,7 +1356,6 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	doDrawPeakSectionData: function(spectrum, section, context, contextBox, renderOptions, dataVarSymbols, dataTransferMatrix, visibleDataRange)
 	{
 		var self = this;
-		var result;
 
 		var addNewPeakRootValue = function(peakRootValue, peakRootValues, dataVarSymbols)
 		{
@@ -1374,6 +1399,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 
 		var pathArgs = [];
 		var peakRootValues = [];
+		var drawnElems = [];
 		section.forEach(function(dataValue, index){
 			var peakRootValue = section.getPeakRootValueOf(dataValue);
 			if (!peakRootValue || !dataValue )
@@ -1383,9 +1409,19 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			var contextCoords = getClippedContextCoordOfDataValues(peakRootValue, dataValue);
 			if (contextCoords)
 			{
-				var subPathArgs = generatePathArgsOfDataValueContextCoords(contextCoords);
-				if (subPathArgs && subPathArgs.length)
-					pathArgs = pathArgs.concat(subPathArgs);
+				var localRenderOptions = self._getSpectrumDataValueItemRenderOptions(spectrum, section, dataValue);
+				if (localRenderOptions)  // this peak has different render style, need to handle separately
+				{
+					localRenderOptions = self._mergeParentAndLocalSpectrumDataRenderOptions(renderOptions, localRenderOptions);
+					var drawnElem = self.drawLine(context, contextCoords[0], contextCoords[1], localRenderOptions);
+					drawnElems.push(drawnElem);
+				}
+				else  // draw with the common style
+				{
+					var subPathArgs = generatePathArgsOfDataValueContextCoords(contextCoords);
+					if (subPathArgs && subPathArgs.length)
+						pathArgs = pathArgs.concat(subPathArgs);
+				}
 			}
 		});
 		// handle peak root line
@@ -1412,7 +1448,19 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		if (pathArgs && pathArgs.length)
 		{
 			var path = Kekule.Render.DrawPathUtils.makePath.apply(this, pathArgs);
-			result = this.drawPath(context, path, renderOptions);
+			drawnElems.unshift(this.drawPath(context, path, renderOptions));  // the line drawn with global style should be at bottom most level
+		}
+
+		var result;
+		if (drawnElems.length < 1)
+			result = null;
+		else if (drawnElems.length === 1)
+			result = drawnElems[0];
+		else
+		{
+			result = this.createDrawGroup(context);
+			for (var i = 0, l = drawnElems.length; i < l; ++i)
+				this.addToDrawGroup(drawnElems[i], result);
 		}
 
 		return result;
