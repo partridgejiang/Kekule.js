@@ -1135,13 +1135,19 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		{
 			result.push(hashValue[symbols[i]]);
 		}
-		// then the remaining fields of hashValue, storing in _extra field of array item
-		var remainingFields = AU.exclude(Kekule.ObjUtils.getOwnedFieldNames(hashValue, false), symbols);
-		if (remainingFields.length)
-			result._extra = {};
-		for (var i = 0, l = remainingFields.length; i < l; ++i)
+		// then the extra fields
+		if (hashValue._extra)
+			result._extra = hashValue._extra;
+		else
 		{
-			result._extra[remainingFields[i]] = hashValue[remainingFields[i]];
+			// then the remaining fields of hashValue, storing in _extra field of array item
+			var remainingFields = AU.exclude(Kekule.ObjUtils.getOwnedFieldNames(hashValue, false), symbols);
+			if (remainingFields.length)
+				result._extra = {};
+			for (var i = 0, l = remainingFields.length; i < l; ++i)
+			{
+				result._extra[remainingFields[i]] = hashValue[remainingFields[i]];
+			}
 		}
 		return result;
 	},
@@ -1163,7 +1169,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		}//
 		if (arrayValue._extra)
 		{
-			result = Object.extend(result, arrayValue._extra);
+			//result = Object.extend(result, arrayValue._extra);
+			result._extra = arrayValue._extra;
 		}
 		return result;
 	},
@@ -1310,47 +1317,128 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var index = items.indexOf(item);
 		return this.removeDataItemAt(index);
 	},
-	/** @private */
+	/**
+	 * Remove a data item at index.
+	 * @param {Int} index
+	 */
 	removeDataAt: function(index)
 	{
 		var result = this.getDataItems().splice(index, 1);
 		this.notifyDataChange();
 		return result;
 	},
-	/** @private */
+	/**
+	 * Get the data value at index.
+	 * @param {Int} index
+	 * @returns {Array} The arrayed form of value.
+	 */
 	getRawValueAt: function(index)
 	{
-		var result = AU.clone(this.getDataItems()[index]);
-		if (this.getMode() === Kekule.Spectroscopy.DataMode.CONTINUOUS)
+		var rawValue = this.getDataItems()[index];
+		if (rawValue)
 		{
-			var dataIntervalCount = this.getDataCount() - 1;
-			// check if there are omitted values
-			for (var i = 0, l = result.length; i < l; ++i)
+			var result = AU.clone(rawValue);
+			if (this.getMode() === Kekule.Spectroscopy.DataMode.CONTINUOUS)
 			{
-				var v = result[i];
-				if (DataType.isUndefinedValue(v) || DataType.isNullValue(v))  // maybe omitted? check if it is a continous variable
+				var dataIntervalCount = this.getDataCount() - 1;
+				// check if there are omitted values
+				for (var i = 0, l = result.length; i < l; ++i)
 				{
-					var range = this.getContinuousVarRange(i);
-					if (range)
+					var v = result[i];
+					if (DataType.isUndefinedValue(v) || DataType.isNullValue(v))  // maybe omitted? check if it is a continous variable
 					{
-						v = (dataIntervalCount > 1)? ((index / dataIntervalCount) * (range.toValue - range.fromValue) + range.fromValue): range.fromValue;
-						//console.log('adjusted v', v, range);
+						var range = this.getContinuousVarRange(i);
+						if (range)
+						{
+							v = (dataIntervalCount > 1)? ((index / dataIntervalCount) * (range.toValue - range.fromValue) + range.fromValue): range.fromValue;
+							//console.log('adjusted v', v, range);
+						}
 					}
+					result[i] = v;
 				}
-				result[i] = v;
 			}
+			if (rawValue._extra)  // copy the extra properties
+				result._extra = rawValue._extra;
+			return result;
 		}
-		return result;
+		else
+			return null;
 	},
 	/** @private */
 	getHashValueAt: function(index, options)
 	{
 		return this._itemArrayToHash(this.getRawValueAt(index), options || {});
 	},
-	/** @private */
+	/**
+	 * Get the data value at index.
+	 * @param {Int} index
+	 * @returns {Hash} The hashed form of value.
+	 */
 	getValueAt: function(index, options)
 	{
 		return this.getHashValueAt(index, options);
+	},
+	/**
+	 * Set the data value at index.
+	 * @param {Int} index
+	 * @param {Array} The arrayed form of value.
+	 */
+	setRawValueAt: function(index, value)
+	{
+		this.getDataItems()[index] = value;
+		return this;
+	},
+	/** @private */
+	setHashValueAt: function(index, value, options)
+	{
+		var aValue = this._itemHashToArray(value);
+		this.setRawValueAt(index, aValue);
+		return this;
+	},
+	/**
+	 * Set the data value at index.
+	 * @param {Int} index
+	 * @param {Variant} value Value in hash or array form.
+	 */
+	setValueAt: function(index, value, options)
+	{
+		var d;
+		if (!DataType.isArrayValue(value))  // is hash value, convert it to array first
+			d = this._itemHashToArray(value);
+		else
+			d = value;
+		this.setRawValueAt(index, d);
+		return this;
+	},
+	/**
+	 * Get the extra information of a data value.
+	 * @param {Variant} value Data value in hash or array form.
+	 * @returns {Hash}
+	 */
+	getExtraInfoOf: function(value)
+	{
+		return value._extra;
+	},
+	/**
+	 * Get the extra information of data value at index.
+	 * @param {Int} index
+	 * @returns {Hash}
+	 */
+	getExtraInfoAt: function(index)
+	{
+		var d = this.getDataItems()[index];
+		return d && d._extra;
+	},
+	/**
+	 * Set the extra information of data value at index.
+	 * @param {Int} index
+	 * @param {Hash} info
+	 */
+	setExtraInfoAt: function(index, info)
+	{
+		var d = this.getDataItems()[index];
+		d._extra = info;
+		return this;
 	},
 
 	/**
@@ -2005,12 +2093,19 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	{
 		return this.getActiveSection().removeData(item);
 	},
-	/** @private */
+	/**
+	 * Remove a data item at index in current active section.
+	 * @param {Int} index
+	 */
 	removeDataAt: function(index)
 	{
 		return this.getActiveSection().removeDataAt(index);
 	},
-	/** @private */
+	/**
+	 * Get the data value at index in current active section.
+	 * @param {Int} index
+	 * @returns {Array} The arrayed form of value.
+	 */
 	getRawValueAt: function(index)
 	{
 		return this.getActiveSection().getRawValueAt(index);
@@ -2020,10 +2115,68 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	{
 		return this.getActiveSection().getHashValueAt(index);
 	},
-	/** @private */
+	/**
+	 * Get the data value at index in current active section.
+	 * @param {Int} index
+	 * @returns {Hash} The hashed form of value.
+	 */
 	getValueAt: function(index)
 	{
 		return this.getHashValueAt(index);
+	},
+	/**
+	 * Set the data value at index in current active section.
+	 * @param {Int} index
+	 * @param {Array} The array form of value.
+	 */
+	setRawValueAt: function(index, value)
+	{
+		this.getActiveSection().setRawValueAt(index, value);
+		return this;
+	},
+	/** @private */
+	setHashValueAt: function(index, value, options)
+	{
+		this.getActiveSection().setHashValueAt(index, value, options);
+		return this;
+	},
+	/**
+	 * Set the data value at index in current active section.
+	 * @param {Int} index
+	 * @param {Variant} value Value in hash or array form.
+	 */
+	setValueAt: function(index, value, options)
+	{
+		this.getActiveSection().setValueAt(index, value);
+		return this;
+	},
+	/**
+	 * Get the extra information of a data value in current active section.
+	 * @param {Variant} value Data value in hash or array form.
+	 * @returns {Hash}
+	 */
+	getExtraInfoOf: function(value)
+	{
+		return this.getActiveSection().getExtraInfoOf(value);
+	},
+	/**
+	 * Get the extra information of data value at index of current active section.
+	 * @param {Int} index
+	 * @returns {Hash}
+	 */
+	getExtraInfoAt: function(index)
+	{
+		return this.getActiveSection().getExtraInfoAt(index);
+	},
+	/**
+	 * Set the extra information of data value at index of current active section.
+	 * @param {Int} index
+	 * @param {Hash} info
+	 */
+	setExtraInfoAt: function(index, info)
+	{
+		this.getActiveSection().setExtraInfoAt(index, info);
+		return this;
 	},
 
 	/**
