@@ -13,14 +13,16 @@ describe('Test of some core data and functions of spectra module', function(){
 			new Kekule.VarDefinition({'symbol': 'x', 'units': 'unitX'}),
 			new Kekule.VarDefinition({'symbol': 'y', 'units': 'unitY', 'dependency': Kekule.VarDependency.DEPENDENT}),
 			new Kekule.VarDefinition({'symbol': 'z', 'units': 'unitZ', 'dependency': Kekule.VarDependency.DEPENDENT}),
+			new Kekule.VarDefinition({'symbol': 'd', 'units': 'unitR', 'dependency': Kekule.VarDependency.DEPENDENT}),
 			new Kekule.VarDefinition({'symbol': 'r', 'units': 'unitR', 'dependency': Kekule.VarDependency.DEPENDENT})
 		];
 		var sData = new Kekule.Spectroscopy.SpectrumData(null, variables);
+		sData.setDefaultVarValue('d', 20);
 
 		sData.appendData({x: 1, y: 1, z: 1, r: -1, 'extra1': 'extra1Value0', 'extra2': 'extra2Value0'});
-		sData.appendData([3,3,3,-3]);
-		sData.appendData([2,2,2,-2]);
-		var raw = [4,4,4,-4];
+		sData.appendData([3,3,3,null,-3]);
+		sData.appendData([2,2,2,null,-2]);
+		var raw = [4,4,4,null,-4];
 		raw._extra = {};
 		raw._extra.extra1 = 'extra1Value3';
 		sData.appendData(raw);
@@ -35,6 +37,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			expect(value.y).toEqual(v);
 			expect(value.z).toEqual(v);
 			expect(value.r).toEqual(-v);
+			expect(value.d).toEqual(20);
 		});
 
 		expect(sData.getValueAt(0)._extra.extra1).toEqual('extra1Value0');
@@ -43,8 +46,8 @@ describe('Test of some core data and functions of spectra module', function(){
 		expect(sData.getRawValueAt(0)._extra.extra2).toEqual('extra2Value0');
 		expect(sData.getValueAt(3)._extra.extra1).toEqual('extra1Value3');
 		expect(sData.getRawValueAt(3)._extra.extra1).toEqual('extra1Value3');
-		expect(sData.getValueAt(4)).toEqual({x: 5, y: 5, z: 5, r: -5, '_extra': {'extra1': 'extra1Value5'}});
-		expect(sData.getValueAt(5)).toEqual({x: 6, y: 6, z: 6, r: -6, '_extra': {'extra1': 'extra1Value5'}});
+		expect(sData.getValueAt(4)).toEqual({x: 5, y: 5, z: 5, r: -5, d: 20, '_extra': {'extra1': 'extra1Value5'}});
+		expect(sData.getValueAt(5)).toEqual({x: 6, y: 6, z: 6, r: -6, d: 20, '_extra': {'extra1': 'extra1Value5'}});
 		expect(sData.getExtraInfoAt(1)).toEqual({'extra2': 'extra2Value1'});
 	});
 
@@ -52,11 +55,13 @@ describe('Test of some core data and functions of spectra module', function(){
 		var variables = [
 			new Kekule.VarDefinition({'symbol': 'x', 'units': 'unitX'}),
 			new Kekule.VarDefinition({'symbol': 'y', 'units': 'unitY', 'dependency': Kekule.VarDependency.DEPENDENT}),
-			new Kekule.VarDefinition({'symbol': 'z', 'units': 'unitZ', 'dependency': Kekule.VarDependency.DEPENDENT})
+			new Kekule.VarDefinition({'symbol': 'z', 'units': 'unitZ', 'dependency': Kekule.VarDependency.DEPENDENT}),
+			new Kekule.VarDefinition({'symbol': 'd', 'units': 'unitR', 'dependency': Kekule.VarDependency.DEPENDENT})
 		];
 		var sData = new Kekule.Spectroscopy.SpectrumData(null, variables);
 		sData.setContinuousVarRange('x', 0, 10);
 		sData.setContinuousVarRange('z', 5, 0);
+		sData.setDefaultVarValue('d', 10);
 		sData.appendData({y: 0});
 		sData.appendData({y: 1});
 		sData.appendData({y: 2, 'extra': 'extraValue'});
@@ -77,6 +82,10 @@ describe('Test of some core data and functions of spectra module', function(){
 		expect(sData.getHashValueAt(3).z).toEqual(2);
 		expect(sData.getHashValueAt(4).z).toEqual(1);
 		expect(sData.getHashValueAt(5).z).toEqual(0);
+
+		expect(sData.getHashValueAt(1).d).toEqual(10);
+		expect(sData.getHashValueAt(2).d).toEqual(10);
+		expect(sData.getHashValueAt(3).d).toEqual(10);
 
 		expect(sData.getExtraInfoAt(2).extra).toEqual('extraValue');
 	});
