@@ -115,13 +115,25 @@ Kekule.IO.CmlUtils = {
 		return value;
 	},
 	/**
+	 * Returns the core part of cml unit.
+	 * E.g., returns 'hz' for 'units:hz'.
+	 * @param {String} sunit
+	 * @returns {String}
+	 */
+	getCmlUnitCorePart: function(sunit)
+	{
+		var p = sunit.indexOf(':');
+		var coreUnit = (p >= 0)? sunit.substr(p + 1): sunit;
+		return coreUnit;
+	},
+	/**
 	 * Get the suitable metric unit symbol for CML unit string.
 	 * @param {String} sunit
 	 * @returns {String}
 	 */
 	cmlUnitStrToMetricsUnitSymbol: function(sunit)
 	{
-		var coreUnit = Kekule.IO.CmlSpectUtils.getCmlUnitCorePart(sunit);
+		var coreUnit = Kekule.IO.CmlUtils.getCmlUnitCorePart(sunit);
 		var coreUnitLower = coreUnit.toLowerCase();
 		var KU = Kekule.Unit;
 		var maps = [
