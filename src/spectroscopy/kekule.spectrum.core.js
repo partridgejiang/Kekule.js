@@ -926,6 +926,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 * @param {Hash} options Extra calculation options, may include fields:
 	 *   {
 	 *    basedOnInternalUnit: Bool. If true, the returned value will be based on internal unit rather than the external unit of variable.
+	 *    ignorePeakRoot: Bool. If true, the peak root value will be ignored during calculation.
 	 *  }
 	 * @returns {Hash}
 	 */
@@ -962,6 +963,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		if (remainingVarSymbols.length)
 		{
 			var self = this;
+			var isPeakData = this.isPeakSection();
 			this.forEach(function (dataValue, index) {
 				for (var i = 0, l = remainingVarSymbols.length; i < l; ++i)
 				{
@@ -970,14 +972,19 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 						continue;
 					if (!ranges[symbol])
 						ranges[symbol] = {};
+
 					ranges[symbol].min = notNum(ranges[symbol].min) ? dataValue[symbol] : Math.min(ranges[symbol].min, dataValue[symbol]);
 					ranges[symbol].max = notNum(ranges[symbol].max) ? dataValue[symbol] : Math.max(ranges[symbol].max, dataValue[symbol]);
+
 					// consider peak root value
-					var peakRootValue = self.getPeakRootValueOf(dataValue);
-					if (peakRootValue && !notNum(peakRootValue[symbol]))
+					if (isPeakData && !op.ignorePeakRoot)
 					{
-						ranges[symbol].min = notNum(ranges[symbol].min) ? peakRootValue[symbol] : Math.min(ranges[symbol].min, peakRootValue[symbol]);
-						ranges[symbol].max = notNum(ranges[symbol].max) ? peakRootValue[symbol] : Math.max(ranges[symbol].max, peakRootValue[symbol]);
+						var peakRootValue = self.getPeakRootValueOf(dataValue);
+						if (peakRootValue && !notNum(peakRootValue[symbol]))
+						{
+							ranges[symbol].min = notNum(ranges[symbol].min) ? peakRootValue[symbol] : Math.min(ranges[symbol].min, peakRootValue[symbol]);
+							ranges[symbol].max = notNum(ranges[symbol].max) ? peakRootValue[symbol] : Math.max(ranges[symbol].max, peakRootValue[symbol]);
+						}
 					}
 				}
 			}, null, {basedOnInternalUnit: true}); // here we use the internal unit, to keep the cache with the same unit
@@ -1372,7 +1379,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		if (rawValue)
 		{
 			var result = AU.clone(rawValue);
-			if (this.getMode() === Kekule.Spectroscopy.DataMode.CONTINUOUS)
+			var isContinousData = this.getMode() === Kekule.Spectroscopy.DataMode.CONTINUOUS;
+			//if (this.getMode() === Kekule.Spectroscopy.DataMode.CONTINUOUS)
 			{
 				var dataIntervalCount = this.getDataCount() - 1;
 				// check if there are omitted values
@@ -1384,7 +1392,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 						var defValue = this.getDefaultVarValue(i);
 						if (Kekule.ObjUtils.notUnset(defValue))
 							v = defValue;
-						else
+						else if (isContinousData)
 						{
 							var range = this.getContinuousVarRange(i);
 							if (range)
