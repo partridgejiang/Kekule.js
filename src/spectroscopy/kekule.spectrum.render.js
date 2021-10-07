@@ -584,7 +584,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 		var scaleLabelSize = {'x': 0, 'y': 0};
 		var scaleLabelPaddingSize = {'x': 0, 'y': 0};
 		// here we check the first and last scale labels to roughly determinate the occupied dimensions of scale labels
-		if (scaleLabels)
+		if (scaleLabels && scaleLabels.length)
 		{
 			var scaleLabelsFirst = scaleLabels[0];
 			var scaleLabelsLast = scaleLabels[scaleLabels.length - 1];
@@ -1053,7 +1053,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	{
 		// get the independant and denpendant vars
 		var dependantVarSymbol, independantVarSymbol;
-		var varInfos = targetDataSections[0].getLocalVarInfos();   // we assume the vars in sections are same
+		var varInfos = targetDataSections[0].getActualLocalVarInfos();   // we assume the vars in sections are same
 		var varUnitSymbols = {};
 		var varSymbols = {};
 		for (var i = 0, l = varInfos.length; i < l; ++i)
