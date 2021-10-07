@@ -509,7 +509,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	getActualLocalVarInfos: function()
 	{
-		var result = this.getLocalVarInfos();
+		var result = AU.clone(this.getLocalVarInfos());
 		if (!result || !result.length)  // inherit all from parent spectrum
 		{
 			var vars = this.getParentVariables();
@@ -1650,14 +1650,19 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 				'dataType': 'Kekule.ChemObjList',
 				'setter': function (value) {
 					var old = this.getSections();
-					if (old) {
-						old.finalize();
+					if (old !== value)
+					{
+						if (old)
+						{
+							old.finalize();
+						}
+						if (value)
+						{
+							value._transparent = true;  // force the obj list be transparent
+							value.setParent(this.getParent() || this);
+						}
+						this.setPropStoreFieldValue('sections', value);
 					}
-					if (value) {
-						value._transparent = true;  // force the obj list be transparent
-						value.setParent(this.getParent() || this);
-					}
-					this.setPropStoreFieldValue('sections', value);
 				}
 			});
 			this.defineProp('autoCreateSection', {'dataType': DataType.BOOL});
@@ -2402,15 +2407,18 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 			'setter': function(value)
 			{
 				var old = this.getData();
-				if (old)
+				if (value !== old)
 				{
-					old.finalize();
+					if (old)
+					{
+						old.finalize();
+					}
+					if (value)
+					{
+						value.setPropValue('parent', this, true);
+					}
+					this.setPropStoreFieldValue('data', value);
 				}
-				if (value)
-				{
-					value.setPropValue('parent', this, true);
-				}
-				this.setPropStoreFieldValue('data', value);
 			}
 		});
 		this.defineProp('spectrumParams',
