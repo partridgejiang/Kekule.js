@@ -1943,9 +1943,9 @@ Kekule.IO.CmlParameterReader = Class.create(Kekule.IO.CmlElementReader,
 		var result = {'key': jsonObj.name || jsonObj.dictRef, 'value': DataType.StringUtils.deserializeValue(jsonObj.value), 'title': jsonObj.title};
 		// may containing <scale> element as value
 		var childResults = this.iterateChildElements(elem, parentObj, parentReader, function(childElem, childResult){
-			if (Kekule.DomUtils.getLocalName(childResults[i].element).toLowerCase() === 'scalar')
+			if (Kekule.DomUtils.getLocalName(childElem).toLowerCase() === 'scalar')
 			{
-				result.value = childResults[i].result;
+				result.value = childResult.result;
 			}
 		});
 		return result;
