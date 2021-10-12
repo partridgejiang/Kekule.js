@@ -90,6 +90,56 @@ describe('Test of some core data and functions of spectra module', function(){
 		expect(sData.getExtraInfoAt(2).extra).toEqual('extraValue');
 	});
 
+	it('Spectrum serialization test', function() {
+		var variables = [
+			new Kekule.VarDefinition({'symbol': 'x', 'units': 'unitX'}),
+			new Kekule.VarDefinition({'symbol': 'y', 'units': 'unitY', 'dependency': Kekule.VarDependency.DEPENDENT}),
+			new Kekule.VarDefinition({'symbol': 'z', 'units': 'unitZ', 'dependency': Kekule.VarDependency.DEPENDENT}),
+			new Kekule.VarDefinition({'symbol': 'd', 'units': 'unitR', 'dependency': Kekule.VarDependency.DEPENDENT}),
+			new Kekule.VarDefinition({'symbol': 'r', 'units': 'unitR', 'dependency': Kekule.VarDependency.DEPENDENT})
+		];
+
+		var spectrum = new Kekule.Spectroscopy.Spectrum();
+		spectrum.setVariables(variables);
+
+		var sData = spectrum.getData(); //new Kekule.Spectroscopy.SpectrumData(null, variables);
+		sData.setDefaultVarValue('d', 20);
+
+		sData.appendData({x: 1, y: 1, z: 1, r: -1, 'extra1': 'extra1Value0', 'extra2': 'extra2Value0'});
+		sData.appendData([3, 3, 3, null, -3]);
+		sData.appendData([2, 2, 2, null, -2]);
+		var raw = [4, 4, 4, null, -4];
+		raw._extra = {};
+		raw._extra.extra1 = 'extra1Value3';
+		sData.appendData(raw);
+		sData.sort();
+		sData.setValueAt(5, {x: 6, y: 6, z: 6, r: -6, 'extra1': 'extra1Value5'});
+		sData.setValueAt(4, {x: 5, y: 5, z: 5, r: -5, 'extra1': 'extra1Value5'});
+		sData.setExtraInfoAt(1, {'extra2': 'extra2Value1'});
+
+		// serialize and deserialize
+		var json1 = {};
+		spectrum.saveObj(json1, 'json');
+		var spectrum2 = new Kekule.Spectroscopy.Spectrum();
+		spectrum2.loadObj(json1, 'json');
+		/*
+		var json2 = {};
+		spectrum2.saveObj(json2, 'json');
+		console.log('save', json1, json2);
+		expect(json1).toEqual(json2);
+		*/
+		expect(spectrum.getData().getVarSymbols()).toEqual(spectrum2.getData().getVarSymbols());
+		for (var i = 0, l = spectrum.getData().getDataCount(); i < l; ++i)
+		{
+			var dataItem = spectrum.getData().getValueAt(i);
+			var dataItem2 = spectrum2.getData().getValueAt(i);
+			expect(dataItem).toEqual(dataItem2);
+			var extra = spectrum.getData().getExtraInfoAt(i);
+			var extra2 = spectrum2.getData().getExtraInfoAt(i);
+			expect(extra).toEqual(extra2);
+		}
+	});
+
 	/*
 	it('Kekule.IO.JcampUtils methods test', function(){
 
