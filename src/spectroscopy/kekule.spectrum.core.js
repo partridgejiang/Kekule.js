@@ -1572,6 +1572,16 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		return value._extra;
 	},
 	/**
+	 * Set the extra information of a data value.
+	 * @param {Variant} value Data value in hash or array form.
+	 * @param {Hash} info
+	 */
+	setExtraInfoOf: function(value, info)
+	{
+		value._extra = info;
+		return this;
+	},
+	/**
 	 * Get the extra information of data value at index.
 	 * @param {Int} index
 	 * @returns {Hash}
@@ -2333,6 +2343,16 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 		return this.getActiveSection().getExtraInfoOf(value);
 	},
 	/**
+	 * Set the extra information of a data value in current active section.
+	 * @param {Variant} value Data value in hash or array form.
+	 * @param {Hash} info
+	 */
+	setExtraInfoOf: function(value, info)
+	{
+		this.getActiveSection().setExtraInfoOf(value, info);
+		return this;
+	},
+	/**
 	 * Get the extra information of data value at index of current active section.
 	 * @param {Int} index
 	 * @returns {Hash}
@@ -2458,29 +2478,57 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 });
 
 /**
- * A special class to store the peak assignment ref object.
+ * Spectrum peak shape enumeration.
+ * @enum
+ */
+Kekule.Spectroscopy.PeakShape = {
+	SHARP: 'sharp',
+	BROAD: 'broad'
+};
+/**
+ * Spectrum peak multiplicity enumeration.
+ * @enum
+ */
+Kekule.Spectroscopy.PeakMultiplicity = {
+	UNKNOWN: 0,
+	SINGLET: 1,
+	DOUBLET: 2,
+	TRIPLET: 3,
+	QUARTET: 4,
+	QUINTET: 5,
+	SEXTUPLET: 6,
+	MULTIPLET: 255,
+};
+
+/**
+ * A special class to store the additional peak information (e.g. the assignment ref object of peak).
  * @class
  * @augments Kekule.ChemObject
  *
- * @param {Kekule.ChemObject} target
+ * @param {Hash} params
  *
- * @property {Kekule.ChemObject} target The assignment target of peak, ususally an atom or a bond.
+ * @property {Kekule.ChemObject} assignment The assignment target of peak, ususally an atom or a bond.
+ * @property {String} shape Shape of peak, usually be set with value from {@link Kekule.Spectroscopy.PeakShape}.
+ * @property {VARIANT} multiplicity Multiplicity of peak.
+ *   Usually be set with value from {@link Kekule.Spectroscopy.PeakMultiplicity}, but a custom string value (e.g. 'triplet121') is also allowed.
  */
-Kekule.Spectroscopy.SpectrumPeakAssignment = Class.create(Kekule.ChemObject,
-/** @lends Kekule.Spectroscopy.SpectrumPeakAssignment# */
+Kekule.Spectroscopy.SpectrumPeakDetails = Class.create(Kekule.ChemObject,
+/** @lends Kekule.Spectroscopy.SpectrumPeakDetails# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumPeakAssignment',
+	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumPeakDetails',
 	/** @private */
-	initialize: function (target)
+	initialize: function (params)
 	{
 		this.tryApplySuper('initialize', []);
-		this.setTarget(target);
+		this.setPropValues(params);
 	},
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('target', {'dataType': 'Kekule.ChemObject', 'objRef': true, 'autoUpdate': true});
+		this.defineProp('assignment', {'dataType': 'Kekule.ChemObject', 'objRef': true, 'autoUpdate': true});
+		this.defineProp('shape', {'dataType': DataType.STRING});
+		this.defineProp('multiplicity', {'dataType': DataType.VARIANT});
 	}
 });
 
