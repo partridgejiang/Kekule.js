@@ -368,7 +368,9 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		this.setPropStoreFieldValue('dataItems', []);
 		this.setPropStoreFieldValue('parent', parent);
 		this.tryApplySuper('initialize', []);
-		this.setLocalVarSymbols(localVariables);
+		//this.setLocalVarSymbols(localVariables);
+		if (localVariables)
+			this.setLocalVariables(localVariables);
 		this.setDataSorted(true);
 		this._cache = {};  // private
 		//this.setPropStoreFieldValue('variables', variables? AU.clone(variables): []);
@@ -458,6 +460,78 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		this.setMode(Kekule.Spectroscopy.DataMode.CONTINUOUS);
 	},
 
+	// custom save / load method
+	/** @ignore */
+	doSaveProp: function(obj, prop, storageNode, serializer)
+	{
+		if (!prop.serializable)
+			return;
+		var propName = prop.name;
+		if (propName === 'dataItems')
+		{
+			var node = serializer.createChildStorageNode(storageNode, serializer.propNameToStorageName('dataItems'), false);
+			var subNode = serializer.createChildStorageNode(node, serializer.propNameToStorageName('values'), true); // create sub node for array
+			serializer.save(obj.getDataItems(), subNode);  // save array values in this sub node
+			// extract all extra info of data array and save them
+			var extraInfos = obj._extractAllExtraInfoOfDataItems();
+			if (extraInfos.length)
+			{
+				var subNode = serializer.createChildStorageNode(node, serializer.propNameToStorageName('extras'), true);
+				serializer.save(extraInfos, subNode);
+			}
+			return true;  // this property is handled, do not use default save method
+		}
+		else
+			return false;  // use the default method
+	},
+	/** @ignore */
+	doLoadProp: function(obj, prop, storageNode, serializer)
+	{
+		if (!prop.serializable)
+			return;
+		var propName = prop.name;
+		if (propName === 'dataItems')
+		{
+			var items = [];
+			var node = serializer.getChildStorageNode(storageNode, serializer.propNameToStorageName('dataItems'));
+			var subNode = serializer.getChildStorageNode(node, serializer.propNameToStorageName('values')); // get sub node for array
+			serializer.load(items, subNode);
+			obj.setPropStoreFieldValue('dataItems', items);
+			// then the extra info
+			var subNode = serializer.getChildStorageNode(node, serializer.propNameToStorageName('extras'));
+			if (subNode)
+			{
+				var extras = [];
+				serializer.load(extras, subNode);
+				obj._writeExtraInfoOfDataItems(extras);
+			}
+			return true;
+		}
+		else
+			return false;  // use the default method
+	},
+	/** @private */
+	_extractAllExtraInfoOfDataItems: function()
+	{
+		var result = [];
+		for (var i = 0, l = this.getDataCount(); i < l; ++i)
+		{
+			var info = this.getExtraInfoAt(i);
+			if (info)
+				result.push({'index': i, 'info': info});
+		}
+		return result;
+	},
+	/** @private */
+	_writeExtraInfoOfDataItems: function(extras)
+	{
+		for (var i = 0, l = extras.length; i < l; ++i)
+		{
+			var info = extras[i];
+			this.setExtraInfoAt(info.index, info.info);
+		}
+	},
+
 	/* @ignore */
 	/*
 	parentChanged: function(newParent, oldParent)
@@ -499,7 +573,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	getParentVariables: function()
 	{
-		var parent = this.getParent();
+		var parent = this.getParentSpectrum();
 		return (parent && parent.getVariables()) || [];
 	},
 	/**
@@ -549,6 +623,36 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			{
 				targetArray.push({/*'varDef': varDef,*/ 'symbol': varSymbol});
 			}
+		}
+	},
+	/**
+	 * Set the local variable symbols or definitions.
+	 * @param {Array} variables Array of var defintion or symbols.
+	 */
+	setLocalVariables: function(variables)
+	{
+		var localVar;
+		var varDefs = [], varSymbols = [];
+		for (var i = 0, l = variables.length; i < l; ++i)
+		{
+			localVar = variables[i];
+			if (typeof(localVar) === 'string')  // a var symbol
+			{
+				varSymbols.push(localVar);
+			}
+			else // var definition
+			{
+				varDefs.push(localVar);
+			}
+		}
+		if (varDefs.length)
+		{
+			this.setPropStoreFieldValue('localVarInfos', varDefs);
+			this.notifyPropSet('localVarInfos', varDefs);
+		}
+		else if (varSymbols.length)
+		{
+			this._updateLocalVarInfosFromSymbols(varSymbols);
 		}
 	},
 	/**
@@ -1623,6 +1727,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 			var sections = new Kekule.ChemObjList(null, Kekule.Spectroscopy.SpectrumDataSection, true);
 			this.setPropStoreFieldValue('sections', sections);
 			this.setParent(parent);
+			sections.setOwner(this.getOwner());
 			//this.createSection(this.getVariables());  // create a default section
 		},
 		doFinalize: function () {
@@ -1660,6 +1765,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 						{
 							value._transparent = true;  // force the obj list be transparent
 							value.setParent(this.getParent() || this);
+							value.setOwner(this.getOwner());
 						}
 						this.setPropStoreFieldValue('sections', value);
 					}
@@ -1735,12 +1841,32 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 		},
 
 		/** @private */
-		getHigherLevelObj: function () {
+		getHigherLevelObj: function ()
+		{
 			return this.getParent();
 		},
+		/** @private */
+		getOwner: function()
+		{
+			var parent = this.getParent();
+			return parent && parent.getOwner && parent.getOwner();  // always returns the owner of parent spectrum
+		},
 		/** @ignore */
-		getChildHolder: function () {
+		getChildHolder: function ()
+		{
 			return this.getSections();
+		},
+
+		/** @ignore */
+		loaded: function(/*$super*/)
+		{
+			var sections = this.getSections();
+			if (sections)
+			{
+				sections.parentChanged(this);
+				sections.ownerChanged(this.getOwner());
+			}
+			this.tryApplySuper('loaded');
 		},
 
 		/**
@@ -2328,6 +2454,33 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 			}
 		}
 		return this;
+	}
+});
+
+/**
+ * A special class to store the peak assignment ref object.
+ * @class
+ * @augments Kekule.ChemObject
+ *
+ * @param {Kekule.ChemObject} target
+ *
+ * @property {Kekule.ChemObject} target The assignment target of peak, ususally an atom or a bond.
+ */
+Kekule.Spectroscopy.SpectrumPeakAssignment = Class.create(Kekule.ChemObject,
+/** @lends Kekule.Spectroscopy.SpectrumPeakAssignment# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumPeakAssignment',
+	/** @private */
+	initialize: function (target)
+	{
+		this.tryApplySuper('initialize', []);
+		this.setTarget(target);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('target', {'dataType': 'Kekule.ChemObject', 'objRef': true, 'autoUpdate': true});
 	}
 });
 
