@@ -2700,7 +2700,8 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 				},
 				'setter': function(value) {
 					this.setInfoValue(infoFieldName || propName, value);
-				}
+				},
+				'serializable': false
 			}, options);
 		})();
 		return this.defineProp(propName, defs);
