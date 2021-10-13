@@ -537,7 +537,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			var value = Jcamp.LdrValueParser.parseValue(ldr);
 			var defaultHandler = function()
 			{
-				chemObj.setSpectrumParam(labelName.toLowerCase(), value);
+				chemObj.setParameter(labelName.toLowerCase(), value);
 			};
 			if (spectrumType === KS.SpectrumType.IR)
 			{
@@ -546,7 +546,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 					var isSingleNum = value.indexOf(Jcamp.Consts.SIMPLE_VALUE_DELIMITER) < 0;
 					if (isSingleNum)
 						value = parseFloat(value) || value;
-					chemObj.setSpectrumParam('resolution', value);
+					chemObj.setParameter('resolution', value);
 				}
 			}
 			else if (spectrumType === KS.SpectrumType.NMR)
@@ -554,26 +554,26 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				if (labelName === '.OBSERVENUCLEUS')
 				{
 					var targetNucleus = (value.indexOf('C') >= 0 && value.indexOf('13') >= 0)? KS.SpectrumNMR.TargetNucleus.C13: KS.SpectrumNMR.TargetNucleus.H;
-					chemObj.setSpectrumParam('nucleus', targetNucleus);
+					chemObj.setParameter('nucleus', targetNucleus);
 				}
 				else if (labelName === '.OBSERVEFREQUENCY')
 				{
 					if (Kekule.NumUtils.isNormalNumber(value))
-						chemObj.setSpectrumParam('observeFrequency', Kekule.Scalar.create(value, Kekule.Unit.Frequency.MEGAHERTZ.symbol)); // the value is stored in MHz in Jcamp-DX
+						chemObj.setParameter('observeFrequency', Kekule.Scalar.create(value, Kekule.Unit.Frequency.MEGAHERTZ.symbol)); // the value is stored in MHz in Jcamp-DX
 				}
 				else if (labelName === '.SOLVENTREFERENCE')
 				{
 					if (Kekule.NumUtils.isNormalNumber(value))
-						chemObj.setSpectrumParam('solventReference', Kekule.Scalar.create(value, Kekule.Unit.Ratio.MILLIONTH.symbol));
+						chemObj.setParameter('solventReference', Kekule.Scalar.create(value, Kekule.Unit.Ratio.MILLIONTH.symbol));
 				}
 				else if (labelName === '.DELAY')
 				{
 					if (Kekule.NumUtils.isNormalNumber(value))
-						chemObj.setSpectrumParam('dalays', Kekule.Scalar.create(value, Kekule.Unit.Time.MICROSECOND.symbol));
+						chemObj.setParameter('delays', Kekule.Scalar.create(value, Kekule.Unit.Time.MICROSECOND.symbol));
 				}
 				else if (labelName === '.ACQUISITIONMODE')
 				{
-					chemObj.setSpectrumParam('acquisitionMode', value.toLowerCase());
+					chemObj.setParameter('acquisitionMode', value.toLowerCase());
 				}
 				else
 					defaultHandler();

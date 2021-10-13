@@ -212,7 +212,7 @@ DCM.register({
 DCM.register({
 	convert: function(value, varDef, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
 	{
-		var observeFreq = spectrum.getSpectrumParam('observeFrequency');
+		var observeFreq = spectrum.getParameter('observeFrequency');
 		if (fromUnitObj.category === KUnit.Frequency)  // from Hz to ppm
 		{
 			var freq = fromUnitObj.convertValueTo(value, observeFreq.getUnit());
@@ -231,7 +231,7 @@ DCM.register({
 	{
 		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)
 		{
-			var observeFreq = spectrum.getSpectrumParam('observeFrequency');
+			var observeFreq = spectrum.getParameter('observeFrequency');
 			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
 			{
 				return (fromUnitObj.category === Kekule.Unit.Frequency && toUnitObj.category === Kekule.Unit.Ratio)
@@ -245,7 +245,7 @@ DCM.register({
 		var result = [];
 		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)
 		{
-			var observeFreq = spectrum.getSpectrumParam('observeFrequency');
+			var observeFreq = spectrum.getParameter('observeFrequency');
 			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
 			{
 				if (fromUnitObj.category === Kekule.Unit.Frequency)
@@ -2575,6 +2575,9 @@ Kekule.Spectroscopy.SpectrumMS = {
  * @property {String} spectrumType Type of spectrum, value from {@link Kekule.Spectroscopy.SpectrumType}.
  * @property {String} name Name of spectrum.
  * @property {String} title Title of spectrum.
+ * @property {Hash} conditions Conditions of spectrum.
+ * @property {Hash} parameters Important parameters of spectrum.
+ * @property {Hash} annotations Additional annotations of spectrum.
  * @property {Kekule.Spectroscopy.SpectrumData} data Spectrum data.
  * @property {Hash} spectrumParams Key spectrum parameters, e,g. the frequency of NMR.
  */
@@ -2603,7 +2606,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	{
 		this.defineProp('spectrumType', {'dataType': DataType.STRING});
 		this.defineProp('name', {'dataType': DataType.STRING});
-		this.defineProp('title', {'dataType': DataType.STRING});
+		//this.defineProp('title', {'dataType': DataType.STRING});
 		this.defineProp('data', {'dataType': 'Kekule.Spectroscopy.SpectrumData',
 			'setter': function(value)
 			{
@@ -2622,6 +2625,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 				}
 			}
 		});
+		/*
 		this.defineProp('spectrumParams',
 			{
 				'dataType': DataType.HASH,
@@ -2637,9 +2641,11 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 				},
 				'setter': null
 			});
-		//this.defineProp('title', {'dataType': DataType.STRING});
-		//this._defineInfoProperty('title');
-		//this.defineProp('molecule', {'dataType': 'Kekule.Molecule'});
+		*/
+		this._defineInfoProperty('title');
+		this._defineInfoProperty('conditions', null, {'dataType': DataType.HASH});
+		this._defineInfoProperty('parameters', null, {'dataType': DataType.HASH});
+		this._defineInfoProperty('annotations', null, {'dataType': DataType.HASH});
 		this._defineDataDelegatedProperty('variables');
 		this._defineDataDelegatedProperty('dataSections', 'sections');
 		this._defineDataDelegatedProperty('activeDataSectionIndex', 'activeSectionIndex');
@@ -2677,14 +2683,13 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		this._defineDataDelegatedMethod('setDefaultVarValue');
 		this._defineDataDelegatedMethod('clearDefaultVarValue');
 	},
-	/*
+	/**
 	 * Defines property which storing value in {@link Kekule.ChemObject.info}.
 	 * @param {String} propName
 	 * @param {String} infoFieldName
 	 * @param {Hash} options
 	 * @private
 	 */
-	/*
 	_defineInfoProperty: function(propName, infoFieldName, options)
 	{
 		var defs;
@@ -2700,7 +2705,6 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		})();
 		return this.defineProp(propName, defs);
 	},
-	*/
 	/**
 	 * Defines property which reflecting the property values in {@link Kekule.Spectroscopy.Spectrum.data}.
 	 * @param {String} propName
@@ -2750,6 +2754,111 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		}
 	},
 
+	/** @private */
+	_getInfoBasedHashPropValue: function(infoKeyName, propName)
+	{
+		var hash = this.getInfoValue(infoKeyName);
+		return hash && hash[propName];
+	},
+	/** @private */
+	_setInfoBasedHashpropValue: function(infoKeyName, propName, value)
+	{
+		var hash = this.getInfoValue(infoKeyName);
+		if (!hash)
+		{
+			hash = {};
+			this.setInfoValue(infoKeyName, hash);
+		}
+		hash[propName] = value;
+	},
+	/** @private */
+	_getAllKeysOfInfoBasedHashProp: function(infoKeyName)
+	{
+		var hash = this.getInfoValue(infoKeyName);
+		return hash? Kekule.ObjUtils.getOwnedFieldNames(hash, false): [];
+	},
+	/**
+	 * Returns the value of a spectrum condition.
+	 * @param {String} key
+	 * @returns {Variant}
+	 */
+	getCondition: function(key)
+	{
+		return this._getInfoBasedHashPropValue('conditions', key);
+	},
+	/**
+	 * Set the value of a spectrum condition.
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setCondition: function(key, value)
+	{
+		this._setInfoBasedHashpropValue('conditions', key, value);
+		return this;
+	},
+	/**
+	 * Returns all the keys of spectrum condition list.
+	 * @returns {Array}
+	 */
+	getConditionKeys: function()
+	{
+		return this._getAllKeysOfInfoBasedHashProp('conditions');
+	},
+	/**
+	 * Returns the value of a spectrum parameter.
+	 * @param {String} key
+	 * @returns {Variant}
+	 */
+	getParameter: function(key)
+	{
+		return this._getInfoBasedHashPropValue('parameters', key);
+	},
+	/**
+	 * Set the value of a spectrum parameter.
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setParameter: function(key, value)
+	{
+		this._setInfoBasedHashpropValue('parameters', key, value);
+		return this;
+	},
+	/**
+	 * Returns all the keys of spectrum parameter list.
+	 * @returns {Array}
+	 */
+	getParameterKeys: function()
+	{
+		return this._getAllKeysOfInfoBasedHashProp('parameters');
+	},
+	/**
+	 * Returns the value of a spectrum annotation.
+	 * @param {String} key
+	 * @returns {Variant}
+	 */
+	getAnnotation: function(key)
+	{
+		return this._getInfoBasedHashPropValue('annotations', key);
+	},
+	/**
+	 * Set the value of a spectrum annotation.
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setAnnotation: function(key, value)
+	{
+		this._setInfoBasedHashpropValue('annotations', key, value);
+		return this;
+	},
+	/**
+	 * Returns all the keys of spectrum annotation list.
+	 * @returns {Array}
+	 */
+	getAnnotationKeys: function()
+	{
+		return this._getAllKeysOfInfoBasedHashProp('annotations');
+	},
+
 	/*
 	 * Create the data object.
 	 * @param variables
@@ -2789,33 +2898,39 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		return result;
 	},
 
-	/**
+	/*
 	 * Returns all keys in {@link Kekule.Spectroscopy.Spectrum#spectrumParams} property.
 	 * @returns {Array}
 	 */
+	/*
 	getSpectrumParamKeys: function()
 	{
 		return this.getSpectrumParams()? Kekule.ObjUtils.getOwnedFieldNames(this.getSpectrumParams()): [];
 	},
-	/**
+	*/
+	/*
 	 * Get param value from {@link Kekule.Spectroscopy.Spectrum#spectrumParams}.
 	 * @param {String} key
 	 * @returns {Variant}
 	 */
+	/*
 	getSpectrumParam: function(key)
 	{
 		return this.getSpectrumParams()? this.getSpectrumParams()[key]: null;
 	},
-	/**
+	*/
+	/*
 	 * Set value of a spectrum param. If key already exists, its value will be overwritten.
 	 * @param {String} key
 	 * @param {Variant} value
 	 */
+	/*
 	setSpectrumParam: function(key, value)
 	{
 		this.doGetSpectrumParams(true)[key] = value;
 		this.notifyPropSet('spectrumParams', this.getPropStoreFieldValue('spectrumParams'));
 	}
+	*/
 });
 
 Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.Spectroscopy.Spectrum);
