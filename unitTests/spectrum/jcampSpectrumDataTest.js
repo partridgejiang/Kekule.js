@@ -16,7 +16,7 @@ describe('Test of some core data and functions of spectra module', function(){
 
 			// test stored information
 			expect(chemObj.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.MS);
-			expect(chemObj.getInfoValue('jcamp.jcampDxVersion')).toEqual('5.00');
+			expect(chemObj.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.00');
 
 			// spectrum data
 			var spectrumData = chemObj.getData();
@@ -45,7 +45,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			expect(obj1 instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 
 			// test stored information
-			expect(obj1.getInfoValue('jcamp.jcampDxVersion')).toEqual('5.0');
+			expect(obj1.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.0');
 			expect(obj1.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
 
 			// spectrum data
@@ -55,7 +55,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			expect(spectrumData1.getMode()).toEqual(Kekule.Spectroscopy.DataMode.CONTINUOUS);
 
 			// sections
-			var dataCount = 16384; //parseInt(obj1.getInfoValue('NPOINTS'));
+			var dataCount = 16384; //parseInt(obj1.getSpectrumInfoValue('NPOINTS'));
 			expect(spectrumData1.getSectionCount()).toEqual(1);
 			expect(spectrumData1.getDataCount()).toEqual(dataCount);
 
@@ -66,7 +66,7 @@ describe('Test of some core data and functions of spectra module', function(){
 				expect(obj2 instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 
 				// test stored information
-				expect(obj2.getInfoValue('jcamp.jcampDxVersion')).toEqual('5.0');
+				expect(obj2.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.0');
 				expect(obj2.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
 
 				// spectrum data
@@ -76,7 +76,7 @@ describe('Test of some core data and functions of spectra module', function(){
 				expect(spectrumData2.getMode()).toEqual(Kekule.Spectroscopy.DataMode.CONTINUOUS);
 
 				// sections
-				var dataCount = 16384;  // parseInt(obj2.getInfoValue('NPOINTS'));
+				var dataCount = 16384;  // parseInt(obj2.getSpectrumInfoValue('NPOINTS'));
 				expect(spectrumData2.getSectionCount()).toEqual(1);
 				expect(spectrumData2.getDataCount()).toEqual(dataCount);
 
@@ -115,7 +115,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			expect(obj1 instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 
 			// test stored information
-			expect(obj1.getInfoValue('jcamp.jcampDxVersion')).toEqual('5.0');
+			expect(obj1.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.0');
 			expect(obj1.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
 
 			// spectrum data
@@ -125,7 +125,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			expect(spectrumData1.getMode()).toEqual(Kekule.Spectroscopy.DataMode.CONTINUOUS);
 
 			// sections
-			var dataCount = 16384; //parseInt(obj1.getInfoValue('NPOINTS'));
+			var dataCount = 16384; //parseInt(obj1.getSpectrumInfoValue('NPOINTS'));
 			expect(spectrumData1.getSectionCount()).toEqual(1);
 			expect(spectrumData1.getDataCount()).toEqual(dataCount);
 
@@ -136,7 +136,7 @@ describe('Test of some core data and functions of spectra module', function(){
 				expect(obj2 instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 
 				// test stored information
-				expect(obj2.getInfoValue('jcamp.jcampDxVersion')).toEqual('5.0');
+				expect(obj2.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.0');
 				expect(obj2.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
 
 				// spectrum data
@@ -146,7 +146,7 @@ describe('Test of some core data and functions of spectra module', function(){
 				expect(spectrumData2.getMode()).toEqual(Kekule.Spectroscopy.DataMode.CONTINUOUS);
 
 				// sections
-				var dataCount = 16384;  // parseInt(obj2.getInfoValue('NPOINTS'));
+				var dataCount = 16384;  // parseInt(obj2.getSpectrumInfoValue('NPOINTS'));
 				expect(spectrumData2.getSectionCount()).toEqual(1);
 				expect(spectrumData2.getDataCount()).toEqual(dataCount);
 
@@ -186,7 +186,7 @@ describe('Test of some core data and functions of spectra module', function(){
 
 			// test stored information
 			expect(chemObj.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
-			expect(chemObj.getInfoValue('jcamp.jcampDxVersion')).toEqual('5.00');
+			expect(chemObj.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.00');
 
 			// spectrum data
 			var spectrumData = chemObj.getData();
@@ -221,7 +221,7 @@ describe('Test of some core data and functions of spectra module', function(){
 
 			// test stored information
 			expect(chemObj.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.MS);
-			expect(chemObj.getInfoValue('jcamp.jcampDxVersion')).toEqual('5.00');
+			expect(chemObj.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.00');
 
 			// spectrum data
 			var spectrumData = chemObj.getData();
@@ -269,7 +269,7 @@ describe('Test of some core data and functions of spectra module', function(){
 
 			// test stored information
 			expect(spectrum.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
-			expect(spectrum.getInfoValue('jcamp.jcampDxVersion')).toEqual('5.00');
+			expect(spectrum.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.00');
 
 			// spectrum data
 			var spectrumData = spectrum.getData();
