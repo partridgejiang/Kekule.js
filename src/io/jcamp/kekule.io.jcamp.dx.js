@@ -79,32 +79,32 @@ Kekule.IO.Jcamp.LabelTypeInfos.createInfos([
 	// IR
 	//['RESOLUTION', Jcamp.ValueType.STRING],  // already defined in jcamp.base.js
 	// MS
-	['SPECTROMETER TYPE', Jcamp.ValueType.STRING, null, KS.SpectrumType.MS],
-	['INLET', Jcamp.ValueType.STRING, null, KS.SpectrumType.MS],
-	['IONIZATION MODE', Jcamp.ValueType.STRING, null, KS.SpectrumType.MS],
+	['SPECTROMETER TYPE', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.MS],
+	['INLET', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.MS],
+	['IONIZATION MODE', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.MS],
 	// NMR
-	['OBSERVE FREQUENCY', Jcamp.ValueType.AFFN, null, KS.SpectrumType.NMR],  // in MHz
-	['OBSERVE NUCLEUS', Jcamp.ValueType.STRING, null, KS.SpectrumType.NMR],
-	['SOLVENT REFERENCE', Jcamp.ValueType.AFFN, null, KS.SpectrumType.NMR],  // Solvent lock signal in ppm
-	['DELAY', Jcamp.ValueType.SIMPLE_AFFN_GROUP, null, KS.SpectrumType.NMR],
-	['ACQUISITION MODE', Jcamp.ValueType.STRING, null, KS.SpectrumType.NMR],
+	['OBSERVE FREQUENCY', Jcamp.ValueType.AFFN, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.NMR],  // in MHz
+	['OBSERVE NUCLEUS', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.NMR],
+	['SOLVENT REFERENCE', Jcamp.ValueType.AFFN, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.NMR],  // Solvent lock signal in ppm
+	['DELAY', Jcamp.ValueType.SIMPLE_AFFN_GROUP, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.NMR],
+	['ACQUISITION MODE', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.NMR],
 	// IMS
-	['IMS PRESSURE', Jcamp.ValueType.AFFN, null, KS.SpectrumType.IMS],  // in kilopascal
-	['CARRIER GAS', Jcamp.ValueType.STRING, null, KS.SpectrumType.IMS],
-	['DRIFT GAS', Jcamp.ValueType.STRING, null, KS.SpectrumType.IMS],
-	['ELECTRIC FIELD', Jcamp.ValueType.SIMPLE_AFFN_GROUP, null, KS.SpectrumType.IMS],  // actually a (AFFN, AFFN) pair
-	['ION POLARITY', Jcamp.ValueType.STRING, null, KS.SpectrumType.IMS],
-	['IONIZATION MODE', Jcamp.ValueType.STRING, null, KS.SpectrumType.IMS],
-	['IMS TEMPERATURE', Jcamp.ValueType.SIMPLE_AFFN_GROUP, null, KS.SpectrumType.IMS],   // actually (AFFN[, AFFN])
-	['SHUTTER OPENING TIME', Jcamp.ValueType.AFFN, null, KS.SpectrumType.IMS],
+	['IMS PRESSURE', Jcamp.ValueType.AFFN, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.IMS],  // in kilopascal
+	['CARRIER GAS', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.IMS],
+	['DRIFT GAS', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.IMS],
+	['ELECTRIC FIELD', Jcamp.ValueType.SIMPLE_AFFN_GROUP, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.IMS],  // actually a (AFFN, AFFN) pair
+	['ION POLARITY', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.IMS],
+	['IONIZATION MODE', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.IMS],
+	['IMS TEMPERATURE', Jcamp.ValueType.SIMPLE_AFFN_GROUP, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.IMS],   // actually (AFFN[, AFFN])
+	['SHUTTER OPENING TIME', Jcamp.ValueType.AFFN, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.IMS],
 	// chromatography/ms
-	['MASS ANALYSER', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY],
-	['TANDEM SCANNING METHOD', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY], // actually (STRING, {AFFN})
-	['INTERFACE', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY],
-	['CHROMATOGRAPHY TYPE', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY],
-	['CHROMATOGRAPHY SOLVENTS', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY],  // actually lines of (N,C,U)
-	['ADDITIVES', Jcamp.ValueType.STRING, null, KS.SpectrumType.CHROMATOGRAPHY],   // actually lines of (N,C,U)
-	['DIMENSIONALITY', Jcamp.ValueType.AFFN, null, KS.SpectrumType.CHROMATOGRAPHY]
+	['MASS ANALYSER', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.CHROMATOGRAPHY],
+	['TANDEM SCANNING METHOD', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.CHROMATOGRAPHY], // actually (STRING, {AFFN})
+	['INTERFACE', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.CHROMATOGRAPHY],
+	['CHROMATOGRAPHY TYPE', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.CHROMATOGRAPHY],
+	['CHROMATOGRAPHY SOLVENTS', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.CHROMATOGRAPHY],  // actually lines of (N,C,U)
+	['ADDITIVES', Jcamp.ValueType.STRING, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.CHROMATOGRAPHY],   // actually lines of (N,C,U)
+	['DIMENSIONALITY', Jcamp.ValueType.AFFN, null, Jcamp.LabelCategory.PARAMTER, KS.SpectrumType.CHROMATOGRAPHY]
 ]);
 
 /**

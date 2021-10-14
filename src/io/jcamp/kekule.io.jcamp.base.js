@@ -150,7 +150,7 @@ Kekule.IO.Jcamp.Utils = {
 		return JcampUtils.standardizeLdrLabelName(name1) === JcampUtils.standardizeLdrLabelName(name2);
 	},
 	/**
-	 * Returns the core name and label type of LDR.
+	 * Returns the core name and label type/data type/category of LDR.
 	 * @param {String} labelName
 	 * @returns {Hash} {coreName, labelType}
 	 */
@@ -158,11 +158,20 @@ Kekule.IO.Jcamp.Utils = {
 	{
 		var result;
 		if (labelName.startsWith(JcampConsts.SPECIFIC_LABEL_PREFIX))
-			result = {'coreName': JcampUtils.standardizeLdrLabelName(labelName.substr(JcampConsts.SPECIFIC_LABEL_PREFIX.length)), 'labelType': JLabelType.SPECIFIC};
+			result = {'coreName': JcampUtils.standardizeLdrLabelName(labelName.substr(JcampConsts.SPECIFIC_LABEL_PREFIX.length)), 'labelType': JLabelType.SPECIFIC, 'labelCategory': JLabelCategory.ANNOTATION};
 		else if (labelName.startsWith(JcampConsts.PRIVATE_LABEL_PREFIX))
-			result = {'coreName': JcampUtils.standardizeLdrLabelName(labelName.substr(JcampConsts.PRIVATE_LABEL_PREFIX.length)), 'labelType': JLabelType.PRIVATE};
+			result = {'coreName': JcampUtils.standardizeLdrLabelName(labelName.substr(JcampConsts.PRIVATE_LABEL_PREFIX.length)), 'labelType': JLabelType.PRIVATE, 'labelCategory': JLabelCategory.ANNOTATION};
 		else
-			result = {'coreName': labelName, 'labelType': JLabelType.GLOBAL};
+			result = {'coreName': labelName, 'labelType': JLabelType.GLOBAL, 'labelCategory': JLabelCategory.META};
+
+		var detailInfo = JcampLabelTypeInfos.getInfo(result.coreName, result.labelType);
+		if (detailInfo)
+		{
+			result.dataType = detailInfo.dataType;
+			result.labelCategory = detailInfo.labelCategory;
+		}
+		//console.log('label info', result);
+
 		return result;
 	},
 	/**
@@ -866,15 +875,30 @@ Kekule.IO.Jcamp.LabelType = {
 }
 var JLabelType = Kekule.IO.Jcamp.LabelType;
 
+/**
+ * Enumeration of JCAMP label categories.
+ * @enum
+ */
+Kekule.IO.Jcamp.LabelCategory = {
+	GLOBAL: 'global',
+	META: 'meta',
+	PARAMTER: 'parameter',
+	CONDITION: 'condition',
+	ANNOTATION: 'annotation'
+};
+var JLabelCategory = Kekule.IO.Jcamp.LabelCategory;
+
 Kekule.IO.Jcamp.LabelTypeInfos = {
 	_DEFAULT_TYPE: JValueType.STRING
 };
-Kekule.IO.Jcamp.LabelTypeInfos.createInfo = function(labelName, dataType, labelType, specificType)
+Kekule.IO.Jcamp.LabelTypeInfos.createInfo = function(labelName, dataType, labelType, labelCategory, specificType)
 {
 	var name = JcampUtils.standardizeLdrLabelName(labelName);
 	var defaultLabelType = specificType? JLabelType.SPECIFIC: JLabelType.GLOBAL;
 	if (!labelType)
 		labelType = defaultLabelType;
+	if (!labelCategory)
+		labelCategory = (labelType === JLabelType.GLOBAL)? JLabelCategory.META: JLabelCategory.ANNOTATION;
 	if (labelType === JLabelType.SPECIFIC && !name.startsWith(JcampConsts.SPECIFIC_LABEL_PREFIX))
 		name = JcampConsts.SPECIFIC_LABEL_PREFIX + name;
 	else if (labelType === JLabelType.PRIVATE && !name.start(JcampConsts.PRIVATE_LABEL_PREFIX))
@@ -882,6 +906,7 @@ Kekule.IO.Jcamp.LabelTypeInfos.createInfo = function(labelName, dataType, labelT
 	var result = {
 		'labelName': name,
 		'labelType': labelType,
+		'labelCategory': labelCategory,
 		'dataType': dataType
 	};
 	if (specificType)
@@ -902,12 +927,24 @@ Kekule.IO.Jcamp.LabelTypeInfos.getType = function(labelName)
 	var info = JcampLabelTypeInfos[labelName];
 	return (info && info.dataType) || JcampLabelTypeInfos._DEFAULT_TYPE;
 };
+Kekule.IO.Jcamp.LabelTypeInfos.getCategory = function(labelName)
+{
+	var info = JcampLabelTypeInfos[labelName];
+	return (info && info.labelCategory) || JLabelCategory.ANNOTATION;
+};
+Kekule.IO.Jcamp.LabelTypeInfos.getInfo = function(labelName, labelType)
+{
+	var result = JcampLabelTypeInfos[labelName];
+	if (result && labelType && result.labelType !== labelType)  // label type not match
+		return null;
+	return result;
+}
 var JcampLabelTypeInfos = Kekule.IO.Jcamp.LabelTypeInfos;
 var _createLabelTypeInfos = Kekule.IO.Jcamp.LabelTypeInfos.createInfos;
 // create type infos
 _createLabelTypeInfos([
 	// global labels
-	['TITLE', JValueType.STRING],
+	['TITLE', JValueType.STRING, null, JLabelCategory.GLOBAL],
 	//['JCAMP-DX', JValueType.STRING],    // JCAMP-DX version
 	['JCAMPDX', JValueType.STRING],    // JCAMP-DX version
 	['JCAMPCX', JValueType.STRING],    // JCAMP-CX version
@@ -929,7 +966,7 @@ _createLabelTypeInfos([
 	['XFACTOR', JValueType.AFFN],
 	['YFACTOR', JValueType.AFFN],
 	['NPOINTS', JValueType.AFFN],       // number of components
-	['RESOLUTION', JValueType.STRING],
+	['RESOLUTION', JValueType.STRING, null, JLabelCategory.PARAMTER],
 
 	['XYDATA', JValueType.MULTILINE_AFFN_ASDF],
 	['XYPOINTS', JValueType.MULTILINE_AFFN_GROUP],
@@ -941,9 +978,9 @@ _createLabelTypeInfos([
 	['CLASS', JValueType.STRING],       // Coblentz Class of the spectrum (1,2,3, or 4) and the IUPAC Class of digital representation (A, B, C).3
 	['ORIGIN', JValueType.STRING],      // Name of organization, address, telephone number, name of individual contributor, etc.,
 	['OWNER', JValueType.STRING],       // Name of owner of a proprietary spectrum
-	['DATE', JValueType.SHORT_DATE],    // YY/MM/DD
-	['TIME', JValueType.SHORT_TIME],    // hh:mm:ss
-	['LONGDATE', JValueType.DATETIME],  // YYYY/MM/DD [HH:MM:SS[.SSSS] [±UUUU]] , e.g. 1998/08/12 23:18:02.0000 -0500
+	['DATE', JValueType.SHORT_DATE, null, JLabelCategory.GLOBAL],    // YY/MM/DD
+	['TIME', JValueType.SHORT_TIME, null, JLabelCategory.GLOBAL],    // hh:mm:ss
+	['LONGDATE', JValueType.DATETIME, null, JLabelCategory.GLOBAL],  // YYYY/MM/DD [HH:MM:SS[.SSSS] [±UUUU]] , e.g. 1998/08/12 23:18:02.0000 -0500
 	['SOURCE REFERENCE', JValueType.STRING],
 	['CROSS REFERENCE', JValueType.STRING],
 	['SAMPLE DESCRIPTION', JValueType.STRING],
@@ -1366,19 +1403,42 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		return result;
 	},
 	/** @private */
-	getLdrFullNameForInfoField: function(labelName, chemObj)
+	getLdrStorageParamsForInfoField: function(labelName, chemObj)
 	{
 		var ldrNameInfo = Jcamp.Utils.analysisLdrLabelName(labelName);
 		var labelType = ldrNameInfo.labelType;
 		var prefix = this.getLdrNamePrefixForInfoField(labelName, labelType, chemObj);
-		var result = prefix? prefix + ldrNameInfo.coreName: ldrNameInfo.coreName;
+		var fullName = prefix? prefix + ldrNameInfo.coreName: ldrNameInfo.coreName;
+		var result = {
+			'fullName': fullName,
+			'labelType': labelType,
+			'labelCategory': ldrNameInfo.labelCategory,
+		}
 		return result;
 	},
 	/** @private */
 	saveLdrValueToChemObjInfoProp: function(ldrName, ldrValue, chemObj)
 	{
-		var fname = this.getLdrFullNameForInfoField(ldrName, chemObj);
-		chemObj.setInfoValue(fname, ldrValue);
+		var params = this.getLdrStorageParamsForInfoField(ldrName, chemObj);
+		var fname = params.fullName;
+		var category = params.labelCategory;
+		var saveMethod;
+
+		if (category === JLabelCategory.ANNOTATION)
+			saveMethod = chemObj.setAnnotation;
+		else if (category === JLabelCategory.PARAMTER)
+			saveMethod = chemObj.setParameter;
+		else if (category === JLabelCategory.CONDITION)
+			saveMethod = chemObj.setCondition;
+		else if (category === JLabelCategory.META)
+			saveMethod = chemObj.setMeta;
+		else if (category === JLabelCategory.GLOBAL)
+			saveMethod = chemObj.setInfoValue;
+		else if (params.labelType === JLabelType.PRIVATE)
+			saveMethod = chemObj.setAnnotation;
+		if (!saveMethod)
+			saveMethod = chemObj.setInfoValue;  // default
+		saveMethod.apply(chemObj, [fname, ldrValue]);
 	},
 
 	/** @private */
