@@ -2575,6 +2575,7 @@ Kekule.Spectroscopy.SpectrumMS = {
  * @property {String} spectrumType Type of spectrum, value from {@link Kekule.Spectroscopy.SpectrumType}.
  * @property {String} name Name of spectrum.
  * @property {String} title Title of spectrum.
+ * @property {Hash} metaData Meta information of spectrum.
  * @property {Hash} conditions Conditions of spectrum.
  * @property {Hash} parameters Important parameters of spectrum.
  * @property {Hash} annotations Additional annotations of spectrum.
@@ -2643,6 +2644,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 			});
 		*/
 		this._defineInfoProperty('title');
+		this._defineInfoProperty('metaData', null, {'dataType': DataType.HASH});
 		this._defineInfoProperty('conditions', null, {'dataType': DataType.HASH});
 		this._defineInfoProperty('parameters', null, {'dataType': DataType.HASH});
 		this._defineInfoProperty('annotations', null, {'dataType': DataType.HASH});
@@ -2777,6 +2779,44 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	{
 		var hash = this.getInfoValue(infoKeyName);
 		return hash? Kekule.ObjUtils.getOwnedFieldNames(hash, false): [];
+	},
+	/**
+	 * Returns value of spectrum meta/condition/parameter/annotation.
+	 * @param {String} key
+	 * @param {Array} candicateCategories
+	 * @returns {Variant}
+	 */
+	getSpectrumInfoValue: function(key, candicateCategories)
+	{
+		if (!candicateCategories)
+			candicateCategories = ['metaData', 'conditions', 'parameters', 'annotations'];
+		for (var i = 0, l = candicateCategories.length; i < l; ++i)
+		{
+			var c = candicateCategories[i];
+			var v = this._getInfoBasedHashPropValue(c, key);
+			if (Kekule.ObjUtils.notUnset(v))
+				return v;
+		}
+		return undefined;
+	},
+	/**
+	 * Returns the value of a spectrum meta data.
+	 * @param {String} key
+	 * @returns {Variant}
+	 */
+	getMeta: function(key)
+	{
+		return this._getInfoBasedHashPropValue('metaData', key);
+	},
+	/**
+	 * Set the value of a spectrum meta data.
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setMeta: function(key, value)
+	{
+		this._setInfoBasedHashpropValue('metaData', key, value);
+		return this;
 	},
 	/**
 	 * Returns the value of a spectrum condition.
