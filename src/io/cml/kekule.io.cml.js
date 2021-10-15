@@ -23,7 +23,9 @@
  * @object
  */
 Kekule.globalOptions.add('IO.cml', {
-	prettyPrint: true
+	prettyPrint: true,
+	enableReadRootObjList: true,  // if false, when reading <cml> with multiple child root elements, only the first will be returned by reader
+	defaultRootObjListHolder: Kekule.ChemSpace  // when reading root obj list, put all objects into instance of this class
 });
 
 /**
@@ -4137,6 +4139,8 @@ Kekule.IO.CmlRootReader = Class.create(Kekule.IO.CmlElementReader,
 			return reader.readElement(elem, null, this);
 		else
 		{
+			var enableReadList = options.defaultRootObjListHolder && options.enableReadRootObjList;
+			var resultObjs = [];
 			var children = Kekule.DomUtils.getDirectChildElems(elem, null, null, this.getCoreNamespaceURI());
 			if (children)
 			{
@@ -4145,13 +4149,39 @@ Kekule.IO.CmlRootReader = Class.create(Kekule.IO.CmlElementReader,
 					reader = this.getReader(children[i]);
 					if (reader)
 					{
-						return reader.readElement(children[i], null, this);
-						break;
+						var obj = reader.readElement(children[i], null, this, options);
+						if (!enableReadList)
+						{
+							return obj;
+							break;
+						}
+						else
+						{
+							resultObjs.push(obj);
+						}
 					}
+				}
+				if (resultObjs.length <= 0)
+					return null;
+				if (resultObjs.length <= 1)  // only when readable obj, return it directly
+					return resultObjs[0];
+				else  // return obj list
+				{
+					return this._createObjWrapper(resultObjs, options.defaultRootObjListHolder);
 				}
 			}
 		}
 		return null;
+	},
+	/** @private */
+	_createObjWrapper: function(objs, wrapperClass)
+	{
+		var result = new wrapperClass();
+		for (var i = 0, l = objs.length; i < l; ++i)
+		{
+			result.appendChild(objs[i]);
+		}
+		return result;
 	},
 	/**
 	 * Get a suitable reader for elem.
@@ -4304,7 +4334,11 @@ Kekule.IO.CmlReader = Class.create(Kekule.IO.ChemDataReader,
 				rootElem = data;
 		}
 		var reader = Kekule.IO.CmlElementReaderFactory.getReader('cml');
-		return reader.readElement(rootElem, null, null, options);
+		var op = Object.extend({
+			'enableReadRootObjList': Kekule.globalOptions.IO.cml.enableReadRootObjList,
+			'defaultRootObjListHolder': Kekule.globalOptions.IO.cml.defaultRootObjListHolder
+		}, options || {});
+		return reader.readElement(rootElem, null, null, op);
 	}
 });
 
@@ -4340,12 +4374,13 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 		var writer = Kekule.IO.CmlElementWriterFactory.getWriter('Kekule.ChemDocument');
 		if (writer)
 		{
+			var op = options || {};
 			writer.setCoreNamespaceURI(nsUri);
 			//writer.setCoreNamespaceURI('');
-			var result = writer.writeObject(obj, xmlDoc.documentElement, xmlDoc, options);
+			var result = writer.writeObject(obj, xmlDoc.documentElement, xmlDoc, op);
 			if (dataType == Kekule.IO.ChemDataType.TEXT) // convert DOM to text
 			{
-				result = DataType.XmlUtility.serializeNode(xmlDoc.documentElement, {'prettyPrint': this.getPrettyPrint()});
+				result = DataType.XmlUtility.serializeNode(xmlDoc.documentElement, {'prettyPrint': op.prettyPrint || this.getPrettyPrint()});
 			}
 			return result;
 		}
