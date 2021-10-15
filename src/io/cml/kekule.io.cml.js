@@ -128,34 +128,126 @@ Kekule.IO.CmlUtils = {
 	},
 	/**
 	 * Get the suitable metric unit symbol for CML unit string.
-	 * @param {String} sunit
+	 * @param {String} cmlUnit
 	 * @returns {String}
 	 */
-	cmlUnitStrToMetricsUnitSymbol: function(sunit)
+	cmlUnitStrToMetricsUnitSymbol: function(cmlUnit)
 	{
-		var coreUnit = Kekule.IO.CmlUtils.getCmlUnitCorePart(sunit);
+		var coreUnit = Kekule.IO.CmlUtils.getCmlUnitCorePart(cmlUnit);
 		var coreUnitLower = coreUnit.toLowerCase();
+		// sometimes the unit name is suffixed with plural 's', we may need to remove it?
+		var coreUnitLowerWithNoSuffix = ((coreUnitLower.length > 3) && coreUnitLower.endsWith('s'))? coreUnitLower.substr(0, coreUnitLower.length - 1): null;
+
 		var KU = Kekule.Unit;
+		/*
 		var maps = [
-			['arbitrary', KU.General.ARBITRARY],
+			['arbitrary', KU.Arbitrary.ARBITRARY],
 			['counts', KU.Counts.COUNTS],
-			['cm-1', KU.WaveNumber.RECIPROCAL_CENTIMETER]
+			['cm-1', KU.WaveNumber.RECIPROCAL_CENTIMETER],
+			['hertz', KU.Frequency.HERTZ],
+			['hz', KU.Frequency.HERTZ]
 		];
-		var unitObj;
+		*/
+		var maps = [
+			['second', 's', 'sec'],
+			['hour', 'h', 'hr'],
+			['ohm', '[Omega]', 'Ω'],
+			['molarity', '_i_M__i_', 'mol/L'],
+			['molality', '_i_m__i_', 'mol/kg'],
+			['m.s-1', 'm.s-1', 'm/s'],
+			['m.s-2', 'm.s-2', 'm·s-2'],
+			['rad.s-1', 'rad.s-1', 'rad/s'],
+			['n.s', 'N.s', 'N·s'],
+			['n.m.s', 'N.m.s', 'N·m·s'],
+			['n.m', 'N.m', 'N·m'],
+			['kg.m-3', 'kg.m-3', 'kg·m-3'],
+			['kg-1.m3', 'kg-1.m3', 'kg-1·m3'],
+			['m-3.mol', 'm-3.mol', 'm-3·mol'],
+			['m3.mol-1', 'm3.mol-1', 'm3/mol'],
+			['j.k-1', 'J.K-1', 'J/K'],
+			['j.k-1.mol-1', 'J.K-1.mol-1', 'J·K-1·mol-1'],
+			['j.k-1.kg-1', 'J.K-1.kg-1', 'J·K-1·kg-1'],
+			['j.mol-1', 'J.mol-1', 'J/mol'],
+			['j.kg-1', 'J.kg-1', 'J/kg'],
+			['j.m-3', 'J.m-3', 'J·m-3'],
+			['n.m-1', 'N.m-1 = J.m-2', 'N/m'],
+			['w.m-2', 'W.m-2', 'W·m-2'],
+			['w.m-1.k-1', 'W.m-1.K-1', 'W·m-1·K-1'],
+			['m2.s-1', 'm2.s-1', 'm2/s'],
+			['pa.s', 'Pa.s = N.s.m-2', 'Pa·s'],
+			['c.m-3', 'C.m-3', 'C·m-3'],
+			['a.m-2', 'A.m-2', 'A·m-2'],
+			['s.m-1', 'S.m-1', 'S/m'],
+			['s.m2.mol-1', 'S.m2.mol-1', 'S·m2/mol'],
+			['f.m-1', 'F.m-1', 'F/m'],
+			['h.m-1', 'H.m-1', 'H/m'],
+			['v.m-1', 'V.m-1', 'V/m'],
+			['a.m-1', 'A.m-1', 'A/m'],
+			['cd.m-2', 'cd.m-2', 'cd·m-2'],
+			['c.kg-1', 'C.kg-1', 'C/kg'],
+			['gy.s-1', 'Gy.s-1', 'Gy/s'],
+			['j.m-1', 'J.m-1', 'J/m'],
+			['ang', '[Aring]', 'Å'],
+			['deg', '[deg]', 'deg'],
+			['ang3', 'A3', 'Å3'],
+			['celsius', '[deg]C', '℃'],
+			['kcal.mol-1.ang-1', 'kcal mol-1 ang-1', 'kcal·mol-1·ang-1'],
+			['kj.mol-1', 'kj mol-1', 'kj/mol'],
+			['kcal.ang-1', 'kcal.ang-1', 'kcal/Å'],
+			['kcal.rad-1', 'kcal.rad-1', 'kcal/rad']
+		];
+		var sunit;
 		for (var i = 0, l = maps.length; i < l; ++i)
 		{
-			if (coreUnitLower === maps[i][0].toLowerCase())
+			//if (coreUnitLower === maps[i][0].toLowerCase())
+			if (coreUnit === maps[i][0] || coreUnit === maps[i][1])
 			{
-				unitObj = maps[i][1];
+				sunit = maps[i][2];
 				break;
 			}
 		}
-		if (!unitObj)
+		if (!sunit)
 		{
-			unitObj = Kekule.Unit.getUnit(coreUnit, true);  // ignore case
+			for (var i = 0, l = maps.length; i < l; ++i)
+			{
+				if (coreUnitLower === maps[i][0].toLowerCase() || coreUnitLower === maps[i][1].toLowerCase())
+				{
+					sunit = maps[i][2];
+					break;
+				}
+			}
 		}
-		if (unitObj)
-			return unitObj.symbol;
+		if (!sunit && coreUnitLowerWithNoSuffix)
+		{
+			for (var i = 0, l = maps.length; i < l; ++i)
+			{
+				if (coreUnitLowerWithNoSuffix === maps[i][0].toLowerCase() || coreUnitLowerWithNoSuffix === maps[i][1].toLowerCase())
+				{
+					sunit = maps[i][2];
+					break;
+				}
+			}
+		}
+		if (!sunit)
+		{
+			var unitObj = Kekule.Unit.getUnit(coreUnit, true);  // ignore case
+			sunit = unitObj && unitObj.symbol;
+		}
+		if (!sunit)
+		{
+			var unitObj = Kekule.Unit.getUnitByName(coreUnit, true);  // ignore case
+			sunit = unitObj && unitObj.symbol;
+		}
+		if (!sunit && coreUnitLowerWithNoSuffix)
+		{
+			var unitObj = Kekule.Unit.getUnitByName(coreUnitLowerWithNoSuffix, true);  // ignore case
+			sunit = unitObj && unitObj.symbol;
+		}
+
+		console.log(coreUnit, sunit);
+
+		if (sunit)
+			return sunit;
 		else
 			return coreUnit; // if unit not found, returns the core unit string directly
 	},
@@ -1945,7 +2037,7 @@ Kekule.IO.CmlParameterReader = Class.create(Kekule.IO.CmlElementReader,
 		var childResults = this.iterateChildElements(elem, parentObj, parentReader, function(childElem, childResult){
 			if (Kekule.DomUtils.getLocalName(childElem).toLowerCase() === 'scalar')
 			{
-				result.value = childResult.result;
+				result.value = childResult;
 			}
 		});
 		return result;
