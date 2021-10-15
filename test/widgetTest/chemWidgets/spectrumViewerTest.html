@@ -8,26 +8,26 @@
 	<style>
 		#chemViewer
 		{
-				width: 800px;
-				height: 600px;
+			width: 600px;
+			height: 400px;
 		}
 		#objInspector
 		{
-				width: 400px;
+			width: 400px;
 		}
-    #objInspector .K-ValueListEditor-KeyCell
+    	#objInspector .K-ValueListEditor-KeyCell
 		{
-				width: 250px;
+			width: 250px;
 		}
 		section
 		{
-        border: 1px solid #ccc;
-				margin: 0.5em;
-				float: left;
+        	border: 1px solid #ccc;
+			margin: 0.5em;
+			float: left;
 		}
 		input[type="number"], input[type="text"]
 		{
-				width: 8em;
+			width: 6em;
 		}
 	</style>
 	<script>
@@ -90,9 +90,14 @@
 			var configPropName = elem.getAttribute('data-config-prop');
 			if (configPropName)
 				getSpectrumDisplayConfigs().setPropValue(configPropName, value);
-			else if (elem.tagName.toLowerCase() === 'select')  // var unit
+			else if (elem.tagName.toLowerCase() === 'select')  // var unit, or active section selector
 			{
-				doReactSpectrumVarUnitChange(elem);
+				if (elem === $('selActiveSection'))
+				{
+					doReactSpectrumActiveSectionChange(elem);
+				}
+				else
+					doReactSpectrumVarUnitChange(elem);
 			}
 			if (viewer.getChemObj())
 				viewer.repaint();
@@ -112,11 +117,37 @@
 				varDef.setExternalUnit(value);
 			}
 		}
+		function doReactSpectrumActiveSectionChange(elem)
+		{
+			var spectrum = getSpectrum();
+			if (spectrum)
+			{
+				var value = parseInt(elem.value);
+				spectrum.setActiveDataSectionIndex(value);
+			}
+		}
+
+		function getSpectrum()
+		{
+			var obj = viewer.getChemObj();
+			if (obj instanceof Kekule.Spectroscopy.Spectrum)
+				return obj;
+			else if (obj.getChildCount && obj.getChildAt)  // a list object?
+			{
+				for (var i = 0, l = obj.getChildCount(); i < l; ++i)
+				{
+					var childObj = obj.getChildAt(i);
+					if (childObj instanceof Kekule.Spectroscopy.Spectrum)
+						return childObj;
+				}
+				return null;
+			}
+		}
 
 		function getSpectrumIndepAndDepVarInfos()
 		{
 			var result = {};
-			var spectrum = viewer.getChemObj();
+			var spectrum = getSpectrum(); // viewer.getChemObj();
 			if (spectrum)
 			{
 				var section = spectrum.getActiveDataSection();
@@ -128,7 +159,7 @@
 			}
 			return result;
 		}
-		function updateSelectElemItems(selElem, itemStrs, currValue)
+		function updateSelectElemItems(selElem, itemStrs, itemValues, currValue)
 		{
 			selElem.innerHTML = '';
 			var items = Kekule.ArrayUtils.clone(itemStrs);
@@ -137,7 +168,7 @@
 			for (var i = 0, l = items.length; i < l; ++i)
 			{
 				var child = selElem.ownerDocument.createElement('option');
-				child.value = items[i];
+				child.value = itemValues? itemValues[i]: items[i];
 				child.innerHTML = items[i];
 				if (items[i] === currValue)
 					child.selected = true;
@@ -146,7 +177,7 @@
 		}
 		function updateAvailableVarUnits()
 		{
-			var spectrum = viewer.getChemObj();
+			var spectrum = getSpectrum(); //viewer.getChemObj();
 			if (spectrum)
 			{
 				var varInfos = getSpectrumIndepAndDepVarInfos();
@@ -154,14 +185,31 @@
 				{
 					var unitSymbols = spectrum.getVarAvailableExternalUnitSymbols(varInfos.independent.varDef);
 					var currSymbol = varInfos.independent.varDef.getExternalUnit() || varInfos.independent.varDef.getInternalUnit();
-					updateSelectElemItems($('selIndepUnit'), unitSymbols, currSymbol);
+					updateSelectElemItems($('selIndepUnit'), unitSymbols, null, currSymbol);
 				}
 				if (varInfos.dependent)
 				{
 					var unitSymbols = spectrum.getVarAvailableExternalUnitSymbols(varInfos.dependent.varDef);
 					var currSymbol = varInfos.dependent.varDef.getExternalUnit() || varInfos.dependent.varDef.getInternalUnit();
-					updateSelectElemItems($('selDepUnit'), unitSymbols, currSymbol);
+					updateSelectElemItems($('selDepUnit'), unitSymbols, null, currSymbol);
 				}
+			}
+		}
+		function updateSectionSelector()
+		{
+			var spectrum = getSpectrum();
+			if (spectrum)
+			{
+				var sectionNames = [];
+				var sectionIndexes = [];
+				for (var i = 0, l = spectrum.getDataSectionCount(); i < l; ++i)
+				{
+					var sec = spectrum.getDataSectionAt(i);
+					var name = sec.getName() || ('' + i);
+					sectionIndexes.push(i);
+					sectionNames.push(name);
+				}
+				updateSelectElemItems($('selActiveSection'), sectionNames, sectionIndexes, '' + (spectrum.getActiveDataSectionIndex() || 0));
 			}
 		}
 
@@ -210,8 +258,9 @@
 
 			viewer.on('load', function(e){
 				var chemObj = viewer.getChemObj();
-				objInspector.setObjects(viewer.getChemObj());
+				objInspector.setObjects(chemObj);
 				updateAvailableVarUnits();
+				updateSectionSelector();
 			});
 			objInspector.on('propertyChange', function(e){
 				viewer.repaint();
@@ -233,6 +282,8 @@
 		<form id="formController" action="#" onsubmit="javascript:void();">
 			<fieldset>
 				<legend>Spectrum</legend>
+				<label>Active section: <select id="selActiveSection"></select></label>
+				<br />
 				<label>Visible independent data range ratio from: </label><input id="inputVisibleIndepDataRangeFrom" data-config-prop="visibleIndependentDataRangeFrom" type="number" step="0.05" />
 				<label>to: </label><input id="inputVisibleIndepDataRangeTo" data-config-prop="visibleIndependentDataRangeTo" type="number"  step="0.05" />
 				<br />
@@ -253,10 +304,11 @@
 				<legend>Axis render</legend>
 				<fieldset>
 					<legend>General</legend>
+					<label>Reverse axises</label><input id="inputReverseAxises" data-config-prop="reversedAxises" type="checkbox" />
+					<label>Axis color: </label><input id="inputAxisColor" type="color" data-config-prop="axisColor"></input>
+					<br />
 					<label>Axis width ratio: </label><input id="inputAxisWidthRatio" data-config-prop="axisWidthRatio" type="number" step="0.025" />
 					<label>min: </label><input id="inputAxisWidthMin" data-config-prop="axisWidthMin" type="number" step="0.5" />
-					<br />
-					<label>Axis color: </label><input id="inputAxisColor" type="color" data-config-prop="axisColor"></input>
 					<br />
 					<label>Axis scale mark size ratio: </label><input id="inputScaleSizeRatio" data-config-prop="axisScaleMarkSizeRatio" type="number" step="0.05" />
 					<label>min: </label><input id="inputScaleSizeMin" data-config-prop="axisScaleMarkSizeMin" type="number" step="0.5" />
