@@ -53,6 +53,55 @@ Kekule.IO.CML.LEGAL_CORE_NAMESPACE_URIS = [
  * @class
  */
 Kekule.IO.CmlUtils = {
+	/** @private */
+	_cmlUnitConvMap: [
+		['second', 's', 'sec'],
+		['hour', 'h', 'hr'],
+		['ohm', '[Omega]', 'Ω'],
+		['molarity', '_i_M__i_', 'mol/L'],
+		['molality', '_i_m__i_', 'mol/kg'],
+		['m.s-1', 'm.s-1', 'm/s'],
+		['m.s-2', 'm.s-2', 'm·s-2'],
+		['rad.s-1', 'rad.s-1', 'rad/s'],
+		['n.s', 'N.s', 'N·s'],
+		['n.m.s', 'N.m.s', 'N·m·s'],
+		['n.m', 'N.m', 'N·m'],
+		['kg.m-3', 'kg.m-3', 'kg·m-3'],
+		['kg-1.m3', 'kg-1.m3', 'kg-1·m3'],
+		['m-3.mol', 'm-3.mol', 'm-3·mol'],
+		['m3.mol-1', 'm3.mol-1', 'm3/mol'],
+		['j.k-1', 'J.K-1', 'J/K'],
+		['j.k-1.mol-1', 'J.K-1.mol-1', 'J·K-1·mol-1'],
+		['j.k-1.kg-1', 'J.K-1.kg-1', 'J·K-1·kg-1'],
+		['j.mol-1', 'J.mol-1', 'J/mol'],
+		['j.kg-1', 'J.kg-1', 'J/kg'],
+		['j.m-3', 'J.m-3', 'J·m-3'],
+		['n.m-1', 'N.m-1 = J.m-2', 'N/m'],
+		['w.m-2', 'W.m-2', 'W·m-2'],
+		['w.m-1.k-1', 'W.m-1.K-1', 'W·m-1·K-1'],
+		['m2.s-1', 'm2.s-1', 'm2/s'],
+		['pa.s', 'Pa.s = N.s.m-2', 'Pa·s'],
+		['c.m-3', 'C.m-3', 'C·m-3'],
+		['a.m-2', 'A.m-2', 'A·m-2'],
+		['s.m-1', 'S.m-1', 'S/m'],
+		['s.m2.mol-1', 'S.m2.mol-1', 'S·m2/mol'],
+		['f.m-1', 'F.m-1', 'F/m'],
+		['h.m-1', 'H.m-1', 'H/m'],
+		['v.m-1', 'V.m-1', 'V/m'],
+		['a.m-1', 'A.m-1', 'A/m'],
+		['cd.m-2', 'cd.m-2', 'cd·m-2'],
+		['c.kg-1', 'C.kg-1', 'C/kg'],
+		['gy.s-1', 'Gy.s-1', 'Gy/s'],
+		['j.m-1', 'J.m-1', 'J/m'],
+		['ang', '[Aring]', 'Å'],
+		['deg', '[deg]', 'deg'],
+		['ang3', 'A3', 'Å3'],
+		['celsius', '[deg]C', '℃'],
+		['kcal.mol-1.ang-1', 'kcal mol-1 ang-1', 'kcal·mol-1·ang-1'],
+		['kj.mol-1', 'kj mol-1', 'kj/mol'],
+		['kcal.ang-1', 'kcal.ang-1', 'kcal/Å'],
+		['kcal.rad-1', 'kcal.rad-1', 'kcal/rad']
+	],
 	/*
 	 * Convert a JS type name to XSD type name to be used in <scalar>
 	 * @param {String} dataTypeName
@@ -117,15 +166,15 @@ Kekule.IO.CmlUtils = {
 		return value;
 	},
 	/**
-	 * Returns the core part of cml unit.
+	 * Returns the local part of cml namespaced value.
 	 * E.g., returns 'hz' for 'units:hz'.
-	 * @param {String} sunit
+	 * @param {String} s
 	 * @returns {String}
 	 */
-	getCmlUnitCorePart: function(sunit)
+	getCmlNsValueLocalPart: function(s)
 	{
-		var p = sunit.indexOf(':');
-		var coreUnit = (p >= 0)? sunit.substr(p + 1): sunit;
+		var p = s.indexOf(':');
+		var coreUnit = (p >= 0)? s.substr(p + 1): s;
 		return coreUnit;
 	},
 	/**
@@ -135,7 +184,7 @@ Kekule.IO.CmlUtils = {
 	 */
 	cmlUnitStrToMetricsUnitSymbol: function(cmlUnit)
 	{
-		var coreUnit = Kekule.IO.CmlUtils.getCmlUnitCorePart(cmlUnit);
+		var coreUnit = Kekule.IO.CmlUtils.getCmlNsValueLocalPart(cmlUnit);
 		var coreUnitLower = coreUnit.toLowerCase();
 		// sometimes the unit name is suffixed with plural 's', we may need to remove it?
 		var coreUnitLowerWithNoSuffix = ((coreUnitLower.length > 3) && coreUnitLower.endsWith('s'))? coreUnitLower.substr(0, coreUnitLower.length - 1): null;
@@ -150,54 +199,7 @@ Kekule.IO.CmlUtils = {
 			['hz', KU.Frequency.HERTZ]
 		];
 		*/
-		var maps = [
-			['second', 's', 'sec'],
-			['hour', 'h', 'hr'],
-			['ohm', '[Omega]', 'Ω'],
-			['molarity', '_i_M__i_', 'mol/L'],
-			['molality', '_i_m__i_', 'mol/kg'],
-			['m.s-1', 'm.s-1', 'm/s'],
-			['m.s-2', 'm.s-2', 'm·s-2'],
-			['rad.s-1', 'rad.s-1', 'rad/s'],
-			['n.s', 'N.s', 'N·s'],
-			['n.m.s', 'N.m.s', 'N·m·s'],
-			['n.m', 'N.m', 'N·m'],
-			['kg.m-3', 'kg.m-3', 'kg·m-3'],
-			['kg-1.m3', 'kg-1.m3', 'kg-1·m3'],
-			['m-3.mol', 'm-3.mol', 'm-3·mol'],
-			['m3.mol-1', 'm3.mol-1', 'm3/mol'],
-			['j.k-1', 'J.K-1', 'J/K'],
-			['j.k-1.mol-1', 'J.K-1.mol-1', 'J·K-1·mol-1'],
-			['j.k-1.kg-1', 'J.K-1.kg-1', 'J·K-1·kg-1'],
-			['j.mol-1', 'J.mol-1', 'J/mol'],
-			['j.kg-1', 'J.kg-1', 'J/kg'],
-			['j.m-3', 'J.m-3', 'J·m-3'],
-			['n.m-1', 'N.m-1 = J.m-2', 'N/m'],
-			['w.m-2', 'W.m-2', 'W·m-2'],
-			['w.m-1.k-1', 'W.m-1.K-1', 'W·m-1·K-1'],
-			['m2.s-1', 'm2.s-1', 'm2/s'],
-			['pa.s', 'Pa.s = N.s.m-2', 'Pa·s'],
-			['c.m-3', 'C.m-3', 'C·m-3'],
-			['a.m-2', 'A.m-2', 'A·m-2'],
-			['s.m-1', 'S.m-1', 'S/m'],
-			['s.m2.mol-1', 'S.m2.mol-1', 'S·m2/mol'],
-			['f.m-1', 'F.m-1', 'F/m'],
-			['h.m-1', 'H.m-1', 'H/m'],
-			['v.m-1', 'V.m-1', 'V/m'],
-			['a.m-1', 'A.m-1', 'A/m'],
-			['cd.m-2', 'cd.m-2', 'cd·m-2'],
-			['c.kg-1', 'C.kg-1', 'C/kg'],
-			['gy.s-1', 'Gy.s-1', 'Gy/s'],
-			['j.m-1', 'J.m-1', 'J/m'],
-			['ang', '[Aring]', 'Å'],
-			['deg', '[deg]', 'deg'],
-			['ang3', 'A3', 'Å3'],
-			['celsius', '[deg]C', '℃'],
-			['kcal.mol-1.ang-1', 'kcal mol-1 ang-1', 'kcal·mol-1·ang-1'],
-			['kj.mol-1', 'kj mol-1', 'kj/mol'],
-			['kcal.ang-1', 'kcal.ang-1', 'kcal/Å'],
-			['kcal.rad-1', 'kcal.rad-1', 'kcal/rad']
-		];
+		var maps = Kekule.IO.CmlUtils._cmlUnitConvMap;
 		var sunit;
 		for (var i = 0, l = maps.length; i < l; ++i)
 		{
@@ -3159,6 +3161,8 @@ Kekule.IO.CmlMoleculeReader = Class.create(Kekule.IO.CmlChemStructureReader,
 					var cmlStereo = Kekule.DomUtils.getElementText(elem);
 					if (!cmlStereo)
 						cmlStereo = Kekule.IO.CmlDomUtils.getCmlElemAttribute(elem, 'conversionValue', Kekule.IO.CmlDomUtils.FILTER_TYPED_ELEM, domHelper);
+					if (!cmlStereo)
+						cmlStereo = Kekule.IO.CmlUtils.getCmlNsValueLocalPart(Kekule.IO.CmlDomUtils.getCmlElemAttribute(elem, 'dictRef', Kekule.IO.CmlDomUtils.FILTER_TYPED_ELEM, domHelper));
 					var kStereo = Kekule.IO.CmlUtils.cmlBondStereoToKekule(cmlStereo);
 					if ((kStereo != Kekule.BondStereo.NONE) && result.setStereo)
 						result.setStereo(kStereo);
