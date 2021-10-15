@@ -70,7 +70,7 @@ Kekule.Unit = {
 		}
 	},
 	/**
-	 * Returns an unit object.
+	 * Returns an unit object by unit key (usually the unit symbol).
 	 * @param {String} key
 	 * @param {Bool} ignoreCase Whether ignore the case of key in searching for unit objects.
 	 * @returns {Object}
@@ -97,6 +97,27 @@ Kekule.Unit = {
 			}
 			return result;
 		}
+	},
+	/**
+	 * Returns an unit object by unit name.
+	 * @param {String} key
+	 * @param {Bool} ignoreCase Whether ignore the case of key in searching for unit objects.
+	 * @returns {Object}
+	 */
+	getUnitByName: function(name, ignoreCase)
+	{
+		var keys = Kekule.ObjUtils.getOwnedFieldNames(KU._KEY_MAP);
+		var nameLower = ignoreCase && name.toLowerCase();
+		for (var i = 0, l = keys.length; i < l; ++i)
+		{
+			var unitObj = KU._KEY_MAP[keys[i]];
+			var unitName = unitObj.name;
+			if (name === unitName || (ignoreCase && nameLower === unitName.toLowerCase()))
+			{
+				return unitObj;
+			}
+		}
+		return null;
 	},
 
 	/** @private */
@@ -240,7 +261,10 @@ Kekule.Unit._unitObjProto = {
 		if (!sunit)
 			Kekule.error(Kekule.$L('ErrorMsg.STANDARD_UNIT_OF_CATEGORY_NOT_FOUND').format(this.category.name));
 		else
-			return sunit.convertValueTo(value, this, extraParams);
+		{
+			var currValue = this._convFromStandard? this._convFromStandard(value, extraParams): sunit.convertValueTo(value, this, extraParams);
+			return currValue;
+		}
 	},
 	/**
 	 * Convert a value with this unit to the standard unit of this category.
@@ -264,7 +288,10 @@ Kekule.Unit._unitObjProto = {
 		if (!sunit)
 			Kekule.error(Kekule.$L('ErrorMsg.STANDARD_UNIT_OF_CATEGORY_NOT_FOUND').format(this.category.name));
 		else
-			return {'value': this.convertValueTo(value, sunit, extraParams), 'unit': sunit};
+		{
+			var stdValue = this._convToStandard? this._convToStandard(value, extraParams): this.convertValueTo(value, sunit, extraParams);
+			return {'value': stdValue, 'unit': sunit};
+		}
 	},
 	/** @private */
 	doConvertValueTo: function(value, toUnitObj, extraParams)
@@ -278,12 +305,28 @@ Kekule.Unit._unitObjProto = {
 		{
 			var r1 = toUnitObj.rateToStandard;
 			var r0 = this.rateToStandard;
+			if (r1 && r0)
+				return value * r0 / r1;
+			else // try to convert to/from standard
+			{
+				var canConvThisToStd = (r0 || this._convToStandard);  // can convert this to standard?
+				var canConvStdToDest = (r1 || toUnitObj._convFromStandard);  // can convert standard to dest?
+				if (canConvThisToStd && canConvStdToDest)
+				{
+					var stdValue = this.convertValueToStandard(value, extraParams);
+					return toUnitObj.convertValueFromStandard(stdValue, extraParams);
+				}
+				else
+					Kekule.error(Kekule.$L('ErrorMsg.UNABLE_TO_CONVERT_BETWEEN_UNITS').format(this.getKey(), toUnitObj.getKey()));
+			}
+			/*
 			if (!r1 || !r0)
 				Kekule.error(Kekule.$L('ErrorMsg.UNABLE_TO_CONVERT_BETWEEN_UNITS').format(this.getKey(), toUnitObj.getKey()));
 			else
 			{
 				return value * r0 / r1;
 			}
+			*/
 		}
 	}
 };
@@ -324,10 +367,9 @@ register('ppm', 'parts_per_million', 'Dimensionless', 1.0E-6);
 
 register('pH', 'pH', 'AcidicScake', 1);
 
-register('s', 'second', 'Time', 1.0);
-	register('h', 'hour', 'Time', 3600);
+register('sec', 'second', 'Time', 1.0);
+	register('hr', 'hour', 'Time', 3600);
 	register('min', 'minute', 'Time', 60);
-	register('sec', 'second', 'Time', 1);
 	register('ms', 'millisecond', 'Time', 1e-3);
 	register('μs', 'microsecond', 'Time', 1e-6);
 	register('ns', 'nanosecond', 'Time', 1e-9);
@@ -350,7 +392,7 @@ register('kg', 'kilogram', 'Mass', 1.0);
 	register('g', 'gram', 'Mass', 1e-3);
 
 register('K', 'kelvin', 'Temperature', 1.0);
-	register('℃', 'Celsius', 'Temp', 1,
+	register('℃', 'Celsius', 'Temperature', null,
 		{
 			'_convToStandard': function(value) { return value + 273.15; },
 			'_convFromStandard': function(value) { return value - 273.15; }
