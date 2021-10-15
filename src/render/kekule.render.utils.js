@@ -537,6 +537,64 @@ Kekule.Render.RichTextUtils = {
 	{
 		return Kekule.Render.RichTextUtils._toDebugHtml(richText);
 	},
+	/**
+	 * Create new rich text from HTML code.
+	 * Note this method only handles flat <sup>/<sub> (with no nests) and normal text.
+	 * @param {String} htmlCode
+	 * @returns {Object} Created richtext object.
+	 */
+	fromSimpleHtmlCode: function(htmlCode)
+	{
+		var RT = Kekule.Render.RichText;
+		//var tagPattern = /\<\/?([a-z]+)\/?\>/i;
+		var tagPattern = new RegExp('\<\/?([a-z]+)\/?\>', 'ig');
+		// split the html code to a series of tags/endTags and innerTexts
+		var textItems = [];
+		var currIndex = 0;
+		var currTextType = RT.NORMAL;
+		var matchResult;
+		while ((matchResult = tagPattern.exec(htmlCode)) !== null)
+		{
+			var matchIndex = matchResult.index;
+			var sTag = matchResult[0];
+			var tagName = matchResult[1].toLowerCase();
+			if (currIndex < matchIndex)  // there is something before this tag, should be simple text
+				textItems.push({'textType': currTextType, 'text': htmlCode.substring(currIndex, matchIndex)});
+			var isCloseTag = sTag.indexOf('/') === 1;
+			var isSelfCloseTag = sTag.lastIndexOf('/') === sTag.length - 2;
+			if (!isSelfCloseTag)
+			{
+				var tokenTagType = (tagName === 'sup')? RT.SUP:
+					(tagName === 'sub')? RT.SUB: null;
+				if (tokenTagType)
+				{
+					if (!isCloseTag)
+						currTextType = tokenTagType;
+					else if (currTextType === tokenTagType)  // close a sup or sub
+						currTextType = RT.NORMAL;
+				}
+			}
+			currIndex = matchIndex + sTag.length;
+		}
+		if (htmlCode.length > currIndex)
+		{
+			textItems.push({'textType': currTextType, 'text': htmlCode.substring(currIndex)});
+		}
+		// generate the rich text
+		var RTU = Kekule.Render.RichTextUtils;
+		var result = RTU.createGroup(null, {'charDirection': Kekule.Render.TextDirection.LTR});
+		for (var i = 0, l = textItems.length; i < l; ++i)
+		{
+			var textType = textItems[i].textType;
+			var text = textItems[i].text;
+			if (text)
+			{
+				var child = RTU.createSection(text, {'textType': textType});
+				RTU.append(result, child);
+			}
+		}
+		return result;
+	},
 
 	/**
 	 * Convert rich text to HTML element.
