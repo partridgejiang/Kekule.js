@@ -905,14 +905,27 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		};
 		var getVarUnitLabel = function(spectrumObj, varSymbol)
 		{
+			var result;
 			var varDef = spectrumObj.getVariable(varSymbol);
-			var text = self.doGetVarDefUnit(varDef);       // TODO: here we may need to transform the unit to a propert rich text
-			if (!text)
+			var sunit = self.doGetVarDefUnit(varDef);       // TODO: here we may need to transform the unit to a propert rich text
+			if (!sunit)
 				return null;
-			else if (DataType.isObjectValue(text))  // already a rich text?
-				return text;
 			else
-				return Kekule.Render.RichTextUtils.strToRichText(text);
+			{
+				var unitObj = Kekule.Unit.getUnit(sunit);
+				if (unitObj)
+				{
+					if (unitObj.symbolHtml)
+						result = Kekule.Render.RichTextUtils.fromSimpleHtmlCode(unitObj.symbolHtml);
+					else if (unitObj.getKey())
+						result = Kekule.Render.RichTextUtils.strToRichText(unitObj.getKey());
+				}
+				else if (DataType.isObjectValue(sunit))  // already a rich text?
+					result = sunit;
+				else
+					result = Kekule.Render.RichTextUtils.strToRichText(sunit);
+				return result;
+			}
 		};
 
 		var paramPrefixDependent = reversedAxis? 'abscissa': 'ordinate';
