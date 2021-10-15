@@ -217,9 +217,9 @@ DCM.register({
 		{
 			var freq = fromUnitObj.convertValueTo(value, observeFreq.getUnit());
 			var pureRatio = freq / observeFreq.getValue();  // in ppm * 1e10, in another word, the pure ratio
-			return KUnit.Ratio.ONE.convertValueTo(pureRatio, toUnitObj);
+			return KUnit.Dimensionless.ONE.convertValueTo(pureRatio, toUnitObj);
 		}
-		else if (fromUnitObj.category === K.Unit.Ratio)  // from ppm to Hz
+		else if (fromUnitObj.category === K.Unit.Dimensionless)  // from ppm to Hz
 		{
 			var value2 = fromUnitObj.convertValueToStandard(value);
 			var freq = value2 * observeFreq.getValue();
@@ -234,8 +234,8 @@ DCM.register({
 			var observeFreq = spectrum.getParameter('observeFrequency');
 			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
 			{
-				return (fromUnitObj.category === Kekule.Unit.Frequency && toUnitObj.category === Kekule.Unit.Ratio)
-					|| (fromUnitObj.category === Kekule.Unit.Ratio && toUnitObj.category === Kekule.Unit.Frequency);
+				return (fromUnitObj.category === Kekule.Unit.Frequency && toUnitObj.category === Kekule.Unit.Dimensionless)
+					|| (fromUnitObj.category === Kekule.Unit.Dimensionless && toUnitObj.category === Kekule.Unit.Frequency);
 			}
 		}
 		return false;
@@ -249,8 +249,8 @@ DCM.register({
 			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
 			{
 				if (fromUnitObj.category === Kekule.Unit.Frequency)
-					result.push(Kekule.Unit.Ratio.MILLIONTH);
-				else if (fromUnitObj.category === Kekule.Unit.Ratio)
+					result.push(Kekule.Unit.Dimensionless.PARTS_PER_MILLION);
+				else if (fromUnitObj.category === Kekule.Unit.Dimensionless)
 					result = result.concat(Kekule.Unit.Frequency.getConvertableUnits());
 			}
 		}
@@ -2987,14 +2987,12 @@ Kekule.ClassDefineUtils.addStandardSizeSupport(Kekule.Spectroscopy.Spectrum);
 	register('reflectance', 'reflectance', 'OpticalReflectance', 1);  // IR/I0
 	register('absorbance', 'absorbance', 'OpticalAbsorbance', 1);  // log10(IR/I0)
 	register('Kubelka Munk', 'Kubelka_Munk', 'OpticalKubelkaMunk', 1);  // (1-R^2)/(2R)
-	register('1/m', 'reciprocal_meter', 'WaveNumber', 1);
-	register('1/cm', 'reciprocal_centimeter', 'WaveNumber', 1e2);
-	// NMR
-	//register('ppm', 'nmr_ppm', 'Frequency', null);
+
 	// MS
-	register('counts', 'ms_count', 'General', null);
+	register('counts', 'ms_count', 'Misc', null);
 	register('relative abundance', 'ms_relative_abundance', 'SpectrumMS', null);
 	register('m/z', 'ms_mass_charge_ratio', 'SpectrumMS', null);
+
 })();
 
 })();

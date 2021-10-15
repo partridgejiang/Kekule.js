@@ -311,45 +311,154 @@ Kekule.UnitUtils = {
 var register = KU.register;
 
 // register common used units
-register('', 'arbitrary', 'General', null);
+
+register('unk', 'Unknown', 'Unknown', null);
+
 register('', 'counts', 'Counts', 1);
+register('arb', 'arbitrary', 'Arbitrary', null);
 
-register('', 'one', 'Ratio', 1);
-register('%', 'percent', 'Ratio', 1e-2);
-register('‰', 'thousandth', 'Ratio', 1e-3);
-register('ppm', 'millionth', 'Ratio', 1e-6);
+register('', 'one', 'Dimensionless', 1);
+register('%', 'percent', 'Dimensionless', 1e-2);
+register('‰', 'thousandth', 'Dimensionless', 1e-3);
+register('ppm', 'parts_per_million', 'Dimensionless', 1.0E-6);
 
-register('hr', 'hour', 'Time', 3600);
-register('min', 'minute', 'Time', 60);
-register('sec', 'second', 'Time', 1);
-register('ms', 'millisecond', 'Time', 1e-3);
-register('μs', 'microsecond', 'Time', 1e-6);
-register('ns', 'nanosecond', 'Time', 1e-9);
+register('pH', 'pH', 'AcidicScake', 1);
 
-register('m', 'meter', 'Length', 1);
-register('cm', 'centimeter', 'Length', 1e-2);
-register('mm', 'millimeter', 'Length', 1e-3);
-register('μm', 'micrometer', 'Length', 1e-6);
-register('nm', 'nanometer', 'Length', 1e-9);
-register('Å', 'angstrom', 'Length', 1e-10);
+register('s', 'second', 'Time', 1.0);
+	register('h', 'hour', 'Time', 3600);
+	register('min', 'minute', 'Time', 60);
+	register('sec', 'second', 'Time', 1);
+	register('ms', 'millisecond', 'Time', 1e-3);
+	register('μs', 'microsecond', 'Time', 1e-6);
+	register('ns', 'nanosecond', 'Time', 1e-9);
 
-register('mol', 'mole', 'AmountOfSubstance', 1);
+register('m', 'meter', 'Length', 1.0);
+	register('cm', 'centimeter', 'Length', 1e-2);
+	register('mm', 'millimeter', 'Length', 1e-3);
+	register('μm', 'micrometer', 'Length', 1e-6);
+	register('nm', 'nanometer', 'Length', 1e-9);
+	register('Å', 'Angstrom', 'Length', 1e-10);
 
-register('g', 'gram', 'Weight', 1);
-register('kg', 'kilogram', 'Weight', 1e3);
+	register('A-1', 'Angstrom-1', 'InverseLength', 1.0E10, {'symbolHtml': 'A<sup>-1</sup>'});
 
-register('K', 'kelvin', 'Temperature', 1);
+register('A', 'ampere', 'ElectricCurrent', 1.0);
+	register('μA', 'microampere', 'ElectricCurrent', 1e-6);
+	register('nA', 'nanoampere', 'ElectricCurrent', 1e-9);
+	register('pA', 'picoampere', 'ElectricCurrent', 1e-12);
 
-register('A', 'ampere', 'ElectricCurrent', 1);
-register('μA', 'microampere', 'ElectricCurrent', 1e-6);
-register('nA', 'nanoampere', 'ElectricCurrent', 1e-9);
-register('pA', 'picoampere', 'ElectricCurrent', 1e-12);
+register('kg', 'kilogram', 'Mass', 1.0);
+	register('g', 'gram', 'Mass', 1e-3);
 
-register('V', 'volts', 'ElectricVoltage', 1);
+register('K', 'kelvin', 'Temperature', 1.0);
+	register('℃', 'Celsius', 'Temp', 1,
+		{
+			'_convToStandard': function(value) { return value + 273.15; },
+			'_convFromStandard': function(value) { return value - 273.15; }
+		}
+	);
 
-register('Hz', 'hertz', 'Frequency', 1);
-register('kHz', 'kilohertz', 'Frequency', 1e3);
-register('MHz', 'megahertz', 'Frequency', 1e6);
+register('mol', 'mole', 'AmountOfSubstance', 1.0);
+register('cd', 'candela', 'LuminousIntensity', 1.0);
+
+register('rad', 'radian', 'Angle', 1.0);
+	register('deg', 'degree', 'Angle', 0.01745329, {'symbolHtml': '°'});
+
+register('sr', 'steradian', 'SolidAngle', 1.0);
+
+register('Hz', 'Hertz', 'Frequency', 1.0);
+	register('kHz', 'kilohertz', 'Frequency', 1e3);
+	register('MHz', 'megahertz', 'Frequency', 1e6);
+
+register('N', 'Newton', 'Force', 1.0);
+	register('kcal/Å', 'kilocalorie_per_angstrom', 'Force', null);
+
+register('J', 'Joule', 'Energy', 1.0);
+	register('cal', 'calorie', 'Energy', 4.184);
+	register('kcal', 'kilocalorie', 'Energy', 4184);
+	register('kcal/rad', 'kilocalorie_per_radian', 'Energy', null);
+	register('eV', 'electron_volt', 'Energy', 1.60217733E-19);
+	register('hart', 'Hartree', 'Energy', 4.3597482E-18);
+
+register('W', 'Watt', 'Power', 1.0);
+
+register('Pa', 'Pascal', 'Pressure', 1.0);
+	register('GPa', 'gigaPascal', 'Pressure', 1.0E+09);
+	register('bar', 'Bar', 'Pressure', 1E5);
+	register('kbar', 'kbar', 'Pressure', 1E8);
+	register('atm', 'Atmosphere', 'Pressure', 1.01325027E5);
+
+	register('GPa-1', 'gigaPascal-1', 'InversePressure', 1.0E-09, {'symbolHtml': 'GPa<sup>-1</sup>'});
+
+register('C', 'Coulomb', 'ElectricCharge', 1.0);
+	register('e', 'electron_charge', 'ElectricCharge', 1.60217733E-19);
+	
+register('V', 'Volt', 'ElectricPotentialDifference', 1.0);
+register('Ω', 'Ohm', 'ElectricResistance', 1.0);
+register('F', 'Farad', 'ElectricCapacitance', 1.0);
+register('S', 'Siemens', 'ElectricConductance', 1.0);
+register('Wb', 'Weber', 'MagneticFlux', 1.0);
+register('T', 'Tesla', 'MagneticFluxDensity', 1.0);
+register('H', 'Henry', 'MagneticInductance', 1.0);
+register('Bq', 'Becquerel', 'Radioactivity', 1.0);
+register('Gy', 'Gray', 'RadioactiveAbsorbedDose', 1.0);
+register('Sv', 'Sievert', 'RadioactiveEquivalentDose', 1.0);
+register('kat', 'Katal', 'CatalyticActivity', 1.0);
+register('cp', 'Centipoise', 'DynamicVicosity', null);
+register('mol/L', 'Molarity', 'Molarity', 1.0);
+register('mol/kg', 'Molality', 'Molality', 1.0);
+
+register('m2', 'Square_meter', 'Area', 1.0, {'symbolHtml': 'm<sup>2</sup>'});
+	register('cm2', 'centimeter_squared', 'Area', 1.0E-04, {'symbolHtml': 'cm<sup>2</sup>'});
+
+register('m3', 'Cubic_meter', 'Volume', 1.0, {'symbolHtml': 'm<sup>3</sup>'});
+	register('Å3', 'Angstrom_cubed', 'Volume', 1.0E-30, {'symbolHtml': 'Å<sup>3</sup>'});
+	register('L', 'litre', 'Volume', 1.0E-03);
+	register('mL', 'millilitre', 'Volume', 1.0E-06);
+
+register('m/s', 'Meter_per_second', 'Velocity', 1.0);
+	register('km/s', 'kilometers_per_second', 'Velcity', 1000);
+
+register('m·s-2', 'Meter_per_second_squared', 'Acceleration', 1.0, {'symbolHtml': 'm·s<sup>-2</sup>'});
+register('rad/s', 'radian_per_second', 'AngularVelocity', 1.0);
+register('N·s', 'newton_second', 'Momentum', 1.0);
+register('N·m·s', 'newton_meter_second', 'AngularMomentum', 1.0);
+register('N·m', 'newton_meter', 'Torque', 1.0);
+
+register('m-1', 'reciprocal_meter', 'WaveNumber', 1.0, {'symbolHtml': 'm<sup>-1</sup>'});	
+	register('cm-1', 'reciprocal_centimeter', 'WaveNumber', 1e2, {'symbolHtml': 'cm<sup>-1</sup>'});
+
+register('kg·m-3', 'Kilogram_per_cubic_meter', 'MassDensity', 1.0, {'symbolHtml': 'kg·m<sup>-3</sup>'});
+register('kg-1·m3', 'cubic_meter_per_kilogram', 'SpecificVolume', 1.0, {'symbolHtml': 'kg<sup>-1</sup>·m<sup>3</sup>'});
+register('m-3·mol', 'mole_per_cubic_meter', 'AmountConcentration', 1.0, {'symbolHtml': 'm<sup>-3</sup>·mol'});
+register('m3/mol', 'cubic_meter_per_mole', 'MolarVolume', 1.0, {'symbolHtml': 'm<sup>3</sup>/mol'});
+register('J/K', 'joule_per_kelvin', 'HeatCapacity', 1.0);
+register('J·K-1·mol-1', 'joule_per_kelvin_mole', 'MolarHeatCapacity', 1.0, {'symbolHtml': 'J·K<sup>-1</sup>·mol<sup>-1</sup>'});
+register('J·K-1·kg-1', 'joule_per_kilogram_kelvin', 'SpecificHeatCapacity', 1.0, {'symbolHtml': 'J·K<sup>-1</sup>·kg<sup>-1</sup>'});
+register('J/mol', 'joule_per_mole', 'MolarEnergy', 1.0);
+register('J/kg', 'joule_per_kilogram', 'SpecificEnergy', 1.0);
+register('J·m-3', 'joule_per_cubic_meter', 'EnergyDensity', 1.0, {'symbolHtml': 'J·m<sup>-3</sup>'});
+register('N/m', 'newton_per_meter', 'SurfaceTension', 1.0);
+register('W·m-2', 'watt_per_square_meter', 'HeatFluxDensity', 1.0, {'symbolHtml': 'W·m<sup>-2</sup>'});
+register('W·m-1·K-1', 'watt_per_meter_kelvin', 'ThermalConductivity', 1.0, {'symbolHtml': 'W·m<sup>-1</sup>·K<sup>-1</sup>'});
+register('m2/s', 'square_meter_per_second', 'KinematicViscosity', 1.0, {'symbolHtml': 'm<sup>2</sup>/s'});
+register('Pa·s', 'Pascal_second', 'DynamicViscosity', 1.0);
+register('C·m-3', 'coulomb_per_cubic_meter', 'ElectricChargeDensity', 1.0, {'symbolHtml': 'C·m<sup>-3</sup>'});
+register('A·m-2', 'ampere_per_square_meter', 'ElectricCurrentDensity', 1.0, {'symbolHtml': 'A·m<sup>-2</sup>'});
+register('S/m', 'siemens_per_meter', 'ElectricalConductivity', 1.0);
+register('S·m2/mol', 'siemens_square_meter_per_mole', 'MolarConductivity', 1.0, {'symbolHtml': 'S·m<sup>2</sup>/mol'});
+register('F/m', 'farad_per_meter', 'Permittivity', 1.0);
+register('H/m', 'henry_per_meter', 'Permeability', 1.0);
+register('V/m', 'volt_per_meter', 'ElectricFieldStrength', 1.0);
+register('A/m', 'ampere_per_meter', 'MagneticFieldStrength', 1.0);
+register('cd·m-2', 'candela_per_square_meter', 'Luminance', 1.0, {'symbolHtml': 'cd·m<sup>-2</sup>'});
+register('C/kg', 'coulomb_per_kilogram', 'Exposure', 1.0);
+register('Gy/s', 'gray_per_second', 'AbsorbedDoseRate', 1.0);
+register('J/m', 'joule_per_meter', 'EnergyLengthGradient', 1.0);
+
+register('kj/mol', 'kj_per_mole', 'MolarEnergy', 1000);
+//register('kcal·mol-1·ang-1', 'kcal_per_mole_per_Angstrom', 'Xx', null, {'symbolHtml': 'kcal·mol<sup>-1</sup>·ang<sup>-1</sup>'});
+
+register('D', 'debye', 'Dipole', 3.335641E-30);
 
 
 })();

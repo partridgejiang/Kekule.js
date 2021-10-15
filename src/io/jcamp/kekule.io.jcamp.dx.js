@@ -27,18 +27,18 @@ Kekule.IO.Jcamp.DxUtils = {
 	/** @private */
 	_dxUnitToMetricsObjMap: {
 		// general
-		'ARBITARY UNITS': KU.General.ARBITRARY,
-		'ARBITARY UNIT': KU.General.ARBITRARY,
+		'ARBITARY UNITS': KU.Arbitrary.ARBITRARY,
+		'ARBITARY UNIT': KU.Arbitrary.ARBITRARY,
 		'SECONDS': KU.Time.SECOND,
 		'SECOND': KU.Time.SECOND,
 		'MILLISECONDS': KU.Time.MILLISECOND,
 		'MICROSECONDS': KU.Time.MICROSECOND,
 		'NANOSECONDS': KU.Time.NANOSECOND,
-		'PPM': KU.Ratio.MILLIONTH,
+		'PPM': KU.Dimensionless.PARTS_PER_MILLION,
 		// NMR
 		'HZ': KU.Frequency.HERTZ,
 		// IR
-		'1/CM': KU.Frequency.WAVE_NUMBER,
+		'1/CM': KU.WaveNumber.RECIPROCAL_CENTIMETER,
 		'MICROMETERS': KU.Length.MICROMETER,
 		'NANOMETERS': KU.Length.NANOMETER,
 		'TRANSMITTANCE': KU.OpticalTransmittance.TRANSMITTANCE_PERCENT,
@@ -47,8 +47,8 @@ Kekule.IO.Jcamp.DxUtils = {
 		'KUBELKA-MUNK': KU.OpticalKubelkaMunk.KUBELKA_MUNK,
 		// MS
 		'CHANNEL NUMBER': null,
-		'COUNTS': KU.General.MS_COUNT,
-		'COUNT': KU.General.MS_COUNT,
+		'COUNTS': KU.Misc.MS_COUNT,
+		'COUNT': KU.Misc.MS_COUNT,
 		'M/Z': KU.SpectrumMS.MS_MASS_CHARGE_RATIO,
 		'RELATIVE ABUNDANCE ': KU.SpectrumMS.MS_RELATIVE_ABUNDANCE,
 		// Other
@@ -564,7 +564,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				else if (labelName === '.SOLVENTREFERENCE')
 				{
 					if (Kekule.NumUtils.isNormalNumber(value))
-						chemObj.setParameter('solventReference', Kekule.Scalar.create(value, Kekule.Unit.Ratio.MILLIONTH.symbol));
+						chemObj.setParameter('solventReference', Kekule.Scalar.create(value, Kekule.Unit.Dimensionless.PARTS_PER_MILLION.symbol));
 				}
 				else if (labelName === '.DELAY')
 				{
