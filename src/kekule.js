@@ -544,7 +544,8 @@ var kekuleFiles = {
 			'spectroscopy/kekule.spectrum.render.js',
 			'io/jcamp/kekule.io.jcamp.base.js',
 			'io/jcamp/kekule.io.jcamp.dx.js',
-			'io/jcamp/kekule.io.jcampIO.js'
+			'io/jcamp/kekule.io.jcampIO.js',
+			'io/cmlspect/kekule.io.cmlspect.js'
 		]
 	},
 
