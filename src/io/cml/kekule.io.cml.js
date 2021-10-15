@@ -244,8 +244,6 @@ Kekule.IO.CmlUtils = {
 			sunit = unitObj && unitObj.symbol;
 		}
 
-		console.log(coreUnit, sunit);
-
 		if (sunit)
 			return sunit;
 		else
