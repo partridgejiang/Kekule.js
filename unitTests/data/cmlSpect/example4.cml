@@ -1,0 +1,686 @@
+<cml xmlns="http://www.xml-cml.org/schema"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:siUnits="http://www.xml-cml.org/units/siUnits"
+   xmlns:units="http://www.xml-cml.org/units/units"
+   xmlns:nmr="http://www.nmrshiftdb.org/dict"
+   xmlns:cml="http://www.xml-cml.org/dict/cml"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:jcamp="http://www.xml-cml.org/dict/jcampDict"
+   xmlns:subst="http://www.xml-cml.org/dict/subst"
+   xmlns:spect="http://www.blueobelisk.org/dict/spect"
+   xsi:schemaLocation="http://www.blueobelisk.org/dict/spect spect.xml http://www.xml-cml.org/dict/subst dict/substDict.xml http://www.xml-cml.org/dict/jcampDict dict/jcampDict.xml http://www.xml-cml.org/dict/cml dict/cmlDict.xml http://www.nmrshiftdb.org/dict dict/nmrDict.xml http://www.xml-cml.org/units/units dict/unitsDict.xml http://www.xml-cml.org/units/siUnits dict/siUnitsDict.xml http://www.xml-cml.org/schema schema.xsd">
+    <entry xmlns="http://bibtexml.sf.net/">
+      <article>
+        <author>Xiaozhe Zhang, Qing Xu, Hongbin Xiao, Xinmiao Liang*</author>
+        <title>Iridoid glucosides from Strychnos nux-vomica</title>
+        <journal>Iridoid glucosides from Strychnos nux-vomica</journal>
+        <year>2003</year>
+        <volume>64</volume>
+        <pages>1341-1344</pages>
+      </article>
+    </entry>
+	<molecule id="m10.1016_S0031-9422_03_00501-6-structure-1">
+		<atomArray>
+			<atom id="a1" elementType="C" x2="429.8481473023461"
+				y2="601.3343638274541" formalCharge="0" hydrogenCount="0" />
+			<atom id="a2" elementType="C" x2="407.5705632235066"
+				y2="630.0254966262445" formalCharge="0" hydrogenCount="0" />
+			<atom id="a3" elementType="C" x2="464.0225438819748"
+				y2="613.6503752971462" formalCharge="0" hydrogenCount="0" />
+			<atom id="a4" elementType="C" x2="419.72768620185195"
+				y2="566.4466712958134" formalCharge="0" hydrogenCount="0" />
+			<atom id="a5" elementType="C" x2="427.9815861645984"
+				y2="660.0801139605659" formalCharge="0" hydrogenCount="0" />
+			<atom id="a6" elementType="O" x2="371.2629999132853"
+				y2="628.8697849220622" formalCharge="0" hydrogenCount="0" />
+			<atom id="a7" elementType="C" x2="462.8659154646929"
+				y2="649.955705224187" formalCharge="0" hydrogenCount="0" />
+			<atom id="a8" elementType="C" x2="496.0403392970794"
+				y2="596.4958857030111" formalCharge="0" hydrogenCount="0" />
+			<atom id="a9" elementType="H" x2="461.37379417761633"
+				y2="577.4211198801137" formalCharge="0" hydrogenCount="0" />
+			<atom id="a10" elementType="C" x2="493.733956644494"
+				y2="669.1129152119537" formalCharge="0" hydrogenCount="0" />
+			<atom id="a11" elementType="H" x2="457.92329101071596"
+				y2="685.943832246524" formalCharge="0" hydrogenCount="0" />
+			<atom id="a12" elementType="O" x2="526.9095156628953"
+				y2="615.6490594738362" formalCharge="0" hydrogenCount="0" />
+			<atom id="a13" elementType="O" x2="494.85974584170765"
+				y2="561.0621894376525" formalCharge="0" hydrogenCount="0" />
+			<atom id="a14" elementType="C" x2="525.7539593657385"
+				y2="651.9533803466419" formalCharge="0" hydrogenCount="0" />
+			<atom id="a15" elementType="C" x2="492.58103831439246"
+				y2="705.4205673309358" formalCharge="0" hydrogenCount="0" />
+			<atom id="a16" elementType="C" x2="476.09556247861394"
+				y2="528.8531151790573" formalCharge="0" hydrogenCount="0" />
+			<atom id="a17" elementType="O" x2="523.4479282361482"
+				y2="724.5728499527835" formalCharge="0" hydrogenCount="0" />
+			<atom id="a18" elementType="O" x2="460.5612300625352"
+				y2="722.5759368280702" formalCharge="0" hydrogenCount="0" />
+			<atom id="a19" elementType="O" x2="458.94164047748643"
+				y2="560.1337964752312" formalCharge="0" hydrogenCount="0" />
+			<atom id="a20" elementType="C" x2="445.8239354178006"
+				y2="520.7806812961738" formalCharge="0" hydrogenCount="0" />
+			<atom id="a21" elementType="C" x2="433.7152845934752"
+				y2="534.90744059122" formalCharge="0" hydrogenCount="0" />
+			<atom id="a22" elementType="C" x2="414.5432541216268"
+				y2="503.6267592950462" formalCharge="0" hydrogenCount="0" />
+			<atom id="a23" elementType="O" x2="462.9778574189281"
+				y2="489.5" formalCharge="0" hydrogenCount="0" />
+			<atom id="a24" elementType="C" x2="397.38933212049915"
+				y2="534.90744059122" formalCharge="0" hydrogenCount="0" />
+			<atom id="a25" elementType="C" x2="402.43460329730135"
+				y2="553.0704168277081" formalCharge="0" hydrogenCount="0" />
+			<atom id="a26" elementType="O" x2="378.2173016486507"
+				y2="503.6267592950462" formalCharge="0" hydrogenCount="0" />
+			<atom id="a27" elementType="O" x2="366.1086508243253"
+				y2="517.7535185900925" formalCharge="0" hydrogenCount="0" />
+			<atom id="a28" elementType="O" x2="385.2806812961738"
+				y2="584.3510981238819" formalCharge="0" hydrogenCount="0" />
+			<atom id="a29" elementType="C" x2="349.0" y2="584.0"
+				formalCharge="0" hydrogenCount="0" />
+			<atom id="a30" elementType="C" x2="332.0" y2="615.0"
+				formalCharge="0" hydrogenCount="0" />
+			<atom id="a31" elementType="O" x2="318.0" y2="567.0"
+				formalCharge="0" hydrogenCount="0" />
+			<atom id="a32" elementType="H" x2="394.5142404391602"
+				y2="594.5776834653102" formalCharge="0" hydrogenCount="0" />
+			<atom id="a33" elementType="H" x2="392.26806171326956"
+				y2="597.4682984780366" formalCharge="0" hydrogenCount="0" />
+			<atom id="a34" elementType="H" x2="385.17789071829986"
+				y2="576.4691129033861" formalCharge="0" hydrogenCount="0" />
+			<atom id="a35" elementType="H" x2="409.7052445942793"
+				y2="531.8968758122613" formalCharge="0" hydrogenCount="0" />
+			<atom id="a36" elementType="H" x2="454.27748168540404"
+				y2="556.4242296882408" formalCharge="0" hydrogenCount="0" />
+			<atom id="a37" elementType="H" x2="441.56439994630824"
+				y2="693.3914464692464" formalCharge="0" hydrogenCount="0" />
+			<atom id="a38" elementType="H" x2="396.272273701951"
+				y2="677.0700288184653" formalCharge="0" hydrogenCount="0" />
+			<atom id="a39" elementType="H" x2="335.3070854962858"
+				y2="627.7252666085844" formalCharge="0" hydrogenCount="0" />
+			<atom id="a40" elementType="H" x2="527.1806720350468"
+				y2="578.4842955260956" formalCharge="0" hydrogenCount="0" />
+			<atom id="a41" elementType="H" x2="556.3221133275953"
+				y2="670.9198156231165" formalCharge="0" hydrogenCount="0" />
+			<atom id="a42" elementType="H" x2="497.92228439024245"
+				y2="500.25710296887473" formalCharge="0" hydrogenCount="0" />
+			<atom id="a43" elementType="H" x2="428.85154259836986"
+				y2="739.5651517792513" formalCharge="0" hydrogenCount="0" />
+			<atom id="a44" elementType="H" x2="432.4435476768393"
+				y2="554.1738381944668" formalCharge="0" hydrogenCount="0" />
+			<atom id="a45" elementType="H" x2="398.0489227482988"
+				y2="539.6030062079934" formalCharge="0" hydrogenCount="0" />
+			<atom id="a46" elementType="H" x2="379.8994105300838"
+				y2="513.3191173640191" formalCharge="0" hydrogenCount="0" />
+			<atom id="a47" elementType="H" x2="480.27539010723217"
+				y2="457.957440391916" formalCharge="0" hydrogenCount="0" />
+			<atom id="a48" elementType="H" x2="388.4612386350334"
+				y2="569.7560682607175" formalCharge="0" hydrogenCount="0" />
+			<atom id="a49" elementType="H" x2="366.91452060916805"
+				y2="547.3729235577998" formalCharge="0" hydrogenCount="0" />
+			<atom id="a50" elementType="H" x2="395.86999608970723"
+				y2="517.7003216067098" formalCharge="0" hydrogenCount="0" />
+			<atom id="a51" elementType="H" x2="342.2431761730748"
+				y2="503.6267592950462" formalCharge="0" hydrogenCount="0" />
+			<atom id="a52" elementType="H" x2="334.5660912162413"
+				y2="500.4559859017885" formalCharge="0" hydrogenCount="0" />
+			<atom id="a53" elementType="H" x2="363.54255960808393"
+				y2="632.297532688304" formalCharge="0" hydrogenCount="0" />
+			<atom id="a54" elementType="H" x2="314.7024673116959"
+				y2="646.5425596080839" formalCharge="0" hydrogenCount="0" />
+			<atom id="a55" elementType="H" x2="300.45744039191607"
+				y2="597.702467311696" formalCharge="0" hydrogenCount="0" />
+		</atomArray>
+		<bondArray>
+			<bond id="b1321194" atomRefs2="a1 a2" order="S" />
+			<bond id="b21307627" atomRefs2="a3 a1" order="S" />
+			<bond id="b9708927" atomRefs2="a1 a4" order="S">
+				<bondStereo dictRef="cml:W" />
+			</bond>
+			<bond id="b22316618" atomRefs2="a2 a5" order="S" />
+			<bond id="b11200622" atomRefs2="a2 a6" order="S">
+				<bondStereo dictRef="cml:W" />
+			</bond>
+			<bond id="b10175206" atomRefs2="a7 a3" order="S" />
+			<bond id="b8752113" atomRefs2="a3 a8" order="S" />
+			<bond id="b11576309" atomRefs2="a3 a9" order="S">
+				<bondStereo dictRef="cml:W" />
+			</bond>
+			<bond id="b3969559" atomRefs2="a5 a7" order="S" />
+			<bond id="b25706868" atomRefs2="a10 a7" order="S" />
+			<bond id="b13982086" atomRefs2="a7 a11" order="S">
+				<bondStereo dictRef="cml:W" />
+			</bond>
+			<bond id="b27692793" atomRefs2="a8 a12" order="S" />
+			<bond id="b30844270" atomRefs2="a8 a13" order="S">
+				<bondStereo dictRef="cml:W" />
+			</bond>
+			<bond id="b26999600" atomRefs2="a14 a10" order="D" />
+			<bond id="b4167406" atomRefs2="a10 a15" order="S" />
+			<bond id="b32801378" atomRefs2="a12 a14" order="S" />
+			<bond id="b22878167" atomRefs2="a13 a16" order="S" />
+			<bond id="b27198423" atomRefs2="a15 a17" order="D" />
+			<bond id="b25018827" atomRefs2="a15 a18" order="S" />
+			<bond id="b28715691" atomRefs2="a16 a19" order="S" />
+			<bond id="b21010507" atomRefs2="a20 a16" order="S" />
+			<bond id="b26622782" atomRefs2="a19 a21" order="S" />
+			<bond id="b5285449" atomRefs2="a22 a20" order="S" />
+			<bond id="b2326550" atomRefs2="a20 a23" order="S" />
+			<bond id="b6659511" atomRefs2="a21 a24" order="S" />
+			<bond id="b21726407" atomRefs2="a21 a25" order="S" />
+			<bond id="b11800260" atomRefs2="a24 a22" order="S">
+				<bondStereo dictRef="cml:W" />
+			</bond>
+			<bond id="b24615045" atomRefs2="a22 a26" order="S" />
+			<bond id="b33355664" atomRefs2="a24 a27" order="S" />
+			<bond id="b11265620" atomRefs2="a25 a28" order="S" />
+			<bond id="b9996039" atomRefs2="a28 a29" order="S" />
+			<bond id="b31556811" atomRefs2="a29 a30"
+				order="S" />
+			<bond id="b31056514" atomRefs2="a29 a31"
+				order="D" />
+			<bond id="b4070344" atomRefs2="a1 a32" order="S" />
+			<bond id="b26343425" atomRefs2="a2 a33" order="S" />
+			<bond id="b3223920" atomRefs2="a4 a34" order="S" />
+			<bond id="b27575732" atomRefs2="a4 a35" order="S" />
+			<bond id="b11513418" atomRefs2="a4 a36" order="S" />
+			<bond id="b31168594" atomRefs2="a5 a37" order="S" />
+			<bond id="b32330841" atomRefs2="a5 a38" order="S" />
+			<bond id="b3977333" atomRefs2="a6 a39" order="S" />
+			<bond id="b6620348" atomRefs2="a8 a40" order="S" />
+			<bond id="b1702354" atomRefs2="a14 a41" order="S" />
+			<bond id="b23103909" atomRefs2="a16 a42" order="S" />
+			<bond id="b15513215" atomRefs2="a18 a43" order="S" />
+			<bond id="b12675864" atomRefs2="a20 a44" order="S" />
+			<bond id="b6169134" atomRefs2="a21 a45" order="S" />
+			<bond id="b1440568" atomRefs2="a22 a46" order="S" />
+			<bond id="b18895884" atomRefs2="a23 a47" order="S" />
+			<bond id="b23978087" atomRefs2="a24 a48" order="S" />
+			<bond id="b10994782" atomRefs2="a25 a49" order="S" />
+			<bond id="b5057266" atomRefs2="a25 a50" order="S" />
+			<bond id="b4102111" atomRefs2="a26 a51" order="S" />
+			<bond id="b23387835" atomRefs2="a27 a52" order="S" />
+			<bond id="b22741811" atomRefs2="a30 a53"
+				order="S" />
+			<bond id="b3089045" atomRefs2="a30 a54"
+				order="S" />
+			<bond id="b8883276" atomRefs2="a30 a55"
+				order="S" />
+		</bondArray>
+	</molecule>
+	<molecule id="m10.1016_S0031-9422_03_00501-6-structure-2">
+		<atomArray>
+			<atom id="a1" elementType="C" x2="439.6206938287401"
+				y2="601.3124892083148" formalCharge="0" hydrogenCount="0" />
+			<atom id="a2" elementType="C" x2="417.14826561017463"
+				y2="630.2545603076031" formalCharge="0" hydrogenCount="0" />
+			<atom id="a3" elementType="C" x2="474.09398641426645"
+				y2="613.7362189409555" formalCharge="0" hydrogenCount="0" />
+			<atom id="a4" elementType="C" x2="429.4117171814174"
+				y2="566.1196620438387" formalCharge="0" hydrogenCount="0" />
+			<atom id="a5" elementType="C" x2="437.73780737951137"
+				y2="660.5720412468189" formalCharge="0" hydrogenCount="0" />
+			<atom id="a6" elementType="O" x2="380.5231491975301"
+				y2="629.088740521145" formalCharge="0" hydrogenCount="0" />
+			<atom id="a7" elementType="C" x2="472.9272418969554"
+				y2="650.3590824368104" formalCharge="0" hydrogenCount="0" />
+			<atom id="a8" elementType="C" x2="506.3918157765667"
+				y2="596.4316928008657" formalCharge="0" hydrogenCount="0" />
+			<atom id="a9" elementType="H" x2="471.42207022310816"
+				y2="577.1900953177628" formalCharge="0" hydrogenCount="0" />
+			<atom id="a10" elementType="C" x2="504.0652610468732"
+				y2="669.6838451576922" formalCharge="0" hydrogenCount="0" />
+			<atom id="a11" elementType="H" x2="467.94138827565433"
+				y2="686.6619687088579" formalCharge="0" hydrogenCount="0" />
+			<atom id="a12" elementType="O" x2="537.5309800410596"
+				y2="615.7523840032576" formalCharge="0" hydrogenCount="0" />
+			<atom id="a13" elementType="O" x2="505.20089661822095"
+				y2="560.688086446437" formalCharge="0" hydrogenCount="0" />
+			<atom id="a14" elementType="C" x2="536.3653170208477"
+				y2="652.3742296194897" formalCharge="0" hydrogenCount="0" />
+			<atom id="a15" elementType="C" x2="502.902259065896"
+				y2="706.3090511558365" formalCharge="0" hydrogenCount="0" />
+			<atom id="a16" elementType="C" x2="486.27259801030954"
+				y2="528.1973052781932" formalCharge="0" hydrogenCount="0" />
+			<atom id="a17" elementType="O" x2="534.0391168886385"
+				y2="725.6288434150864" formalCharge="0" hydrogenCount="0" />
+			<atom id="a18" elementType="O" x2="470.6023992621762"
+				y2="723.6144648947308" formalCharge="0" hydrogenCount="0" />
+			<atom id="a19" elementType="O" x2="468.9686444275074"
+				y2="559.7515735762443" formalCharge="0" hydrogenCount="0" />
+			<atom id="a20" elementType="C" x2="455.73620933477633"
+				y2="520.054268298051" formalCharge="0" hydrogenCount="0" />
+			<atom id="a21" elementType="C" x2="443.521653864563"
+				y2="534.3045830132999" formalCharge="0" hydrogenCount="0" />
+			<atom id="a22" elementType="C" x2="424.1819410367253"
+				y2="502.7503147152488" formalCharge="0" hydrogenCount="0" />
+			<atom id="a23" elementType="O" x2="473.04016291757847"
+				y2="488.5" formalCharge="0" hydrogenCount="0" />
+			<atom id="a24" elementType="C" x2="406.877987453923"
+				y2="534.3045830132999" formalCharge="0" hydrogenCount="0" />
+			<atom id="a25" elementType="C" x2="411.96738556651195"
+				y2="552.6264162186199" formalCharge="0" hydrogenCount="0" />
+			<atom id="a26" elementType="O" x2="387.5382746260853"
+				y2="502.7503147152488" formalCharge="0" hydrogenCount="0" />
+			<atom id="a27" elementType="O" x2="375.323719155872"
+				y2="517.0006294304977" formalCharge="0" hydrogenCount="0" />
+			<atom id="a28" elementType="O" x2="394.66343198370976"
+				y2="584.1806845166709" formalCharge="0" hydrogenCount="0" />
+			<atom id="a29" elementType="C" x2="341.0" y2="526.0"
+				formalCharge="0" hydrogenCount="0" />
+			<atom id="a30" elementType="O" x2="332.0" y2="560.0"
+				formalCharge="0" hydrogenCount="0" />
+			<atom id="a31" elementType="C" x2="310.0" y2="509.0"
+				formalCharge="0" hydrogenCount="0" />
+			<atom id="a32" elementType="H" x2="404.03485441845316"
+				y2="594.5076333726753" formalCharge="0" hydrogenCount="0" />
+			<atom id="a33" elementType="H" x2="401.7366564884465"
+				y2="597.4652276861905" formalCharge="0" hydrogenCount="0" />
+			<atom id="a34" elementType="H" x2="394.61557990464973"
+				y2="576.2135641681367" formalCharge="0" hydrogenCount="0" />
+			<atom id="a35" elementType="H" x2="419.3178150571194"
+				y2="531.323524767071" formalCharge="0" hydrogenCount="0" />
+			<atom id="a36" elementType="H" x2="464.207854458185"
+				y2="556.0257599195407" formalCharge="0" hydrogenCount="0" />
+			<atom id="a37" elementType="H" x2="451.4174673120324"
+				y2="694.1208852449233" formalCharge="0" hydrogenCount="0" />
+			<atom id="a38" elementType="H" x2="405.8024059115787"
+				y2="677.6830950589175" formalCharge="0" hydrogenCount="0" />
+			<atom id="a39" elementType="H" x2="344.31086728803973"
+				y2="627.9360617340735" formalCharge="0" hydrogenCount="0" />
+			<atom id="a40" elementType="H" x2="537.7541806655393"
+				y2="578.291679072935" formalCharge="0" hydrogenCount="0" />
+			<atom id="a41" elementType="H" x2="567.1514234700307"
+				y2="671.4758965409428" formalCharge="0" hydrogenCount="0" />
+			<atom id="a42" elementType="H" x2="508.2549455556205"
+				y2="499.3974020513466" formalCharge="0" hydrogenCount="0" />
+			<atom id="a43" elementType="H" x2="438.6666201189459"
+				y2="740.7248138097408" formalCharge="0" hydrogenCount="0" />
+			<atom id="a44" elementType="H" x2="442.26041875093574"
+				y2="553.6855200978138" formalCharge="0" hydrogenCount="0" />
+			<atom id="a45" elementType="H" x2="407.60098905141103"
+				y2="539.033628250951" formalCharge="0" hydrogenCount="0" />
+			<atom id="a46" elementType="H" x2="389.2910850841892"
+				y2="512.511779788584" formalCharge="0" hydrogenCount="0" />
+			<atom id="a47" elementType="H" x2="490.4610278908065"
+				y2="456.732540342937" formalCharge="0" hydrogenCount="0" />
+			<atom id="a48" elementType="H" x2="397.8862362093179"
+				y2="569.4016831646472" formalCharge="0" hydrogenCount="0" />
+			<atom id="a49" elementType="H" x2="376.194042888208"
+				y2="546.8882995328765" formalCharge="0" hydrogenCount="0" />
+			<atom id="a50" elementType="H" x2="405.35597237675086"
+				y2="517.0041304256949" formalCharge="0" hydrogenCount="0" />
+			<atom id="a51" elementType="H" x2="351.30765181224774"
+				y2="502.7503147152488" formalCharge="0" hydrogenCount="0" />
+			<atom id="a52" elementType="H" x2="377.24256701048165"
+				y2="615.9481441737338" formalCharge="0" hydrogenCount="0" />
+			<atom id="a53" elementType="H" x2="292.57913502677195"
+				y2="540.767459657063" formalCharge="0" hydrogenCount="0" />
+			<atom id="a54" elementType="H" x2="278.23254034293706"
+				y2="491.57913502677195" formalCharge="0" hydrogenCount="0" />
+			<atom id="a55" elementType="H" x2="327.42086497322805"
+				y2="477.23254034293706" formalCharge="0" hydrogenCount="0" />
+		</atomArray>
+		<bondArray>
+			<bond id="b1321194" atomRefs2="a1 a2" order="S" />
+			<bond id="b21307627" atomRefs2="a3 a1" order="S" />
+			<bond id="b9708927" atomRefs2="a1 a4" order="S">
+				<bondStereo dictRef="cml:W" />
+			</bond>
+			<bond id="b22316618" atomRefs2="a2 a5" order="S" />
+			<bond id="b11200622" atomRefs2="a2 a6" order="S">
+				<bondStereo dictRef="cml:W" />
+			</bond>
+			<bond id="b10175206" atomRefs2="a7 a3" order="S" />
+			<bond id="b8752113" atomRefs2="a3 a8" order="S" />
+			<bond id="b11576309" atomRefs2="a3 a9" order="S">
+				<bondStereo dictRef="cml:W" />
+			</bond>
+			<bond id="b3969559" atomRefs2="a5 a7" order="S" />
+			<bond id="b25706868" atomRefs2="a10 a7" order="S" />
+			<bond id="b13982086" atomRefs2="a7 a11" order="S">
+				<bondStereo dictRef="cml:W" />
+			</bond>
+			<bond id="b27692793" atomRefs2="a8 a12" order="S" />
+			<bond id="b30844270" atomRefs2="a8 a13" order="S">
+				<bondStereo dictRef="cml:W" />
+			</bond>
+			<bond id="b26999600" atomRefs2="a14 a10" order="D" />
+			<bond id="b4167406" atomRefs2="a10 a15" order="S" />
+			<bond id="b32801378" atomRefs2="a12 a14" order="S" />
+			<bond id="b22878167" atomRefs2="a13 a16" order="S" />
+			<bond id="b27198423" atomRefs2="a15 a17" order="D" />
+			<bond id="b25018827" atomRefs2="a15 a18" order="S" />
+			<bond id="b28715691" atomRefs2="a16 a19" order="S" />
+			<bond id="b21010507" atomRefs2="a20 a16" order="S" />
+			<bond id="b26622782" atomRefs2="a19 a21" order="S" />
+			<bond id="b5285449" atomRefs2="a22 a20" order="S" />
+			<bond id="b2326550" atomRefs2="a20 a23" order="S" />
+			<bond id="b6659511" atomRefs2="a21 a24" order="S" />
+			<bond id="b21726407" atomRefs2="a21 a25" order="S" />
+			<bond id="b11800260" atomRefs2="a24 a22" order="S">
+				<bondStereo dictRef="cml:W" />
+			</bond>
+			<bond id="b24615045" atomRefs2="a22 a26" order="S" />
+			<bond id="b33355664" atomRefs2="a24 a27" order="S" />
+			<bond id="b25619834" atomRefs2="a25 a28" order="S" />
+			<bond id="b5253145" atomRefs2="a27 a29" order="S" />
+			<bond id="b19140890" atomRefs2="a29 a30" order="D" />
+			<bond id="b8550760" atomRefs2="a29 a31" order="S" />
+			<bond id="b27785692" atomRefs2="a1 a32" order="S" />
+			<bond id="b17097355" atomRefs2="a2 a33" order="S" />
+			<bond id="b28656482" atomRefs2="a4 a34" order="S" />
+			<bond id="b22744620" atomRefs2="a4 a35" order="S" />
+			<bond id="b16748627" atomRefs2="a4 a36" order="S" />
+			<bond id="b6059828" atomRefs2="a5 a37" order="S" />
+			<bond id="b9838890" atomRefs2="a5 a38" order="S" />
+			<bond id="b5990238" atomRefs2="a6 a39" order="S" />
+			<bond id="b14648293" atomRefs2="a8 a40" order="S" />
+			<bond id="b5006112" atomRefs2="a14 a41" order="S" />
+			<bond id="b16765237" atomRefs2="a16 a42" order="S" />
+			<bond id="b16780239" atomRefs2="a18 a43" order="S" />
+			<bond id="b480508" atomRefs2="a20 a44" order="S" />
+			<bond id="b22845834" atomRefs2="a21 a45" order="S" />
+			<bond id="b6576294" atomRefs2="a22 a46" order="S" />
+			<bond id="b33041076" atomRefs2="a23 a47" order="S" />
+			<bond id="b29070998" atomRefs2="a24 a48" order="S" />
+			<bond id="b10183200" atomRefs2="a25 a49" order="S" />
+			<bond id="b21450309" atomRefs2="a25 a50" order="S" />
+			<bond id="b6530849" atomRefs2="a26 a51" order="S" />
+			<bond id="b7446303" atomRefs2="a28 a52" order="S" />
+			<bond id="b25537913" atomRefs2="a31 a53"
+				order="S" />
+			<bond id="b20978984" atomRefs2="a31 a54"
+				order="S" />
+			<bond id="b3829340" atomRefs2="a31 a55" order="S" />
+		</bondArray>
+	</molecule>
+	<spectrum title="Table 2.1" moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-1" type="NMR">
+		<conditionList>
+			<scalar dataType="xsd:string" dictRef="cml:field"
+				units="siUnits:hertz">
+				100.57
+			</scalar>
+		</conditionList>
+		<substanceList>
+			<substance role="subst:solvent" title="D2O"/>
+		</substanceList>
+		<metadataList>
+			<metadata name="nmr:OBSERVENUCLEUS" content="13C" />
+			<metadata name="nmr:INSTRUM" content="Varian Unity" />
+		</metadataList>
+		<peakList>
+			<peak xValue="99.5" xUnits="units:ppm" id="p1" atomRefs="a8" />
+			<peak xValue="154.0" xUnits="units:ppm" id="p3" atomRefs="a14" />
+			<peak xValue="115.6" xUnits="units:ppm" id="p4" atomRefs="a10" />
+			<peak xValue="32.5" xUnits="units:ppm" id="p5" atomRefs="a7" />
+			<peak xValue="43.0" xUnits="units:ppm" id="p6" atomRefs="a5" />
+			<peak xValue="77.1" xUnits="units:ppm" id="p7" atomRefs="a2" />
+			<peak xValue="42.8" xUnits="units:ppm" id="p8" atomRefs="a1" />
+			<peak xValue="47.6" xUnits="units:ppm" id="p9" atomRefs="a3" />
+			<peak xValue="14.7" xUnits="units:ppm" id="p10" atomRefs="a4" />
+			<peak xValue="174.0" xUnits="units:ppm" id="p11" atomRefs="a15" />
+			<peak xValue="101.0" xUnits="units:ppm" id="p1a"	atomRefs="a16" />
+			<peak xValue="75.3" xUnits="units:ppm" id="p2a" atomRefs="a20" />
+			<peak xValue="78.1" xUnits="units:ppm" id="p3a" atomRefs="a22" />
+			<peak xValue="72.1" xUnits="units:ppm" id="p4a" atomRefs="a24" />
+			<peak xValue="76.4" xUnits="units:ppm" id="p5a" atomRefs="a21" />
+			<peak xValue="65.7" xUnits="units:ppm" id="p6a" atomRefs="a25" />
+			<peak xValue="22.9" xUnits="units:ppm" id="p_CH3CO" atomRefs="a30" />
+			<peak xValue="176.8" xUnits="units:ppm" id="pCH3_CO" atomRefs="a29" />
+		</peakList>
+	</spectrum>
+	<spectrum title="Table 2.2" moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-2" type="NMR">
+		<conditionList>
+			<scalar dataType="xsd:string" dictRef="cml:field"
+				units="siUnits:hertz">
+				100.57
+			</scalar>
+		</conditionList>
+		<substanceList>
+			<substance role="subst:solvent" title="D2O"/>
+		</substanceList>
+		<metadataList>
+			<metadata name="nmr:OBSERVENUCLEUS" content="13C" />
+			<metadata name="nmr:INSTRUM" content="Varian Unity" />
+		</metadataList>
+		<peakList>
+			<peak xValue="99.4" xUnits="units:ppm" id="p1" atomRefs="a8" />
+			<peak xValue="153.4" xUnits="units:ppm" id="p3" atomRefs="a14" />
+			<peak xValue="116.2" xUnits="units:ppm" id="p4" atomRefs="a10" />
+			<peak xValue="3245" xUnits="units:ppm" id="p5" atomRefs="a7" />
+			<peak xValue="42.9" xUnits="units:ppm" id="p6" atomRefs="a5" />
+			<peak xValue="77.1" xUnits="units:ppm" id="p7" atomRefs="a2" />
+			<peak xValue="42.7" xUnits="units:ppm" id="p8" atomRefs="a1" />
+			<peak xValue="47.6" xUnits="units:ppm" id="p9" atomRefs="a3" />
+			<peak xValue="14.7" xUnits="units:ppm" id="p10" atomRefs="a4" />
+			<peak xValue="174.3" xUnits="units:ppm" id="p11" atomRefs="a15" />
+			<peak xValue="101.2" xUnits="units:ppm" id="p1a" atomRefs="a16" />
+			<peak xValue="75.2" xUnits="units:ppm" id="p2a" atomRefs="a20" />
+			<peak xValue="76.2" xUnits="units:ppm" id="p3a" atomRefs="a22" />
+			<peak xValue="73.5" xUnits="units:ppm" id="p4a" atomRefs="a24" />
+			<peak xValue="76.7" xUnits="units:ppm" id="p5a" atomRefs="a21" />
+			<peak xValue="62.8" xUnits="units:ppm" id="p6a" atomRefs="a25" />
+			<peak xValue="23.1" xUnits="units:ppm" id="p_CH3CO" atomRefs="a30" />
+			<peak xValue="176.4" xUnits="units:ppm" id="pCH3_CO" atomRefs="a29" />
+		</peakList>
+	</spectrum>
+	<spectrum title="Table 1.1" moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-1" type="NMR">
+		<conditionList>
+			<scalar dataType="xsd:string" dictRef="cml:field"
+				units="siUnits:hertz">
+				400
+			</scalar>
+		</conditionList>
+		<substanceList>
+			<substance role="subst:solvent" title="D2O"/>
+		</substanceList>
+		<metadataList>
+			<metadata name="nmr:OBSERVENUCLEUS" content="1H" />
+			<metadata name="nmr:INSTRUM" content="Varian Unity" />
+		</metadataList>
+		<peakList>
+			<peak xValue="5.33" xUnits="units:ppm" id="p1" atomRefs="a40" peakMultiplicity="nmr:d">
+				<peakStructure type="coupling" units="unit:hertz" value="3.6" />
+			</peak>
+			<peak xValue="7.45" xUnits="units:ppm" id="p3" atomRefs="a41" peakMultiplicity="nmr:s"/>
+			<peak xValue="3.06" xUnits="units:ppm" id="p5" atomRefs="a11" peakMultiplicity="nmr:dd">
+				<peakStructure type="coupling" units="unit:hertz" value="7,6" />
+				<peakStructure type="coupling" units="unit:hertz" value="8.0" />
+			</peak>	
+			<peak xValue="2.19" xUnits="units:ppm" id="p6a" atomRefs="a37" peakMultiplicity="nmr:m" />
+			<peak xValue="1.76" xUnits="units:ppm" id="p6b" atomRefs="a38" peakMultiplicity="nmr:m" />
+			<peak xValue="4.15" xUnits="units:ppm" id="p7" atomRefs="a33" peakMultiplicity="nmr:m" />
+			<peak xValue="1.90" xUnits="units:ppm" id="p8" atomRefs="a32" peakMultiplicity="nmr:m" />
+			<peak xValue="2.10" xUnits="units:ppm" id="p9" atomRefs="a36" peakMultiplicity="nmr:m" />
+			<peak xValue="1.06" xUnits="units:ppm" id="p10" atomRefs="a34 a35 a36" peakMultiplicity="nmr:d">
+				<peakStructure type="coupling" units="unit:hertz" value="7,2" />
+			</peak>			
+			<peak xValue="4.81" xUnits="units:ppm" id="p1a" atomRefs="a42" peakMultiplicity="nmr:d">
+				<peakStructure type="coupling" units="unit:hertz" value="8.0" />
+			</peak>			
+			<peak xValue="3.29" xUnits="units:ppm" id="p2a" atomRefs="a44" peakMultiplicity="nmr:t">
+				<peakStructure type="coupling" units="unit:hertz" value="8.0" />
+				<peakStructure type="coupling" units="unit:hertz" value="9.2" />
+			</peak>							
+			<peak xValue="3.51" xUnits="units:ppm" id="p3a" atomRefs="a46" peakMultiplicity="nmr:t">
+				<peakStructure type="coupling" units="unit:hertz" value="9.2" />
+			</peak>			
+			<peak xValue="3.47" xUnits="units:ppm" id="p4a" atomRefs="a48" peakMultiplicity="nmr:t">
+				<peakStructure type="coupling" units="unit:hertz" value="9.2" />
+				<peakStructure type="coupling" units="unit:hertz" value="9,6" />
+			</peak>							
+			<peak xValue="3.68" xUnits="units:ppm" id="p5a" atomRefs="a45" peakMultiplicity="nmr:m" />
+			<peak xValue="4.42" xUnits="units:ppm" id="p6aa" atomRefs="a49" peakMultiplicity="nmr:dd">
+				<peakStructure type="coupling" units="unit:hertz" value="2.4" />
+				<peakStructure type="coupling" units="unit:hertz" value="12.4" />
+			</peak>
+			<peak xValue="4.33" xUnits="units:ppm" id="p6ab"	atomRefs="a55" peakMultiplicity="nmr:dd">
+				<peakStructure type="coupling" units="unit:hertz" value="6.0" />
+				<peakStructure type="coupling" units="unit:hertz" value="12.6" />
+			</peak>							
+			<peak xValue="2.12" xUnits="units:ppm" id="CH3CO" atomRefs="a53 a54 a55" peakMultiplicity="nmr:s" />
+		</peakList>
+	</spectrum>
+	<spectrum title="Table 1.2" moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-1" type="NMR">
+		<conditionList>
+			<scalar dataType="xsd:string" dictRef="cml:field"
+				units="siUnits:hertz">
+				400
+			</scalar>
+		</conditionList>
+		<substanceList>
+			<substance role="subst:solvent" title="D2O"/>
+		</substanceList>
+		<metadataList>
+			<metadata name="nmr:OBSERVENUCLEUS" content="1H" />
+			<metadata name="nmr:INSTRUM" content="Varian Unity" />
+		</metadataList>
+		<peakList>
+			<peak xValue="541" xUnits="units:ppm" id="p1" atomRefs="a40" peakMultiplicity="nmr:d">
+				<peakStructure type="coupling" units="unit:hertz" value="3.6" />
+			</peak>
+			<peak xValue="7.40" xUnits="units:ppm" id="p3" atomRefs="a41" peakMultiplicity="nmr:s"/>
+			<peak xValue="3.04" xUnits="units:ppm" id="p5" atomRefs="a11" peakMultiplicity="nmr:dd">
+				<peakStructure type="coupling" units="unit:hertz" value="7,6" />
+				<peakStructure type="coupling" units="unit:hertz" value="8.0" />
+			</peak>	
+			<peak xValue="2.21" xUnits="units:ppm" id="p6a" atomRefs="a37" peakMultiplicity="nmr:m" />
+			<peak xValue="1.77" xUnits="units:ppm" id="p6b" atomRefs="a38" peakMultiplicity="nmr:m" />
+			<peak xValue="4.15" xUnits="units:ppm" id="p7" atomRefs="a33" peakMultiplicity="nmr:m" />
+			<peak xValue="1.92" xUnits="units:ppm" id="p8" atomRefs="a32" peakMultiplicity="nmr:m" />
+			<peak xValue="2.12" xUnits="units:ppm" id="p9" atomRefs="a36" peakMultiplicity="nmr:m" />
+			<peak xValue="1.07" xUnits="units:ppm" id="p10" atomRefs="a34 a35 a36" peakMultiplicity="nmr:d">
+				<peakStructure type="coupling" units="unit:hertz" value="7,2" />
+			</peak>			
+			<peak xValue="4.85" xUnits="units:ppm" id="p1a" atomRefs="a42" peakMultiplicity="nmr:d">
+				<peakStructure type="coupling" units="unit:hertz" value="8.4" />
+			</peak>			
+			<peak xValue="3.19" xUnits="units:ppm" id="p2a" atomRefs="a44" peakMultiplicity="nmr:t">
+				<peakStructure type="coupling" units="unit:hertz" value="8.4" />
+				<peakStructure type="coupling" units="unit:hertz" value="9.2" />
+			</peak>							
+			<peak xValue="3.71" xUnits="units:ppm" id="p3a" atomRefs="a46" peakMultiplicity="nmr:t"/>
+			<peak xValue="4.81" xUnits="units:ppm" id="p4a" atomRefs="a48" peakMultiplicity="nmr:t">
+				<peakStructure type="coupling" units="unit:hertz" value="9.2" />
+			</peak>							
+			<peak xValue="3.69" xUnits="units:ppm" id="p5a" atomRefs="a45" peakMultiplicity="nmr:m" />
+			<peak xValue="3.73" xUnits="units:ppm" id="p6aa" atomRefs="a49" peakMultiplicity="nmr:dd">
+				<peakStructure type="coupling" units="unit:hertz" value="1.6" />
+				<peakStructure type="coupling" units="unit:hertz" value="12.4" />
+			</peak>
+			<peak xValue="3.39" xUnits="units:ppm" id="p6ab"	atomRefs="a55" peakMultiplicity="nmr:dd">
+				<peakStructure type="coupling" units="unit:hertz" value="4.8" />
+				<peakStructure type="coupling" units="unit:hertz" value="12.4" />
+			</peak>							
+			<peak xValue="2.17" xUnits="units:ppm" id="CH3CO" atomRefs="a53 a54 a55" peakMultiplicity="nmr:s" />
+		</peakList>
+	</spectrum>
+	<spectrum moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-1" type="UV/VIS">
+		<metadataList>
+			<metadata name="nmr:INSTRUM" content="Jasco P1010" />
+		</metadataList>
+		<peakList>
+			<peak xValue="235" xUnits="units:nm"/>
+		</peakList>
+	</spectrum>
+	<spectrum moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-2" type="UV/VIS">
+		<metadataList>
+			<metadata name="nmr:INSTRUM" content="Jasco P1010" />
+		</metadataList>
+		<peakList>
+			<peak xValue="235" xUnits="units:nm"/>
+		</peakList>
+	</spectrum>
+	<spectrum moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-1" type="spect:IR">
+		<metadataList>
+			<metadata name="nmr:INSTRUM" content="Perkin Elmer GS II" />
+		</metadataList>
+		<peakList>
+			<peak xValue="3422" xUnits="units:wavenumber_energy"/>
+			<peak xValue="1705" xUnits="units:wavenumber_energy"/>
+			<peak xValue="1685" xUnits="units:wavenumber_energy"/>
+			<peak xValue="1636" xUnits="units:wavenumber_energy"/>
+			<peak xValue="1376" xUnits="units:wavenumber_energy"/>
+			<peak xValue="1074" xUnits="units:wavenumber_energy"/>
+		</peakList>
+	</spectrum>
+	<spectrum moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-2" type="spect:IR">
+		<metadataList>
+			<metadata name="nmr:INSTRUM" content="Perkin Elmer GS II" />
+		</metadataList>
+		<peakList>
+			<peak xValue="3423" xUnits="units:wavenumber_energy"/>
+			<peak xValue="1707" xUnits="units:wavenumber_energy"/>
+			<peak xValue="1685" xUnits="units:wavenumber_energy"/>
+			<peak xValue="1637" xUnits="units:wavenumber_energy"/>
+			<peak xValue="1376" xUnits="units:wavenumber_energy"/>
+			<peak xValue="1079" xUnits="units:wavenumber_energy"/>
+		</peakList>
+	</spectrum>
+	<spectrum moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-1" type="massSpectrum">
+		<metadataList>
+			<metadata name="nmr:INSTRUM" content="Finnigan TSQ 1700" />
+			<metadata name="spect:exactType" content="ESI-MS" />
+			<metadata name="spect:treatment" content="[M-H]-" />
+		</metadataList>
+		<peakList>
+			<peak xValue="417" xUnits="units:moverz"/>
+		</peakList>
+	</spectrum>
+	<spectrum moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-2" type="massSpectrum">
+		<metadataList>
+			<metadata name="nmr:INSTRUM" content="Finnigan TSQ 1700" />
+			<metadata name="spect:exactType" content="ESI-MS" />
+			<metadata name="spect:treatment" content="[M-H]-" />
+		</metadataList>
+		<peakList>
+			<peak xValue="417" xUnits="units:moverz"/>
+		</peakList>
+	</spectrum>
+	<spectrum moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-1" type="massSpectrum">
+		<metadataList>
+			<metadata name="nmr:INSTRUM" content="Finnigan TSQ 1700" />
+			<metadata name="spect:exactType" content="ESI-MS-MS" />
+		</metadataList>
+		<peakList>
+			<peak xValue="375" xUnits="units:moverz"/>
+			<peak xValue="357" xUnits="units:moverz"/>
+			<peak xValue="213" xUnits="units:moverz"/>
+			<peak xValue="169" xUnits="units:moverz"/>
+		</peakList>
+	</spectrum>
+	<spectrum moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-2" type="massSpectrum">
+		<metadataList>
+			<metadata name="nmr:INSTRUM" content="Finnigan TSQ 1700" />
+			<metadata name="spect:exactType" content="ESI-MS-MS" />
+		</metadataList>
+		<peakList>
+			<peak xValue="375" xUnits="units:moverz"/>
+			<peak xValue="357" xUnits="units:moverz"/>
+			<peak xValue="213" xUnits="units:moverz"/>
+			<peak xValue="169" xUnits="units:moverz"/>
+		</peakList>
+	</spectrum>
+	<spectrum moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-1" type="massSpectrum">
+		<metadataList>
+			<metadata name="nmr:INSTRUM" content="Finnigan TSQ 1700" />
+			<metadata name="spect:exactType" content="API-TOF/MS" />
+			<metadata name="spect:treatment" content="[M-H]-" />
+		</metadataList>
+		<peakList>
+			<peak xValue="417.1380" xUnits="units:moverz"/>
+		</peakList>
+	</spectrum>
+	<spectrum moleculeRef="m10.1016_S0031-9422_03_00501-6-structure-2" type="massSpectrum">
+		<metadataList>
+			<metadata name="nmr:INSTRUM" content="Finnigan TSQ 1700" />
+			<metadata name="spect:exactType" content="API-TOF/MS" />
+			<metadata name="spect:treatment" content="[M-H]-" />
+		</metadataList>
+		<peakList>
+			<peak xValue="417.1374" xUnits="units:moverz"/>
+		</peakList>
+	</spectrum>
+</cml>
