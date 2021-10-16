@@ -163,14 +163,18 @@
 		{
 			selElem.innerHTML = '';
 			var items = Kekule.ArrayUtils.clone(itemStrs);
-			if (currValue && items.indexOf(currValue) < 0)
+			var values = Kekule.ArrayUtils.clone(itemValues || itemStrs);
+			if (currValue && values.indexOf(currValue) < 0)
+			{
+				values.unshift(currValue);
 				items.unshift(currValue);
+			}
 			for (var i = 0, l = items.length; i < l; ++i)
 			{
 				var child = selElem.ownerDocument.createElement('option');
-				child.value = itemValues? itemValues[i]: items[i];
+				child.value = values? values[i]: items[i];
 				child.innerHTML = items[i];
-				if (items[i] === currValue)
+				if (values[i] === currValue)
 					child.selected = true;
 				selElem.appendChild(child);
 			}
@@ -209,7 +213,7 @@
 					sectionIndexes.push(i);
 					sectionNames.push(name);
 				}
-				updateSelectElemItems($('selActiveSection'), sectionNames, sectionIndexes, '' + (spectrum.getActiveDataSectionIndex() || 0));
+				updateSelectElemItems($('selActiveSection'), sectionNames, sectionIndexes, (spectrum.getActiveDataSectionIndex() || 0));
 			}
 		}
 
