@@ -219,7 +219,7 @@ DCM.register({
 			var pureRatio = freq / observeFreq.getValue();  // in ppm * 1e10, in another word, the pure ratio
 			return KUnit.Dimensionless.ONE.convertValueTo(pureRatio, toUnitObj);
 		}
-		else if (fromUnitObj.category === K.Unit.Dimensionless)  // from ppm to Hz
+		else if (fromUnitObj.category === Kekule.Unit.Dimensionless)  // from ppm to Hz
 		{
 			var value2 = fromUnitObj.convertValueToStandard(value);
 			var freq = value2 * observeFreq.getValue();
