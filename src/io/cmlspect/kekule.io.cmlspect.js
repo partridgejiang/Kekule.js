@@ -29,6 +29,10 @@ var SPM = Kekule.Spectroscopy.PeakMultiplicity
 // add additional unit conversion map data
 Kekule.IO.CmlUtils._cmlUnitConvMap.push(['moverz', 'm/z', 'm/z']);
 
+/** @private */
+Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME = '__$objRef$__';
+Kekule.IO.CML.SPECTRUM_DATA_OBJREF_FLAG_FIELDNAME = '__$hasObjRef$__'
+
 /**
  * Util functions for CMLSpect data.
  * @class
@@ -180,6 +184,18 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.CmlSpectrumPeakListReader',
+	/** @constructs */
+	initialize: function()
+	{
+		this.tryApplySuper('initialize');
+		this._peakDetailsWithAssignments = [];  // a private field to storing all involved child readers
+	},
+	/** @ignore */
+	doFinalize: function()
+	{
+		this._peakDetailsWithAssignments = null;
+		this.tryApplySuper('doFinalize');
+	},
 	/** @ignore */
 	doReadElement: function(elem, parentObj, parentReader, options)
 	{
@@ -190,10 +206,11 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 			// TODO: ignoring <peakGroup> in list, since lacking the document of <peakGroup>. We simply iterate all child <peak> elements.
 			var domHelper = this.getDomHelper();
 			var peakElems = domHelper.getElementsByTagNameNS(this.getCoreNamespaceURI(), 'peak', elem);
-			var peakReader = Kekule.IO.CmlElementReaderFactory.getReader('peak');
+			//var peakReader = Kekule.IO.CmlElementReaderFactory.getReader('peak');
+			var peakReader = this.doGetChildElementReader('peak');
 			if (peakReader)
 			{
-				this.copySettingsToChildHandler(peakReader);
+				//this.copySettingsToChildHandler(peakReader);
 				try
 				{
 					for (var i = 0, l = peakElems.length; i < l; ++i)
@@ -205,7 +222,7 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 				}
 				finally
 				{
-					peakReader.finalize();
+					//peakReader.finalize();   // child readers will be released at the finalized method of parent reader
 				}
 			}
 			if (peaks.length)
@@ -232,6 +249,32 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 		}
 		else
 			return null;
+	},
+	/** @ignore */
+	doDoneReadingDocument: function()
+	{
+		// after the document is build, try set the assignments of peaks
+		var details = this._peakDetailsWithAssignments;
+		for (var i = 0, l = details.length; i < l; ++i)
+		{
+			var d = details[i];
+			if (d instanceof Kekule.Spectroscopy.SpectrumPeakDetails)
+			{
+				var owner = d.getOwner();
+				if (owner && owner.getObjById)
+				{
+					var ids = d.getInfoValue(Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME);
+					// TODO: currently we only handles the first ref id
+					var id = ids[0];
+					var obj = owner.getObjById(id);
+					if (obj)
+						d.setAssignment(obj);
+					console.log('set assignment', d, id, obj);
+					delete d.getInfo()[Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME];
+				}
+			}
+		}
+		this._peakDetailsWithAssignments = [];
 	},
 	/** @private */
 	_analysisPeakVarInfo: function(peaks, spectrumObj)  // iterate peaks data and find out the variable informations
@@ -360,12 +403,12 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 				var value = peak.value[symbol];
 				values.push(value);
 			}
-			this._setPeakDetails(peak, values, spectrumDataObj);
+			this._setPeakDetails(peak, values, spectrumDataSection);
 			spectrumDataSection.appendData(values);
 		}
 	},
 	/** @private */
-	_setPeakDetails: function(peak, dataValue, spectrumDataObj)
+	_setPeakDetails: function(peak, dataValue, spectrumDataSection)
 	{
 		if (peak.subStructure || peak.multiplicity || peak.shape)
 		{
@@ -375,11 +418,42 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 			});
 			if (peak.subStructure)  // has <peakStructure> child element
 				detail.setInfoValue('structure', peak.subStructure);
-			spectrumDataObj.setExtraInfoOf(dataValue, detail);
-			// TODO: atomRef/bondRef is not handled yet
+			var objRefIds = this._getPeakObjRefIds(peak);
+			if (objRefIds)
+			{
+				detail.setInfoValue(Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME, objRefIds);  // save the ref ids, handling it when the spectrum is added to chem space
+				//spectrumDataSection[Kekule.IO.CML.SPECTRUM_DATA_OBJREF_FLAG_FIELDNAME] = true;  // flag, indicating the cross ref should be handled later
+				this._peakDetailsWithAssignments.push(detail);
+			}
+			spectrumDataSection.setExtraInfoOf(dataValue, detail);
 			return detail;
 		}
 		return null;
+	},
+	/** @private */
+	_getPeakObjRefIds: function(peak)
+	{
+		var ids = [];
+		for (var i = 0 , l = Kekule.IO.CML.ATOMS_REF_ATTRIBS.length; i < l; ++i)
+		{
+			var key = Kekule.IO.CML.ATOMS_REF_ATTRIBS[i];
+			if (peak[key])
+				ids = ids.concat(peak[key].split(/\s/));
+		}
+		for (var i = 0 , l = Kekule.IO.CML.BONDS_REF_ATTRIBS.length; i < l; ++i)
+		{
+			var key = Kekule.IO.CML.BONDS_REF_ATTRIBS[i];
+			if (peak[key])
+				ids = ids.concat(peak[key].split(/\s/));
+		}
+		var result = [];
+		for (var i = 0, l = ids.length; i < l; ++i)
+		{
+			var id = ids[i].trim();
+			if (id)
+				result.push(id);
+		}
+		return result.length? result: null;
 	}
 });
 /**
@@ -537,10 +611,11 @@ Kekule.IO.CmlSpectrumDataAxisReader = Class.create(Kekule.IO.CmlElementReader,
 		var tagName = DU.getLocalName(elem).toLowerCase();
 		if (tagName === 'array')  // TODO: now we only handles the <array> element inside <axis>
 		{
-			var reader = Kekule.IO.CmlElementReaderFactory.getReader(elem);
+			//var reader = Kekule.IO.CmlElementReaderFactory.getReader(elem);
+			var reader = this.doGetChildElementReader(elem);
 			if (reader)
 			{
-				this.copySettingsToChildHandler(reader);
+				//this.copySettingsToChildHandler(reader);
 				if (reader.setExpandSteppedArray)  // do not expand an array with start/end/size
 					reader.setExpandSteppedArray(false);
 				if (reader.setDefaultItemDataType)  // automatically convert the values in array to number
