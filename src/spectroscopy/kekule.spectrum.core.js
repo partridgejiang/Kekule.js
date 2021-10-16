@@ -1740,7 +1740,8 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 			sections.setOwner(this.getOwner());
 			//this.createSection(this.getVariables());  // create a default section
 		},
-		doFinalize: function () {
+		doFinalize: function ()
+		{
 			//this.clear();
 			this.getSections().finalize();
 			var variables = this.getVariables() || [];
@@ -1751,7 +1752,28 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 			this.tryApplySuper('doFinalize');
 		},
 		/** @private */
-		initProperties: function () {
+		initProperties: function ()
+		{
+			this.defineProp('owner', {
+				'dataType': 'Kekule.ChemSpace',
+				'serializable': false,
+				'scope': Class.PropertyScope.PUBLIC,
+				'getter': function()
+				{
+					return this.getPropStoreFieldValue('owner') || this._getDefaultOwner();
+				},
+				'setter': function(value)
+				{
+					if (value !== this.getPropStoreFieldValue('owner'))
+					{
+						this.setPropStoreFieldValue('owner', value);
+						var newOwner = this.getOwner();
+						var sections = this.getSections();
+						if (sections)
+							sections.setOwner(newOwner);
+					}
+				}
+			});
 			this.defineProp('parent', {
 				'dataType': 'Kekule.Spectroscopy.Spectrum', 'serializable': false,
 				'setter': function (value) {
@@ -1851,15 +1873,15 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 		},
 
 		/** @private */
-		getHigherLevelObj: function ()
-		{
-			return this.getParent();
-		},
-		/** @private */
-		getOwner: function()
+		_getDefaultOwner: function()
 		{
 			var parent = this.getParent();
 			return parent && parent.getOwner && parent.getOwner();  // always returns the owner of parent spectrum
+		},
+		/** @private */
+		getHigherLevelObj: function ()
+		{
+			return this.getParent();
 		},
 		/** @ignore */
 		getChildHolder: function ()
@@ -2755,6 +2777,16 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 			//console.log('call', methodName, arguments);
 			return this.getData()[dataMethodName].apply(this.getData(), arguments);
 		}
+	},
+
+	/** @private */
+	ownerChanged: function(/*$super, */newOwner, oldOwner)
+	{
+		// change the owner of child data and sections
+		var data = this.getData();
+		if (data)
+			data.setOwner(newOwner);
+		this.tryApplySuper('ownerChanged', [newOwner, oldOwner]);
 	},
 
 	/** @private */
