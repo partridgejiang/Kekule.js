@@ -460,6 +460,19 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		this.setMode(Kekule.Spectroscopy.DataMode.CONTINUOUS);
 	},
 
+	/** @ignore */
+	ownerChanged: function(newOwner, oldOwner)
+	{
+		// change the owner of all extra info objects if possible
+		for (var i = 0, l = this.getDataCount(); i < l; ++i)
+		{
+			var extra = this.getExtraInfoAt(i);
+			if (extra && extra.setOwner)
+				extra.setOwner(newOwner);
+		}
+		this.tryApplySuper('ownerChanged', [newOwner, oldOwner]);
+	},
+
 	// custom save / load method
 	/** @ignore */
 	doSaveProp: function(obj, prop, storageNode, serializer)
@@ -1537,7 +1550,14 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	setRawValueAt: function(index, value)
 	{
+		var oldValue = this.getDataItems()[index];
+		if (oldValue && oldValue._extra)
+			this._extraInfoRemoved(oldValue._extra);
 		this.getDataItems()[index] = value;
+		if (value._extra)
+		{
+			this._extraInfoAdded(value._extra);
+		}
 		return this;
 	},
 	/** @private */
@@ -1578,7 +1598,10 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	setExtraInfoOf: function(value, info)
 	{
+		if (value._extra)
+			this._extraInfoRemoved(value._extra);
 		value._extra = info;
+		this._extraInfoAdded(info);
 		return this;
 	},
 	/**
@@ -1599,8 +1622,29 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	setExtraInfoAt: function(index, info)
 	{
 		var d = this.getDataItems()[index];
+		if (d._extra)
+			this._extraInfoRemoved(d._extra);
 		d._extra = info;
+		this._extraInfoAdded(info);
 		return this;
+	},
+	/** @private */
+	_extraInfoAdded: function(extraInfo)
+	{
+		if (extraInfo && extraInfo instanceof Kekule.ChemObject)
+		{
+			extraInfo.setParent(this);
+			extraInfo.setOwner(this.getOwner());
+		}
+	},
+	/** @private */
+	_extraInfoRemoved: function(extraInfo)
+	{
+		if (extraInfo && extraInfo instanceof Kekule.ChemObject && extraInfo.getParent() === this)
+		{
+			extraInfo.setParent(null);
+			extraInfo.setOwner(null);
+		}
 	},
 
 	/**
