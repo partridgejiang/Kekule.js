@@ -2715,6 +2715,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		this._defineInfoProperty('parameters', null, {'dataType': DataType.HASH});
 		this._defineInfoProperty('annotations', null, {'dataType': DataType.HASH});
 		this._defineDataDelegatedProperty('variables');
+		this._defineDataDelegatedProperty('varSymbols');
 		this._defineDataDelegatedProperty('dataSections', 'sections');
 		this._defineDataDelegatedProperty('activeDataSectionIndex', 'activeSectionIndex');
 		this._defineDataDelegatedProperty('activeDataSection', 'activeSection');
@@ -2736,6 +2737,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		this._defineDataDelegatedMethod('iterateDataSection', 'iterateSection');
 		this._defineDataDelegatedMethod('sortData', 'sort');
 		this._defineDataDelegatedMethod('clearData');
+		this._defineDataDelegatedMethod('getVariableCount');
 		this._defineDataDelegatedMethod('getVariable');
 		this._defineDataDelegatedMethod('indexOfVariable');
 		this._defineDataDelegatedMethod('insertVariableAt');
