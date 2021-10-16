@@ -461,6 +461,12 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	},
 
 	/** @ignore */
+	getAutoIdPrefix: function()
+	{
+		return 'sec';
+	},
+
+	/** @ignore */
 	ownerChanged: function(newOwner, oldOwner)
 	{
 		// change the owner of all extra info objects if possible
@@ -2595,6 +2601,11 @@ Kekule.Spectroscopy.SpectrumPeakDetails = Class.create(Kekule.ChemObject,
 		this.defineProp('assignment', {'dataType': 'Kekule.ChemObject', 'objRef': true, 'autoUpdate': true});
 		this.defineProp('shape', {'dataType': DataType.STRING});
 		this.defineProp('multiplicity', {'dataType': DataType.VARIANT});
+	},
+	/** @ignore */
+	getAutoIdPrefix: function()
+	{
+		return 'p';
 	}
 });
 
@@ -2825,7 +2836,13 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		}
 	},
 
-	/** @private */
+	/** @ignore */
+	getAutoIdPrefix: function()
+	{
+		return 's';
+	},
+
+	/** @ignore */
 	ownerChanged: function(/*$super, */newOwner, oldOwner)
 	{
 		// change the owner of child data and sections
@@ -2833,6 +2850,37 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		if (data)
 			data.setOwner(newOwner);
 		this.tryApplySuper('ownerChanged', [newOwner, oldOwner]);
+	},
+
+	/** @ignore */
+	getChildSubgroupNames: function()
+	{
+		return ['dataSection', 'sample'].concat(this.tryApplySuper('getChildSubgroupNames'));
+	},
+	/** @ignore */
+	getBelongChildSubGroupName: function(obj)
+	{
+		if (obj instanceof Kekule.Spectroscopy.SpectrumDataSection)
+			return 'dataSection';
+		else if (obj instanceof Kekule.ChemStructureNode)
+			return 'sample';
+		else
+			return this.tryApplySuper('getBelongChildSubGroupName', [obj])  /* $super(obj) */;
+	},
+	/** @ignore */
+	doGetChildCount: function()
+	{
+		return this.getDataSectionCount();  // TODO: child samples are not considered
+	},
+	/** @ignore */
+	doGetChildAt: function(index)
+	{
+		return this.getDataSectionAt(index);
+	},
+	/** @ignore */
+	doIndexOfChild: function(obj)
+	{
+		return this.indexOfDataSection(obj);
 	},
 
 	/** @private */
