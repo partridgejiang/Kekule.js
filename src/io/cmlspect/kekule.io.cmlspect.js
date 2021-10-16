@@ -73,6 +73,7 @@ Kekule.IO.CmlSpectUtils = {
 			['nmr', ST.NMR],
 			//['ir', ST.IR],
 			['infrared', ST.IR],
+			['ir', ST.IR],
 			['mass', ST.MS],
 			['uv', ST.UV_VIS],
 			['vis', ST.UV_VIS]
@@ -136,17 +137,6 @@ Kekule.IO.CmlSpectUtils = {
 				return map[i][1];
 		}
 		return cmlMultiplicity;
-	},
-
-	/**
-	 * Try convert a string to float. If fails, the original string will be returned.
-	 * @param {String} str
-	 * @returns {Variant}
-	 */
-	tryParseFloat: function(str)
-	{
-		var result = parseFloat(str);
-		return Kekule.NumUtils.isNormalNumber(result)? result: str;
 	},
 
 	/**
@@ -269,7 +259,7 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 					var obj = owner.getObjById(id);
 					if (obj)
 						d.setAssignment(obj);
-					console.log('set assignment', d, id, obj);
+					//console.log('set assignment', d, id, obj);
 					delete d.getInfo()[Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME];
 				}
 			}
@@ -512,7 +502,7 @@ Kekule.IO.CmlSpectrumPeakReader = Class.create(Kekule.IO.CmlElementReader,
 				var symbol = this._getVarSymbolInName(key, 'value');
 				if (!peakObj.value)
 					peakObj.value = {};
-				peakObj.value[symbol] = Kekule.IO.CmlSpectUtils.tryParseFloat(value);
+				peakObj.value[symbol] = Kekule.IO.CmlUtils.tryParseFloat(value);
 			}
 			else if (keyLower === 'peakmultiplicity')
 			{

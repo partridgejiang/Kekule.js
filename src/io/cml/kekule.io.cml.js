@@ -119,6 +119,16 @@ Kekule.IO.CmlUtils = {
 	}
 	*/
 	/**
+	 * Try convert a string to float. If fails, the original string will be returned.
+	 * @param {String} str
+	 * @returns {Variant}
+	 */
+	tryParseFloat: function(str)
+	{
+		var result = parseFloat(str);
+		return Kekule.NumUtils.isNormalNumber(result)? result: str;
+	},
+	/**
 	 * Based on cml datatype attribute, convert a simple string value to a proper js value.
 	 * @param {String} sValue
 	 * @param {String} xmlDataType
@@ -1859,6 +1869,11 @@ Kekule.IO.CmlScalarReader = Class.create(Kekule.IO.CmlElementReader,
 				{
 					jsonObj.errorValue = Kekule.IO.CmlUtils.convertSimpleValueByDataType(jsonObj.errorValue, jsonObj.dataType, true);
 				}
+			}
+			else
+			{
+				// without explicit data type, as scalar, try to convert value to number
+				jsonObj.value = Kekule.IO.CmlUtils.tryParseFloat(jsonObj.value);
 			}
 		}
 		// turn jsonObj to Kekule.Scalar instance
