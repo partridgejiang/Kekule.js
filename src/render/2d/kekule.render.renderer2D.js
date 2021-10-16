@@ -4988,7 +4988,7 @@ Kekule.Render.ChemSpace2DRenderer = Class.create(Kekule.Render.CompositeObj2DRen
 	/** @private */
 	doEstimateSelfObjBox: function(/*$super, */context, options, allowCoordBorrow)
 	{
-		var size = this.getChemObj().getSize2D();
+		var size = this.getChemObj().getSize2D() || {};
 		if (size.x && size.y && options.useExplicitSpaceSize)
 		{
 			var result = {
