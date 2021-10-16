@@ -143,6 +143,29 @@ Kekule.IO.CmlSpectUtils = {
 	{
 		var result = parseFloat(str);
 		return Kekule.NumUtils.isNormalNumber(result)? result: str;
+	},
+
+	/**
+	 * Check if a variable definition already existing in spectrum. If true, returns it.
+	 * @param {Kekule.Spectroscopy.Spectrum} spectrum
+	 * @param {String} varSymbol
+	 * @param {String} varUnit
+	 * @param {String} name
+	 * @param {Int} dependency
+	 * @returns {Kekule.Spectroscopy.SpectrumVarDefinition}
+	 */
+	getSpectrumVarDef: function(spectrum, varSymbol, varUnit, name, dependency)
+	{
+		if (!dependency)
+			dependency = Kekule.VarDependency.INDEPENDENT;
+		var varDefs = spectrum.getVariables();
+		for (var i = 0, l = varDefs.length; i < l; ++i)
+		{
+			var varDef = varDefs[i];
+			if ((!varSymbol || varSymbol === varDef.getSymbol()) && (!varUnit || varUnit === varDef.getUnit()) && (!name || name === varDef.getName()) && (dependency === varDef.getDependency()))
+				return varDef;
+		}
+		return null;
 	}
 };
 var CmlSpectUtils = Kekule.IO.CmlSpectUtils;
@@ -187,24 +210,21 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 			}
 			if (peaks.length)
 			{
-				//var spectrumData = new Kekule.Spectroscopy.SpectrumData();
-				var spectrumData = spectrum.getData();
-				var varSymbols = this._addPeakVariablesToSpectrumData(peaks, spectrumData, spectrum);
 				var result;
-				if (varSymbols && varSymbols.length)
+				var spectrumData = spectrum.getData();
+				var varInfos = this._analysisPeakVarInfo(peaks, spectrum);
+				if (varInfos)
 				{
-					result = new Kekule.Spectroscopy.SpectrumDataSection();
-					spectrum.appendDataSection(result);
-					result.setLocalVarSymbols(varSymbols);
-					//spectrumData.getActiveSection().setMode(Kekule.Spectroscopy.DataMode.PEAK);
-					result.setMode(Kekule.Spectroscopy.DataMode.PEAK);
-					this._addPeakDataToSpectrumData(peaks, varSymbols, result, spectrumData, spectrum);
+					var varSymbols = this._addPeakVariablesToSpectrumData(varInfos, spectrumData, spectrum);
+					if (varSymbols && varSymbols.length)
+					{
+						result = spectrumData.createSection(varSymbols, Kekule.Spectroscopy.DataMode.PEAK); //new Kekule.Spectroscopy.SpectrumDataSection();
+						//result.setLocalVarSymbols(varSymbols);
+						//result.setMode(Kekule.Spectroscopy.DataMode.PEAK);
+						this._setVarLocalInfos(varInfos, result);
+						this._addPeakDataToSpectrumData(peaks, varSymbols, result, spectrumData, spectrum);
+					}
 				}
-				/*
-				if (spectrum)
-					spectrum.setData(spectrumData);
-				return spectrumData;
-				*/
 				return result;
 			}
 			else
@@ -214,7 +234,7 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 			return null;
 	},
 	/** @private */
-	_analysisPeakVarInfo: function(peaks)  // iterate peaks data and find out the variable informations
+	_analysisPeakVarInfo: function(peaks, spectrumObj)  // iterate peaks data and find out the variable informations
 	{
 		var variableInfos = {};
 		var varCount = 0;
@@ -251,14 +271,23 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 		}
 		if (varCount <= 0)  // no variables, just returns null
 			return null;
-		else
-			return variableInfos;
+		else if (varCount === 1)   // only one explicit symbol, may be ommitted the y values in NMR?
+		{
+			if (spectrumObj && spectrumObj.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)  // we manually add the implicit y
+			{
+				variableInfos.y = {
+					'units': Kekule.Unit.Arbitrary.ARBITRARY.symbol,
+					'displayLabel': Kekule.Unit.Arbitrary.ARBITRARY.name,
+					'defaultValue': 1
+				};
+			}
+		}
+
+		return variableInfos;
 	},
 	/** @private */
-	_addPeakVariablesToSpectrumData: function(peaks, spectrumDataObj, spectrumObj)
+	_addPeakVariablesToSpectrumData: function(varInfos, spectrumDataObj, spectrumObj)
 	{
-		var varSymbols = [];
-		var varInfos = this._analysisPeakVarInfo(peaks);
 		if (!varInfos)  // no var info, returns directly
 			return null;
 		var symbols = Kekule.ObjUtils.getOwnedFieldNames(varInfos, false);
@@ -273,20 +302,8 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 		var indepInfo = symbols.splice(indepIndex, 1);
 		symbols.unshift(indepInfo[0]);
 
-		if (symbols.length === 1)   // only one explicit symbol, may be ommitted the y values in NMR?
-		{
-			if (spectrumObj && spectrumObj.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)  // we manually add the implicit y
-			{
-				varInfos.y = {
-					'units': Kekule.Unit.Arbitrary.ARBITRARY.symbol,
-					'displayLabel': Kekule.Unit.Arbitrary.ARBITRARY.name,
-					'defaultValue': 1
-				};
-				symbols.push('y');
-			}
-		}
-
 		// add var definitions
+		var varSymbols = [];
 		for (var i = 0, l = symbols.length; i < l; ++i)
 		{
 			var initParams = {
@@ -298,15 +315,37 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 			if (varInfos[symbols[i]].units)
 				initParams.unit = varInfos[symbols[i]].units;
 
-			var varDef = new Kekule.Spectroscopy.SpectrumVarDefinition(initParams);
-			spectrumDataObj.appendVariable(varDef);
-			if (varInfos[symbols[i]].defaultValue)
-				spectrumDataObj.setDefaultVarValue(varDef, varInfos[symbols[i]].defaultValue);
-
+			// check if there is already a varDef of this condition
+			var varDef = Kekule.IO.CmlSpectUtils.getSpectrumVarDef(spectrumObj, initParams.symbol, initParams.unit, null, initParams.dependency);
+			if (varDef && !varDef.getDisplayLabel() && initParams.displayLabel)
+				varDef.setDisplayLabel(initParams.displayLabel);
+			if (!varDef)
+			{
+				varDef = new Kekule.Spectroscopy.SpectrumVarDefinition(initParams);
+				spectrumDataObj.appendVariable(varDef);
+			}
+			/*
+			if (varInfos[symbols[i]].defaultValue)  // set default value at data section, avoid affect existed varDef in spectrumData
+				spectrumDataSection.setDefaultVarValue(varDef, varInfos[symbols[i]].defaultValue);
+				//spectrumDataObj.setDefaultVarValue(varDef, varInfos[symbols[i]].defaultValue);
+			*/
 			varSymbols.push(initParams.symbol);
 		}
 
 		return varSymbols;  // A flag means variable adding successful
+	},
+	/** @private */
+	_setVarLocalInfos: function(varInfos, spectrumDataSection)
+	{
+		var symbols = Kekule.ObjUtils.getOwnedFieldNames(varInfos, false);
+		for (var i = 0, l = symbols.length; i < l; ++i)
+		{
+			var info = varInfos[symbols[i]];
+			if (Kekule.ObjUtils.notUnset(info.defaultValue))
+			{
+				spectrumDataSection.setDefaultVarValue(symbols[i], info.defaultValue);
+			}
+		}
 	},
 	/** @private */
 	_addPeakDataToSpectrumData: function(peaks, varSymbols, spectrumDataSection, spectrumDataObj, spectrumObj)
@@ -538,7 +577,7 @@ Kekule.IO.CmlSpectrumDataReader = Class.create(Kekule.IO.CmlElementReader,
 			//var result = new Kekule.Spectroscopy.SpectrumData();
 			var result = new Kekule.Spectroscopy.SpectrumDataSection();
 			parentObj.appendDataSection(result);
-			console.log(parentObj.getData(), parentObj.getData().getActiveSection() === result);
+			//console.log(parentObj.getData(), parentObj.getData().getActiveSection() === result);
 			//var result = this.tryApplySuper('doReadElement', [elem]);  // do not pass parentObj to it, since we will handle with the return values later
 			var childResults = this.iterateChildElements(elem, parentObj, parentReader);
 			this._handleChildResults(childResults, result);
@@ -578,20 +617,30 @@ Kekule.IO.CmlSpectrumDataReader = Class.create(Kekule.IO.CmlElementReader,
 		var spectrumObj = spectrumDataSectionObj.getParentSpectrum();
 		var spectrumDataObj = spectrumObj.getData();
 		var dataSize = 0;
+		var axisVarDefParamList = [];
 		var localVarSymbols = [];
-		// first fill the var definitions and calc the data size
+
+		// get the var definition informations and calc the data size
 		for (var i = 0, l = axisDataObjs.length; i < l; ++i)
 		{
 			var isIndependent = (i === 0);  // TODO: here we simply regard the first axis (x) as the independent var
-			var varDef = this._createSpectrumDataVariables(axisDataObjs[i], spectrumDataObj, isIndependent);
-			spectrumDataObj.appendVariable(varDef);
-			localVarSymbols.push(varDef.getSymbol());
+			//var varDef = this._addSpectrumDataVariables(axisDataObjs[i], spectrumDataSectionObj, spectrumDataObj, spectrumObj, isIndependent);
+			var axisVarDefParams = this._getAxisVarDefParams(axisDataObjs[i], isIndependent);
+			axisVarDefParamList.push(axisVarDefParams)
+			//spectrumDataObj.appendVariable(varDef);
+			//localVarSymbols.push(varDef.getSymbol());
+			//localVarSymbols.push(axisVarDefParams.symbol);
 			//console.log('varDef', axisDataObjs[i], varDef, spectrumDataObj.getVariables());
 			var size = axisDataObjs[i].array.size || (axisDataObjs[i].array.values && axisDataObjs[i].array.values.length);
 			if (size > dataSize)
 				dataSize = size;
 		}
-		spectrumDataSectionObj.setLocalVarSymbols(localVarSymbols);
+
+		// create var definitions and local settings
+		var localVarSymbols = this._addSpectrumDataVarDefs(axisVarDefParamList, spectrumDataObj, spectrumObj); // add varDef to spectrum first
+		spectrumDataSectionObj.setLocalVarSymbols(localVarSymbols);  // then set the local var infos
+		this._setDataSectionLocalVarInfos(axisVarDefParamList, spectrumDataSectionObj);
+
 		// then the data
 		for (var i = 0; i < dataSize; ++i)
 		{
@@ -611,9 +660,8 @@ Kekule.IO.CmlSpectrumDataReader = Class.create(Kekule.IO.CmlElementReader,
 		}
 	},
 	/** @private */
-	_createSpectrumDataVariables(axisDataObj, spectrumDataObj, isIndependent)
+	_getAxisVarDefParams: function(axisDataObj, isIndependent)
 	{
-		// fill the variables of sepctrumData
 		var symbol = axisDataObj.symbol;
 		var initParams = {'symbol': symbol, 'dependency': isIndependent? Kekule.VarDependency.INDEPENDENT: Kekule.VarDependency.DEPENDENT};
 		var extraInfo = {};
@@ -641,22 +689,112 @@ Kekule.IO.CmlSpectrumDataReader = Class.create(Kekule.IO.CmlElementReader,
 			{
 				// do nothing here, we will handle this continous var info later
 			}
+			else if (fname === 'value' || fname === 'values' || fname === 'datatype')  // value of axis, no need to be handled in var definition part
+			{
+
+			}
 			else
 			{
 				extraInfo[fieldNames[i]] = value;
 				hasExtraInfo = true;
 			}
 		}
-		var varDef = new Kekule.Spectroscopy.SpectrumVarDefinition(initParams);
+		var isContinuousVar = !arrayObj.values && arrayObj.start && arrayObj.end;
+		var continuousInfo;
+		if (isContinuousVar)
+		{
+			continuousInfo = {'start': arrayObj.start, 'end': arrayObj.end};
+		}
+
+		return {
+			'symbol': symbol,
+			'initParams': initParams,
+			'continuousInfo': continuousInfo,
+			'hasExtraInfo': hasExtraInfo,
+			'extraInfo': extraInfo
+		};
+	},
+	/** @private */
+	_addSpectrumDataVarDefs: function(axisVarDefParamList, spectrumDataObj, spectrumObj)
+	{
+		var varSymbols = [];
+		for (var i = 0, l = axisVarDefParamList.length; i < l; ++i)
+		{
+			var varDefParams = axisVarDefParamList[i];
+			var initParams = varDefParams.initParams;
+
+			var varDef = Kekule.IO.CmlSpectUtils.getSpectrumVarDef(spectrumObj, initParams.symbol, initParams.unit, null, initParams.dependency);
+			if (varDef && !varDef.getDisplayLabel() && initParams.displayLabel)
+				varDef.setDisplayLabel(initParams.displayLabel);
+			if (!varDef)
+			{
+				varDef = new Kekule.Spectroscopy.SpectrumVarDefinition(initParams);
+				spectrumDataObj.appendVariable(varDef);
+			}
+			varSymbols.push(varDef.getSymbol());
+		}
+		return varSymbols;
+	},
+	/** @private */
+	_setDataSectionLocalVarInfos: function(axisVarDefParamList, spectrumDataSection)
+	{
+		for (var i = 0, l = axisVarDefParamList.length; i < l; ++i)
+		{
+			var varDefParams = axisVarDefParamList[i];
+			var varSymbol = varDefParams.symbol;
+			var continuousInfo = varDefParams.continuousInfo;
+			if (continuousInfo)
+			{
+				spectrumDataSection.setContinuousVarRange(varSymbol, continuousInfo.start, continuousInfo.end);
+			}
+			if (varDefParams.hasExtraInfo)
+			{
+				var extraInfo = varDefParams.extraInfo;
+				var fnames = Kekule.ObjUtils.getOwnedFieldNames(extraInfo);
+				for (var i = 0, l = fnames.length; i < l; ++i)
+				{
+					spectrumDataSection.setLocalVarInfoValue(varSymbol, fnames[i], extraInfo[fnames[i]]);
+				}
+			}
+		}
+	}
+	/* @private */
+	/*
+	_addSpectrumDataVariables(axisDataObj, spectrumDataSection, spectrumDataObj, spectrumObj, isIndependent)
+	{
+		// fill the variables of spectrumData
+		var axisVarDefInfos = this._getAxisVarDefParams(axisDataObj, isIndependent);
+		var initParams = axisVarDefInfos.initParams;
+		var extraInfo = axisVarDefInfos.extraInfo;
+		var hasExtraInfo = axisVarDefInfos.hasExtraInfo;
+
+		var varDef = Kekule.IO.CmlSpectUtils.getSpectrumVarDef(spectrumObj, initParams.symbol, initParams.unit, null, initParams.dependency);
+		if (varDef && !varDef.getDisplayLabel() && initParams.displayLabel)
+			varDef.setDisplayLabel(initParams.displayLabel);
+		if (!varDef)
+		{
+			varDef = new Kekule.Spectroscopy.SpectrumVarDefinition(initParams);
+			spectrumDataObj.appendVariable(varDef);
+		}
+
+		// set extra info at section level, avoid affecting the global settings in spectrumData
 		if (hasExtraInfo)
-			varDef.setInfo(extraInfo);
+		{
+			var fnames = Kekule.ObjUtils.getOwnedFieldNames(extraInfo);
+			for (var i = 0, l = fnames.length; i < l; ++i)
+			{
+				spectrumDataSection.setLocalVarInfoValue(varDef.getSymbol(), fnames[i], extraInfo[fnames[i]]);
+			}
+		}
 		var isContinuousVar = !arrayObj.values && arrayObj.start && arrayObj.end;
 		if (isContinuousVar)
 		{
-			spectrumDataObj.setContinuousVarRange(varDef, arrayObj.start, arrayObj.end);
+			//spectrumDataObj.setContinuousVarRange(varDef, arrayObj.start, arrayObj.end);
+			spectrumDataSection.setContinuousVarRange(varDef, arrayObj.start, arrayObj.end);
 		}
 		return varDef;
 	}
+	*/
 });
 
 /**
