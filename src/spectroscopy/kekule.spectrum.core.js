@@ -2579,7 +2579,8 @@ Kekule.Spectroscopy.PeakMultiplicity = {
  *
  * @param {Hash} params
  *
- * @property {Kekule.ChemObject} assignment The assignment target of peak, ususally an atom or a bond.
+ * @property {Kekule.ChemObject} assignments The assignment targets array of peak, usually containing only an atom or a bond.
+ * @property {Kekule.ChemObject} assignment The assignment target of peak, first item of {@link Kekule.Spectroscopy.SpectrumPeakDetails.assignments}, usually an atom or a bond.
  * @property {String} shape Shape of peak, usually be set with value from {@link Kekule.Spectroscopy.PeakShape}.
  * @property {VARIANT} multiplicity Multiplicity of peak.
  *   Usually be set with value from {@link Kekule.Spectroscopy.PeakMultiplicity}, but a custom string value (e.g. 'triplet121') is also allowed.
@@ -2592,15 +2593,32 @@ Kekule.Spectroscopy.SpectrumPeakDetails = Class.create(Kekule.ChemObject,
 	/** @private */
 	initialize: function (params)
 	{
+		this.setPropStoreFieldValue('assignments', []);
 		this.tryApplySuper('initialize', []);
 		this.setPropValues(params);
 	},
 	/** @private */
 	initProperties: function()
 	{
-		this.defineProp('assignment', {'dataType': 'Kekule.ChemObject', 'objRef': true, 'autoUpdate': true});
+		this.defineProp('assignments', {'dataType': DataType.ARRAY, 'objRef': true, 'autoUpdate': true,
+			'setter': function(value)
+			{
+				var a = value? (DataType.isArrayValue(value)? AU.clone(value): AU.toArray(value)): [];
+				this.setPropStoreFieldValue('assignments', a);
+			}
+		});
+		this.defineProp('assignment', {'dataType': 'Kekule.ChemObject', 'objRef': true, 'serializable': false,
+			'getter': function() { return (this.getAssignments() || [])[0]; },
+			'setter': function(value) { this.setAssignments(value); }
+		});
 		this.defineProp('shape', {'dataType': DataType.STRING});
 		this.defineProp('multiplicity', {'dataType': DataType.VARIANT});
+	},
+	/** @ignore */
+	doFinalize: function()
+	{
+		this.setPropStoreFieldValue('assignments', null);
+		this.tryApplySuper('doFinalize');
 	},
 	/** @ignore */
 	getAutoIdPrefix: function()

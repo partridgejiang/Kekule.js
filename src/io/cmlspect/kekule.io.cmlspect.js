@@ -254,12 +254,17 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 				if (owner && owner.getObjById)
 				{
 					var ids = d.getInfoValue(Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME);
-					// TODO: currently we only handles the first ref id
-					var id = ids[0];
-					var obj = owner.getObjById(id);
-					if (obj)
-						d.setAssignment(obj);
-					//console.log('set assignment', d, id, obj);
+					var objs = [];
+					for (var j = 0, k = ids.length; j < k; ++j)
+					{
+						var id = ids[j];
+						var obj = owner.getObjById(id);
+						if (obj)
+							objs.push(obj);
+					}
+					if (objs.length)
+						d.setAssignments(objs);
+					//console.log('set assignment', d, ids, objs);
 					delete d.getInfo()[Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME];
 				}
 			}
