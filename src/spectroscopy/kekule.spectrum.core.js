@@ -2607,7 +2607,7 @@ Kekule.Spectroscopy.SpectrumPeakDetails = Class.create(Kekule.ChemObject,
 				this.setPropStoreFieldValue('assignments', a);
 			}
 		});
-		this.defineProp('assignment', {'dataType': 'Kekule.ChemObject', 'objRef': true, 'serializable': false,
+		this.defineProp('assignment', {'dataType': 'Kekule.ChemObject', 'serializable': false, 'scope': Class.PropertyScope.PUBLIC,
 			'getter': function() { return (this.getAssignments() || [])[0]; },
 			'setter': function(value) { this.setAssignments(value); }
 		});
@@ -2675,7 +2675,7 @@ Kekule.Spectroscopy.SpectrumMS = {
  * @property {Hash} parameters Important parameters of spectrum.
  * @property {Hash} annotations Additional annotations of spectrum.
  * @property {Kekule.Spectroscopy.SpectrumData} data Spectrum data.
- * @property {Hash} spectrumParams Key spectrum parameters, e,g. the frequency of NMR.
+ * @property {Array} refMolecules Related molecules to spectrum.
  */
 Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 /** @lends Kekule.Spectroscopy.Spectrum# */
@@ -2692,6 +2692,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	/** @ignore */
 	doFinalize: function()
 	{
+		this.setPropStoreFieldValue('refMolecules', null);
 		var d = this.getData();
 		if (d)
 			d.finalize();
@@ -2720,6 +2721,17 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 					this.setPropStoreFieldValue('data', value);
 				}
 			}
+		});
+		this.defineProp('refMolecules', {'dataType': DataType.ARRAY, 'objRef': true, 'autoUpdate': true,
+			'setter': function(value)
+			{
+				var a = value? (DataType.isArrayValue(value)? AU.clone(value): AU.toArray(value)): [];
+				this.setPropStoreFieldValue('refMolecules', a);
+			}
+		});
+		this.defineProp('refMolecule', {'dataType': 'Kekule.Molecule', 'serializable': false, 'scope': Class.PropertyScope.PUBLIC,
+			'getter': function() { return (this.getRefMolecules() || [])[0]; },
+			'setter': function(value) { this.setrRefMolecules(value); }
 		});
 		/*
 		this.defineProp('spectrumParams',

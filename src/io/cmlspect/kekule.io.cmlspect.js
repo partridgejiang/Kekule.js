@@ -881,12 +881,19 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 	initialize: function()
 	{
 		this.tryApplySuper('initialize');
+		this._spectrumWithRefMolecules = [];
 	},
 	/** @private */
 	initProperties: function()
 	{
 		// a private property, convention of this CMLSpect file
 		this.defineProp('convention', {'dataType': DataType.STRING,	'serializable': false});
+	},
+	/** @ignore */
+	doFinalize: function()
+	{
+		this._spectrumWithRefMolecules = null;
+		this.tryApplySuper('doFinalize');
 	},
 	/** @ignore */
 	doReadElement: function(elem, parentObj, parentReader, options)
@@ -901,6 +908,36 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 			return this.tryApplySuper('doReadChildElement', [elem, null, parentReader]);
 		else
 			return this.tryApplySuper('doReadChildElement', [elem, parentObj, parentReader]);
+	},
+	/** @ignore */
+	doDoneReadingDocument: function()
+	{
+		// after the document is build, try set the assignments of peaks
+		var spectrums = this._spectrumWithRefMolecules;
+		for (var i = 0, l = spectrums.length; i < l; ++i)
+		{
+			var spec = spectrums[i];
+			var owner = spec.getOwner();
+			if (owner && owner.getObjById)
+			{
+				var ids = spec[Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME] || [];
+				var objs = [];
+				for (var j = 0, k = ids.length; j < k; ++j)
+				{
+					var id = ids[j].trim();
+					if (id)
+					{
+						var obj = owner.getObjById(id);
+						if (obj)
+							objs.push(obj);
+					}
+				}
+				if (objs.length)
+					spec.setRefMolecules(objs);
+				delete spec[Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME];
+			}
+		}
+		this._spectrumWithRefMolecules = [];
 	},
 	/* @ignore */
 	/*
@@ -946,10 +983,13 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 		// important attribs are id, type, title and convention
 		var attribs = Kekule.IO.CmlDomUtils.fetchCmlElemAttributeValuesToJson(elem, null, true, domHelper);
 		var attribKeys = Kekule.ObjUtils.getOwnedFieldNames(attribs);
+		var refMolIds = [];
 		for (var i = 0, l = attribKeys.length; i < l; ++i)
 		{
 			var key = attribKeys[i];
 			var value = attribs[key];
+			if (Kekule.IO.CML.MOL_REF_ATTRIBS.indexOf(key) >= 0)
+				refMolIds.push((value || '').trim());
 			switch (key)
 			{
 				case 'id':
@@ -968,6 +1008,12 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 				default:
 					spectrum.setInfoValue(key, value);
 			}
+		}
+		if (refMolIds.length)
+		{
+			var ids = refMolIds.join(' ').split(/\s/);
+			spectrum[Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME] = ids;  // store these ids, handled when the chem space is built
+			this._spectrumWithRefMolecules.push(spectrum);
 		}
 	},
 	/** @private */

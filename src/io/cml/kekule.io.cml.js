@@ -41,6 +41,7 @@ Kekule.IO.CML = {
 	TYPED_ARRAY_ELEM_NAMES: ['stringArray', 'integerArray', 'floatArray'],
 	ATOMS_REF_ATTRIBS: ['atomRef', 'atomRefs2', 'atomRefs3', 'atomRefs4', 'atomRefs', 'atomRefArray'],
 	BONDS_REF_ATTRIBS: ['bondRef', 'bondRefs', 'bondRefArray'],
+	MOL_REF_ATTRIBS: ['moleculeRef', 'moleculeRefs'],
 	DEFAULT_VALUE_DELIMITER_PATTERN: /\s+/gm,
 };
 Kekule.IO.CML.LEGAL_CORE_NAMESPACE_URIS = [
