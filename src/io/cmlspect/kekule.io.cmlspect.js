@@ -19,6 +19,15 @@
 
 "use strict";
 
+/*
+ * Add default options to read/write CML format data.
+ * @object
+ */
+Kekule.globalOptions.add('IO.cml', {
+	enableExtractSampleInsideSpectrum: true,  // if true, when reading molecule out from the child <sample> element of <spectrum>, a parent element will be created to hold both molecule and spectrum
+	autoHideSampleInsideSpectrum: true  // if true, the sample molecule inside <spectrum> will be hidden from displaying
+});
+
 var AU = Kekule.ArrayUtils;
 var OU = Kekule.ObjUtils;
 var DU = Kekule.DomUtils;
@@ -163,6 +172,18 @@ Kekule.IO.CmlSpectUtils = {
 	}
 };
 var CmlSpectUtils = Kekule.IO.CmlSpectUtils;
+
+/**
+ * CML <sample> element reader.
+ * @class
+ * @augments Kekule.IO.CmlBaseListReader
+ */
+Kekule.IO.CmlSampleReader = Class.create(Kekule.IO.CmlBaseListReader,
+/** @lends Kekule.IO.CmlSampleReader# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlSampleReader'
+});
 
 /**
  * Reader to read a <peaklist> element inside <spectrum>.
@@ -888,17 +909,37 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 	{
 		// a private property, convention of this CMLSpect file
 		this.defineProp('convention', {'dataType': DataType.STRING,	'serializable': false});
+		this.defineProp('additionalRefMolecules', {'dataType': DataType.ARRAY,	'serializable': false});
 	},
 	/** @ignore */
 	doFinalize: function()
 	{
 		this._spectrumWithRefMolecules = null;
+		this.setPropStoreFieldValue('additionalRefMolecules', null);
 		this.tryApplySuper('doFinalize');
+	},
+	/** @ignore */
+	readElement: function(elem, parentObj, parentReader, options)
+	{
+		this.setAdditionalRefMolecules([]);
+		var spectrum = this.tryApplySuper('readElement', [elem, parentObj, parentReader, options]);
+		var additionalMols = this.getAdditionalRefMolecules();
+		if (additionalMols.length)   // has extra sample molecules, need to create root list object to wrap them together with spectrum
+		{
+			var objs = AU.clone(additionalMols);
+			objs.push(spectrum);
+			var holder = this._createChildObjsHolder(objs, options.defaultRootObjListHolder);
+			spectrum.setRefMolecules(additionalMols);
+			return holder;
+		}
+		else
+			return spectrum;
 	},
 	/** @ignore */
 	doReadElement: function(elem, parentObj, parentReader, options)
 	{
-		return this.readSpectrum(elem, this.getDomHelper());
+		var spectrum = this.readSpectrum(elem, this.getDomHelper(), options);
+		return spectrum;
 	},
 	/** @ignore */
 	doReadChildElement: function(elem, parentObj, parentReader)
@@ -964,16 +1005,17 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 	 * Read a <spectrum> element and returns new spectrum object.
 	 * @param {Element} elem
 	 * @param {Object} domHelper
+	 * @param {Hash} options
 	 * @returns {Kekule.Spectroscopy.Spectrum}
 	 * @private
 	 */
-	readSpectrum: function(elem, domHelper)
+	readSpectrum: function(elem, domHelper, options)
 	{
 		var result = new Kekule.Spectroscopy.Spectrum();
 		this.readSpectrumAttribs(result, elem, domHelper);
 		var self = this;
 		var childResults = this.iterateChildElements(elem, result, this, function(childElem, childResult){
-			self._handleChildResult(childElem, childResult, result);
+			self._handleChildResult(childElem, childResult, result, options);
 		});
 		return result;
 	},
@@ -1017,7 +1059,7 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 		}
 	},
 	/** @private */
-	_handleChildResult: function(childElem, childResult, spectrumObj)
+	_handleChildResult: function(childElem, childResult, spectrumObj, options)
 	{
 		var childElemTagName = DU.getLocalName(childElem).toLowerCase();
 		// the spectrum data should be inserted by the child readers, no need to handle them here
@@ -1035,12 +1077,34 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 
 			}
 		}
+		else if (childElemTagName === 'sample' && options.enableExtractSampleInsideSpectrum)
+		{
+			//console.log('Has sample', childResult);
+			this._handleSampleData(childResult, spectrumObj, options);
+		}
 		// info data need to be handled manually
 		else if (this._isInfoListElemTagName(childElemTagName))
 		{
 			//console.log('child', childResult);
 			this._handleInfoData(childElemTagName, childResult, spectrumObj);
 		}
+	},
+	/** @private */
+	_handleSampleData: function(childResult, spectrumObj, options)
+	{
+		var sampleObjs = [];
+		for (var i = 0, l = childResult.length; i < l; ++i)
+		{
+			var obj = childResult[i];
+			if (obj instanceof Kekule.Molecule)  // now only handles the molecules
+			{
+				sampleObjs.push(obj);
+				if (options.autoHideSampleInsideSpectrum && obj.setVisible)
+					obj.setVisible(false);
+			}
+		}
+		if (sampleObjs.length)
+			this.setAdditionalRefMolecules(this.getAdditionalRefMolecules().concat(sampleObjs));
 	},
 	/** @private */
 	_handleInfoData: function(elemTagName, childResult, spectrumObj)
@@ -1148,6 +1212,7 @@ RF.register('peak', Kekule.IO.CmlSpectrumPeakReader);
 RF.register('peakStructure', Kekule.IO.CmlSpectrumPeakStructureReader);
 RF.register('spectrumData', Kekule.IO.CmlSpectrumDataReader);
 RF.register(['parameterList', 'substanceList'], Kekule.IO.CmlBaseListReader);
+RF.register('sample', Kekule.IO.CmlSampleReader);
 RF.register(['xaxis', 'yaxis'], Kekule.IO.CmlSpectrumDataAxisReader);
 
 })();
