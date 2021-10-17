@@ -1359,6 +1359,22 @@ Kekule.IO.CmlElementReader = Class.create(Kekule.IO.CmlElementHandler,
 	doDoneReadingDocument: function()
 	{
 		// do nothing here
+	},
+	/**
+	 * Create a parent object to hold all childObjs inside it.
+	 * @param {Array} childObjs
+	 * @param {Class} wrapperClass
+	 * @returns {Object}
+	 * @private
+	 */
+	_createChildObjsHolder: function(childObjs, wrapperClass)
+	{
+		var result = new wrapperClass();
+		for (var i = 0, l = childObjs.length; i < l; ++i)
+		{
+			result.appendChild(childObjs[i]);
+		}
+		return result;
 	}
 });
 
@@ -4300,7 +4316,7 @@ Kekule.IO.CmlRootReader = Class.create(Kekule.IO.CmlElementReader,
 		if (Kekule.DomUtils.getLocalName(elem) != 'cml')
 			reader = this.getReader(elem);
 		if (reader)
-			return reader.readElement(elem, null, this);
+			return reader.readElement(elem, null, this, options);
 		else
 		{
 			var enableReadList = options.defaultRootObjListHolder && options.enableReadRootObjList;
@@ -4331,21 +4347,11 @@ Kekule.IO.CmlRootReader = Class.create(Kekule.IO.CmlElementReader,
 					return resultObjs[0];
 				else  // return obj list
 				{
-					return this._createObjWrapper(resultObjs, options.defaultRootObjListHolder);
+					return this._createChildObjsHolder(resultObjs, options.defaultRootObjListHolder);
 				}
 			}
 		}
 		return null;
-	},
-	/** @private */
-	_createObjWrapper: function(objs, wrapperClass)
-	{
-		var result = new wrapperClass();
-		for (var i = 0, l = objs.length; i < l; ++i)
-		{
-			result.appendChild(objs[i]);
-		}
-		return result;
 	},
 	/**
 	 * Get a suitable reader for elem.
@@ -4509,10 +4515,8 @@ Kekule.IO.CmlReader = Class.create(Kekule.IO.ChemDataReader,
 		{
 			try
 			{
-				var op = Object.extend({
-					'enableReadRootObjList': Kekule.globalOptions.IO.cml.enableReadRootObjList,
-					'defaultRootObjListHolder': Kekule.globalOptions.IO.cml.defaultRootObjListHolder
-				}, options || {});
+				var op = Object.extend({}, Kekule.globalOptions.IO.cml);
+				op = Object.extend(op, options || {});
 				result = reader.readElement(rootElem, null, null, op);
 				reader.doneReadingDocument(true);  // notify the whole document is read
 			} finally
@@ -4559,7 +4563,8 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 			var result;
 			try
 			{
-				var op = options || {};
+				var op = Object.extend({}, Kekule.globalOptions.IO.cml);
+				op = Object.extend(op, options || {});
 				writer.setCoreNamespaceURI(nsUri);
 				//writer.setCoreNamespaceURI('');
 				result = writer.writeObject(obj, xmlDoc.documentElement, xmlDoc, op);
