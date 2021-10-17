@@ -2334,9 +2334,14 @@ Kekule.IO.CmlFormulaReader = Class.create(Kekule.IO.CmlChemStructureReader,
 		if (charge)
 			result.setCharge(parseFloat(charge));
 		var concise = Kekule.IO.CmlDomUtils.getCmlElemAttribute(elem, 'concise', Kekule.IO.CmlDomUtils.FILTER_TYPED_ELEM, domHelper);
+		var inlineText = Kekule.IO.CmlDomUtils.getCmlElemAttribute(elem, 'inline', Kekule.IO.CmlDomUtils.FILTER_TYPED_ELEM, domHelper);
 		if (concise)
 		{
 			this.setConcise(result, concise);
+		}
+		else if (inlineText)
+		{
+			this.setInlineFormula(result, inlineText);
 		}
 		else
 		{
@@ -2394,6 +2399,12 @@ Kekule.IO.CmlFormulaReader = Class.create(Kekule.IO.CmlChemStructureReader,
 		}
 		if (info.formalCharge)
 			formula.setCharge(info.formalCharge);
+		return formula;
+	},
+	/** @private */
+	setInlineFormula: function(formula, inlineText)
+	{
+		Kekule.FormulaUtils.textToFormula(inlineText, null, formula);
 		return formula;
 	},
 
