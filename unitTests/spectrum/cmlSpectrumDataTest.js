@@ -1,5 +1,7 @@
 describe('Test of some core data and functions of spectra module', function() {
 
+	Kekule.globalOptions.IO.cml.enableExtractSampleInsideSpectrum = true;
+
 	function loadTestFile(fileName, callback)
 	{
 		return Kekule.IO.loadUrlData('./data/' + fileName, callback);
@@ -8,10 +10,27 @@ describe('Test of some core data and functions of spectra module', function() {
 	{
 		return Kekule.NumUtils.isFloatEqual(n1, n2);
 	}
+	function getSpectrumInside(obj)
+	{
+		if (obj instanceof Kekule.Spectroscopy.Spectrum)
+			return obj;
+		else if (obj.getChildCount)
+		{
+			for (var i = 0, l = obj.getChildCount(); i < l; ++i)
+			{
+				var child = obj.getChildAt(i);
+				if (child instanceof Kekule.Spectroscopy.Spectrum)
+					return child;
+			}
+		}
+		return null;
+	}
 
 	it('Test reading single CMLSpect file with continuous data (example0.cml)', function(done) {
 		loadTestFile('cmlSpect/example0.cml', function (chemObj, success) {
 			expect(success).toEqual(true);
+
+			chemObj = getSpectrumInside(chemObj);
 
 			expect(chemObj instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 			expect(chemObj.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.UV_VIS);
@@ -21,6 +40,10 @@ describe('Test of some core data and functions of spectra module', function() {
 			expect(chemObj.getSpectrumInfoValue('jcamp.origin')).toEqual('Lambda 900');
 			expect(chemObj.getSpectrumInfoValue('resolution').getValue()).toEqual(2);
 			expect(chemObj.getSpectrumInfoValue('resolution').getUnit()).toEqual('nm');
+
+			// sample
+			expect(chemObj.getRefMolecule().hasFormula()).toEqual(true);
+			expect(chemObj.getRefMolecule().getFormula().getText()).toEqual('Ho2O3');
 
 			// variables
 			expect(chemObj.getVariableCount()).toEqual(2);
@@ -127,6 +150,8 @@ describe('Test of some core data and functions of spectra module', function() {
 		loadTestFile('cmlSpect/example2.cml', function (chemObj, success) {
 			expect(success).toEqual(true);
 
+			chemObj = getSpectrumInside(chemObj);
+
 			expect(chemObj instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 			expect(chemObj.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.IR);
 			expect(chemObj.getTitle()).toEqual('2-Butanol');
@@ -134,6 +159,10 @@ describe('Test of some core data and functions of spectra module', function() {
 			// metas
 			expect(chemObj.getSpectrumInfoValue('cml.press').getValue()).toEqual(12345);
 			expect(chemObj.getSpectrumInfoValue('cml.press').getUnit()).toEqual('Pa');
+
+			// sample
+			expect(chemObj.getRefMolecule().hasFormula()).toEqual(true);
+			expect(chemObj.getRefMolecule().getFormula().getText()).toEqual('C4H10O');
 
 			// variables
 			expect(chemObj.getVariableCount()).toEqual(2);
@@ -184,12 +213,18 @@ describe('Test of some core data and functions of spectra module', function() {
 		loadTestFile('cmlSpect/example3.cml', function (chemObj, success) {
 			expect(success).toEqual(true);
 
+			chemObj = getSpectrumInside(chemObj);
+
 			expect(chemObj instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 			expect(chemObj.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.MS);
 			expect(chemObj.getTitle()).toEqual('4-vinylbenzyl chloride');
 
 			// metas
 			expect(chemObj.getSpectrumInfoValue('jcamp.owner')).toEqual('Robert Badger');
+
+			// sample
+			expect(chemObj.getRefMolecule().hasFormula()).toEqual(true);
+			expect(chemObj.getRefMolecule().getFormula().getText()).toEqual('C9H9Cl');
 
 			// variables
 			expect(chemObj.getVariableCount()).toEqual(2);
