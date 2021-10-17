@@ -3046,6 +3046,31 @@ Kekule.ChemWidget.ActionViewerChangeMolDisplayTypeStub = Class.create(Kekule.Che
 	doExecute: function(target)
 	{
 		// do nothing
+	},
+	/** @ignore */
+	doUpdate: function()
+	{
+		this.tryApplySuper('doUpdate');
+		var viewer = this.getDisplayer();
+		this.setEnabled(this.getEnabled() && this._isMolInViewer(viewer));
+	},
+	/** @private */
+	_isMolInViewer: function(viewer)
+	{
+		if (viewer)
+		{
+			var root = viewer.getChemObj();
+			if (!root)
+				return false;
+			else if (root instanceof Kekule.ChemStructureNode)
+				return true;
+			else
+			{
+				var mols = Kekule.ChemStructureUtils.getAllStructFragments(root);
+				return !!(mols && mols.length);
+			}
+		}
+		return false;
 	}
 });
 
