@@ -78,6 +78,14 @@
 			return configInputElems;
 		}
 
+		function showCodeSnippet(code, doRepaint)
+		{
+			var s = code;
+			if (doRepaint)
+				s += '\nviewer.repaint();';
+			console.log(code);
+		}
+
 		function reactInputElemChange(e)
 		{
 			var elem = e.target;
@@ -89,7 +97,12 @@
 			var value = getInputElemValue(elem);
 			var configPropName = elem.getAttribute('data-config-prop');
 			if (configPropName)
+			{
 				getSpectrumDisplayConfigs().setPropValue(configPropName, value);
+				var quotedValue = (typeof(value) === 'string')? '\'' + value + '\'': value;
+				var code = 'viewer.getRenderConfigs().getSpectrumDisplayConfigs().set' + configPropName.upperFirst() + '(' + quotedValue + ');';
+				showCodeSnippet(code, true);
+			}
 			else if (elem.tagName.toLowerCase() === 'select')  // var unit, or active section selector
 			{
 				if (elem === $('selActiveSection'))
@@ -115,6 +128,12 @@
 			{
 				var value = elem.value;
 				varDef.setExternalUnit(value);
+				var varSymbol = varDef.getSymbol();
+				if (varSymbol)
+				{
+					var code = 'spectrum.getVariable(\'{0}\').setExternalUnit(\'{1}\');'.format(varSymbol, value);
+					showCodeSnippet(code, true);
+				}
 			}
 		}
 		function doReactSpectrumActiveSectionChange(elem)
@@ -124,6 +143,8 @@
 			{
 				var value = parseInt(elem.value);
 				spectrum.setActiveDataSectionIndex(value);
+				var code = 'spectrum.setActiveDataSectionIndex({0});'.format(value);
+				showCodeSnippet(code, true);
 			}
 		}
 
@@ -262,7 +283,7 @@
 
 			viewer.on('load', function(e){
 				var chemObj = viewer.getChemObj();
-				objInspector.setObjects(chemObj);
+				objInspector.setObjects(getSpectrum());
 				updateAvailableVarUnits();
 				updateSectionSelector();
 			});
