@@ -4109,6 +4109,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return o;
 	},
 	_removeOrphans: function(action) {
+		console.log('@@@ removing orphan')
 		const chemSpace = this.getChemSpace();
 		if (chemSpace) {
 			const children = chemSpace.getChildren().filter(x => x.CLASS_NAME === 'Kekule.Glyph.PathGlyphArcConnectorControlNode');
