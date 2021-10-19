@@ -658,10 +658,10 @@ Kekule.ActionList = Class.create(ObjectEx,
  * @event
  */
 Kekule.ActionFileOpen = Class.create(Kekule.Action,
-/** @lends Kekule.ChemWidget.ActionFileOpen# */
+/** @lends Kekule.ActionFileOpen# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ChemWidget.ActionFileOpen',
+	CLASS_NAME: 'Kekule.ActionFileOpen',
 	/** @constructs */
 	initialize: function(/*$super*/)
 	{
@@ -777,10 +777,10 @@ Kekule.ActionFileOpen = Class.create(Kekule.Action,
  * @event
  */
 Kekule.ActionLoadFileData = Class.create(Kekule.Action,
-/** @lends Kekule.ChemWidget.ActionLoadFileData# */
+/** @lends Kekule.ActionLoadFileData# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.ChemWidget.ActionLoadFileData',
+	CLASS_NAME: 'Kekule.ActionLoadFileData',
 	/** @constructs */
 	initialize: function(/*$super*/)
 	{
