@@ -665,17 +665,17 @@ table.K-Widget
     /*border: 1px solid;*/
     position: relative;
 }
-.K-TabView-TabAtTop .K-TabView-TabButton-Container,
-.K-TabView-TabAtBottom .K-TabView-TabButton-Container,
-.K-TabView-TabAtTop .K-TabView-Page-Container,
-.K-TabView-TabAtBottom .K-TabView-Page-Container
+.K-TabView.K-TabAtTop .K-TabView-TabButton-Container,
+.K-TabView.K-TabAtBottom .K-TabView-TabButton-Container,
+.K-TabView.K-TabAtTop .K-TabView-Page-Container,
+.K-TabView.K-TabAtBottom .K-TabView-Page-Container
 {
     display: block;
 }
-.K-TabView-TabAtLeft .K-TabView-TabButton-Container,
-.K-TabView-TabAtRight .K-TabView-TabButton-Container,
-.K-TabView-TabAtLeft .K-TabView-Page-Container,
-.K-TabView-TabAtRight .K-TabView-Page-Container
+.K-TabView.K-TabAtLeft .K-TabView-TabButton-Container,
+.K-TabView.K-TabAtRight .K-TabView-TabButton-Container,
+.K-TabView.K-TabAtLeft .K-TabView-Page-Container,
+.K-TabView.K-TabAtRight .K-TabView-Page-Container
 {
     display: inline-block;
     vertical-align: top;
