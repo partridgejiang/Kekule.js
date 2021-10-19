@@ -1,0 +1,49 @@
+<spectrum id="but2" title="2-Butanol" convention="JSpecView" type="infrared" state="gas"
+   xmlns="http://www.xml-cml.org/schema"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:siUnits="http://www.xml-cml.org/units/siUnits"
+   xmlns:units="http://www.xml-cml.org/units/units"
+   xmlns:jspecview="http://jspecview.sf.net/convention.html"
+   xmlns:jcamp="http://www.xml-cml.org/dict/jcampDict"
+   xmlns:cml="http://www.xml-cml.org/dict/cml"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xsi:schemaLocation="http://www.xml-cml.org/units/siUnits dict/siUnitsDict.xml 
+   http://www.xml-cml.org/units/units dict/unitsDict.xml 
+   http://www.xml-cml.org/dict/jcampDict dict/jcampDict.xml
+   http://www.xml-cml.org/dict/cml dict/cmlDict.xml http://www.xml-cml.org/schema schema.xsd">
+    <metadataList>
+        <metadata name="jcamp:origin" content="Sadtler Research Labs Under US-EPA Contract"/>
+        <metadata name="jcamp:owner" content="NIST Standard Reference Data Program"/>
+        <metadata name="dc:identifier" content="No.424 (EPA Vapor Library"/>
+        <metadata name="dc:source" content="I am guessing this means vapor phase"/>
+    </metadataList>
+    <sample>
+        <molecule>
+            <formula concise="C 4 H 10 O 1"/>
+            <name convention="jcamp:casregistryno">78-92-2</name>
+        </molecule>
+    </sample>
+    <conditionList>
+        <scalar dictRef="units:bar">1.2345</scalar>
+        <scalar dictRef="cml:press" units="siUnits:pascal">12345</scalar>
+    </conditionList>
+    <spectrumData>
+        <xaxis>
+            <array units="units:cm-1" size="227" dataType="xsd:double">
+734 738 742 746 750 754 758 762 766 770 774 778 782 786 790 794 798 802 806 810 814 818 822 826 830 834 838 842 846 850 854 858 862 866 870 874 878 882 886 890 894 898 902 906 910 914 918 922 926 930 934 938 942 946 950 954 958 962 966 970 974 978 982 986 990 994 998 1002 1006 1010 1014 1018 1022 1026 1030 1034 1038 1042 1046 1050 1054 1058 1062 1066 1070 1074 1078 1082 1086 1090 1094 1098 1102 1106 1110 1114 1118 1122 1126 1130 1134 1138 1142 1146 1150 1154 1158 1162 1166 1170 1174 1178 1182 1186 1190 1194 1198 1202 1206 1210 1214 1218 1222 1226 1230 1234 1238 1242 1246 1250 1254 1258 1262 1266 1270 1274 1278 1282 1286 1290 1294 1298 1302 1306 1310 1314 1318 1322 1326 1330 1334 1338 1342 1346 1350 1354 1358 1362 1366 1370 1374 1378 1382 1386 1390 1394 1398 1402 1406 1410 1414 1418 1422 1426 1430 1434 1438 1442 1446 1450 1454 1458 1462 1466 1470 1474 1478 1482 1486 1490 1494 1498 1502 1506 1510 1514 1518 1522 1526 1530 1534 1538 1542 1546 1550 1554 1558 1562 1566 1570 1574 1578 1582 1586 1590 1594 1598 1602 1606 1610 1614 1618 1622 1626 1630 1634 1638</array>
+        </xaxis>
+        <yaxis multiplierToData="0.000109021">
+            <array units="units:absorbance" size="227" dataType="xsd:double">
+42 37 43 67 66 92 112 128 148 162 160 162 178 178 154 155 167 176 170 179 195 210 216 190 173 158 146 135 121 109 101 105 108 133 162 206 288 417 579 792 1063 1377 1675 1797 1736 1700 1794 1780 1552 1198 878 648 524 492 516 599 730 896 1110 1360 1623 1889 2123 2282 2404 2451 2442 2396 2327 2185 2029 1915 1803 1691 1594 1520 1448 1382 1300 1230 1211 1264 1392 1518 1659 1758 1867 1968 2018 2005 1960 1969 2010 2063 2100 2175 2254 2344 2467 2557 2573 2525 2486 2397 2253 2048 1838 1612 1393 1195 1007 863 748 681 640 634 650 704 777 888 1012 1171 1339 1504 1672 1783 1855 1872 1865 1801 1697 1560 1384 1227 1084 979 897 846 810 791 781 769 757 755 744 738 740 715 704 705 747 802 875 968 1073 1229 1418 1663 1936 2183 2384 2524 2647 2679 2637 2440 2146 1802 1486 1210 1011 867 774 738 743 799 861 1009 1148 1330 1432 1453 1446 1378 1398 1348 1105 936 803 638 503 389 302 231 182 144 123 107 97 89 85 82 72 77 80 83 75 82 81 81 79 82 74 77 71 69 64 62 59 54 58 55 57 51 52 52 49</array>
+        </yaxis>
+    </spectrumData>
+    <peakList>
+        <peakGroup id="pg1" xMax="3040" xMin="2800">
+            <peak id="ch1" title="CH-stretch-1" peakMultiplicity="singlet" peakShape="sharp" xUnits="units:cm-1" xValue="2974" yUnits="units:absorbance" yValue="1.0921"/>
+            <peak id="ch2" title="CH-stretch-2" peakShape="shoulder" xUnits="units:cm-1" xValue="2938" yUnits="units:absorbance" yValue="0.653"/>
+            <peak id="ch3" title="CH-stretch-3" xUnits="units:cm-1" xValue="2890" yUnits="units:absorbance" yValue="0.470"/>
+        </peakGroup>
+        <peak id="oh1" title="CH-stretch???" peakShape="broad" xUnits="units:cm-1" xValue="3657" yUnits="units:absorbance" yValue="0.1092"/>
+    </peakList>
+</spectrum>
+

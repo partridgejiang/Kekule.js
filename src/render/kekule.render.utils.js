@@ -537,6 +537,64 @@ Kekule.Render.RichTextUtils = {
 	{
 		return Kekule.Render.RichTextUtils._toDebugHtml(richText);
 	},
+	/**
+	 * Create new rich text from HTML code.
+	 * Note this method only handles flat <sup>/<sub> (with no nests) and normal text.
+	 * @param {String} htmlCode
+	 * @returns {Object} Created richtext object.
+	 */
+	fromSimpleHtmlCode: function(htmlCode)
+	{
+		var RT = Kekule.Render.RichText;
+		//var tagPattern = /\<\/?([a-z]+)\/?\>/i;
+		var tagPattern = new RegExp('\<\/?([a-z]+)\/?\>', 'ig');
+		// split the html code to a series of tags/endTags and innerTexts
+		var textItems = [];
+		var currIndex = 0;
+		var currTextType = RT.NORMAL;
+		var matchResult;
+		while ((matchResult = tagPattern.exec(htmlCode)) !== null)
+		{
+			var matchIndex = matchResult.index;
+			var sTag = matchResult[0];
+			var tagName = matchResult[1].toLowerCase();
+			if (currIndex < matchIndex)  // there is something before this tag, should be simple text
+				textItems.push({'textType': currTextType, 'text': htmlCode.substring(currIndex, matchIndex)});
+			var isCloseTag = sTag.indexOf('/') === 1;
+			var isSelfCloseTag = sTag.lastIndexOf('/') === sTag.length - 2;
+			if (!isSelfCloseTag)
+			{
+				var tokenTagType = (tagName === 'sup')? RT.SUP:
+					(tagName === 'sub')? RT.SUB: null;
+				if (tokenTagType)
+				{
+					if (!isCloseTag)
+						currTextType = tokenTagType;
+					else if (currTextType === tokenTagType)  // close a sup or sub
+						currTextType = RT.NORMAL;
+				}
+			}
+			currIndex = matchIndex + sTag.length;
+		}
+		if (htmlCode.length > currIndex)
+		{
+			textItems.push({'textType': currTextType, 'text': htmlCode.substring(currIndex)});
+		}
+		// generate the rich text
+		var RTU = Kekule.Render.RichTextUtils;
+		var result = RTU.createGroup(null, {'charDirection': Kekule.Render.TextDirection.LTR});
+		for (var i = 0, l = textItems.length; i < l; ++i)
+		{
+			var textType = textItems[i].textType;
+			var text = textItems[i].text;
+			if (text)
+			{
+				var child = RTU.createSection(text, {'textType': textType});
+				RTU.append(result, child);
+			}
+		}
+		return result;
+	},
 
 	/**
 	 * Convert rich text to HTML element.
@@ -2785,6 +2843,26 @@ Kekule.Render.RenderOptionUtils = {
 	},
 	*/
 
+	/**
+	 * Get all config properties of a config object.
+	 * @param {Kekule.AbstractConfigs} configObject
+	 * @returns {Array} Names of all config properties.
+	 */
+	getConfigPropNames: function(configObject)
+	{
+		var result = [];
+		var props = configObject.getAllPropList();
+		for (var i = 0, l = props.getLength(); i < l; ++i)
+		{
+			var prop = props.getPropInfoAt(i);
+			if (configObject.isConfigProp(prop))
+			{
+				result.push(prop.name);
+			}
+		}
+		return result;
+	},
+
 	convertConfigsToPlainHash: function(configs)
 	{
 		var U = Kekule.Render.RenderOptionUtils;
@@ -2807,6 +2885,32 @@ Kekule.Render.RenderOptionUtils = {
 		// keep a ref to config instance
 		result._configs = render2DConfigs;
 
+		var configPropNames = Kekule.Render.RenderOptionUtils.getConfigPropNames(render2DConfigs);
+		var specialPropNames = ['generalConfigs', 'moleculeDisplayConfigs', 'displayLabelConfigs', 'lengthConfigs'];
+
+		for (var i = 0, l = configPropNames.length; i < l; ++i)
+		{
+			var pname = configPropNames[i];
+			if (specialPropNames.indexOf(pname) >= 0)
+				continue;
+			var value = render2DConfigs.getPropValue(pname);
+			if (value.toHash)
+			{
+				var hash = value.toHash();
+				result = Object.extend(result, hash);
+			}
+		}
+
+		/*
+		// textFontConfigs
+		h = render2DConfigs.getTextFontConfigs().toHash();
+		result = Object.extend(result, h);
+
+		// colorConfigs
+		h = render2DConfigs.getColorConfigs().toHash();
+		result = Object.extend(result, h);
+		*/
+
 		// general configs
 		var h = render2DConfigs.getGeneralConfigs().toHash();
 		OU.replacePropName(h, 'drawOpacity', 'opacity');
@@ -2823,18 +2927,10 @@ Kekule.Render.RenderOptionUtils = {
 		// displayLabelConfigs, special, keep the whole config object
 		result.displayLabelConfigs = render2DConfigs.getDisplayLabelConfigs();
 
-		// textFontConfigs
-		h = render2DConfigs.getTextFontConfigs().toHash();
-		result = Object.extend(result, h);
-
 		// lengthConfigs
 		h = render2DConfigs.getLengthConfigs().toHash();
 		result = Object.extend(result, h);
 		result.unitLength = result.unitLength || 1;
-
-		// colorConfigs
-		h = render2DConfigs.getColorConfigs().toHash();
-		result = Object.extend(result, h);
 
 		return result;
 	},
@@ -2850,6 +2946,32 @@ Kekule.Render.RenderOptionUtils = {
 		var result = {};
 		// keep a ref to config instance
 		result._configs = render3DConfigs;
+
+		var configPropNames = Kekule.Render.RenderOptionUtils.getConfigPropNames(render3DConfigs);
+		var specialPropNames = ['generalConfigs', 'moleculeDisplayConfigs', 'environmentConfigs'];
+
+		for (var i = 0, l = configPropNames.length; i < l; ++i)
+		{
+			var pname = configPropNames[i];
+			if (specialPropNames.indexOf(pname) >= 0)
+				continue;
+			var value = render3DConfigs.getPropValue(pname);
+			if (value.toHash)
+			{
+				var hash = value.toHash();
+				result = Object.extend(result, hash);
+			}
+		}
+
+		/*
+		// modelConfigs
+		var h = render3DConfigs.getModelConfigs().toHash();
+		result = Object.extend(result, h);
+
+		// lengthConfigs
+		var h = render3DConfigs.getLengthConfigs().toHash();
+		result = Object.extend(result, h);
+		*/
 
 		// generalConfigs
 		var h = render3DConfigs.getGeneralConfigs().toHash();
@@ -2867,14 +2989,6 @@ Kekule.Render.RenderOptionUtils = {
 		OU.replacePropName(h, 'defDisplayMultipleBond', 'displayMultipleBond');
 		OU.replacePropName(h, 'defBondColor', 'bondColor');
 		OU.replacePropName(h, 'defAtomColor', 'atomColor');
-		result = Object.extend(result, h);
-
-		// modelConfigs
-		var h = render3DConfigs.getModelConfigs().toHash();
-		result = Object.extend(result, h);
-
-		// lengthConfigs
-		var h = render3DConfigs.getLengthConfigs().toHash();
 		result = Object.extend(result, h);
 
 		return result;

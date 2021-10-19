@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>JCAMP Read test</title>
+  <script src="../../src/kekule.js?min=false&modules=spectroscopy"></script>
+  <script>
+    var spectrum;
+    function $(id)
+    {
+      return document.getElementById(id);
+    }
+    function test()
+    {
+      //var reader = new Kekule.IO.JcampReader();
+      /*
+      var result = reader._createAnalysisTree($('memoSrc').value);
+      console.log(result);
+      reader.buildChemObj(result);
+      */
+      //var result = reader.readData($('memoSrc').value);
+      var result = Kekule.IO.loadFormatData($('memoSrc').value, Kekule.IO.DataFormat.JCAMP_DX);
+      console.log(result);
+      var saveTarget = {};
+      result.saveObj(saveTarget, 'json');
+      console.log(saveTarget);
+      spectrum = result;
+    }
+  </script>
+</head>
+<body>
+  <p>
+    <textarea id="memoSrc" style="width:80em;height:30em"></textarea>
+  </p>
+  <p>
+    <button id="btnExec" onclick="test()">Execute</button>
+  </p>
+</body>
+</html>

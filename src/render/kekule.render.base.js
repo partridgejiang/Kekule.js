@@ -805,6 +805,16 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	{
 		return this.getRenderCache(context).drawnElem;
 	},
+	/**
+	 * Check if the current chem object is not hidden and should be rendered.
+	 * @returns {Bool}
+	 * @private
+	 */
+	isChemObjNeedToBeDrawn: function()
+	{
+		var obj = this.getChemObj();
+		return obj && (!obj.getVisible || obj.getVisible());
+	},
 
 	/**
 	 * Draw an instance of ChemObject to context.
@@ -820,6 +830,8 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	 */
 	draw: function(context, baseCoord, options)
 	{
+		if (!this.isChemObjNeedToBeDrawn())
+			return null;
 		//console.log('[Draw]', this.getClassName(), this.getChemObj().getId? this.getChemObj().getId(): null);
 		/*
 		var p = this.getRenderCache(context);
@@ -946,6 +958,9 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 	 */
 	redraw: function(context)
 	{
+		if (!this.isChemObjNeedToBeDrawn())
+			return null;
+
 		var isRoot = this.isRootRenderer();
 
 		//console.log('[Redraw]', isRoot, this.getClassName(), this.getChemObj().getId? this.getChemObj().getId(): null);

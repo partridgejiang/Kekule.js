@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Axis Render Test</title>
+	<script src="../../_libs/raphael-min.2.0.1.js"></script>
+    <style>
+        #drawStage canvas
+        {
+            background-color: antiquewhite;
+        }
+    </style>
+  <script src="../../../src/kekule.js?min=false&modules=render,widget,spectroscopy"></script>
+  <script>
+    var drawBoxWidth = 500;
+    var drawBoxHeight = 500;
+    var drawBridge;
+    var drawContext;
+    var richTextDrawer;
+
+    function $(id)
+    {
+      return document.getElementById(id);
+    }
+    function $v(id)
+    {
+      return $(id).value;
+    }
+    function $b(id)
+    {
+      return $(id).checked;
+    }
+
+    function getDrawStage()
+    {
+      return document.getElementById('drawStage');
+    }
+    function getDrawBridge()
+    {
+      if (!drawBridge)
+        drawBridge = Kekule.Render.DrawBridge2DMananger.getPreferredBridgeInstance();
+      return drawBridge;
+    }
+    function getRichTextDrawer()
+		{
+			if (!richTextDrawer)
+				richTextDrawer = new Kekule.Render.BaseRichTextDrawer(getDrawBridge());
+			return richTextDrawer;
+		}
+    function getContext()
+    {
+      if (!drawContext)
+        drawContext = getDrawBridge().createContext(getDrawStage(), drawBoxWidth, drawBoxHeight);
+      return drawContext;
+    }
+    function getRenderBox()
+    {
+      //return {'left': 0, 'top': 0, 'width': drawBoxWidth, 'height': drawBoxHeight};
+      return {'x1': 100, 'y1': 100, 'x2': drawBoxWidth, 'y2': drawBoxHeight};
+    }
+
+    function getDataRanges()
+    {
+      //return {'x': {min: 0, max: 100}, 'y': {min: 0, max: 100}};
+      return {
+        'x': {
+          'min': parseFloat($v('inputRangeFromX')),
+          'max': parseFloat($v('inputRangeToX'))
+        },
+        'y': {
+          'min': parseFloat($v('inputRangeFromY')),
+          'max': parseFloat($v('inputRangeToY'))
+        }
+      }
+    }
+
+    function getAxisDrawParams()
+    {
+      var dataRanges = getDataRanges();
+      //var preferredScaleMarkCount = 10;
+      var preferredScaleMarkCount = parseInt($('inputScaleCount').value);
+      var scaleInfoX = Kekule.Spectroscopy.Utils.calcScalePointInfo(dataRanges.x.min, dataRanges.x.max, preferredScaleMarkCount);
+      var scaleInfoY = Kekule.Spectroscopy.Utils.calcScalePointInfo(dataRanges.y.min, dataRanges.y.max, preferredScaleMarkCount);
+
+      var result = {
+        abscissaDataRange: $b('inputShowAxisX')? dataRanges.x: null,
+        abscissaScales: $b('inputShowScalesX')? scaleInfoX.scaleValues: null,
+        abscissaScaleBase: scaleInfoX.scaleBase,
+        abscissaScaleUseSciForm: scaleInfoX.useSciForm,
+        abscissaScaleFixedDigitCountAfterPoint: scaleInfoX.fixDigitsCountAfterPoint,
+        //abscissaScaleMarkSize: parseFloat($v('inputScaleMarkWidthX')),
+        abscissaUnitLabel: ($b('inputShowUnitX') && $v('inputUnitX'))? Kekule.Render.RichTextUtils.strToRichText($v('inputUnitX')): null,
+        abscissaLabel: $b('inputShowAxisLabelX')? Kekule.Render.RichTextUtils.strToRichText($v('inputAxisLabelX')): null,
+        abscissaAxisPosition: parseInt($v('selAxisPosX')),
+        abscissaReversedDirection: $b('inputReversedX'),
+        ordinateDataRange: $b('inputShowAxisY')? dataRanges.y: null,
+        ordinateScales: scaleInfoY.scaleValues,
+        ordinateScaleBase: scaleInfoY.scaleBase,
+        ordinateScaleUseSciForm: scaleInfoY.useSciForm,
+        ordinateScaleFixedDigitCountAfterPoint: scaleInfoY.fixDigitsCountAfterPoint,
+        //ordinateScaleMarkSize: parseFloat($v('inputScaleMarkWidthY')),
+        ordinateUnitLabel: ($b('inputShowUnitY') && $v('inputUnitY'))? Kekule.Render.RichTextUtils.strToRichText($v('inputUnitY')): null,
+        ordinateLabel: $b('inputShowAxisLabelY')? Kekule.Render.RichTextUtils.strToRichText($v('inputAxisLabelY')): null,
+        ordinateAxisPosition: parseInt($v('selAxisPosY')),
+        ordinateReversedDirection: $b('inputReversedY')
+      }
+      return result;
+    }
+    function getAxisDrawRenderOptions()
+    {
+      var result = {
+        'axisLabel': {
+          'fontSize': parseFloat($v('inputAxisLabelFontSizeX')),
+          'fontFamily': 'Times new Roman',
+          'color': '#00FF00',
+          'padding': parseFloat($v('inputAxisLabelPadding'))
+        },
+        'scaleLabel': {
+          'fontSize': parseFloat($v('inputScaleFontSizeX')),
+          'supFontSizeRatio': 0.66,
+          'subFontSizeRatio': 0.66,
+          'fontFamily': 'Arial',
+          'color': '#0000FF',
+          'padding': parseFloat($v('inputScaleLabelPadding'))
+            //'textBoxAlignmentMode': Kekule.Render.TextBoxAlignmentMode.BOX
+          //'verticalAlign': Kekule.Render.TextAlign.BOTTOM
+        },
+        //'scaleLabelPadding':
+        //'abscissaAxis': {
+        'axis': {
+          'strokeWidth': parseFloat($v('inputAxisStrokeWidthX')),
+          'scaleMarkSize': parseFloat($v('inputScaleMarkWidthX')),
+          'unlabeledScaleSizeRatio': 0.5,
+          'strokeColor': '#ff0000'
+        },
+          'ordinateAxis': {
+              'strokeWidth': parseFloat($v('inputAxisStrokeWidthY')),
+              'scaleMarkSize': parseFloat($v('inputScaleMarkWidthY')),
+              'strokeColor': '#ff0000'
+          }
+      }
+      return result;
+    }
+
+    function drawAxis()
+    {
+      var ARU = Kekule.Render.CoordAxisRender2DUtils;
+
+      var dataRanges = getDataRanges();
+      var preferredScaleMarkCount = parseInt($('inputScaleCount').value);
+      var scaleInfoX = Kekule.Spectroscopy.Utils.calcScalePointInfo(dataRanges.x.min, dataRanges.x.max, preferredScaleMarkCount);
+      var scaleInfoY = Kekule.Spectroscopy.Utils.calcScalePointInfo(dataRanges.y.min, dataRanges.y.max, preferredScaleMarkCount);
+
+      //console.log(preferredScaleMarkCount, scaleInfoX);
+
+      /*
+      var params = {
+        abscissaDataRange: dataRanges.x,
+        abscissaScales: scaleInfoX.scaleValues,
+        abscissaScaleBase: scaleInfoX.scaleBase,
+        abscissaScaleUseSciForm: scaleInfoX.useSciForm,
+        abscissaScaleFixedDigitCountAfterPoint: scaleInfoX.fixDigitsCountAfterPoint,
+        abscissaScaleMarkWidth: 5,
+        abscissaUnitLabel: Kekule.Render.RichTextUtils.strToRichText('CM'),
+        abscissaLabel: Kekule.Render.RichTextUtils.strToRichText('Axis X'),
+        abscissaAxisPosition: 0,
+        ordinateDataRange: dataRanges.y,
+        ordinateScales: scaleInfoX.scaleValues,
+        ordinateScaleBase: scaleInfoY.scaleBase,
+        ordinateScaleUseSciForm: scaleInfoY.useSciForm,
+        ordinateScaleFixedDigitCountAfterPoint: scaleInfoY.fixDigitsCountAfterPoint,
+        ordinateScaleMarkWidth: 5,
+        ordinateUnitLabel: Kekule.Render.RichTextUtils.strToRichText('CM-Y'),
+        ordinateLabel: Kekule.Render.RichTextUtils.strToRichText('Axis Y'),
+        ordinateAxisPosition: 0,
+      };
+      */
+      var params = getAxisDrawParams();
+      /*
+      var renderOptions = {
+        'axisLabel': {
+          'fontSize': 30,
+	        'fontFamily': 'Times new Roman',
+					'color': '#00FF00'
+        },
+        'scaleLabel': {
+          'fontSize': 10,
+	        'fontFamily': 'Arial',
+					'color': '#0000FF'
+        },
+        'axis': {
+          'strokeWidth': 2,
+					'scaleMarkWidth': 5,
+          'strokeColor': '#ff0000'
+        }
+      };
+      */
+      var renderOptions = getAxisDrawRenderOptions();
+
+      var drawBridge = getDrawBridge();
+      var context = getContext();
+      drawBridge.releaseContext(context);
+      drawContext = null;
+
+
+      /*
+      if (context.clearRect)  // canvas
+      {
+        context.clearRect(0, 0, drawBoxWidth, drawBoxHeight);
+      }
+      else  // raphael
+      {
+        context
+      }
+      drawBridge.clear();
+
+       */
+
+      ARU.drawAxises(getDrawBridge(), getRichTextDrawer(), getContext(), getRenderBox(), params, renderOptions);
+    }
+
+    function init()
+    {
+      $('formController').addEventListener('change', function(e){
+        //console.log('changed');
+        drawAxis();
+      })
+
+      drawAxis();
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+</head>
+<body>
+  <div id="drawStage"></div>
+  <div id="controller">
+      <form id="formController">
+          <fieldset>
+              <legend>General</legend>
+              <label>Preferred scale count: </label><input id="inputScaleCount" type="number" value="10" />
+              <label>Scale label padding: </label><input id="inputScaleLabelPadding" type="number" value="3" />
+              <label>Axis label padding: </label><input id="inputAxisLabelPadding" type="number" value="3" />
+          </fieldset>
+      <fieldset>
+        <legend>X Axis</legend>
+        <p>
+            <label>Show axis</label><input id="inputShowAxisX" type="checkbox" checked />
+            <br />
+            <label>Data range from: </label><input id="inputRangeFromX" type="number" value="0" />
+            <label>to: </label><input id="inputRangeToX" type="number" value="100" />
+            <label>Reversed</label><input id="inputReversedX" type="checkbox" />
+            <label>Axis stroke width: </label><input id="inputAxisStrokeWidthX" type="number" value="3" />
+            <br />
+            <label>Scale mark width: </label><input id="inputScaleMarkWidthX" type="number" value="5" />
+            <label>Scale font size: </label><input id="inputScaleFontSizeX" type="number" value="14" />
+            <label>Show scales</label><input id="inputShowScalesX" type="checkbox" checked />
+            <br />
+            <label>Unit: </label><input id="inputUnitX" type="text" value="UnitX" />
+            <label>Unit font size: </label><input id="inputUnitFontSizeX" type="number" value="14" />
+            <label>Show Unit</label><input id="inputShowUnitX" type="checkbox" checked />
+            <br />
+            <label>Label: </label><input id="inputAxisLabelX" type="text" value="Axis X" />
+            <label>Label font size: </label><input id="inputAxisLabelFontSizeX" type="number" value="20" />
+            <label>Show label</label><input id="inputShowAxisLabelX" type="checkbox" checked />
+            <br />
+            <label>Axis position: </label>
+            <select id="selAxisPosX">
+                <option value="0">bottom</option>
+                <option value="1">top</option>
+            </select>
+        </p>
+    </fieldset>
+
+      <fieldset>
+          <legend>Y Axis</legend>
+          <p>
+              <label>Show axis</label><input id="inputShowAxisY" type="checkbox" checked />
+              <br />
+              <label>Data range from: </label><input id="inputRangeFromY" type="number" value="0" />
+              <label>to: </label><input id="inputRangeToY" type="number" value="100" />
+              <label>Reversed</label><input id="inputReversedY" type="checkbox" />
+              <label>Axis stroke width: </label><input id="inputAxisStrokeWidthY" type="number" value="3" />
+              <br />
+              <label>Scale mark width: </label><input id="inputScaleMarkWidthY" type="number" value="5" />
+              <label>Scale font size: </label><input id="inputScaleFontSizeY" type="number" value="14" />
+              <label>Show scales</label><input id="inputShowScalesY" type="checkbox" checked />
+              <br />
+              <label>Unit: </label><input id="inputUnitY" type="text" value="UnitY" />
+              <label>Unit font size: </label><input id="inputUnitFontSizeY" type="number" value="14" />
+              <label>Show Unit</label><input id="inputShowUnitY" type="checkbox" checked />
+              <br />
+              <label>Label: </label><input id="inputAxisLabelY" type="text" value="Axis Y" />
+              <label>Label font size: </label><input id="inputAxisLabelFontSizeY" type="number" value="20" />
+              <label>Show label</label><input id="inputShowAxisLabelY" type="checkbox" checked />
+              <br />
+              <label>Axis position: </label>
+              <select id="selAxisPosY">
+                  <option value="0">left</option>
+                  <option value="1">right</option>
+              </select>
+          </p>
+      </fieldset>
+      </form>
+  </div>
+</body>
+</html>

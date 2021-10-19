@@ -126,7 +126,7 @@ Kekule.ContentBlock = Class.create(Kekule.ChemObject,
 		var cornerCoord1 = this.getCornerCoord1(coordMode, allowCoordBorrow);
 		var size = this.getSizeOfMode(coordMode, allowCoordBorrow);
 		return Kekule.CoordUtils.add(cornerCoord1, size);
-	},
+	}
 	/*
 	 * Set coord of bottom corner of block.
 	 * @param {Hash} value
@@ -141,13 +141,14 @@ Kekule.ContentBlock = Class.create(Kekule.ChemObject,
 		return this;
 	},
 	*/
-	/**
+	/*
 	 * Calculate the box to fit the image on context.
 	 * @param {Int} coordMode Determine to calculate 2D or 3D box. Value from {@link Kekule.CoordMode}.
 	 * @param {Bool} allowCoordBorrow
 	 * @returns {Hash} Box information. {x1, y1, z1, x2, y2, z2} (in 2D mode z1 and z2 will not be set).
 	 */
-	getContainerBox: function(/*$super, */coordMode, allowCoordBorrow)
+	/*
+	getContainerBox: function(coordMode, allowCoordBorrow)
 	{
 		var coord1 = this.getAbsCoordOfMode(coordMode, allowCoordBorrow) || {};
 		var size = this.getSizeOfMode(coordMode, allowCoordBorrow) || {};
@@ -156,21 +157,14 @@ Kekule.ContentBlock = Class.create(Kekule.ChemObject,
 		else // 2D
 		{
 			coord2 = {
-				x: coord1.x + size.x,
-				y: coord1.y - size.y
+				x: (coord1.x || 0) + (size.x || 0),
+				y: (coord1.y || 0) - (size.y || 0)
 			};
 		}
-		/*
-		var result = {'x1': coord1.x, 'y1': coord1.y, 'x2': coord2.x, 'y2': coord2.y};
-		if (coordMode === Kekule.CoordMode.COORD3D)
-		{
-			result.z1 = coord1.z;
-			result.z2 = coord2.z;
-		}
-		*/
 		var result = Kekule.BoxUtils.createBox(coord1, coord2);
 		return result;
 	}
+	*/
 });
 Kekule.ClassDefineUtils.addStandardCoordSupport(Kekule.ContentBlock);
 Kekule.ClassDefineUtils.addStandardSizeSupport(Kekule.ContentBlock);

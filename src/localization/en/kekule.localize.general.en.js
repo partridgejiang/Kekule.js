@@ -30,6 +30,7 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 
 	// core/kekule.metrics.js
 	UNIT_NOT_FOUND: 'Unit not found: {0}',
+	STANDARD_UNIT_OF_CATEGORY_NOT_FOUND: 'Standard unit of category {0} not found',
 	UNABLE_TO_CONVERT_BETWEEN_UNITS: 'Unable to convert between units {0} and {1}',
 
 	// utils/kekule.utils.js
@@ -126,6 +127,23 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	KCX_OUTPUT_DATATYPE_NOT_DOM_OR_TEXT: 'Can not output as non text or DOM data',
 	JSON_SERIALIZER_NOT_EXISTS: 'Serializer for JSON not exists',
 	XML_SERIALIZER_NOT_EXISTS: 'Serializer for XML not exists',
+
+	// io/jcamp/kekule.io.jcamp.base.js
+	JCAMP_DATA_WITHOUT_TITLE_LINE: 'Malformed JCAMP format data, not started with TITLE label',
+	JCAMP_OTHER_LABEL_BEFORE_TITLE_LINE: 'Malformed JCAMP format data, not started with TITLE label',
+	JCAMP_MORE_THAN_ONE_ROOT_BLOCK: 'Malformed JCAMP format data, root block not unique',
+	JCAMP_MORE_THAN_TWO_NEST_LEVEL: 'Malformed JCAMP format data, block nested level should not exceed 2',
+	JCAMP_ASDF_FORMAT_ERROR_WITH_STR: 'Malformed JCAMP ASDF String: {0}',
+	JCAMP_DATA_TABLE_X_VALUE_CHECK_ERROR: 'JCAMP data table X value check failed!',
+	JCAMP_DATA_TABLE_Y_VALUE_CHECK_ERROR: 'JCAMP data table Y value check failed!',
+	JCAMP_DATA_TABLE_VALUE_FIRST_LAST_NOT_MATCH: 'JCAMP data table first/last values not match',
+	JCAMP_DATA_TABLE_VAR_LIST_FORMAT_ERROR: 'Malformed JCAMP variable list format: {0}',
+	JCAMP_DATA_TABLE_VAR_LIST_FORMAT_UNSUPPORTED: 'Unsupported JCAMP variable list format: {0}',
+	JCAMP_NTUPLES_BEGIN_END_NAME_NOT_MATCH: 'Ntuples name not match in begin/end labels: {0} and {1}',
+	JCAMP_NTUPLES_PAGE_DECLARATION_FORMAT_ERROR: 'Malformed JCAMP ntuples page declaration: {0}',
+	// spectroscopy/kekule.spectrum.render.js
+	VISIBLE_DATA_RANGE_IS_EMPTY: 'The visible range of data is empty, unable to draw the spectrum',
+
 
 	/*
 	// render/2d/kekule.render.def2DRenderer.js

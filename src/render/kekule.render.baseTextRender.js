@@ -224,11 +224,11 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 
 	/** private */
 	_FONT_OPTION_FIELDS: ['fontSize', 'fontFamily', 'fontWeight', 'fontStyle',
-		'color', 'overhang', 'oversink', 'opacity', 'zoom'],
+		'color', 'overhang', 'oversink', 'opacity', 'zoom', 'transforms'],
 	/** @private */
 	_DRAW_OPTIONS_FIELDS: ['textType', 'charDirection', 'defaultCharDirection',
 		'fontSize', 'fontFamily', 'fontWeight', 'fontStyle', 'color',
-		'horizontalAlign', 'verticalAlign', 'zoom'],
+		'horizontalAlign', 'verticalAlign', 'zoom', 'transforms'],
 	/**
 	 * Get local draw options of a item.
 	 * @param {Object} richTextItem
@@ -344,7 +344,7 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 	{
 		var result = Kekule.ObjUtils.notUnset(richTextItem._noAlignRect)?
 			(!!richTextItem._noAlignRect):
-			(RTU.isSubscript(richTextItem) || RTU.isSuperscript(richTextItem));
+			(RTU.isSubscript(richTextItem) || RTU.isSuperscript(richTextItem));  // TODO: is this suitable? alignRect of sub/sup not take into consideration
 		return result;
 	},
 
@@ -393,10 +393,11 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 		//console.log('predraw', preDrawnElem);
 
 		var drawnObj = this.doRenderRichText(context, destRichText, ops, drawMode);
-		var rect = this._getItemRectInfo(destRichText).boundRect;
+		var rectInfo = this._getItemRectInfo(destRichText);
 		var result = {
 			'drawnObj': drawnObj,
-			'boundRect': rect
+			'boundRect': rectInfo.boundRect,
+			'alignRect': rectInfo.alignRect
 		};
 		return result;
 	},
@@ -445,6 +446,8 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 	measure: function(context, coord, richText, options, drawConfigs)
 	{
 		var ops = this.doPrepareDrawOptions(context, richText, options);
+		if (!coord)
+			coord = {'x': 0, 'y': 0};
 
 		// clone richtext to modify the object freely
 		var destRichText = this.cloneRichText(richText);
@@ -457,7 +460,7 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 
 		var preDrawnElem = [];
 		this.doPrepare(context, coord, destRichText, ops, drawMode, preDrawnElem);
-		var result = this._getItemRectInfo(destRichText);
+		var rectInfo = this._getItemRectInfo(destRichText);
 
 		if (preDrawnElem.length && bridge.removeDrawnElem)  // free this elements after measurement
 		{
@@ -468,7 +471,7 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 			}
 		}
 
-		return result;
+		return rectInfo.boundRect;
 	},
 
 	/** @private */
@@ -516,6 +519,8 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 		}
 		var alignRect = Kekule.RectUtils.shiftRect(rectInfo.alignRect, delta.x, delta.y);
 		var boundRect = Kekule.RectUtils.shiftRect(rectInfo.boundRect, delta.x, delta.y);
+
+		//console.log('draw text', anchorAlignRect, alignRect, boundRect, rectInfo);
 
 		this._setItemRectInfo(richText, boundRect, alignRect);
 		//console.log('bound', boundRect);
@@ -907,6 +912,9 @@ Kekule.Render.BaseRichTextDrawer = Class.create(ObjectEx,
 				else
 					gAlignRect = Kekule.RectUtils.getContainerRect(gAlignRect, rectInfo.alignRect);
 			}
+
+			//console.log('item align rect info!!!!!', this._itemHasNoAlignRect(item), this._getActualFontInfo(item) && this._getActualFontInfo(item).isSup, rectInfo.alignRect, gAlignRect);
+
 			//else
 			//	console.log('noAlign');
 			if (!gBoundRect)

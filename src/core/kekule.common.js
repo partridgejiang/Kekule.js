@@ -746,6 +746,18 @@ Kekule.CoordMode = {
 };
 
 /**
+ * Enumeration of the anchor point position of a chem object.
+ * @enum
+ */
+Kekule.ObjAnchorPosition = {
+	/** At the corner of object box (e.g., top left corner of 2D box). */
+	CORNER: 0,
+	/** At the center of object box. */
+	CENTER: 1,
+	DEFAULT: 0
+};
+
+/**
  * Class to help to define some classes with similar interfaces.
  * @class
  * @@private
@@ -1132,6 +1144,17 @@ Kekule.ClassDefineUtils = {
 	CommonCoordMethods:
 	/** @lends Kekule.ClassDefineUtils.CommonCoordMethods# */
 	{
+		/**
+		 * Returns the anchor position of this object.
+		 * @param {Int} coordMode
+		 * @returns {Int} Value from {@link Kekule.ObjAnchorPosition}
+		 */
+		getObjAnchorPosition: function(coordMode)
+		{
+			var result = this.doGetObjAnchorPosition && this.doGetObjAnchorPosition(coordMode);
+			result ||= Kekule.ObjAnchorPosition.DEFAULT;
+			return result;
+		},
 		/**
 		 * Returns the parent object that influences the abs coord of this object.
 		 * @param {Int} coordMode
@@ -3757,13 +3780,21 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			if (this.getSizeOfMode)
 			{
 				var size = this.getSizeOfMode(coordMode, allowCoordBorrow) || {};
+				var anchorPosition = this.getObjAnchorPosition(coordMode);
+				if (anchorPosition === Kekule.ObjAnchorPosition.CENTER)
+				{
+					var halfSize = Kekule.CoordUtils.divide(size, 2);
+					if (coordMode !== Kekule.CoordMode.COORD3D)
+						halfSize.y = -halfSize.y;
+					coord1 = Kekule.CoordUtils.substract(coord1, halfSize);
+				}
 				if (coordMode === Kekule.CoordMode.COORD3D)
-					var coord2 = Kekule.CoordUtils.add(coord1, this.getSizeOfMode(coordMode, allowCoordBorrow) || {});
+					coord2 = Kekule.CoordUtils.add(coord1, this.getSizeOfMode(coordMode, allowCoordBorrow) || {});
 				else // 2D
 				{
 					coord2 = {
-						x: coord1.x + size.x,
-						y: coord1.y - size.y
+						x: (coord1.x || 0) + (size.x || 0),
+						y: (coord1.y || 0) - (size.y || 0)
 					};
 				}
 			}
@@ -4007,6 +4038,113 @@ Kekule.ChemObject = Class.create(ObjectEx,
 });
 
 /**
+ * Enum of variable dependency.
+ * @enum
+ */
+Kekule.VarDependency = {
+	INDEPENDENT: 0,
+	DEPENDENT: 1
+}
+
+/**
+ * Class to define a chemical variable with name and unit.
+ * @class
+ * @augments ObjectEx
+ * @param {Hash} params A hash to set the initial property values.
+ *
+ * @property {String} name Name of variable.
+ * @property {String} symbol Symbol of variable.
+ * @property {String} unit Units of variable.
+ * @property {Variant} displayLabel Display text of variable, can be string or rich text object.
+ * @property {String} description Description of variable.
+ * @property {Int} dependency Value from {@link Kekule.VarDependency}.
+ * @property {Hash} info Additional information about variable.
+ */
+Kekule.VarDefinition = Class.create(ObjectEx,
+/** @lends Kekule.VarDefinition# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.VarDefinition',
+	/** @private */
+	initialize: function(params)
+	{
+		this.tryApplySuper('initialize');
+		this.beginUpdate();
+		try
+		{
+			if (params)
+				this.setPropValues(params);
+			if (Kekule.ObjUtils.isUnset(this.getDependency()))
+				this.setDependency(Kekule.VarDependency.INDEPENDENT);
+		}
+		finally
+		{
+			this.endUpdate();
+		}
+	},
+	initProperties: function()
+	{
+		this.defineProp('name', {'dataType': DataType.STRING});
+		this.defineProp('symbol', {'dataType': DataType.STRING});
+		this.defineProp('unit', {'dataType': DataType.STRING});
+		this.defineProp('units', {'dataType': DataType.STRING, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC,
+			'getter': function() { return this.getUnit(); },
+			'setter': function(value) { this.setUnit(value); }
+		});
+		this.defineProp('dependency', {'dataType': DataType.INT, 'enumSource': Kekule.VarDependency});
+		this.defineProp('displayLabel', {'dataType': DataType.VARIANT});
+		this.defineProp('description', {'dataType': DataType.STRING});
+		//this.defineProp('minValue', {'dataType': DataType.PRIMARY});
+		//this.defineProp('maxValue', {'dataType': DataType.PRIMARY});
+		this.defineProp('info',
+			{
+				'dataType': DataType.HASH,
+				'getter': function(canCreate)
+				{
+					var r = this.getPropStoreFieldValue('info');
+					if ((!r) && canCreate)
+					{
+						r = {};
+						this.setPropStoreFieldValue('info', r);
+					}
+					return r;
+				}
+			});
+	},
+	/**
+	 * Returns all keys in {@link Kekule.ChemObject#info} property.
+	 * @returns {Array}
+	 */
+	getInfoKeys: function()
+	{
+		return this.getInfo()? Kekule.ObjUtils.getOwnedFieldNames(this.getInfo()): [];
+	},
+	/**
+	 * Get item value from info hash.
+	 * @param key Key of information item.
+	 */
+	getInfoValue: function(key)
+	{
+		return this.getInfo()? this.getInfo()[key]: null;
+	},
+	/**
+	 * Set an item value in info hash. If key already exists, its value will be overwritten.
+	 * @param key Key of information item.
+	 * @param value Value of information item.
+	 */
+	setInfoValue: function(key, value)
+	{
+		this.doGetInfo(true)[key] = value;
+		this.notifyInfoChange();
+	},
+	/** @private */
+	notifyInfoChange: function()
+	{
+		this.notifyPropSet('info', this.getPropStoreFieldValue('info'));
+	}
+});
+
+/**
  * Class to hold a general data with unit in chemistry, such as temperature, weight, pressure and so on.
  * @class
  * @augments Kekule.ChemObject
@@ -4046,6 +4184,20 @@ Kekule.Scalar = Class.create(Kekule.ChemObject,
 		this.defineProp('title', {'dataType': DataType.STRING});
 	}
 });
+
+/**
+ * A quick function to create a new scalar value.
+ * @param {Variant} value
+ * @param {String} unit
+ * @param {Variant} errorValue
+ */
+Kekule.Scalar.create = function(value, unit, errorValue)
+{
+	var result = new Kekule.Scalar(null, null, value, unit);
+	if (errorValue !== undefined)
+		result.setErrorValue(errorValue);
+	return result;
+}
 
 /**
  * A list to hold a set of other {@link Kekule.ChemObject}.

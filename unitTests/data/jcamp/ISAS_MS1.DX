@@ -1,0 +1,45 @@
+##TITLE= 2-Chlorphenol
+##JCAMP-DX= 5.00   $$ ISAS JCAMP-DX program (V.1.0)
+##DATA TYPE= MASS SPECTRUM
+##DATA CLASS= PEAKTABLE
+##ORIGIN= H. Mayer, ISAS Dortmund
+##OWNER= COPYRIGHT (C) 1993 by ISAS Dortmund, FRG
+##SPECTROMETER/DATA SYSTEM= Finnigan MAT Magnum
+##INSTRUMENTAL PARAMETERS= LOW RESOLUTION
+##.SPECTROMETER TYPE= TRAP  $$ ion trap spectrometer
+##.INLET= GC                $$ gas chromatograph as inlet
+##.IONIZATION MODE= EI+     $$ electron impact ionization with positiv polarity
+##.BASE PEAK= 128
+##.BASE PEAK INTENSITY= 687729 COUNTS
+##.RIC= 3063043
+##XUNITS= M/Z
+##YUNITS= RELATIVE ABUNDANCE
+##NPOINTS= 26
+##PEAK TABLE= (XY..XY)
+50, 5.84
+51, 9.55
+52, 4.19
+53, 1.12
+54, 12.67
+60, 3.80
+61, 10.16
+62, 13.47
+63, 58.30
+64, 60.43
+65, 33.02
+66, 4.32
+72, 1.70
+75, 1.62
+91, 1.03
+92, 24.95
+93, 4.20
+94, 1.25
+99, 7.20
+100, 19.83
+101, 3.45
+102, 6.47
+128, 100.00
+129, 6.52
+130, 32.45
+131, 2.13
+##END=

@@ -82,6 +82,7 @@ test/misc/touchEventTest.html
 /src/_extras/browserAddOns/firefox
 /src/_extras/browserAddOns/chrome
 /src/_devUtils/compressUtil
+/src/_devUtils/cmlUnitUtil
 /utils/superRemover
 /website
 /tutorial/build

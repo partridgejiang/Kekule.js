@@ -86,6 +86,15 @@ Kekule.ClassUtils = {
  */
 Kekule.NumUtils = {
 	/**
+	 * Check if a value is a normal number (not NaN).
+	 * @param {Variant} value
+	 * @returns {Bool}
+	 */
+	isNormalNumber: function(value)
+	{
+		return (typeof(value) === 'number') && !isNaN(value);
+	},
+	/**
 	 * Check if a number is integer.
 	 * @param {Number} num
 	 * @returns {Bool}
@@ -3300,6 +3309,111 @@ Kekule.GeometryUtils = {
 			}
 			return result;
 		}
+	},
+
+	/**
+	 * Clip a segment to a box, using the Cohen–Sutherland algorithm.
+	 * @param {Array} lineCoords Coords of two line segment ends.
+	 * @param {Array} boxCornerCoords Coords of two box corners.
+	 * @returns {Array} Coords of clipped line ends, or null if the line is out of box.
+	 */
+	clipLineSegmentByBox: function(lineCoords, boxCornerCoords)
+	{
+		// code is ported from https://www.jianshu.com/p/d512116bbbf3
+		var INSIDE = 0, LEFT = 1, RIGHT = 2, BOTTOM = 4, TOP = 8;
+
+		var xmin = boxCornerCoords[0].x, ymin = boxCornerCoords[0].y;
+		var xmax = boxCornerCoords[1].x, ymax = boxCornerCoords[1].y;
+		var x0 = lineCoords[0].x, y0 = lineCoords[0].y;
+		var x1 = lineCoords[1].x, y1 = lineCoords[1].y;
+
+		var getRegionCode = function(coord)
+		{
+			var result = INSIDE;
+			if (coord.x < xmin)
+				result |= LEFT;
+			else if (coord.x > xmax)
+				result |= RIGHT;
+			if (coord.y < ymin)
+				result |= BOTTOM;
+			else if (coord.y > ymax)
+				result |= TOP;
+			return result;
+		}
+
+		var regionCode0 = getRegionCode(lineCoords[0]);
+		var regionCode1 = getRegionCode(lineCoords[1]);
+		var accept = false;
+
+		while (true)
+		{
+			if (!(regionCode0 | regionCode1))  // two ends inside box
+			{
+				accept = true;
+				break;
+			}
+			else if (regionCode0 & regionCode1)  // two ends outside one side of box, reject
+			{
+				accept = false;
+				break;
+			}
+			else
+			{
+				// failed both tests, so calculate the line segment to clip
+				// from an outside point to an intersection with clip edge
+				var x, y;
+
+				var outRegionCode = regionCode0? regionCode0: regionCode1;
+				// 找出和边界相交的点
+				// 使用点斜式 y = y0 + slope * (x - x0), x = x0 + (1 / slope) * (y - y0)
+				if (outRegionCode & TOP) // point is above the clip rectangle
+				{
+					x = x0 + (x1 - x0) * (ymax - y0) / (y1 - y0);
+					y = ymax;
+				}
+				else if (outRegionCode & BOTTOM)  // point is below the clip rectangle
+				{
+					x = x0 + (x1 - x0) * (ymin - y0) / (y1 - y0);
+					y = ymin;
+				}
+				else if (outRegionCode & RIGHT)   // point is to the right of clip rectangle
+				{
+					y = y0 + (y1 - y0) * (xmax - x0) / (x1 - x0);
+					x = xmax;
+				}
+				else if (outRegionCode & LEFT)    // point is to the left of clip rectangle
+				{
+					y = y0 + (y1 - y0) * (xmin - x0) / (x1 - x0);
+					x = xmin;
+				}
+
+				// Now we move outside point to intersection point to clip
+				// 为什么继续循环，两个端点都有可能在外面
+				if (outRegionCode === regionCode0)
+				{
+					x0 = x;
+					y0 = y;
+					regionCode0 = getRegionCode(x0, y0);
+				}
+				else
+				{
+					x1 = x;
+					y1 = y;
+					regionCode1 = getRegionCode(x1, y1);
+				}
+			}
+		}
+
+		// found the clipped segment, or the segment is totally out of box
+		if (accept)
+		{
+			var createCoord = Kekule.CoordUtils.create;
+			return [
+				createCoord(x0, y0), createCoord(x1, y1)
+			];
+		}
+		else
+			return null;
 	},
 
 	/**
