@@ -2885,22 +2885,20 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	/** @ignore */
 	getChildSubgroupNames: function()
 	{
-		return ['dataSection', 'sample'].concat(this.tryApplySuper('getChildSubgroupNames'));
+		return ['dataSection'].concat(this.tryApplySuper('getChildSubgroupNames'));
 	},
 	/** @ignore */
 	getBelongChildSubGroupName: function(obj)
 	{
 		if (obj instanceof Kekule.Spectroscopy.SpectrumDataSection)
 			return 'dataSection';
-		else if (obj instanceof Kekule.ChemStructureNode)
-			return 'sample';
 		else
-			return this.tryApplySuper('getBelongChildSubGroupName', [obj])  /* $super(obj) */;
+			return this.tryApplySuper('getBelongChildSubGroupName', [obj]);
 	},
 	/** @ignore */
 	doGetChildCount: function()
 	{
-		return this.getDataSectionCount();  // TODO: child samples are not considered
+		return this.getDataSectionCount();
 	},
 	/** @ignore */
 	doGetChildAt: function(index)
