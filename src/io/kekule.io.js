@@ -1348,7 +1348,7 @@ Kekule.IO.loadFileData = function(file, callback, formatId, options)
  * Load chem object from a URL.
  * Note this function relies on AJAX support.
  * @param {String} fileUrl
- * @param {Function} callback Callback function when the file is loaded. Has two params (chemObj, success).
+ * @param {Function} callback Callback function when the file is loaded. Has params (chemObj, success, srcData).
  * @param {String} formatId If not set, format will be get from file name automatically.
  * @param {Hash} options Additional options to read data. Different data format may have different options.
  */
@@ -1385,7 +1385,7 @@ Kekule.IO.loadUrlData = function(fileUrl, callback, formatId, options)
 				info.fileName = fileUrl;
 				//var success = !!chemObj;
 				var success = (chemObj !== false);
-				callback(chemObj, success);
+				callback(chemObj, success, data);
 			}
 			else
 			{
