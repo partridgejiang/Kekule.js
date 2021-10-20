@@ -1152,7 +1152,7 @@ Kekule.ClassDefineUtils = {
 		getObjAnchorPosition: function(coordMode)
 		{
 			var result = this.doGetObjAnchorPosition && this.doGetObjAnchorPosition(coordMode);
-			result ||= Kekule.ObjAnchorPosition.DEFAULT;
+			result = result || Kekule.ObjAnchorPosition.DEFAULT;
 			return result;
 		},
 		/**
