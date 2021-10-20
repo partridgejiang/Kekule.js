@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spectrum Viewer Demo</title>
+    <link rel="stylesheet" type="text/css" href="../../libs/kekule/themes/default/kekule.css" />
+
+    <style>
+        section
+        {
+            margin: 0.5em;
+            float: left;
+        }
+        input[type="number"], input[type="text"]
+        {
+            width: 6em;
+        }
+        #stage
+        {
+            float: left;
+            min-width: 1440px;
+        }
+        #secController
+        {
+            float: right;
+        }
+        #secCode
+        {
+            clear: left;
+        }
+        #chemViewer, #editorSrc, #editorCode
+        {
+            display: block;
+            width: 720px;
+        }
+        #chemViewer, #editorSrc
+        {
+            width: 720px;
+            height: 540px;
+            margin: 0;
+            padding: 0px;
+        }
+        #editorCode
+        {
+            display: block;
+            /*
+            width: 100%;
+            box-sizing: border-box;
+            */
+            height: 300px;
+            font-family: "Courier New", Courier, monospace;
+            overflow: scroll;
+        }
+        #chemViewer, #editorSrc, #editorCode, #tabPageSource, #tabPageViewer
+        {
+            border1: 1px solid #ccc;
+        }
+    </style>
+    <script src="../../../src/kekule.js?min=false&modules=chemWidget,spectroscopy"></script>
+    <!--
+    <script src="../../../dist/kekule.min.js"></script>
+    -->
+    <script>
+        function $(id)
+        {
+          return document.getElementById(id);
+        }
+
+        var initialConfigValues = {};
+        function getSpectrumDisplayConfigs()
+        {
+          return viewer.getRenderConfigs().getSpectrumDisplayConfigs();
+        }
+        function getInputElemValue(elem)
+        {
+          var widget = Kekule.Widget.getWidgetOnElem(elem);
+          if (widget)
+            return widget.getValue();
+          else
+          {
+            if (elem.getAttribute('type') === 'checkbox')
+              return !!elem.checked;
+            else if (elem.getAttribute('type') === 'number')
+              return parseFloat(elem.value);
+            else
+              return elem.value;
+          }
+        }
+        function setInputElemValue(elem, value)
+        {
+          var widget = Kekule.Widget.getWidgetOnElem(elem);
+          if (widget)
+            return widget.setValue(value);
+          else
+          {
+            if (elem.getAttribute('type') === 'checkbox')
+              elem.checked = !!value;
+            else
+              elem.value = value;
+          }
+        }
+        function getAllConfigInputElems()
+        {
+          var rootElem = $('secController');
+          var configInputElems = rootElem.querySelectorAll('[data-config-prop]');
+          return configInputElems;
+        }
+
+        function showCodeSnippet(code, doRepaint)
+        {
+          var s = code;
+          if (doRepaint)
+            s += '\nviewer.repaint();';
+          //console.log(code);
+          $('editorCode').value = s;
+        }
+        function reactInputElemChange(e)
+        {
+          var elem = e.target;
+          var widget = Kekule.Widget.getBelongedWidget(elem);
+          if (widget && widget instanceof Kekule.Widget.FormWidget)
+          {
+            elem = widget.getElement();
+          }
+          var value = getInputElemValue(elem);
+          var configPropName = elem.getAttribute('data-config-prop');
+          if (configPropName)
+          {
+            getSpectrumDisplayConfigs().setPropValue(configPropName, value);
+            var quotedValue = (typeof(value) === 'string')? '\'' + value + '\'': value;
+            var code = 'viewer.getRenderConfigs().getSpectrumDisplayConfigs().set' + configPropName.upperFirst() + '(' + quotedValue + ');';
+            showCodeSnippet(code, true);
+          }
+          else if (elem.tagName.toLowerCase() === 'select')  // var unit, or active section selector
+          {
+            if (elem === $('selActiveSection'))
+            {
+              doReactSpectrumActiveSectionChange(elem);
+            }
+            else
+              doReactSpectrumVarUnitChange(elem);
+          }
+          if (viewer.getChemObj())
+            viewer.repaint();
+        }
+        function doReactSpectrumVarUnitChange(elem)
+        {
+          var varInfos = getSpectrumIndepAndDepVarInfos();
+          var varDef;
+          if (elem === $('selIndepUnit'))
+            varDef = varInfos.independent && varInfos.independent.varDef;
+          else if (elem === $('selDepUnit'))
+            varDef = varInfos.dependent && varInfos.dependent.varDef;
+          if (varDef)
+          {
+            var value = elem.value;
+            varDef.setExternalUnit(value);
+            var varSymbol = varDef.getSymbol();
+            if (varSymbol)
+            {
+              var code = 'spectrum.getVariable(\'{0}\').setExternalUnit(\'{1}\');'.format(varSymbol, value);
+              showCodeSnippet(code, true);
+            }
+          }
+        }
+        function doReactSpectrumActiveSectionChange(elem)
+        {
+          var spectrum = getSpectrum();
+          if (spectrum)
+          {
+            var value = parseInt(elem.value);
+            spectrum.setActiveDataSectionIndex(value);
+            var code = 'spectrum.setActiveDataSectionIndex({0});'.format(value);
+            showCodeSnippet(code, true);
+          }
+        }
+        function getSpectrum()
+        {
+          var obj = viewer.getChemObj();
+          if (!obj)
+              return null;
+          if (obj instanceof Kekule.Spectroscopy.Spectrum)
+            return obj;
+          else if (obj.getChildCount && obj.getChildAt)  // a list object?
+          {
+            for (var i = 0, l = obj.getChildCount(); i < l; ++i)
+            {
+              var childObj = obj.getChildAt(i);
+              if (childObj instanceof Kekule.Spectroscopy.Spectrum)
+                return childObj;
+            }
+          }
+          return null;
+        }
+
+        function getSpectrumIndepAndDepVarInfos()
+        {
+          var result = {};
+          var spectrum = getSpectrum(); // viewer.getChemObj();
+          if (spectrum)
+          {
+            var section = spectrum.getActiveDataSection();
+            if (section)
+            {
+              result.independent = section.getLocalVarInfoOfDependency(Kekule.VarDependency.INDEPENDENT)[0];
+              result.dependent = section.getLocalVarInfoOfDependency(Kekule.VarDependency.DEPENDENT)[0];
+            }
+          }
+          return result;
+        }
+        function updateSelectElemItems(selElem, itemStrs, itemValues, currValue)
+        {
+          selElem.innerHTML = '';
+          var items = Kekule.ArrayUtils.clone(itemStrs);
+          var values = Kekule.ArrayUtils.clone(itemValues || itemStrs);
+          if (currValue && values.indexOf(currValue) < 0)
+          {
+            values.unshift(currValue);
+            items.unshift(currValue);
+          }
+          for (var i = 0, l = items.length; i < l; ++i)
+          {
+            var child = selElem.ownerDocument.createElement('option');
+            child.value = values? values[i]: items[i];
+            child.innerHTML = items[i];
+            if (values[i] === currValue)
+              child.selected = true;
+            selElem.appendChild(child);
+          }
+        }
+        function updateAvailableVarUnits()
+        {
+          var spectrum = getSpectrum(); //viewer.getChemObj();
+          if (spectrum)
+          {
+            var varInfos = getSpectrumIndepAndDepVarInfos();
+            if (varInfos.independent)
+            {
+              var unitSymbols = spectrum.getVarAvailableExternalUnitSymbols(varInfos.independent.varDef);
+              var currSymbol = varInfos.independent.varDef.getExternalUnit() || varInfos.independent.varDef.getInternalUnit();
+              updateSelectElemItems($('selIndepUnit'), unitSymbols, null, currSymbol);
+            }
+            if (varInfos.dependent)
+            {
+              var unitSymbols = spectrum.getVarAvailableExternalUnitSymbols(varInfos.dependent.varDef);
+              var currSymbol = varInfos.dependent.varDef.getExternalUnit() || varInfos.dependent.varDef.getInternalUnit();
+              updateSelectElemItems($('selDepUnit'), unitSymbols, null, currSymbol);
+            }
+          }
+        }
+        function updateSectionSelector()
+        {
+          var spectrum = getSpectrum();
+          if (spectrum)
+          {
+            var sectionNames = [];
+            var sectionIndexes = [];
+            for (var i = 0, l = spectrum.getDataSectionCount(); i < l; ++i)
+            {
+              var sec = spectrum.getDataSectionAt(i);
+              var name = sec.getName() || ('' + i);
+              sectionIndexes.push(i);
+              sectionNames.push(name);
+            }
+            updateSelectElemItems($('selActiveSection'), sectionNames, sectionIndexes, (spectrum.getActiveDataSectionIndex() || 0));
+          }
+        }
+
+        function resetConfigInputElemValues()
+        {
+          var configInputElems = getAllConfigInputElems();
+
+          configInputElems.forEach(function(elem) {
+            var configPropName = elem.getAttribute('data-config-prop');
+            var value = initialConfigValues[configPropName];
+            setInputElemValue(elem, value);
+          });
+
+          if (viewer.getChemObj())
+            viewer.repaint();
+        }
+
+        function initConfigValues(config)
+        {
+          if (!config)
+            config = getSpectrumDisplayConfigs();
+
+          var configInputElems = getAllConfigInputElems();
+
+          configInputElems.forEach(function(elem){
+            var configPropName = elem.getAttribute('data-config-prop');
+            if (!configPropName)
+            {
+              console.warn('Config prop name not set', elem);
+            }
+            else
+            {
+              if (!config.getPropInfo(configPropName))
+                console.warn('Config prop name not found', configPropName);
+              var value = config.getPropValue(configPropName);
+              initialConfigValues[configPropName] = value;
+              setInputElemValue(elem, value);
+            }
+          });
+        }
+
+
+        function initSpectrumList(withLoadFileOption)
+        {
+          var spectrumFilePath = '../../chemFiles/spectrum/';
+          var spectrumFileInfos = [
+            {
+              'category': 'JCAMP-DX official demo files',
+              fileNames: [
+                'BRUKER1.JCM',
+                'BRUKER2.JCM',
+                'BRUKPAC.DX',
+                'BRUKNTUP.DX',
+                'PE1800.DX',
+                'ISAS_MS1.DX',
+                'ISAS_MS2.DX',
+                'ISAS_MS3.DX'
+              ]
+            },
+            {
+              'category': 'CMLSpect official demo files',
+              fileNames: [
+                'UV_VIS.cml',
+                'IR.cml',
+                'Mass.cml'
+              ]
+            }
+          ];
+          if (withLoadFileOption)
+            spectrumFileInfos.push({
+              'category': 'Custom',
+              'caption': 'Load local file...',
+              'fileNames': [null]
+            });
+
+          var selElem = $('selSpectrums');
+          // add an empty option first
+          selElem.appendChild(document.createElement('option'));
+          for (var i = 0, ii = spectrumFileInfos.length; i < ii; ++i)
+          {
+            var info = spectrumFileInfos[i];
+            var fileNames = info.fileNames;
+            var optGroupElem = document.createElement('optgroup');
+            optGroupElem.setAttribute('label', info.category);
+            for (var j = 0, jj = fileNames.length; j < jj; ++j)
+            {
+              var optElem = document.createElement('option');
+              var fileName = fileNames[j];
+              if (fileName === null)   // a special load custom file flag
+              {
+                optElem.innerHTML = info.caption;
+                optElem.value = '@';
+              }
+              else
+              {
+                var url = spectrumFilePath + fileName;
+                optElem.innerHTML = fileName;
+                optElem.value = url;
+              }
+              optGroupElem.appendChild(optElem);
+            }
+            selElem.appendChild(optGroupElem);
+          }
+        }
+
+        function loadSpectrum(chemObj, srcData)
+        {
+          var spectrum = chemObj;
+          if (!(chemObj instanceof Kekule.Spectroscopy.Spectrum))  // is a list, or chem space?
+          {
+            if (chemObj.getChildCount && chemObj.getChildAt)
+            {
+              var spectrums = [];
+              for (var i = 0, l = chemObj.getChildCount(); i < l; ++i)
+              {
+                var obj = chemObj.getChildAt(i);
+                if (obj instanceof Kekule.Spectroscopy.Spectrum)
+                  spectrums.push(obj);
+              }
+              if (spectrums.length <= 1)  // no more than one spectrum, can display normally
+              {
+                spectrum = chemObj;
+              }
+              else                      // only displays the first spectrum
+              {
+                spectrum = spectrums[0];
+                Kekule.warn('There are {0} spectrums in this file, now only the first one is displayed.'.format(spectrums.length));
+              }
+            }
+          }
+          viewer.load(spectrum);
+          $('editorSrc').value = srcData;
+        }
+
+        function reactSpectrumListChange()
+        {
+          var value = $('selSpectrums').value;
+          if (!value)  // select the empty item
+          {
+            // do nothing
+          }
+          else if (value === '@')  // load local file item
+          {
+            //console.log('load custom file');
+            $('selSpectrums').value = null;
+            Kekule.NativeServices.loadFileData(document, function(result, data, fileName){
+              if (result)
+              {
+                var ext = Kekule.UrlUtils.extractFileExt(fileName);
+                var formatId = Kekule.IO.DataFormatsManager.findFormatId(null, ext);
+                if (formatId)
+                {
+                  var chemObj = Kekule.IO.loadFormatData(data, formatId);
+                  loadSpectrum(chemObj, data);
+                }
+              }
+            });
+          }
+          else  // normal predefined spectrum url
+          {
+            var url = value;
+            Kekule.IO.loadUrlData(url, function(chemObj, success, srcData){
+              loadSpectrum(chemObj, srcData);
+            });
+            var code = 'Kekule.IO.loadUrlData(url, function(chemObj, success) {\n  if (success)\n    viewer.load(chemObj);\n});';
+            showCodeSnippet(code);
+          }
+        }
+
+        function reactBtnMetaClick()
+        {
+            var spectrum = getSpectrum();
+            if (!spectrum)
+                return;
+
+            var code = '// The information of spectrum is stored in metaData/conditions/parameters/annotations properties\n' +
+                '// while each property is a hash object with key: value pairs.\n' +
+                '// getMeta/getCondition/getParameter/getAnnotation method can be used to retrieve those informations, e.g.:\n' +
+                'spectrum.getParameter(\'resolution\');\n' +
+                'spectrum.getAnnotation(\'myCustomInfo\');\n' +
+                '// Method getMetaKeys/getConditionKeys/getParameterKeys/getAnnotationKeys can be used to get all keys of those hashes.'
+            showCodeSnippet(code);
+
+            var metaProps = ['metaData', 'conditions', 'parameters', 'annotations'];
+            var keys = [];
+            var omitted;
+            var maxCount = 5;
+            var outputs = [];
+            for (var i = 0, ii = metaProps.length; i < ii; ++i)
+            {
+                var keys = spectrum._getAllKeysOfInfoBasedHashProp(metaProps[i]);
+                omitted = (keys.length > maxCount);
+                if (keys.length)
+                {
+                    outputs.push('[' + metaProps[i] + ']');
+                    for (var j = 0, jj = Math.min(keys.length, maxCount); j < jj; ++j)
+                    {
+                        var key = keys[j];
+                        var value = spectrum._getInfoBasedHashPropValue(metaProps[i], key);
+                        outputs.push(key + ': ' + value);
+                    }
+                    if (omitted)
+                        outputs.push('...');
+                }
+            }
+            alert(outputs.join('\n'));
+        }
+        function reactBtnDataClick()
+        {
+            var spectrum = getSpectrum();
+            var section = spectrum && spectrum.getActiveDataSection();
+            if (section)
+            {
+                var code = 'var section = spectrum.getActiveDataSection();\n' +
+                    'for (var i = 0, l = section.getDataCount(); i < l; ++i){\n' +
+                    '  var value = section.getValueAt(i);\n' +
+                    '}';
+                showCodeSnippet(code);
+
+                var maxCount = 10;
+                var dataCount = section.getDataCount();
+                var ommited = dataCount > maxCount;
+                var outputs = ['Spectrum data:'];
+                for (var i = 0, l = Math.min(dataCount, maxCount); i < l; ++i)
+                {
+                    var value = section.getValueAt(i);
+                    if (value._extra)  // avoid output complex extra data
+                    {
+                        value = Object.extend({}, value);
+                        delete value._extra;
+                    }
+                    var s = JSON.stringify(value);
+                    outputs.push(s);
+                }
+                if (ommited)
+                    outputs.push('...');
+                var s = outputs.join('\n');
+                alert(s);
+            }
+        }
+
+
+        var viewer;
+        function init()
+        {
+          initSpectrumList(true);
+          viewer = Kekule.Widget.getWidgetById('chemViewer');
+          viewer.setAutofit(true);
+          var BNS = Kekule.ChemWidget.ComponentWidgetNames;
+          viewer.setToolButtons([BNS.saveData, BNS.zoomIn, BNS.zoomOut]);
+          Kekule.X.Event.addListener($('selSpectrums'), 'change', reactSpectrumListChange);
+
+          viewer.on('load', function(e){
+            updateAvailableVarUnits();
+            updateSectionSelector();
+          });
+          Kekule.X.Event.addListener($('formController'), 'change', reactInputElemChange);
+          Kekule.X.Event.addListener($('btnResetValues'), 'click', resetConfigInputElemValues);
+          Kekule.X.Event.addListener($('btnGetMeta'), 'click', reactBtnMetaClick);
+          Kekule.X.Event.addListener($('btnGetData'), 'click', reactBtnDataClick);
+
+          initConfigValues();
+        }
+
+        Kekule.X.domReady(init);
+    </script>
+</head>
+<body>
+    <h2>Displaying spectrum in Chem Viewer</h2>
+    <div id="stage">
+        <section id="secView" data-widget="Kekule.Widget.Panel" data-caption="Spectrum">
+            <div>
+                Select spectrum file:  <select id="selSpectrums"></select>
+                <button id="btnGetData" type="button">Spectrum Data</button>
+                <button id="btnGetMeta" type="button">Spectrum Meta</button>
+            </div>
+            <div id="tabviewDisplayer" data-widget="Kekule.Widget.TabView">
+                <div id="tabPageViewer" class="TabPage" data-widget="Kekule.Widget.TabPage" data-text="Viewer">
+                    <div id="chemViewer"
+                         data-widget="Kekule.ChemWidget.Viewer2D" data-enable-toolbar="true" data-auto-size="false" data-padding="20"></div>
+                </div>
+                <div id="tabPageSource" class="TabPage" data-widget="Kekule.Widget.TabPage" data-text="Source">
+                    <textarea id="editorSrc">
+                    </textarea>
+                </div>
+            </div>
+        </section>
+
+        <section id="secController" data-widget="Kekule.Widget.Panel" data-caption="Render Controller">
+            <form id="formController" action="#" onsubmit="javascript:void();">
+                <fieldset>
+                    <legend>Spectrum</legend>
+                    <label>Active section: <select id="selActiveSection"></select></label>
+                    <br />
+                    <label>Independent variable unit: <select id="selIndepUnit"></select></label>
+                    <label>Dependent variable unit: <select id="selDepUnit"></select></label>
+                    <div>(Continuous spectrum)</div>
+                    <div style="margin-left: 2em">
+                        <label>Visible independent data range ratio from: </label><input id="inputVisibleIndepDataRangeFromContinuous" data-config-prop="visibleIndependentDataRangeFrom_Continuous" type="number" step="0.05" />
+                        <label>to: </label><input id="inputVisibleIndepDataRangeToContinuous" data-config-prop="visibleIndependentDataRangeTo_Continuous" type="number"  step="0.05" />
+                        <br />
+                        <label>Visible dependent data range ratio from: </label><input id="inputVisibleDepDataRangeFromContinuous" data-config-prop="visibleDependentDataRangeFrom_Continuous" type="number" step="0.05" />
+                        <label>to: </label><input id="inputVisibleDepDataRangeToContinuous" data-config-prop="visibleDependentDataRangeTo_Continuous" type="number" step="0.05" />
+                    </div>
+                    <div>(Peak spectrum)</div>
+                    <div style="margin-left: 2em">
+                        <label>Visible independent data range ratio from: </label><input id="inputVisibleIndepDataRangeFromPeak" data-config-prop="visibleIndependentDataRangeFrom_Peak" type="number" step="0.05" />
+                        <label>to: </label><input id="inputVisibleIndepDataRangeToPeak" data-config-prop="visibleIndependentDataRangeTo_Peak" type="number"  step="0.05" />
+                        <br />
+                        <label>Visible dependent data range ratio from: </label><input id="inputVisibleDepDataRangeFromPeak" data-config-prop="visibleDependentDataRangeFrom_Peak" type="number" step="0.05" />
+                        <label>to: </label><input id="inputVisibleDepDataRangeToPeak" data-config-prop="visibleDependentDataRangeTo_Peak" type="number" step="0.05" />
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Data render</legend>
+                    <label>Data color: </label><input id="inputDataColor" data-config-prop="dataColor" type="color"></input>
+                    <br />
+                    <label>Data stroke width ratio: </label><input id="inputDataStrokeWidthRatio" data-config-prop="dataStrokeWidthRatio" type="number" step="0.025" />
+                    <label>min: </label><input id="inputDataStrokeWidthMin" data-config-prop="dataStrokeWidthMin" type="number" step="0.5" />
+                </fieldset>
+                <fieldset>
+                    <legend>Axis render</legend>
+                    <fieldset>
+                        <legend>General</legend>
+                        <label>Reverse axises</label><input id="inputReverseAxises" data-config-prop="reversedAxises" type="checkbox" />
+                        <label>Axis color: </label><input id="inputAxisColor" type="color" data-config-prop="axisColor"></input>
+                        <br />
+                        <label>Axis width ratio: </label><input id="inputAxisWidthRatio" data-config-prop="axisWidthRatio" type="number" step="0.025" />
+                        <label>min: </label><input id="inputAxisWidthMin" data-config-prop="axisWidthMin" type="number" step="0.5" />
+                        <br />
+                        <label>Axis scale mark size ratio: </label><input id="inputScaleSizeRatio" data-config-prop="axisScaleMarkSizeRatio" type="number" step="0.05" />
+                        <label>min: </label><input id="inputScaleSizeMin" data-config-prop="axisScaleMarkSizeMin" type="number" step="0.5" />
+                        <label>Unlabeled ratio: </label><input id="inputUnlabeledScaleSizeRatio" data-config-prop="axisUnlabeledScaleSizeRatio" type="number" step="0.05" />
+                        <br />
+                        <label>Scale mark preferred count: </label><input id="inputScaleMarkPreferredCount" data-config-prop="axisScaleMarkPreferredCount" type="number" />
+                        <br />
+                        <label>Axis label font family: </label><input id="inputAxisLabelFontFamily" data-config-prop="axisLabelFontFamily" type="text" />
+                        <label>Axis label font size: </label><input id="inputAxisLabelFontSize" data-config-prop="axisLabelFontSize" type="number" />
+                        <br />
+                        <label>Axis label color: </label><input id="inputAxisLabelFontColor" type="color" data-config-prop="axisLabelColor" ></input>
+                        <br />
+                        <label>Scale label font family: </label><input id="inputScaleLabelFontFamily" data-config-prop="axisScaleLabelFontFamily" type="text" />
+                        <label>Scale label font size: </label><input id="inputScaleLabelFontSize" data-config-prop="axisScaleLabelFontSize" type="number" />
+                        <br />
+                        <label>Scale label color: </label><input type="color" id="inputScaleLabelFontColor" data-config-prop="axisScaleLabelColor" ></input>
+                        <br />
+                        <label>Axis label padding ratio: </label><input id="inputAxisLabelPaddingRatio" data-config-prop="axisLabelPaddingRatio" type="number" step="0.005" />
+                        <label>Axis scale label padding ratio: </label><input id="inputAxisScaleLabelPaddingRatio" data-config-prop="axisScaleLabelPaddingRatio" type="number" step="0.005" />
+                    </fieldset>
+                    <fieldset>
+                        <legend>Independent axis</legend>
+                        <label>Display axis</label><input id="inputDisplayIndepAxis" data-config-prop="displayIndependentAxis" type="checkbox" />
+                        <label>Reversed data direction</label><input id="inputReversedIndepDataDir" data-config-prop="reverseIndependentDataDirection" type="checkbox" />
+                        <label>Reversed axis align</label><input id="inputReversedIndepAxisAlign" data-config-prop="reverseIndependentAxisAlign" type="checkbox" />
+                        <br />
+                        <label>Display scales</label><input id="inputDisplayIndepAxisScales" data-config-prop="displayIndependentAxisScales" type="checkbox" />
+                        <label>Display label</label><input id="inputDisplayIndepAxisLabel" data-config-prop="displayIndependentAxisLabel" type="checkbox" />
+                        <label>Display unit</label><input id="inputDisplayIndepAxisUnit" data-config-prop="displayIndependentAxisUnit" type="checkbox" />
+                    </fieldset>
+                    <fieldset>
+                        <legend>Dependent axis</legend>
+                        <label>Display axis</label><input id="inputDisplayDepAxis" data-config-prop="displayDependentAxis" type="checkbox" />
+                        <label>Reversed data direction</label><input id="inputReversedDepDataDir" data-config-prop="reverseDependentDataDirection" type="checkbox" />
+                        <label>Reversed axis align</label><input id="inputReversedDepAxisAlign" data-config-prop="reverseDependentAxisAlign" type="checkbox" />
+                        <br />
+                        <label>Display scales</label><input id="inputDisplayDepAxisScales" data-config-prop="displayDependentAxisScales" type="checkbox" />
+                        <label>Display label</label><input id="inputDisplayDepAxisLabel" data-config-prop="displayDependentAxisLabel" type="checkbox" />
+                        <label>Display unit</label><input id="inputDisplayDepAxisUnit" data-config-prop="displayDependentAxisUnit" type="checkbox" />
+                    </fieldset>
+                </fieldset>
+                <button id="btnResetValues" type="button">Reset values</button>
+            </form>
+        </section>
+
+        <section id="secCode" data-widget="Kekule.Widget.Panel" data-caption="Code Snippet">
+            <textarea id="editorCode" wrap="off"></textarea>
+        </section>
+    </div>
+
+</body>
+</html>
