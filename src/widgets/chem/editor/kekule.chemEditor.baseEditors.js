@@ -4112,7 +4112,6 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		const chemSpace = this.getChemSpace();
 		if (chemSpace) {
 			const children = chemSpace.getChildren().filter(x => x.CLASS_NAME === 'Kekule.Glyph.PathGlyphArcConnectorControlNode');
-			console.log('@@@ _removeOrphans', children)
 			// for (const child of children) {
 			// 	      child.getParent().removeChild(child);
 			// }
@@ -4936,24 +4935,17 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 	/** @private */
 	removeObjs: function(objs)
 	{
-		console.log('@@@ removeObjs', objs) //, JSON.parse(JSON.stringify(objs)))
 		if (objs && objs.length)
 		{
-			console.log('@@@ removeObjs start', objs)
 			var editor = this.getEditor();
 			editor.beginUpdateObject();
-			console.log('@@@ removeObjs start 1', objs)
 			try
 			{
-				console.log('@@@ removeObjs start 2', objs)
-				// const actualObjs = objs.filter(x => x.CLASS_NAME !== 'Kekule.Glyph.PathGlyphArcConnectorControlNode');
-				// console.log('@@@ removeObjs start 3', actualObjs)
 				var actualObjs = this.doGetActualRemovedObjs(objs);
 				this.doRemoveObjs(actualObjs);
 			}
 			finally
 			{
-				console.log('@@@ removeObjs finally', objs)
 				editor.endUpdateObject();
 			}
 		}
@@ -4975,7 +4967,6 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 	removeSelection: function()
 	{
 		var editor = this.getEditor();
-		console.log('@@@ removeSelection', editor.getSelection())
 		this.removeObjs(editor.getSelection());
 		// the selection is currently empty
 		editor.deselectAll();
@@ -4990,15 +4981,12 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 		var obj = this.getEditor().getTopmostBasicObjectAtCoord(coord);
 		if (obj)
 		{
-			console.log('@@@ removeOnScreenCoord', obj)
 			if(obj.CLASS_NAME === 'Kekule.Glyph.PathGlyphArcConnectorControlNode') {
-				console.log('@@@ node detected', obj.getParent())
-				console.log('@@@ node detected 2', obj.getParent().getParent())
-				console.log('@@@ node detected 3', obj.getParent().getParent().getParent())
 				this.removeObjs([obj.getParent().getParent()]);
 			}
-			else 
-			this.removeObjs([obj]);
+			else {
+				this.removeObjs([obj]);
+			}
 			return true;
 		}
 		else
