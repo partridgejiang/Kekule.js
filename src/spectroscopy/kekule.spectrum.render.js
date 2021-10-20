@@ -93,10 +93,21 @@ Kekule.Render.SpectrumDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('dataStrokeWidthRatio', 0.025);
 		this.addFloatConfigProp('dataStrokeWidthMin', 1);
 
+		// default data range
 		this.addFloatConfigProp('visibleIndependentDataRangeFrom', 0);
 		this.addFloatConfigProp('visibleIndependentDataRangeTo', 1);
 		this.addFloatConfigProp('visibleDependentDataRangeFrom', -0.05);
-		this.addFloatConfigProp('visibleDependentDataRangeTo', 1.05); //0.5 /*1.05*/);
+		this.addFloatConfigProp('visibleDependentDataRangeTo', 1.05);
+
+		// specified data range for peak/continuous spectrum
+		this.addFloatConfigProp('visibleIndependentDataRangeFrom_Peak', -0.05);
+		this.addFloatConfigProp('visibleIndependentDataRangeTo_Peak', 1.05);
+		this.addFloatConfigProp('visibleDependentDataRangeFrom_Peak', -0.05);
+		this.addFloatConfigProp('visibleDependentDataRangeTo_Peak', 1.05);
+		this.addFloatConfigProp('visibleIndependentDataRangeFrom_Continuous', 0);
+		this.addFloatConfigProp('visibleIndependentDataRangeTo_Continuous', 1);
+		this.addFloatConfigProp('visibleDependentDataRangeFrom_Continuous', -0.05);
+		this.addFloatConfigProp('visibleDependentDataRangeTo_Continuous', 1.05);
 
 		// config about displayed elements
 		//this.addBoolConfigProp('displaySpectrumGrid', true);
@@ -122,15 +133,15 @@ Kekule.Render.SpectrumDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addFloatConfigProp('axisScaleMarkSizeMin', 3);
 		this.addFloatConfigProp('axisUnlabeledScaleSizeRatio', 0.7);
 		this.addIntConfigProp('axisScaleMarkPreferredCount', 10);
-		this.addFloatConfigProp('axisLabelPaddingRatio', 0);
-		this.addFloatConfigProp('axisScaleLabelPaddingRatio', 0.025);
+		this.addFloatConfigProp('axisLabelPaddingRatio', 0.02);
+		this.addFloatConfigProp('axisScaleLabelPaddingRatio', 0.02);
 	},
 	/** @ignore */
 	initPropDefValues: function()
 	{
 		this.tryApplySuper('initPropDefValues');
 		//var defScaleRefLength = 0.8; // Kekule.Render.getRender2DConfigs().getLengthConfigs().getDefScaleRefLength();
-		this.setDefSize2DRatio({'x': 10, 'y': 6});
+		this.setDefSize2DRatio({'x': 12, 'y': 8});
 		//this.setDefSpectrumSize3D({'x': defScaleRefLength * 10, 'y': defScaleRefLength * 10, 'z': defScaleRefLength * 10});
 	},
 	/** @ignore */
@@ -1167,15 +1178,15 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	/** @private */
 	_getDisplayRangeOfSections: function(spectrum, spectrumData, sections, varInfos, renderOptions)
 	{
-		var dataRange = spectrumData.getDisplayRangeOfSections(sections, null, {autoCalc: true});
-
 		// adjust the dataRange with render options
-		var calcVisibleRange = function(dataRangeOfVar, varSymbol, isDependentVar, renderOptions)
+		var calcVisibleRange = function(dataRangeOfVar, varSymbol, isDependentVar, dataMode, renderOptions)
 		{
+			var renderOptionNameSuffix = (dataMode === Kekule.Spectroscopy.DataMode.PEAK)? '_Peak':
+				(dataMode === Kekule.Spectroscopy.DataMode.CONTINUOUS)? '_Continuous': '';
 			var varType = isDependentVar? 'dependent': 'independent';
 			var visibleRange = {
-				'rangeFrom': renderOptions['spectrum_visible' + varType.upperFirst() + 'DataRangeFrom'] || 0,
-				'rangeTo': renderOptions['spectrum_visible' + varType.upperFirst() + 'DataRangeTo'] || 1,
+				'rangeFrom': renderOptions['spectrum_visible' + varType.upperFirst() + 'DataRangeFrom' + renderOptionNameSuffix] || 0,
+				'rangeTo': renderOptions['spectrum_visible' + varType.upperFirst() + 'DataRangeTo' + renderOptionNameSuffix] || 1,
 			};
 			var range = dataRangeOfVar;
 			if (visibleRange.rangeFrom !== 0 || visibleRange.rangeTo !== 1)  // need adjust
@@ -1188,6 +1199,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				return range;
 		}
 
+		/*
+		var dataRange = spectrumData.getDisplayRangeOfSections(sections, null, {autoCalc: true});
 		var indepVar = varInfos.varSymbols.independant;
 		var depVar = varInfos.varSymbols.dependant;
 		var visibleDataRange = {};
@@ -1196,6 +1209,20 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 
 		//return dataRange;
 		return visibleDataRange;
+		*/
+
+		var indepVar = varInfos.varSymbols.independant;
+		var depVar = varInfos.varSymbols.dependant;
+		var result = {};
+		var visibleDataRange = {};
+		for (var i = 0, l = sections.length; i < l; ++i)
+		{
+			var sectionRange = spectrumData.getDisplayRangeOfSection(sections[i], null, {autoCalc: true});
+			visibleDataRange[indepVar] = calcVisibleRange(sectionRange[indepVar], indepVar, false, sections[i].getMode(), renderOptions);
+			visibleDataRange[depVar] = calcVisibleRange(sectionRange[depVar], depVar, true, sections[i].getMode(), renderOptions);
+			result = Kekule.Spectroscopy.Utils.mergeDataRange(result, visibleDataRange);
+		}
+		return result;
 	},
 	/*
 	 * Returns a hash to indicating whether the data point is in or out of data range.
