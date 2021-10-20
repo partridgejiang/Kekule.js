@@ -422,7 +422,10 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				'dependency': Kekule.ObjUtils.notUnset(info.dependency)? info.dependency: Kekule.VarDependency.DEPENDENT
 			});
 			if (Kekule.ObjUtils.notUnset(info.minValue) && Kekule.ObjUtils.notUnset(info.maxValue))
-				def.setInfoValue('displayRange', {'min': info.minValue, 'max': info.maxValue});
+			{
+				if (info.minValue !== info.maxValue)  // some times these value are all 0, means unavailable values?
+					def.setInfoValue('displayRange', {'min': info.minValue, 'max': info.maxValue});
+			}
 			result.push(def);
 		}
 		return result;
