@@ -20,6 +20,10 @@
 if (!Kekule.Render || !Kekule.Render.ChemObj2DRenderer)
 	return;
 
+Kekule.globalOptions.add('render.spectrum', {
+	continuousSpectrumResampleRatio: 1
+});
+
 var CU = Kekule.CoordUtils;
 var AU = Kekule.ArrayUtils;
 
@@ -1509,9 +1513,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	/** @private */
 	doDrawContinuousSectionData: function(spectrum, section, context, contextBox, options, dataVarSymbols, dataTransferMatrix, visibleDataRange)
 	{
-		//var result = this.createDrawGroup(context);
 		var result;
-		//var renderOptions = Object.create(options);
 		var renderOptions = Object.create(options);
 		renderOptions.lineCap = 'round';  // for a more smooth curve
 
@@ -1531,8 +1533,10 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			return result;
 		};
 
+		//var timeStart = new Date();
+
 		// calculate resample rate
-		var resampleRate = 2;
+		var resampleRate = Kekule.globalOptions.render.spectrum.continuousSpectrumResampleRatio || 1;
 		var contextXWidth = Math.abs(contextBox.x2 - contextBox.x1) * resampleRate;
 
 		var dataSampleMergeWidth = (visibleDataRange[dataVarSymbols.independant].max - visibleDataRange[dataVarSymbols.independant].min) / contextXWidth;
@@ -1675,12 +1679,18 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		}
 
 		//console.log('total', totalValueBuffer.length, this._getMergeSectionDataTypicalValues(totalValueBuffer, dataVarSymbols));
+		//var timeEnd = new Date();
+		//var calcDuration = timeEnd - timeStart;
 
+		//timeStart = new Date();
 		if (pathArgs.length)
 		{
 			var path = Kekule.Render.DrawPathUtils.makePath.apply(this, pathArgs);
 			result = this.drawPath(context, path, renderOptions);
 		}
+		//timeEnd = new Date();
+		//var paintDuration = timeEnd - timeStart;
+		//console.log('Calc, paint', calcDuration, paintDuration, paintDuration / calcDuration);
 
 		return result;
 	},
