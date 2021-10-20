@@ -2973,6 +2973,14 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		return this;
 	},
 	/**
+	 * Returns all the keys of spectrum parameter list.
+	 * @returns {Array}
+	 */
+	getMetaKeys: function()
+	{
+		return this._getAllKeysOfInfoBasedHashProp('metaData');
+	},
+	/**
 	 * Returns the value of a spectrum condition.
 	 * @param {String} key
 	 * @returns {Variant}

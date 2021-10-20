@@ -193,6 +193,11 @@ Kekule.HtmlNativeServiceImpl = {
 		elem.click();
 	},
 	/** @private */
+	_getFileInputElemForPickerDialog: function(doc, callback, options)
+	{
+
+	},
+	/** @private */
 	_createFileInputElem: function(doc, callback, options)
 	{
 		var result = doc.createElement('input');
@@ -243,7 +248,7 @@ Kekule.HtmlNativeServiceImpl = {
 			target.ownerDocument.body.focus();
 			if (target.parentNode)
 			{
-				//target.parentNode.removeChild(target);
+				target.parentNode.removeChild(target);
 			}
 		};
 
