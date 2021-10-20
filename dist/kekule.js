@@ -537,6 +537,19 @@ var kekuleFiles = {
 		]
 	},
 
+	'spectroscopy': {
+		'requires': ['root', 'common', 'io'],
+		'files': [
+			'spectroscopy/kekule.spectrum.core.js',
+			'spectroscopy/kekule.spectrum.render.js',
+			'io/jcamp/kekule.io.jcamp.base.js',
+			'io/jcamp/kekule.io.jcamp.dx.js',
+			'io/jcamp/kekule.io.jcampIO.js',
+			'io/cmlspect/kekule.io.cmlspect.js'
+		]
+	},
+
+
 	'emscripten': {
 		'requires': ['root', 'common'],
 		'files': [
@@ -574,9 +587,9 @@ var kekuleFiles = {
 };
 
 var prequestModules = ['lan', 'root', 'localization', 'localizationData', 'common'];
-var usualModules = prequestModules.concat(['core', 'html', 'io', 'render', 'widget', 'chemWidget', 'algorithm', 'calculation', 'data']);
+var usualModules = prequestModules.concat(['core', 'html', 'io', 'spectroscopy', 'render', 'widget', 'chemWidget', 'algorithm', 'calculation', 'data']);
 var allModules = usualModules.concat(['emscripten', 'inchi', 'openbabel', 'indigo']);
-var nodeModules = prequestModules.concat(['core', 'io', 'algorithm', 'calculation', 'data']);
+var nodeModules = prequestModules.concat(['core', 'io', 'spectroscopy', 'algorithm', 'calculation', 'data']);
 var defaultLocals = [];
 
 function getEssentialModules(modules)
