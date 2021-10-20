@@ -4936,6 +4936,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 	/** @private */
 	removeObjs: function(objs)
 	{
+		console.log('@@@ removeObjs', objs)
 		if (objs && objs.length)
 		{
 			var editor = this.getEditor();
@@ -4971,6 +4972,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 	removeSelection: function()
 	{
 		var editor = this.getEditor();
+		console.log('@@@ removeSelection', editor.getSelection())
 		this.removeObjs(editor.getSelection());
 		// the selection is currently empty
 		editor.deselectAll();
@@ -4985,6 +4987,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 		var obj = this.getEditor().getTopmostBasicObjectAtCoord(coord);
 		if (obj)
 		{
+			console.log('@@@ removeOnScreenCoord', obj)
 			this.removeObjs([obj]);
 			return true;
 		}
