@@ -537,7 +537,10 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			var value = Jcamp.LdrValueParser.parseValue(ldr);
 			var defaultHandler = function()
 			{
-				chemObj.setParameter(labelName.toLowerCase(), value);
+				var name = labelName;
+				if (name.startsWith(Jcamp.Consts.SPECIFIC_LABEL_PREFIX))
+					name = name.substr(Jcamp.Consts.SPECIFIC_LABEL_PREFIX.length);
+				chemObj.setParameter(name.toLowerCase(), value);
 			};
 			if (spectrumType === KS.SpectrumType.IR)
 			{
