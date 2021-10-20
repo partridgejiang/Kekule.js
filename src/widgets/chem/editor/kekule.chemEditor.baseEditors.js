@@ -4999,6 +4999,8 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 			console.log('@@@ removeOnScreenCoord', obj)
 			if(obj.CLASS_NAME === 'Kekule.Glyph.PathGlyphArcConnectorControlNode') {
 				console.log('@@@ node detected', obj.getParent())
+				console.log('@@@ node detected 2', obj.getParent().getParent())
+				console.log('@@@ node detected 3', obj.getParent().getParent().getParent())
 				this.removeObjs([obj.getParent()]);
 			}
 			else 
