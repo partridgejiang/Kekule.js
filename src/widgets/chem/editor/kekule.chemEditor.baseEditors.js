@@ -4949,7 +4949,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 				const actualObjs = objs.filter(x => x.CLASS_NAME !== 'Kekule.Glyph.PathGlyphArcConnectorControlNode');
 				// var actualObjs = this.doGetActualRemovedObjs(objs);
 				console.log('@@@ removeObjs start 3', actualObjs)
-				// this.doRemoveObjs(actualObjs);
+				this.doRemoveObjs(objs);
 			}
 			catch(e) {
 				console.log('@@@ removeObjs exception', e)
@@ -5026,6 +5026,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
 			this.startRemove();
+			console.log('@@@ react_pointerdown')
 			var coord = this._getEventMouseCoord(e);
 			this.removeOnScreenCoord(coord);
 			e.preventDefault();
@@ -5052,6 +5053,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 		if (this.isRemoving())
 		{
 			var coord = this._getEventMouseCoord(e);
+			console.log('@@@ react_pointermove')
 			this.removeOnScreenCoord(coord);
 			e.preventDefault();
 		}
