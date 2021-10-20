@@ -4,7 +4,8 @@
     "./core/*Test.js",
     "./io/*Test.js",
     "./algorithm/*Test.js",
-    "./widget/*Test.js"
+    "./widget/*Test.js",
+    "./spectrum/*Test.js"
   ],
   "helpers": [
     "./_utils/kekuleLoaderCli.js"
