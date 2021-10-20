@@ -4949,10 +4949,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 				// const actualObjs = objs.filter(x => x.CLASS_NAME !== 'Kekule.Glyph.PathGlyphArcConnectorControlNode');
 				// console.log('@@@ removeObjs start 3', actualObjs)
 				var actualObjs = this.doGetActualRemovedObjs(objs);				
-				this.doRemoveObjs(objs);
-			}
-			catch(e) {
-				console.log('@@@ removeObjs exception', e)
+				this.doRemoveObjs(actualObjs);
 			}
 			finally
 			{
@@ -4969,9 +4966,6 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 
 	doGetActualRemovedObjs: function(objs)
 	{
-		console.log('@@@ doGetActualRemovedObjs', objs)
-		const actualObjs = objs.filter(x => x.CLASS_NAME !== 'Kekule.Glyph.PathGlyphArcConnectorControlNode');
-		console.log('@@@ doGetActualRemovedObjs (filtered)', actualObjs)
 		return objs;
 	},
 
@@ -5001,7 +4995,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 				console.log('@@@ node detected', obj.getParent())
 				console.log('@@@ node detected 2', obj.getParent().getParent())
 				console.log('@@@ node detected 3', obj.getParent().getParent().getParent())
-				this.removeObjs([obj.getParent()]);
+				this.removeObjs([obj.getParent().getParent()]);
 			}
 			else 
 			this.removeObjs([obj]);
