@@ -4939,12 +4939,16 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 		console.log('@@@ removeObjs', objs)
 		if (objs && objs.length)
 		{
+			console.log('@@@ removeObjs start', objs)
 			var editor = this.getEditor();
 			editor.beginUpdateObject();
 			try
 			{
 				var actualObjs = this.doGetActualRemovedObjs(objs);
 				this.doRemoveObjs(actualObjs);
+			}
+			catch(e) {
+				console.log('@@@ removeObjs exception', e)
 			}
 			finally
 			{
