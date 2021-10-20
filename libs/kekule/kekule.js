@@ -1,5 +1,15 @@
 (function($root){
 
+if (!$root)
+{
+	if (typeof(self) === 'object')
+		$root = self;
+	else if (typeof(window) === 'object' && window && window.document)
+		$root = window;
+	else if (typeof(global) === 'object')  // node env
+		$root = global;
+}
+
 // IE8 does not support array.indexOf
 if (!Array.prototype.indexOf)
 {
@@ -24,8 +34,11 @@ if (!document)
 
 
 // check if is in Node.js environment
-var isNode = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
+var isInBrowser = (typeof(navigator) !== 'undefined') && (typeof(window) !== 'undefined') && (typeof(document) !== 'undefined');
+var hasNodeEnv = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
+var isNode = hasNodeEnv;
 var isWebpack = (typeof(__webpack_require__) === 'function');
+var loadedByImportOrRequire = (typeof(exports) !== 'undefined');
 
 //if (!isWebpack && isNode)
 if (typeof(__webpack_require__) !== 'function' && isNode)
@@ -281,6 +294,7 @@ var kekuleFiles = {
 		'category': 'localization',
 		'minFile': 'localization.min.js'
 	},
+	// Localization resources, must be put right after 'localization' module, since other modules may use them
 	'localizationData': {
 		'requires': ['localization'],
 		'files': [
@@ -291,6 +305,16 @@ var kekuleFiles = {
 		'category': 'localization',
 		'minFile': 'localization.min.js'
 	},
+	'localizationData.zh': {
+		'requires': ['localization'],
+		'files': [
+			'localization/zh/kekule.localize.general.zh.js',
+			'localization/zh/kekule.localize.widget.zh.js'
+			//'localization/zh/kekule.localize.objDefines.zh.js'
+		],
+		'category': 'localizationData.zh',
+		'autoCompress': false  // do not compress js automatically
+	},
 
 	'common': {
 		'requires': ['lan', 'root', 'localization'],
@@ -299,7 +323,9 @@ var kekuleFiles = {
 			'core/kekule.exceptions.js',
 			'utils/kekule.utils.js',
 			'utils/kekule.domHelper.js',
-			'utils/kekule.domUtils.js'
+			'utils/kekule.domUtils.js',
+			'core/kekule.externalResMgr.js',
+			'core/kekule.metrics.js'
 		],
 		'category': 'common',
 		'minFile': 'common.min.js'
@@ -385,9 +411,12 @@ var kekuleFiles = {
 			'widgets/operation/kekule.operations.js',
 			'widgets/operation/kekule.actions.js',
 
+			'widgets/kekule.widget.root.js',
 			'widgets/kekule.widget.bindings.js',
+			'widgets/kekule.widget.events.js',
 			'widgets/kekule.widget.base.js',
 			'widgets/kekule.widget.sys.js',
+			'widgets/kekule.widget.keys.js',
 			'widgets/kekule.widget.clipboards.js',
 			'widgets/kekule.widget.helpers.js',
 			'widgets/kekule.widget.styleResources.js',
@@ -403,6 +432,7 @@ var kekuleFiles = {
 			'widgets/commonCtrls/kekule.widget.formControls.js',
 			'widgets/commonCtrls/kekule.widget.nestedContainers.js',
 			'widgets/commonCtrls/kekule.widget.treeViews.js',
+			'widgets/commonCtrls/kekule.widget.listViews.js',
 			'widgets/commonCtrls/kekule.widget.dialogs.js',
 			'widgets/commonCtrls/kekule.widget.msgPanels.js',
 			'widgets/commonCtrls/kekule.widget.tabViews.js',
@@ -455,6 +485,10 @@ var kekuleFiles = {
 			'widgets/chem/editor/modifiers/kekule.chemEditor.structureModifiers.js',
 			'widgets/chem/editor/modifiers/kekule.chemEditor.glyphModifiers.js',
 
+			'chemdoc/issueCheckers/kekule.issueCheckers.js',
+			'widgets/chem/editor/issueInspectors/kekule.chemEditor.issueCheckers.js',
+			'widgets/chem/editor/issueInspectors/kekule.chemEditor.issueInspectors.js',
+
 			'widgets/advCtrls/objInspector/kekule.widget.objInspector.chemPropEditors.js',
 
 			'widgets/chem/editor/kekule.chemEditor.composers.js',
@@ -503,6 +537,19 @@ var kekuleFiles = {
 		]
 	},
 
+	'spectroscopy': {
+		'requires': ['root', 'common', 'io'],
+		'files': [
+			'spectroscopy/kekule.spectrum.core.js',
+			'spectroscopy/kekule.spectrum.render.js',
+			'io/jcamp/kekule.io.jcamp.base.js',
+			'io/jcamp/kekule.io.jcamp.dx.js',
+			'io/jcamp/kekule.io.jcampIO.js',
+			'io/cmlspect/kekule.io.cmlspect.js'
+		]
+	},
+
+
 	'emscripten': {
 		'requires': ['root', 'common'],
 		'files': [
@@ -525,7 +572,8 @@ var kekuleFiles = {
 		'requires': ['lan', 'root', 'core', 'emscripten', 'io'],
 		'files': [
 			'_extras/Indigo/kekule.indigo.base.js',
-			'_extras/Indigo/kekule.indigo.io.js'
+			'_extras/Indigo/kekule.indigo.io.js',
+			'_extras/Indigo/kekule.indigo.structures.js'
 		],
 		'category': 'extra'
 	},
@@ -535,25 +583,13 @@ var kekuleFiles = {
 			'_extras/InChI/kekule.inchi.js'
 		],
 		'category': 'extra'
-	},
-
-	// Localization resources
-	'localizationData.zh': {
-		'requires': ['localization'],
-		'files': [
-			'localization/zh/kekule.localize.general.zh.js',
-			'localization/zh/kekule.localize.widget.zh.js'
-			//'localization/zh/kekule.localize.objDefines.zh.js'
-		],
-		'category': 'localizationData.zh',
-		'autoCompress': false  // do not compress js automatically
 	}
 };
 
 var prequestModules = ['lan', 'root', 'localization', 'localizationData', 'common'];
-var usualModules = prequestModules.concat(['core', 'html', 'io', 'render', 'widget', 'chemWidget', 'algorithm', 'calculation', 'data']);
+var usualModules = prequestModules.concat(['core', 'html', 'io', 'spectroscopy', 'render', 'widget', 'chemWidget', 'algorithm', 'calculation', 'data']);
 var allModules = usualModules.concat(['emscripten', 'inchi', 'openbabel', 'indigo']);
-var nodeModules = prequestModules.concat(['core', 'io', 'algorithm', 'calculation', 'data']);
+var nodeModules = prequestModules.concat(['core', 'io', 'spectroscopy', 'algorithm', 'calculation', 'data']);
 var defaultLocals = [];
 
 function getEssentialModules(modules)
@@ -611,8 +647,8 @@ function getEssentialFiles(modules, useMinFile)
 
 function analysisEntranceScriptSrc(doc)
 {
-	var entranceSrc = /^(.*\/?)kekule\.js(\?.*)?$/;
-	var scriptSrcPattern = /^(.*[\/\\])[^\/\\]*\.js(\?.*)?$/;
+	var entranceSrc = /^(.*\/?)kekule(.min)?\.js(\?.*)?$/;
+	var scriptSrcPattern = /^(.*[\/\\])([^\/\\]*)\.js(\?.*)?$/;
 	var paramForceDomLoader = /^domloader\=(.+)$/;
 	var paramMinFile = /^min\=(.+)$/;
 	var paramModules = /^modules\=(.+)$/;
@@ -620,28 +656,31 @@ function analysisEntranceScriptSrc(doc)
 	var paramLanguage = /^language\=(.+)$/;
 
 	var matchResult;
-	// try get current script info by document.currentScript
-	if (doc && doc.currentScript && doc.currentScript.src)
+	if (!loadedByImportOrRequire)
 	{
-		var scriptSrc = decodeURIComponent(doc.currentScript.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
-		if (scriptSrc)
+		// try get current script info by document.currentScript
+		if (doc && doc.currentScript && doc.currentScript.src)
 		{
-			matchResult = scriptSrc.match(scriptSrcPattern);
-		}
-	}
-	else  // use the traditional way, detect each <script> tags
-	{
-		var scriptElems = doc.getElementsByTagName('script');
-		for (var j = scriptElems.length - 1; j >= 0; --j)
-		{
-			var elem = scriptElems[j];
-			var scriptSrc = decodeURIComponent(elem.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+			var scriptSrc = decodeURIComponent(doc.currentScript.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
 			if (scriptSrc)
 			{
-				matchResult = scriptSrc.match(entranceSrc);
-				if (matchResult)
+				matchResult = scriptSrc.match(scriptSrcPattern);
+			}
+		}
+		else  // use the traditional way, detect each <script> tags
+		{
+			var scriptElems = doc.getElementsByTagName('script');
+			for (var j = scriptElems.length - 1; j >= 0; --j)
+			{
+				var elem = scriptElems[j];
+				var scriptSrc = decodeURIComponent(elem.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
+				if (scriptSrc)
 				{
-					break;
+					matchResult = scriptSrc.match(entranceSrc);
+					if (matchResult)
+					{
+						break;
+					}
 				}
 			}
 		}
@@ -649,14 +688,17 @@ function analysisEntranceScriptSrc(doc)
 
 	if (matchResult)
 	{
-		var pstr = matchResult[2];
+		var coreScriptName = matchResult[2];  // kekule.js or kekule.min.js
+		//var singleMinBundle = (coreScriptName.indexOf('.min') === coreScriptName.length - 4);
+		var pstr = matchResult[3];  // script params
 		if (pstr)
 			pstr = pstr.substr(1);  // eliminate starting '?'
 		var result = {
 			'src': scriptSrc,
 			'path': matchResult[1],
+			//'singleMinBundle': singleMinBundle,
 			'paramStr': pstr,
-			'useMinFile': true
+			'useMinFile': true,
 		};
 
 		if (result.paramStr)  // analysis params
@@ -804,34 +846,56 @@ function loadModuleScriptFiles(modules, useMinFile, rootPath, kekuleScriptInfo, 
 function init()
 {
 	var scriptInfo, files, path;
-	if (isNode)
+
+	// some times there are both browser and node environment (e.g. Electron)
+	if (isInBrowser)   // try get info from <script> tag first
+	{
+		scriptInfo = analysisEntranceScriptSrc(document);
+		var findScriptTag = scriptInfo.src && scriptInfo.path;
+
+		if (findScriptTag)  // explicitly use script tag, load files in traditional way
+		{
+			isNode = false;
+		}
+		if (!findScriptTag && hasNodeEnv)  // dual env
+		{
+			scriptInfo.src = this.__filename || '';
+			scriptInfo.path = (__dirname || '.') + '/';
+			isNode = true;
+		}
+	}
+	else if (isNode)
 	{
 		scriptInfo = {
 			'src': this.__filename || '',
 			'path': __dirname + '/',
-			'modules': nodeModules,
+			'modules': isInBrowser? usualModules: nodeModules,  // if there is browser env (e.g. electron, load normal modules including widget)
 			//'useMinFile': false  // for debug
 			'useMinFile': true,
 			'nodeModule': typeof(module !== 'undefined')? module: this.module,  // record the node module, for using the module methods (e.g. require) later
 			'nodeRequire': typeof(require !== 'undefined')? require: this.require,
 		};
+	}
 
+	if (isNode)
+	{
 		// if min files not found, use dev files instead
 		var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
+		var minFileExisted = false;
 		try
 		{
-			fs.statSync(testFileName)
+			minFileExisted = fs.existsSync(testFileName);
 		}
 		catch(e)
 		{
 			//scriptInfo.path += 'src/'
-			scriptInfo.useMinFile = false;
+			minFileExisted = false;
 		}
+		if (!minFileExisted)
+			scriptInfo.useMinFile = false;
 	}
-	else  // in browser
-	{
-		scriptInfo = analysisEntranceScriptSrc(document);
-	}
+
+	scriptInfo.singleMinBundle = $root && $root.__$kekule_single_min_bundle__;  // a special flag bundled into kekule.min.js
 
 	scriptInfo.explicitModules = scriptInfo.modules;
 	var modules = getEssentialModules(scriptInfo.modules);
@@ -849,25 +913,27 @@ function init()
 		'loadModuleScriptFiles': loadModuleScriptFiles
 	};
 
-	loadModuleScriptFiles(modules, scriptInfo.useMinFile, scriptInfo.path, scriptInfo, function(error){
-		if (isNode)  // export Kekule namespace
-		{
-			// export Kekule in module
-			exports.Kekule = this.Kekule || __nodeContext.Kekule;
-			exports.Class = this.Class || __nodeContext.Class;
-			exports.ClassEx = this.ClassEx || __nodeContext.ClassEx;
-			exports.ObjectEx = this.ObjectEx || __nodeContext.ObjectEx;
-			exports.DataType = this.DataType || __nodeContext.DataType;
-			// and these common vars in global
-			this.Class = exports.Class;
-			this.ClassEx = exports.ClassEx;
-			this.ObjectEx = exports.ObjectEx;
-			this.DataType = exports.DataType;
-			// then store script info of Kekule
-			this.Kekule.scriptSrcInfo = scriptInfo;
-		}
-	});
-
+	if (!scriptInfo.singleMinBundle || typeof(scriptInfo.singleMinBundle) === 'undefined')   // when loading with a single bundle, no need to load modules
+	{
+		loadModuleScriptFiles(modules, scriptInfo.useMinFile, scriptInfo.path, scriptInfo, function(error){
+			if (/*isNode*/typeof(exports) !== 'undefined')  // export Kekule namespace
+			{
+				// export Kekule in module
+				exports.Kekule = this.Kekule || __nodeContext.Kekule;
+				exports.Class = this.Class || __nodeContext.Class;
+				exports.ClassEx = this.ClassEx || __nodeContext.ClassEx;
+				exports.ObjectEx = this.ObjectEx || __nodeContext.ObjectEx;
+				exports.DataType = this.DataType || __nodeContext.DataType;
+				// and these common vars in global
+				this.Class = exports.Class;
+				this.ClassEx = exports.ClassEx;
+				this.ObjectEx = exports.ObjectEx;
+				this.DataType = exports.DataType;
+				// then store script info of Kekule
+				this.Kekule.scriptSrcInfo = scriptInfo;
+			}
+		});
+	}
 	//console.log('ROOT', $root);
 
 	/*

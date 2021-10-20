@@ -66,6 +66,9 @@ DU.newRootCategory('chemEditor', 'Chem Editor', 'Demos about the composer (chem 
 	DU.newConcreteDemo('composerCustomization', 'Composer Customization', 'Demo of the UI customization of chemistry editor.', 'chemEditor/composerCustomization.html', null, {'newWindow': false}),
 	DU.newConcreteDemo('chemNote', 'Chem Note', 'A simple notebook app for chemists.', 'chemNote/chemNote.html', null, {'newWindow': true})
 ]);	
+DU.newRootCategory('spectrum', 'Spectrum', 'Demos about the spectroscopy supports in Kekule.js', [
+	DU.newConcreteDemo('spectrumViewer', 'Spectrum Viewer', 'Loading the spectrum data file and displaying it in chem viewer widget.', 'spectrum/spectrumViewer.html', null)
+]);
 DU.newRootCategory('webComponent', 'Web Component', 'Demos about web component wrapper of Kekule.js widgets', [	
 	DU.newConcreteDemo('commonWidgetWrapper', 'Widget Wrapper', 'Demo of the usage of wrapper tool to wrap widget into web component', 'webComponent/commonWidgetWrapper.html', null, {'newWindow': false}),
 	DU.newConcreteDemo('chemWidgetWrapper', 'Chem Widget Component', 'Demo of shipped web component of Viewer, Composer and Periodic Table', 'webComponent/chemWidgetWrapper.html', null, {'newWindow': false}),	
