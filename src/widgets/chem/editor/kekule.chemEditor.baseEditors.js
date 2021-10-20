@@ -4936,7 +4936,7 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 	/** @private */
 	removeObjs: function(objs)
 	{
-		console.log('@@@ removeObjs', objs)
+		console.log('@@@ removeObjs', JSON.parse(JSON.stringify(objs)))
 		if (objs && objs.length)
 		{
 			console.log('@@@ removeObjs start', objs)
@@ -5026,7 +5026,6 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 		if (e.getButton() === Kekule.X.Event.MOUSE_BTN_LEFT)
 		{
 			this.startRemove();
-			console.log('@@@ react_pointerdown')
 			var coord = this._getEventMouseCoord(e);
 			this.removeOnScreenCoord(coord);
 			e.preventDefault();
@@ -5053,7 +5052,6 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 		if (this.isRemoving())
 		{
 			var coord = this._getEventMouseCoord(e);
-			console.log('@@@ react_pointermove')
 			this.removeOnScreenCoord(coord);
 			e.preventDefault();
 		}
