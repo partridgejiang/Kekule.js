@@ -195,7 +195,7 @@ ClassEx.extendMethod(Kekule.Spectroscopy.Spectrum, 'doGetObjAnchorPosition',
 
 // extend Kekule.Render.RenderOptionUtils.getOptionDefinitions for property editors for spectrum objects
 /** @ignore */
-(function extendRenderOptionPropEditors()
+function extendRenderOptionPropEditors()
 {
 	var appendDefinitionItem = function(definitions, fieldName, dataType, targetClasses, fieldNamePrefixes)
 	{
@@ -263,9 +263,14 @@ ClassEx.extendMethod(Kekule.Spectroscopy.Spectrum, 'doGetObjAnchorPosition',
 	}
 
 	// hack
-	var proto = ClassEx.getPrototype(Kekule.PropertyEditor.ChemRender2DOptionsEditor);
-	proto.CHILD_FIELD_INFOS = proto.CHILD_FIELD_INFOS.concat(getSpectrumObjRenderOptionFieldList());
-})();
+	if (Kekule.PropertyEditor && Kekule.PropertyEditor.ChemRender2DOptionsEditor)
+	{
+		var proto = ClassEx.getPrototype(Kekule.PropertyEditor.ChemRender2DOptionsEditor);
+		proto.CHILD_FIELD_INFOS = proto.CHILD_FIELD_INFOS.concat(getSpectrumObjRenderOptionFieldList());
+	}
+};
+
+Kekule._registerAfterLoadSysProc(extendRenderOptionPropEditors);
 
 /**
  * Helper Util class to render coordinate axises in spectrum.
