@@ -4946,7 +4946,8 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 			try
 			{
 				console.log('@@@ removeObjs start 2', objs)
-				var actualObjs = this.doGetActualRemovedObjs(objs);
+				const actualObjs = objs.filter(x => x.CLASS_NAME !== 'Kekule.Glyph.PathGlyphArcConnectorControlNode');
+				// var actualObjs = this.doGetActualRemovedObjs(objs);
 				console.log('@@@ removeObjs start 3', objs)
 				this.doRemoveObjs(actualObjs);
 				console.log('@@@ removeObjs start 4', objs)
