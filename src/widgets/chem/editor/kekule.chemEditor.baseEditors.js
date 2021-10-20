@@ -4080,7 +4080,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				if (o)
 					this.operationDone(o);
 			}
-			// this._removeOrphans('undo');
+			this._removeOrphans('undo');
 		}
 		return o;
 	},
@@ -4104,7 +4104,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				if (o)
 					this.operationDone(o)
 			}
-			// this._removeOrphans('redo');
+			this._removeOrphans('redo');
 		}
 		return o;
 	},
@@ -4112,9 +4112,10 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		const chemSpace = this.getChemSpace();
 		if (chemSpace) {
 			const children = chemSpace.getChildren().filter(x => x.CLASS_NAME === 'Kekule.Glyph.PathGlyphArcConnectorControlNode');
-			for (const child of children) {
-				      child.getParent().removeChild(child);
-			}
+			console.log('@@@ _removeOrphans', children)
+			// for (const child of children) {
+			// 	      child.getParent().removeChild(child);
+			// }
 		}
 	},
 	/**
@@ -4958,6 +4959,9 @@ Kekule.Editor.BasicEraserIaController = Class.create(Kekule.Editor.BaseEditorIaC
 
 	doGetActualRemovedObjs: function(objs)
 	{
+		console.log('@@@ doGetActualRemovedObjs', objs)
+		const actualObjs = objs.filter(x => x.CLASS_NAME !== 'Kekule.Glyph.PathGlyphArcConnectorControlNode');
+		console.log('@@@ doGetActualRemovedObjs (filtered)', actualObjs)
 		return objs;
 	},
 
