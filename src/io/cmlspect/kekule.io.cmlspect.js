@@ -36,7 +36,7 @@ var SPS = Kekule.Spectroscopy.PeakShape;
 var SPM = Kekule.Spectroscopy.PeakMultiplicity
 
 // add additional unit conversion map data
-Kekule.IO.CmlUtils._cmlUnitConvMap.push(['moverz', 'm/z', 'm/z']);
+Kekule.IO.CmlUtils._cmlUnitConvMap.push(['moverz', 'm/z', 'm/z', false]);
 
 /** @private */
 Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME = '__$objRef$__';
