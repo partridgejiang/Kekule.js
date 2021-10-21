@@ -770,10 +770,20 @@ Kekule.IO.ChemDataWriterManager = {
 	{
 		if (!id || !writerClass || !formatId || (DataType.isArrayValue(formatId) && !formatId.length))  // empty format
 			return;
-		if (Kekule.IO.ChemDataWriterManager.getWriterInfoById(id)) // id can not be duplicate
+		var oldItem = Kekule.IO.ChemDataWriterManager.getWriterInfoById(id);
+		if (oldItem) // id can not be duplicate
 		{
-			Kekule.raise(/*Kekule.ErrorMsg.WRITER_ID_ALREADY_EXISTS*/Kekule.$L('ErrorMsg.WRITER_ID_ALREADY_EXISTS'));
-			return null;
+			if (writerClass === oldItem.writerClass)  // same writer class, may want to expand the srcClasses?
+			{
+				Kekule.ArrayUtils.pushUnique(oldItem.srcClasses, srcClasses);
+				Kekule.ArrayUtils.pushUnique(oldItem.formatId, formatId);
+				return oldItem;
+			}
+			else
+				{
+				Kekule.raise(/*Kekule.ErrorMsg.WRITER_ID_ALREADY_EXISTS*/Kekule.$L('ErrorMsg.WRITER_ID_ALREADY_EXISTS'));
+				return null;
+			}
 		}
 		var item = {
 			'id': id,

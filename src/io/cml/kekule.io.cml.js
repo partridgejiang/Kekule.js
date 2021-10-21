@@ -55,53 +55,93 @@ Kekule.IO.CML.LEGAL_CORE_NAMESPACE_URIS = [
  */
 Kekule.IO.CmlUtils = {
 	/** @private */
-	_cmlUnitConvMap: [
-		['second', 's', 'sec'],
-		['hour', 'h', 'hr'],
-		['ohm', '[Omega]', 'Ω'],
-		['molarity', '_i_M__i_', 'mol/L'],
-		['molality', '_i_m__i_', 'mol/kg'],
-		['m.s-1', 'm.s-1', 'm/s'],
-		['m.s-2', 'm.s-2', 'm·s-2'],
-		['rad.s-1', 'rad.s-1', 'rad/s'],
-		['n.s', 'N.s', 'N·s'],
-		['n.m.s', 'N.m.s', 'N·m·s'],
-		['n.m', 'N.m', 'N·m'],
-		['kg.m-3', 'kg.m-3', 'kg·m-3'],
-		['kg-1.m3', 'kg-1.m3', 'kg-1·m3'],
-		['m-3.mol', 'm-3.mol', 'm-3·mol'],
-		['m3.mol-1', 'm3.mol-1', 'm3/mol'],
-		['j.k-1', 'J.K-1', 'J/K'],
-		['j.k-1.mol-1', 'J.K-1.mol-1', 'J·K-1·mol-1'],
-		['j.k-1.kg-1', 'J.K-1.kg-1', 'J·K-1·kg-1'],
-		['j.mol-1', 'J.mol-1', 'J/mol'],
-		['j.kg-1', 'J.kg-1', 'J/kg'],
-		['j.m-3', 'J.m-3', 'J·m-3'],
-		['n.m-1', 'N.m-1 = J.m-2', 'N/m'],
-		['w.m-2', 'W.m-2', 'W·m-2'],
-		['w.m-1.k-1', 'W.m-1.K-1', 'W·m-1·K-1'],
-		['m2.s-1', 'm2.s-1', 'm2/s'],
-		['pa.s', 'Pa.s = N.s.m-2', 'Pa·s'],
-		['c.m-3', 'C.m-3', 'C·m-3'],
-		['a.m-2', 'A.m-2', 'A·m-2'],
-		['s.m-1', 'S.m-1', 'S/m'],
-		['s.m2.mol-1', 'S.m2.mol-1', 'S·m2/mol'],
-		['f.m-1', 'F.m-1', 'F/m'],
-		['h.m-1', 'H.m-1', 'H/m'],
-		['v.m-1', 'V.m-1', 'V/m'],
-		['a.m-1', 'A.m-1', 'A/m'],
-		['cd.m-2', 'cd.m-2', 'cd·m-2'],
-		['c.kg-1', 'C.kg-1', 'C/kg'],
-		['gy.s-1', 'Gy.s-1', 'Gy/s'],
-		['j.m-1', 'J.m-1', 'J/m'],
-		['ang', '[Aring]', 'Å'],
-		['deg', '[deg]', 'deg'],
-		['ang3', 'A3', 'Å3'],
-		['celsius', '[deg]C', '℃'],
-		['kcal.mol-1.ang-1', 'kcal mol-1 ang-1', 'kcal·mol-1·ang-1'],
-		['kj.mol-1', 'kj mol-1', 'kj/mol'],
-		['kcal.ang-1', 'kcal.ang-1', 'kcal/Å'],
-		['kcal.rad-1', 'kcal.rad-1', 'kcal/rad']
+	_cmlUnitConvMap: [  // each item is an array of [cmlUnitCoreName, cmlUnitSymbol, kekuleUnitSymbol, isSiUnit(bool)]
+		['m', 'm', 'm', true],
+		['second', 's', 'sec', true],
+		['hour', 'h', 'hr', true],
+		['kg', 'kg', 'kg', true],
+		['k', 'K', 'K', true],
+		['mol', 'mol', 'mol', true],
+		['candela', 'cd', 'cd', true],
+		['radian', 'rad', 'rad', true],
+		['steradian', 'sr', 'sr', true],
+		['hertz', 'Hz', 'Hz', true],
+		['newton', 'N', 'N', true],
+		['joule', 'J', 'J', true],
+		['watt', 'W', 'W', true],
+		['pascal', 'Pa', 'Pa', true],
+		['coulomb', 'C', 'C', true],
+		['volt', 'V', 'V', true],
+		['ampere', 'A', 'A', true],
+		['ohm', '[Omega]', 'Ω', true],
+		['farad', 'F', 'F', true],
+		['siemens', 'S', 'S', true],
+		['weber', 'Wb', 'Wb', true],
+		['tesla', 'T', 'T', true],
+		['henry', 'H', 'H', true],
+		['becquerel', 'Bq', 'Bq', true],
+		['gray', 'Gy', 'Gy', true],
+		['sievert', 'Sv', 'Sv', true],
+		['katal', 'kat', 'kat', true],
+		['molarity', '_i_M__i_', 'mol/L', true],
+		['molality', '_i_m__i_', 'mol/kg', true],
+		['m2', 'm2', 'm2', true],
+		['m3', 'm3', 'm3', true],
+		['m.s-1', 'm.s-1', 'm/s', true],
+		['m.s-2', 'm.s-2', 'm·s-2', true],
+		['rad.s-1', 'rad.s-1', 'rad/s', true],
+		['n.s', 'N.s', 'N·s', true],
+		['n.m.s', 'N.m.s', 'N·m·s', true],
+		['n.m', 'N.m', 'N·m', true],
+		['m-1', 'm-1', 'm-1', true],
+		['kg.m-3', 'kg.m-3', 'kg·m-3', true],
+		['kg-1.m3', 'kg-1.m3', 'kg-1·m3', true],
+		['m-3.mol', 'm-3.mol', 'm-3·mol', true],
+		['m3.mol-1', 'm3.mol-1', 'm3/mol', true],
+		['j.k-1', 'J.K-1', 'J/K', true],
+		['j.k-1.mol-1', 'J.K-1.mol-1', 'J·K-1·mol-1', true],
+		['j.k-1.kg-1', 'J.K-1.kg-1', 'J·K-1·kg-1', true],
+		['j.mol-1', 'J.mol-1', 'J/mol', true],
+		['j.kg-1', 'J.kg-1', 'J/kg', true],
+		['j.m-3', 'J.m-3', 'J·m-3', true],
+		['n.m-1', 'N.m-1 = J.m-2', 'N/m', true],
+		['w.m-2', 'W.m-2', 'W·m-2', true],
+		['w.m-1.k-1', 'W.m-1.K-1', 'W·m-1·K-1', true],
+		['m2.s-1', 'm2.s-1', 'm2/s', true],
+		['pa.s', 'Pa.s', 'Pa·s', true],
+		['pa.s', 'N.s.m-2', 'Pa·s', true],
+		['c.m-3', 'C.m-3', 'C·m-3', true],
+		['a.m-2', 'A.m-2', 'A·m-2', true],
+		['s.m-1', 'S.m-1', 'S/m', true],
+		['s.m2.mol-1', 'S.m2.mol-1', 'S·m2/mol', true],
+		['f.m-1', 'F.m-1', 'F/m', true],
+		['h.m-1', 'H.m-1', 'H/m', true],
+		['v.m-1', 'V.m-1', 'V/m', true],
+		['a.m-1', 'A.m-1', 'A/m', true],
+		['cd.m-2', 'cd.m-2', 'cd·m-2', true],
+		['c.kg-1', 'C.kg-1', 'C/kg', true],
+		['gy.s-1', 'Gy.s-1', 'Gy/s', true],
+		['j.m-1', 'J.m-1', 'J/m', true],
+		['ang', '[Aring]', 'Å', false],
+		['deg', '[deg]', 'deg', false],
+		['ang3', 'A3', 'Å3', false],
+		['celsius', '[deg]C', '℃', false],
+		['debye', 'D', 'D', false],
+		['electron', 'e', 'e', false],
+		['hartree', 'hart', 'hart', false],
+		['gpa', 'GPa', 'GPa', false],
+		['gpa-1', 'GPa-1', 'GPa-1', false],
+		['atmosphere', 'atm', 'atm', false],
+		['kcal.mol-1.ang-1', 'kcal mol-1 ang-1', 'kcal·mol-1·ang-1', false],
+		['kj.mol-1', 'kj mol-1', 'kj/mol', false],
+		['l', 'L', 'L', false],
+		['ml', 'mL', 'mL', false],
+		['kcal.ang-1', 'kcal.ang-1', 'kcal/Å', false],
+		['kcal.rad-1', 'kcal.rad-1', 'kcal/rad', false],
+		['ph', 'pH', 'pH', false],
+		['centipoise', 'cp', 'cp', false],
+		['km.s-1', 'km/s', 'km/s', false],
+		['arbitrary', 'arb', 'arb', false],
 	],
 	/*
 	 * Convert a JS type name to XSD type name to be used in <scalar>
@@ -263,6 +303,30 @@ Kekule.IO.CmlUtils = {
 			return sunit;
 		else
 			return coreUnit; // if unit not found, returns the core unit string directly
+	},
+	/**
+	 * Convert a Kekule metrics unit symbol to a suitable CML unit.
+	 * @param {String} unitSymbol
+	 * @returns {String}
+	 */
+	metricsUnitSymbolToCmlUnitStr: function(unitSymbol)
+	{
+		var maps = Kekule.IO.CmlUtils._cmlUnitConvMap;
+		var result;
+		for (var i = 0, l = maps.length; i < l; ++i)
+		{
+			var map = maps[i];
+			//if (coreUnitLower === maps[i][0].toLowerCase())
+			if (unitSymbol === map[2])
+			{
+				var prefix = map[3]? 'siUnits:': 'units:';
+				result = prefix + map[0];
+				break;
+			}
+		}
+		if (!result)  // not found in map, just use 'unit:symbol' form
+			result = 'units:' + unitSymbol;
+		return result;
 	},
 	/**
 	 * Turn a CML bond order value to a Kekule one.
@@ -1952,7 +2016,7 @@ Kekule.IO.CmlScalarWriter = Class.create(Kekule.IO.CmlElementWriter,
 		if (obj.getErrorValue())
 			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'errorValue', obj.getErrorValue(), this.getDomHelper());
 		if (obj.getUnit())
-			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'units', obj.getUnit(), this.getDomHelper());
+			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'units', Kekule.IO.CmlUtils.metricsUnitSymbolToCmlUnitStr(obj.getUnit()), this.getDomHelper());
 		if (obj.getTitle())
 			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, 'title', obj.getTitle(), this.getDomHelper());
 		// dataType
