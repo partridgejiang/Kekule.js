@@ -2935,6 +2935,23 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		return hash? Kekule.ObjUtils.getOwnedFieldNames(hash, false): [];
 	},
 	/**
+	 * Returns the spectrum info category names existed in current spectrum.
+	 * @returns {Array}
+	 */
+	getSpectrumInfoCategories: function()
+	{
+		var candicateCategories = ['metaData', 'conditions', 'parameters', 'annotations'];
+		var result = [];
+		for (var i = 0, l = candicateCategories.length; i < l; ++i)
+		{
+			var c = candicateCategories[i];
+			var keys = this._getAllKeysOfInfoBasedHashProp(c);
+			if (keys && keys.length)
+				result.push(c);
+		}
+		return result;
+	},
+	/**
 	 * Returns value of spectrum meta/condition/parameter/annotation.
 	 * @param {String} key
 	 * @param {Array} candicateCategories
