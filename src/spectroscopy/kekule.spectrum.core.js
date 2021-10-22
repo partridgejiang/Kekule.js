@@ -2569,7 +2569,9 @@ Kekule.Spectroscopy.PeakMultiplicity = {
 	QUARTET: 4,
 	QUINTET: 5,
 	SEXTUPLET: 6,
-	MULTIPLET: 255,
+	DOUBLE_DOUBLET: 22,
+	TRIPLE_DOUBLET: 32,
+	MULTIPLET: 255
 };
 
 /**
