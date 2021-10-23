@@ -24,14 +24,22 @@
  * @object
  */
 Kekule.globalOptions.add('IO.cml', {
+	// options for reader
 	enableExtractSampleInsideSpectrum: true,  // if true, when reading molecule out from the child <sample> element of <spectrum>, a parent element will be created to hold both molecule and spectrum
-	autoHideSampleInsideSpectrum: true  // if true, the sample molecule inside <spectrum> will be hidden from displaying
+	autoHideSampleInsideSpectrum: true,  // if true, the sample molecule inside <spectrum> will be hidden from displaying
+	// options for writer
+	autoInsertHiddenRefMoleculeToSample: true,  // if true, a hidden referred molecule will be automatically insert to the <sample> child element of <spectrum>
+	spectrumDataValueOutputDigitCountAfterDecimalPoint: 8,
 });
 
 var AU = Kekule.ArrayUtils;
 var OU = Kekule.ObjUtils;
 var DU = Kekule.DomUtils;
 
+var CmlUtils = Kekule.IO.CmlUtils;
+var CmlDomUtils = Kekule.IO.CmlDomUtils;
+
+var ST = Kekule.Spectroscopy.SpectrumType;
 var SPS = Kekule.Spectroscopy.PeakShape;
 var SPM = Kekule.Spectroscopy.PeakMultiplicity
 
@@ -48,6 +56,17 @@ Kekule.IO.CML.SPECTRUM_DATA_OBJREF_FLAG_FIELDNAME = '__$hasObjRef$__'
  */
 Kekule.IO.CmlSpectUtils = {
 	/** @private */
+	_spectrumTypeMap: [
+		['NMR', ST.NMR],
+		['infrared', ST.IR],
+		['ir', ST.IR],
+		['massSpectrum', ST.MS],
+		['mass', ST.MS],
+		['UV/VIS', ST.UV_VIS],
+		['uv', ST.UV_VIS],
+		['vis', ST.UV_VIS]
+	],
+	/** @private */
 	_peakShapeMap: [
 		['sharp', SPS.SHARP],
 		['broad', SPS.BROAD]
@@ -60,10 +79,16 @@ Kekule.IO.CmlSpectUtils = {
 		['quartet', SPM.QUARTET],
 		['quintet', SPM.QUINTET],
 		['sextuplet', SPM.SEXTUPLET],
-		['multiplet', SPM.MULTIPLET]
+		['multiplet', SPM.MULTIPLET],
+		['s', SPM.SINGLET],
+		['d', SPM.DOUBLET],
+		['dd', SPM.DOUBLE_DOUBLET],
+		['ddd', SPM.TRIPLE_DOUBLET],
+		['t', SPM.TRIPLET],
+		['m', SPM.MULTIPLET]
 	],
 	/** @private */
-	_spectrumParamterKeyMap: [
+	_spectrumInfoKeyMap: [
 		['cml:field', 'observeFrequency'],  //???
 		['jcamp:NMR_OBSERVEFREQUENCY', 'observeFrequency'],
 		['jcamp:NMR_OBSERVENUCLEUS', 'nucleus'],
@@ -77,22 +102,13 @@ Kekule.IO.CmlSpectUtils = {
 	 */
 	cmlSpectrumTypeToKekule: function(cmlSpectrumType)
 	{
-		var ST = Kekule.Spectroscopy.SpectrumType;
-		var valueTypeMap = [
-			['nmr', ST.NMR],
-			//['ir', ST.IR],
-			['infrared', ST.IR],
-			['ir', ST.IR],
-			['mass', ST.MS],
-			['uv', ST.UV_VIS],
-			['vis', ST.UV_VIS]
-		];
+		var valueTypeMap = Kekule.IO.CmlSpectUtils._spectrumTypeMap;
 		var sType = ST.GENERAL;  // default
 		var tValue = cmlSpectrumType.toLowerCase();
 		for (var i = 0, l = valueTypeMap.length; i < l; ++i)
 		{
 			var item = valueTypeMap[i];
-			if (tValue.indexOf(item[0]) >= 0)
+			if (tValue.indexOf(item[0].toLowerCase()) >= 0)
 			{
 				sType = item[1];
 				break;
@@ -101,19 +117,54 @@ Kekule.IO.CmlSpectUtils = {
 		return sType;
 	},
 	/**
+	 * Get the corresponding CML type value from {@link Kekule.Spectroscopy.SpectrumType}.
+	 * @param {String} kekuleSpectrumType
+	 * @returns {String}
+	 */
+	kekuleSpectrumTypeToCml: function(kekuleSpectrumType)
+	{
+		var result = null;
+		var valueTypeMap = Kekule.IO.CmlSpectUtils._spectrumTypeMap;
+		for (var i = 0, l = valueTypeMap.length; i < l; ++i) {
+			var item = valueTypeMap[i];
+			if (kekuleSpectrumType === item[1])
+			{
+				result = item[0];
+				break;
+			}
+		}
+		return result;
+
+	},
+	/**
 	 * Returns a key name for Kekule spectrum corresponding to the CML parameter key.
 	 * @param {String} cmlKey
 	 * @returns {String}
 	 */
 	cmlSpectrumInfoDataKeyToKekule: function(cmlKey)
 	{
-		var map = CmlSpectUtils._spectrumParamterKeyMap;
+		var map = CmlSpectUtils._spectrumInfoKeyMap;
 		for (var i = 0, l = map.length; i < l; ++i)
 		{
 			if (cmlKey === map[i][0])
 				return map[i][1];
 		}
-		return cmlKey;
+		return Kekule.IO.CmlUtils.cmlNsTokenToKekule(cmlKey);  // default
+	},
+	/**
+	 * Returns a key name for Kekule spectrum corresponding to the CML parameter key.
+	 * @param {String} cmlKey
+	 * @returns {String}
+	 */
+	kekuleSpectrumInfoDataKeyToCml: function(kekuleKey)
+	{
+		var map = CmlSpectUtils._spectrumInfoKeyMap;
+		for (var i = 0, l = map.length; i < l; ++i)
+		{
+			if (kekuleKey === map[i][1])
+				return map[i][0];
+		}
+		return Kekule.IO.CmlUtils.kekuleNsTokenToCml(kekuleKey);  // default
 	},
 	/**
 	 * Convert a CML peak shape string to value of {@link Kekule.Spectroscopy.PeakShape}.
@@ -132,6 +183,21 @@ Kekule.IO.CmlSpectUtils = {
 		return cmlPeakShape;
 	},
 	/**
+	 * Convert a Kekule peak shape string to CML value.
+	 * @param {String} kPeakShape
+	 * @returns {String}
+	 */
+	kekulePeakShapeToCml: function(kPeakShape)
+	{
+		var map = CmlSpectUtils._peakShapeMap;
+		for (var i = 0, l = map.length; i < l; ++i)
+		{
+			if (kPeakShape === map[i][1])
+				return map[i][0];
+		}
+		return kPeakShape;
+	},
+	/**
 	 * Convert a CML peak multiplicity string to value of {@link Kekule.Spectroscopy.PeakMultiplicity}.
 	 * @param {String} cmlMultiplicity
 	 * @returns {Variant}
@@ -146,6 +212,35 @@ Kekule.IO.CmlSpectUtils = {
 				return map[i][1];
 		}
 		return cmlMultiplicity;
+	},
+	/**
+	 * Convert a Kekule peak multiplicity const int or description string value to CML.
+	 * @param {Variant} cmlMultiplicity
+	 * @returns {String}
+	 */
+	kekulePeakMultiplicityToCml: function(kMultiplicity)
+	{
+		var map = CmlSpectUtils._peakMultiplicityMap;
+		for (var i = 0, l = map.length; i < l; ++i)
+		{
+			if (kMultiplicity === map[i][1])
+				return map[i][0];
+		}
+		return kMultiplicity;
+	},
+
+	/**
+	 * Output a float to CML string.
+	 * @param {Number} value
+	 * @param {Int} maxDigitCount
+	 * @returns {string}
+	 */
+	floatToCmlString: function(value, maxDigitCount)
+	{
+		if (maxDigitCount)
+			return Kekule.NumUtils.toDecimals(value, maxDigitCount);
+		else
+			return value.toString();
 	},
 
 	/**
@@ -183,6 +278,58 @@ Kekule.IO.CmlSampleReader = Class.create(Kekule.IO.CmlBaseListReader,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.CmlSampleReader'
+});
+
+/**
+ * Base writer to write spectrum data section object to CML.
+ * @class
+ * @augments Kekule.IO.CmlSpectrumDataSectionBaseWriter
+ */
+Kekule.IO.CmlSpectrumDataSectionBaseWriter = Class.create(Kekule.IO.CmlElementWriter,
+/** @lends Kekule.IO.CmlSpectrumDataSectionBaseWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlSpectrumDataWriter',
+	/** @private */
+	getSpectrumDataSectionVarInfos: function(targetDataSection)
+	{
+		var result = {
+			'dependent': {},
+			'independent': {}
+		};
+		// get the independant and denpendant vars
+		var varInfos = targetDataSection.getActualLocalVarInfos();
+		var varUnitSymbols = {};
+		var varSymbols = {};
+		for (var i = 0, l = varInfos.length; i < l; ++i)
+		{
+			var varDef = targetDataSection.getLocalVarDef(i);
+			var currKey;
+			if (varDef.getDependency() === Kekule.VarDependency.DEPENDENT)
+				currKey = 'dependent';
+			else
+				currKey = 'independent';
+
+			var currInfoItem = result[currKey];
+			currInfoItem.symbol = varDef.getSymbol();
+			currInfoItem.unitSymbol = varDef.getUnit();
+
+			var continuosRange = targetDataSection.getContinuousVarRange(i);
+			if (continuosRange)
+			{
+				currInfoItem.range = {
+					'fromValue': continuosRange.fromValue,
+					'toValue': continuosRange.toValue,
+					'count': targetDataSection.getDataCount()
+				}
+			}
+
+			if (result.dependent.symbol && result.independent.symbol)
+				break;
+		}
+		result.varCount = (!result.dependent.symbol? 0: 1) + (!result.independent.symbol? 0: 1);
+		return result;
+	}
 });
 
 /**
@@ -272,14 +419,15 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 			if (d instanceof Kekule.Spectroscopy.SpectrumPeakDetails)
 			{
 				var owner = d.getOwner();
-				if (owner && owner.getObjById)
+				//if (owner && owner.getObjById)
 				{
 					var ids = d.getInfoValue(Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME);
 					var objs = [];
 					for (var j = 0, k = ids.length; j < k; ++j)
 					{
 						var id = ids[j];
-						var obj = owner.getObjById(id);
+						var obj = this.getLoadedObjById(id) || (owner && owner.getObjById && owner.getObjById(id));
+
 						if (obj)
 							objs.push(obj);
 					}
@@ -472,6 +620,93 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 		return result.length? result: null;
 	}
 });
+
+/**
+ * Writer to write a <peaklist> element inside <spectrum>.
+ * @class
+ * @augments Kekule.IO.CmlSpectrumDataSectionBaseWriter
+ */
+Kekule.IO.CmlSpectrumPeakListWriter = Class.create(Kekule.IO.CmlSpectrumDataSectionBaseWriter,
+/** @lends Kekule.IO.CmlSpectrumPeakListWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlSpectrumPeakListWriter',
+	/** @ignore */
+	doCreateElem: function(obj, parentElem)
+	{
+		return this.createChildElem('peakList', parentElem);
+	},
+	/** @ignore */
+	doWriteObject: function(obj, targetElem, options)
+	{
+		return this.writePeaks(obj, targetElem, options);
+	},
+	/** @private */
+	writePeaks: function(dataSection, targetElem, options)
+	{
+		var dataVarInfo = this.getSpectrumDataSectionVarInfos(dataSection);
+		if (dataVarInfo.varCount < 2)  // less than two vars, illegal
+		{
+			// TODO: error message here?
+		}
+		else  // output data peaks
+		{
+			var peakWriter = this.getChildPeakWriter();
+			if (peakWriter)
+			{
+				var indepSymbol = dataVarInfo.independent.symbol;
+				var indepUnit = dataVarInfo.independent.unitSymbol;
+				var depSymbol = dataVarInfo.dependent.symbol;
+				var depUnit = dataVarInfo.dependent.unitSymbol;
+
+				var self = this;
+				dataSection.forEach(function (value, index) {
+					// form a peak hash and use it to write to CML
+					var peakObj = {
+						xValue: value[indepSymbol],
+						xUnits: indepUnit,
+						yValue: value[depSymbol],
+						yUnits: depUnit
+					};
+					var extra = dataSection.getExtraInfoOf(value);
+					var extraHash;
+					if (extra instanceof Kekule.Spectroscopy.SpectrumPeakDetails)
+						extraHash = self._peakDetailsToHash(extra);
+					else if (DataType.isObjectValue(extra))
+						extraHash = extra;
+					if (extraHash)
+						peakObj = Object.extend(peakObj, extraHash);
+					peakWriter.writeObject(peakObj, targetElem, options);
+				});
+			}
+		}
+	},
+	/** @private */
+	getChildPeakWriter: function()
+	{
+		var result = new Kekule.IO.CmlSpectrumPeakWriter();
+		if (result)
+		{
+			this.copySettingsToChildHandler(result);
+			this._appendChildHandler(result);
+		}
+		return result;
+	},
+	/** @private */
+	_peakDetailsToHash: function(peakDetails)
+	{
+		var result = {
+			'shape': peakDetails.getShape(),
+			'multiplicity': peakDetails.getMultiplicity(),
+			'assignments': peakDetails.getAssignments()
+		};
+		var subStructure = peakDetails.getInfoValue('structure');
+		if (subStructure)
+			result.structure = subStructure;
+		return result;
+	}
+});
+
 /**
  * Reader to read a <peak> element inside <spectrum>.
  * @class
@@ -551,6 +786,107 @@ Kekule.IO.CmlSpectrumPeakReader = Class.create(Kekule.IO.CmlElementReader,
 });
 
 /**
+ * Writer to write a <peak> element inside <spectrum>.
+ * @class
+ * @augments Kekule.IO.CmlElementWriter
+ */
+Kekule.IO.CmlSpectrumPeakWriter = Class.create(Kekule.IO.CmlElementWriter,
+/** @lends Kekule.IO.CmlSpectrumPeakWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlSpectrumPeakWriter',
+	/** @ignore */
+	doCreateElem: function(obj, parentElem)
+	{
+		return this.createChildElem('peak', parentElem);
+	},
+	/** @ignore */
+	doWriteObject: function(obj, targetElem, options)
+	{
+		this.writePeakAttribs(obj, targetElem, options);
+	},
+	/** @private */
+	writePeakAttribs: function(peakObj, targetElem, options)
+	{
+		var domHelper = this.getDomHelper();
+		var cmlHash= this._peakHashToCmlHash(peakObj);
+		var keys = Kekule.ObjUtils.getOwnedFieldNames(cmlHash);
+		for (var i = 0, l = keys.length; i < l; ++i)
+		{
+			var key = keys[i];
+			var value = cmlHash[key];
+			if (key.toLowerCase() === 'structure' && DataType.isObjectValue(value))  // sub structure
+				this.writePeakSubStructure(value, targetElem, options);
+			else
+				CmlDomUtils.setCmlElemAttribute(targetElem, key, value, domHelper);
+		}
+	},
+	/** @private */
+	getChildPeakStructureWriter: function()
+	{
+		var result = new Kekule.IO.CmlSpectrumPeakStructureWriter();
+		if (result)
+		{
+			this.copySettingsToChildHandler(result);
+			this._appendChildHandler(result);
+		}
+		return result;
+	},
+	/** @private */
+	writePeakSubStructure: function(subStructure, peakElem, options)
+	{
+		var writer = this.getChildPeakStructureWriter();
+		if (writer)
+			writer.writeObj(subStructure, peakElem, options);
+	},
+	/** @private */
+	_peakHashToCmlHash: function(peakHash)
+	{
+		var result = {};
+		var basicFields = ['xValue', 'yValue'];
+		for (var i = 0, l = basicFields.length; i < l; ++i)
+		{
+			var key = basicFields[i];
+			var value = peakHash[key];
+			if (Kekule.ObjUtils.notUnset(value))
+			{
+				result[key] = value;
+			}
+		}
+		if (peakHash.xUnits)
+			result.xUnits = CmlUtils.metricsUnitSymbolToCmlUnitStr(peakHash.xUnits);
+		if (peakHash.yUnits)
+			result.yUnits = CmlUtils.metricsUnitSymbolToCmlUnitStr(peakHash.yUnits);
+		if (peakHash.shape)
+			result.peakShape = CmlSpectUtils.kekulePeakShapeToCml(peakHash.shape);
+		if (peakHash.multiplicity)
+			result.peakMultiplicity = CmlSpectUtils.kekulePeakMultiplicityToCml(peakHash.multiplicity);
+		if (peakHash.assignments && peakHash.assignments.length)
+		{
+			var atomIds = [], bondIds = [];
+			for (var i = 0, l = peakHash.assignments.length; i < l; ++i)
+			{
+				var obj = peakHash.assignments[i];
+				var currIds = (obj instanceof Kekule.AbstractAtom)? atomIds:
+					(obj instanceof Kekule.ChemStructureConnector)? bondIds:
+						null;
+				if (currIds)
+				{
+					var id = (obj.getId && obj.getId()) || this.autoIdentifyForObj(obj);
+					if (id)
+						currIds.push(id);
+				}
+			}
+			if (atomIds.length)
+				result.atomRefs = atomIds.join(' ');
+			if (bondIds.length)
+				result.bondRefs = bondIds.join(' ');
+		}
+		return result;
+	}
+});
+
+/**
  * Reader to read a <peakStructure> element inside <spectrum>.
  * @class
  * @augments Kekule.IO.CmlElementReader
@@ -571,6 +907,9 @@ Kekule.IO.CmlSpectrumPeakStructureReader = Class.create(Kekule.IO.CmlElementRead
 			var key = attribKeys[i];
 			var keyLower = key.toLowerCase();
 			var value = attribs[key];
+			// TODO: currently do not handle object ref in sub structures
+			if (Kekule.IO.CML.ATOMS_REF_ATTRIBS.indexOf(key) >= 0 || Kekule.IO.CML.BONDS_REF_ATTRIBS.indexOf(key) >= 0)
+				continue;
 			if (keyLower === 'units')
 			{
 				result.unit = Kekule.IO.CmlUtils.cmlUnitStrToMetricsUnitSymbol(value) || Kekule.IO.CmlUtils.getCmlNsValueLocalPart(value);
@@ -580,6 +919,38 @@ Kekule.IO.CmlSpectrumPeakStructureReader = Class.create(Kekule.IO.CmlElementRead
 		}
 		return result;
 	}
+});
+
+/**
+ * Writer to write a <peakStructure> element inside <spectrum>.
+ * @class
+ * @augments Kekule.IO.CmlElementWriter
+ */
+Kekule.IO.CmlSpectrumPeakStructureWriter = Class.create(Kekule.IO.CmlElementWriter,
+/** @lends Kekule.IO.CmlSpectrumPeakStructureWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlSpectrumPeakStructureWriter',
+	/** @ignore */
+	doCreateElem: function(obj, parentElem)
+	{
+		return this.createChildElem('peakStructure', parentElem);
+	},
+	/** @ignore */
+	doWriteObject: function(obj, targetElem, options)
+	{
+		var domHelper = this.getDomHelper();
+		var keys = Kekule.ObjUtils.getOwnedFieldNames(obj);
+		for (var i = 0, l = keys.length; i < l; ++i)
+		{
+			var key = keys[i];
+			var value = obj[key];
+			if (key === 'unit')
+				value = CmlUtils.metricsUnitSymbolToCmlUnitStr(value);
+			CmlDomUtils.setCmlElemAttribute(targetElem, key, value, domHelper);
+		}
+		return targetElem;
+	},
 });
 
 /**
@@ -889,6 +1260,89 @@ Kekule.IO.CmlSpectrumDataReader = Class.create(Kekule.IO.CmlElementReader,
 });
 
 /**
+ * Writer to write a <spectrumData> element inside <spectrum>.
+ * @class
+ * @augments Kekule.IO.CmlSpectrumDataSectionBaseWriter
+ */
+Kekule.IO.CmlSpectrumDataWriter = Class.create(Kekule.IO.CmlSpectrumDataSectionBaseWriter,
+/** @lends Kekule.IO.CmlSpectrumDataWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlSpectrumDataWriter',
+	/** @ignore */
+	doCreateElem: function(obj, parentElem)
+	{
+		return this.createChildElem('spectrumData', parentElem);
+	},
+	/** @ignore */
+	doWriteObject: function(obj, targetElem, options)
+	{
+		return this.writeSpectrumData(obj, targetElem, options);
+	},
+	/** @private */
+	writeSpectrumData: function(spectrumDataSection, targetElem, options)
+	{
+		//var varInfos = spectrumDataSection.getActualLocalVarInfos();
+		var dataVarInfo = this.getSpectrumDataSectionVarInfos(spectrumDataSection);
+		if (dataVarInfo.varCount < 2)  // less than two vars, illegal
+		{
+			// TODO: error message here?
+		}
+		else  // output data axis
+		{
+			var keys = ['independent', 'dependent'];
+			var arrays = [];
+			for (var i = 0, l = keys.length; i < l; ++i)
+			{
+				var key = keys[i];
+				var arrayObj = {
+					'_tagName': (key === 'independent')? 'xaxis': 'yaxis',
+					'varSymbol': dataVarInfo[key].symbol,
+					'unit': dataVarInfo[key].unitSymbol,
+					'dataType': DataType.FLOAT,
+					'size': DataType.count || spectrumDataSection.getDataCount()
+				};
+				var range = dataVarInfo[key].range;
+				if (range)
+				{
+					arrayObj.start = range.fromValue;
+					arrayObj.end = range.toValue;
+					arrayObj.isContinuous = true;
+				}
+				else
+					arrayObj.values = [];
+				arrays.push(arrayObj);
+			}
+
+			// collect array values
+			var decimalCount = (options && options.spectrumDataValueOutputDigitCountAfterDecimalPoint) || 0;
+			spectrumDataSection.forEach(function(value, index){
+				for (var i = 0, l = arrays.length; i < l; ++i)
+				{
+					if (!arrays[i].isContinuous)  // bypass continuous range vars
+					{
+						var symbol = arrays[i].varSymbol;
+						// TODO: here we simple convert the unavailable value (NaN or undefined) to 0, is it safe?
+						arrays[i].values.push(CmlSpectUtils.floatToCmlString(value[symbol] || 0, decimalCount));
+					}
+				}
+			});
+			// write values to element
+			var arrayWriter = this.doGetChildObjectWriter(DataType.ARRAY, spectrumDataSection, this);
+			if (arrayWriter)
+			{
+				for (var i = 0, l = arrays.length; i < l; ++i)
+				{
+					var arrayObj = arrays[i];
+					var axisElem = this.createChildElem(arrayObj._tagName, targetElem);
+					arrayWriter.writeObject(arrayObj, axisElem, options);
+				}
+			}
+		}
+	}
+});
+
+/**
  * Reader to read a spectrum in CML <spectrum> tag.
  * @class
  * @augments Kekule.IO.CmlElementReader
@@ -959,7 +1413,7 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 		{
 			var spec = spectrums[i];
 			var owner = spec.getOwner();
-			if (owner && owner.getObjById)
+			//if (owner && owner.getObjById)
 			{
 				var ids = spec[Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME] || [];
 				var objs = [];
@@ -968,7 +1422,8 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 					var id = ids[j].trim();
 					if (id)
 					{
-						var obj = owner.getObjById(id);
+						//var obj = owner.getObjById(id);
+						var obj = this.getLoadedObjById(id) || (owner && owner.getObjById && owner.getObjById(id));
 						if (obj)
 							objs.push(obj);
 					}
@@ -1035,7 +1490,8 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 			switch (key)
 			{
 				case 'id':
-					spectrum.setId(value);
+					//spectrum.setId(value);
+					this.setObjId(spectrum, value);
 					break;
 				case 'title':
 					spectrum.setTitle(value);
@@ -1167,10 +1623,12 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 	_convertCmlSpectrumInfoKey: function(cmlKey)
 	{
 		var result = CmlSpectUtils.cmlSpectrumInfoDataKeyToKekule(cmlKey);
+		/*
 		var index = result.indexOf(':');
 		if (index >= 0)
 			result = result.substring(0, index) + '.' + result.substring(index + 1);
-
+		result = Kekule.IO.CmlUtils.cmlNsTokenToKekule(result);
+		*/
 		return result;
 	},
 	/** @private */
@@ -1204,6 +1662,208 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 	}
 });
 
+/**
+ * Writer to write a spectrum to CML <spectrum> tag.
+ * @class
+ * @augments Kekule.IO.CmlElementReader
+ */
+Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
+/** @lends Kekule.IO.CmlSpectrumWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.CmlSpectrumWriter',
+	/** @private */
+	initProperties: function()
+	{
+		// a private property, convention of this CMLSpect file, not used currently
+		this.defineProp('convention', {'dataType': DataType.STRING,	'serializable': false});
+	},
+	/** @ignore */
+	doCreateElem: function(obj, parentElem)
+	{
+		return this.createChildElem('spectrum', parentElem);
+	},
+	/** @ignore */
+	doWriteObject: function(obj, targetElem, options)
+	{
+		return this.writeSpectrum(obj, targetElem, options);
+	},
+	/** @ignore */
+	getObjInfoKeysNeedToSaveToMetaList: function(obj)
+	{
+		var result = this.tryApplySuper('getObjInfoKeysNeedToSaveToMetaList', [obj]);
+		if (result)  // the metaData/parameters/conditions/annotations should be handled customly
+		{
+			result = AU.exclude(result, ['metaData', 'parameters', 'conditions', 'annotations']);
+		}
+		return result;
+	},
+	/** @private */
+	writeSpectrum: function(spectrum, targetElem, options)
+	{
+		var result;
+		this.writeSpectrumAttribs(spectrum, targetElem, options);
+		this.writeSpectrumInfoLists(spectrum, targetElem, options);
+		this.writeSpectrumDataSections(spectrum, targetElem, options);
+		return result;
+	},
+	/** @private */
+	writeSpectrumAttribs: function(spectrum, targetElem)
+	{
+		var attribs = [];
+		var title = spectrum.getTitle();
+		if (title)
+			attribs.push({'key': 'title', 'value': title});
+		var sType = Kekule.IO.CmlSpectUtils.kekuleSpectrumTypeToCml(spectrum.getSpectrumType() || '');
+		if (sType)
+			attribs.push({'key': 'type', 'value': sType});
+		// write to CML element
+		for (var i = 0, l = attribs.length; i < l; ++i)
+		{
+			Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, attribs[i].key, attribs[i].value, this.getDomHelper());
+		}
+		// write molecule ref
+		var refMols = spectrum.getRefMolecules();
+		if (refMols && refMols.length)
+		{
+			var refIds = [];
+			for (var i = 0, l = refMols.length; i < l; ++i)
+			{
+				var mol = refMols[i];
+				var id = mol && mol.getId && mol.getId();
+				if (!id)
+					id = this.autoIdentifyForObj(mol);
+				if (id)
+					refIds.push(id);
+			}
+			if (refIds.length)
+			{
+				var attribName = (refIds.length > 1) ? Kekule.IO.CML.MOL_REF_ATTRIBS[1] : Kekule.IO.CML.MOL_REF_ATTRIBS[0];
+				Kekule.IO.CmlDomUtils.setCmlElemAttribute(targetElem, attribName, refIds.join(' '), this.getDomHelper());
+			}
+		}
+	},
+	/** @private */
+	writeSpectrumInfoLists: function(spectrum, targetElem, options)
+	{
+		var domHelper = this.getDomHelper();
+		var infoCategories = spectrum.getSpectrumInfoCategories();
+		var processors = this._getSpectrumInfoProcessors();
+		for (var i = 0, l = infoCategories.length; i < l; ++i)
+		{
+			var category = infoCategories[i];
+			var processor = processors[category];
+			var listElem;
+			if (processor && processor.listElemGetter && processor.infoWriter)
+			{
+				listElem = processor.listElemGetter.apply(this, [targetElem, domHelper]);
+				if (listElem)
+				{
+					var keys = spectrum._getAllKeysOfInfoBasedHashProp(category);
+					for (var j = 0, jj = keys.length; j < jj; ++j)
+					{
+						var key = keys[j];
+						var value = spectrum._getInfoBasedHashPropValue(category, key);
+						if (Kekule.ObjUtils.notUnset(value))
+						{
+							processor.infoWriter.apply(this, [spectrum, Kekule.IO.CmlSpectUtils.kekuleSpectrumInfoDataKeyToCml(key), value, listElem, options]);
+						}
+					}
+				}
+			}
+		}
+	},
+	/** @private */
+	_getSpectrumInfoProcessors: function()
+	{
+		return {
+			'metaData': {'listElemGetter': this._spectrumInfoListElemGetter.bind(this, 'metaDataList'), 'infoWriter': this._writeSpectrumMeta},
+			'annotations': {'listElemGetter': this._spectrumInfoListElemGetter.bind(this, 'metaDataList'), 'infoWriter': this._writeSpectrumAnnotation},
+			'conditions': {'listElemGetter': this._spectrumInfoListElemGetter.bind(this, 'conditionList'), 'infoWriter': this._writeSpectrumCondition},
+			'parameters': {'listElemGetter': this._spectrumInfoListElemGetter.bind(this, 'parameterList'), 'infoWriter': this._writeSpectrumParameter}
+		};
+	},
+	/** @private */
+	_spectrumInfoListElemGetter: function(tagName, parentElem, domHelper)
+	{
+		var result = domHelper.getElementsByTagNameNS(this.getCoreNamespaceURI(), tagName, parentElem)[0];
+		if (!result)
+		{
+			result = this.createChildElem(tagName, parentElem);
+		}
+		return result;
+	},
+	/** @private */
+	_writeSpectrumMeta: function(spectrum, key, value, listElem, options)
+	{
+		this.writeObjMetaValueToListElem(spectrum, key, value, listElem, null, options);
+	},
+	/** @private */
+	_writeSpectrumAnnotation: function(spectrum, key, value, listElem, options)
+	{
+		this.writeObjMetaValueToListElem(spectrum, key, value, listElem, null, options);
+	},
+	/** @private */
+	_writeSpectrumCondition: function(spectrum, key, value, listElem, options)
+	{
+		if (value instanceof ObjectEx)  // write <scalar> or other complex element
+		{
+			var writer = this.doGetChildObjectWriter(value, spectrum, this);
+			if (writer)
+				writer.writeObject(value, listElem, options);
+		}
+		else
+		{
+			this.writeObjMetaValueToListElem(spectrum, key, value, listElem, null, options);
+		}
+	},
+	/** @private */
+	_writeSpectrumParameter: function(spectrum, key, value, listElem, options)
+	{
+		var elem = this.createChildElem('parameter', listElem);
+		elem.setAttribute('dictRef', key);
+		if (DataType.isSimpleValue(value))
+		{
+			elem.setAttribute('value', DataType.StringUtils.serializeValue(value));
+		}
+		else if (DataType.isObjectExValue(value))  // complex value
+		{
+			var writer = this.doGetChildObjectWriter(value, spectrum, this);
+			if (writer)
+				writer.writeObject(value, elem, options);
+		}
+	},
+	/** @private */
+	writeSpectrumDataSections: function(spectrum, parentElem, options)
+	{
+		for (var i = 0, l = spectrum.getDataSectionCount(); i < l; ++i)
+		{
+			var section = spectrum.getDataSectionAt(i);
+			var writer = this.createDataSectionWriter(section);
+			if (writer)
+				writer.writeObject(section, parentElem, options);
+		}
+	},
+	/**
+	 * Create a suitable writer for dataSection.
+	 * Descendants may override this method.
+	 * @param {Kekule.Spectroscopy.SpectrumDataSection} dataSection
+	 * @returns {Kekule.IO.CmlElementWriter}
+	 */
+	createDataSectionWriter: function(dataSection)
+	{
+		var mode = dataSection.getMode();
+		var writerClass = (mode === Kekule.Spectroscopy.DataMode.PEAK)? Kekule.IO.CmlSpectrumPeakListWriter: Kekule.IO.CmlSpectrumDataWriter;
+		var result = writerClass && (new writerClass());
+		if (result)
+		{
+			this.copySettingsToChildHandler(result);
+			this._appendChildHandler(result);
+		}
+		return result;
+	},
+});
+
 // register reader classes
 var RF = Kekule.IO.CmlElementReaderFactory;
 RF.register('spectrum', Kekule.IO.CmlSpectrumReader);
@@ -1214,5 +1874,13 @@ RF.register('spectrumData', Kekule.IO.CmlSpectrumDataReader);
 RF.register(['parameterList', 'substanceList'], Kekule.IO.CmlBaseListReader);
 RF.register('sample', Kekule.IO.CmlSampleReader);
 RF.register(['xaxis', 'yaxis'], Kekule.IO.CmlSpectrumDataAxisReader);
+
+var WF = Kekule.IO.CmlElementWriterFactory;
+WF.register('Kekule.Spectroscopy.Spectrum', Kekule.IO.CmlSpectrumWriter);
+
+var cmlFmtId = Kekule.IO.DataFormatsManager.findFormatId(Kekule.IO.MimeType.CML);
+Kekule.IO.ChemDataWriterManager.register('cml', Kekule.IO.CmlWriter,
+	[Kekule.Spectroscopy.Spectrum],
+	[cmlFmtId]);
 
 })();
