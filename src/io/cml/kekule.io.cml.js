@@ -2122,7 +2122,10 @@ Kekule.IO.CmlScalarReader = Class.create(Kekule.IO.CmlElementReader,
 					case 'errorValue': result.setErrorValue(value); break;
 					case 'units': result.setUnit(Kekule.IO.CmlUtils.cmlUnitStrToMetricsUnitSymbol(value)); break;
 					case 'title': result.setTitle(value); break;
-					case 'dictRef': result.setName(Kekule.IO.CmlUtils.cmlNsTokenToKekule(value)); break;
+					case 'dictRef':
+						result.setName(Kekule.IO.CmlUtils.cmlNsTokenToKekule(value));
+						result.setInfoValue('dictRef', value);
+						break;
 					default: result.setInfoValue(key, value);
 				}
 			}
