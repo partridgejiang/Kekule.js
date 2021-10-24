@@ -168,7 +168,7 @@ Kekule.IO.CmlSpectUtils = {
 	 * @param {String} cmlKey
 	 * @returns {String}
 	 */
-	kekuleSpectrumInfoDataKeyToCml: function(kekuleKey)
+	kekuleSpectrumInfoDataKeyToCml: function(kekuleKey, spectrumType)
 	{
 		var map = CmlSpectUtils._spectrumInfoKeyMap;
 		for (var i = 0, l = map.length; i < l; ++i)
@@ -176,7 +176,35 @@ Kekule.IO.CmlSpectUtils = {
 			if (kekuleKey === map[i][1])
 				return map[i][0];
 		}
-		return Kekule.IO.CmlUtils.kekuleNsTokenToCml(kekuleKey);  // default
+		// not found in map, check if kekuleKey is based on JCAMP? if so, add the corresponding JCAMP namespace
+		var nameDetails = Kekule.Spectroscopy.MetaPropNamespace.getPropertyNameDetail(kekuleKey);
+		if (nameDetails.namespace === CmlSpectUtils.NAMESPACE_JCAMP)  // explicit jcamp label name
+			return nameDetails.namespace + ':' + nameDetails.coreName;
+		else
+		{
+			var jcampLabelName = Kekule.IO.Jcamp.Utils.kekuleLabelNameToJcamp(kekuleKey, spectrumType, true);
+			if (jcampLabelName)
+				return CmlSpectUtils._convPossibleJcampLabelNameToCml(jcampLabelName, spectrumType);
+			else  // not found in JCAMP label name map, custom name?
+				return nameDetails.namespace + ':' + nameDetails.coreName;
+		}
+		/*
+		else if (nameDetails.namespace === spectrumType && spectrumType)  // with a spectrum prefix, check in JCAMP map
+		{
+
+		}
+		*/
+		//return Kekule.IO.CmlUtils.kekuleNsTokenToCml(kekuleKey);  // default
+	},
+	/** @private */
+	_convPossibleJcampLabelNameToCml: function(jcampLabelName, spectrumType)
+	{
+		var nameDetails = Kekule.IO.Jcamp.Utils.analysisLdrLabelName(jcampLabelName, false);
+		var isSpecific = nameDetails.labelType === Kekule.IO.Jcamp.LabelType.SPECIFIC;
+		var isPrivate = nameDetails.labelType === Kekule.IO.Jcamp.LabelType.PRIVATE;
+		var coreName = nameDetails.coreName;
+		var localName = (isSpecific && spectrumType)? spectrumType + '_' + coreName: coreName;
+		return isPrivate? coreName: CmlSpectUtils.NAMESPACE_JCAMP + ':' + coreName;
 	},
 	/**
 	 * Convert a CML peak shape string to value of {@link Kekule.Spectroscopy.PeakShape}.
@@ -1764,6 +1792,7 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 		var domHelper = this.getDomHelper();
 		var infoCategories = spectrum.getSpectrumInfoCategories();
 		var processors = this._getSpectrumInfoProcessors();
+		var spectrumType = spectrum.getSpectrumType();
 		for (var i = 0, l = infoCategories.length; i < l; ++i)
 		{
 			var category = infoCategories[i];
@@ -1781,7 +1810,7 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 						var value = spectrum._getInfoBasedHashPropValue(category, key);
 						if (Kekule.ObjUtils.notUnset(value))
 						{
-							processor.infoWriter.apply(this, [spectrum, Kekule.IO.CmlSpectUtils.kekuleSpectrumInfoDataKeyToCml(key), value, listElem, options]);
+							processor.infoWriter.apply(this, [spectrum, Kekule.IO.CmlSpectUtils.kekuleSpectrumInfoDataKeyToCml(key, spectrumType), value, listElem, options]);
 						}
 					}
 				}
