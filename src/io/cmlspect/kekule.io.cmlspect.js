@@ -137,7 +137,6 @@ Kekule.IO.CmlSpectUtils = {
 			}
 		}
 		return result;
-
 	},
 	/**
 	 * Returns a key name for Kekule spectrum corresponding to the CML parameter key.
@@ -157,7 +156,15 @@ Kekule.IO.CmlSpectUtils = {
 		var nameDetails = CmlUtils.getCmlNsValueDetails(cmlKey);
 		if (nameDetails.namespace && nameDetails.namespace === CmlSpectUtils.NAMESPACE_JCAMP)  // we may need to check the jcamp dictionary
 		{
-			var jcampName = nameDetails.localName.toUpperCase();
+			var localName = nameDetails.localName;
+			if (spectrumType)
+			{
+				var spectrumPrefix = spectrumType && (spectrumType + '_');
+				var p = localName.indexOf(spectrumPrefix);
+				if (p >= 0)  // remove the prefix like 'NMR_', and add the '.'
+					localName = Kekule.IO.Jcamp.Consts.SPECIFIC_LABEL_PREFIX + localName.substr(p + spectrumPrefix.length);
+			}
+			var jcampName = localName.toUpperCase();
 			return Kekule.IO.Jcamp.Utils.jcampLabelNameToKekule(jcampName, spectrumType);
 		}
 
@@ -183,8 +190,11 @@ Kekule.IO.CmlSpectUtils = {
 		else
 		{
 			var jcampLabelName = Kekule.IO.Jcamp.Utils.kekuleLabelNameToJcamp(kekuleKey, spectrumType, true);
+			console.log('is jcamp?', kekuleKey, jcampLabelName);
 			if (jcampLabelName)
+			{
 				return CmlSpectUtils._convPossibleJcampLabelNameToCml(jcampLabelName, spectrumType);
+			}
 			else  // not found in JCAMP label name map, custom name?
 				return nameDetails.namespace + ':' + nameDetails.coreName;
 		}
@@ -204,7 +214,7 @@ Kekule.IO.CmlSpectUtils = {
 		var isPrivate = nameDetails.labelType === Kekule.IO.Jcamp.LabelType.PRIVATE;
 		var coreName = nameDetails.coreName;
 		var localName = (isSpecific && spectrumType)? spectrumType + '_' + coreName: coreName;
-		return isPrivate? coreName: CmlSpectUtils.NAMESPACE_JCAMP + ':' + coreName;
+		return isPrivate? localName: CmlSpectUtils.NAMESPACE_JCAMP + ':' + localName;
 	},
 	/**
 	 * Convert a CML peak shape string to value of {@link Kekule.Spectroscopy.PeakShape}.
@@ -1201,7 +1211,7 @@ Kekule.IO.CmlSpectrumDataReader = Class.create(Kekule.IO.CmlElementReader,
 				hasExtraInfo = true;
 			}
 		}
-		var isContinuousVar = !arrayObj.values && arrayObj.start && arrayObj.end;
+		var isContinuousVar = !arrayObj.values && Kekule.ObjUtils.notUnset(arrayObj.start) && Kekule.ObjUtils.notUnset(arrayObj.end);
 		var continuousInfo;
 		if (isContinuousVar)
 		{
@@ -1822,6 +1832,7 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 	{
 		return {
 			'metaData': {'listElemGetter': this._spectrumInfoListElemGetter.bind(this, 'metaDataList'), 'infoWriter': this._writeSpectrumMeta},
+			// TODO: write all annotations to meta list?
 			'annotations': {'listElemGetter': this._spectrumInfoListElemGetter.bind(this, 'metaDataList'), 'infoWriter': this._writeSpectrumAnnotation},
 			'conditions': {'listElemGetter': this._spectrumInfoListElemGetter.bind(this, 'conditionList'), 'infoWriter': this._writeSpectrumCondition},
 			'parameters': {'listElemGetter': this._spectrumInfoListElemGetter.bind(this, 'parameterList'), 'infoWriter': this._writeSpectrumParameter}
