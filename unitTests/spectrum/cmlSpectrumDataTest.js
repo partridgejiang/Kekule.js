@@ -37,9 +37,9 @@ describe('Test of some core data and functions of spectra module', function() {
 			expect(chemObj.getTitle()).toEqual('Holmium Oxide Wavelength Standard');
 
 			// metas
-			expect(chemObj.getSpectrumInfoValue('jcamp.origin')).toEqual('Lambda 900');
-			expect(chemObj.getSpectrumInfoValue('resolution').getValue()).toEqual(2);
-			expect(chemObj.getSpectrumInfoValue('resolution').getUnit()).toEqual('nm');
+			expect(chemObj.getSpectrumInfoValue('Origin')).toEqual('Lambda 900');
+			expect(chemObj.getSpectrumInfoValue('Resolution').getValue()).toEqual(2);
+			expect(chemObj.getSpectrumInfoValue('Resolution').getUnit()).toEqual('nm');
 
 			// sample
 			expect(chemObj.getRefMolecule().hasFormula()).toEqual(true);
@@ -96,9 +96,10 @@ describe('Test of some core data and functions of spectra module', function() {
 			expect(spec.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
 
 			// metas
-			expect(spec.getSpectrumInfoValue('observeFrequency').getValue()).toEqual('500');  // the <scalar> element has dataType="xsd:string" attribute!
-			expect(spec.getSpectrumInfoValue('observeFrequency').getUnit()).toEqual('MHz');
-			expect(spec.getSpectrumInfoValue('nucleus')).toEqual('H');
+			expect(spec.getSpectrumInfoValue('NMR.ObserveFrequency').getValue()).toEqual('500');  // the <scalar> element has dataType="xsd:string" attribute!
+			expect(spec.getSpectrumInfoValue('NMR.ObserveFrequency').getUnit()).toEqual('MHz');
+			expect(spec.getSpectrumInfoValue('NMR.ObserveNucleus')).toEqual('H');
+			expect(spec.getSpectrumInfoValue('ObserveNucleus')).toEqual('H');  // test for prefix omit
 
 			// variables
 			expect(spec.getVariableCount()).toEqual(2);
@@ -159,6 +160,7 @@ describe('Test of some core data and functions of spectra module', function() {
 			// metas
 			expect(chemObj.getSpectrumInfoValue('cml.press').getValue()).toEqual(12345);
 			expect(chemObj.getSpectrumInfoValue('cml.press').getUnit()).toEqual('Pa');
+			expect(chemObj.getSpectrumInfoValue('press').getUnit()).toEqual('Pa');  // test for prefix omit
 
 			// sample
 			expect(chemObj.getRefMolecule().hasFormula()).toEqual(true);
@@ -220,7 +222,7 @@ describe('Test of some core data and functions of spectra module', function() {
 			expect(chemObj.getTitle()).toEqual('4-vinylbenzyl chloride');
 
 			// metas
-			expect(chemObj.getSpectrumInfoValue('jcamp.owner')).toEqual('Robert Badger');
+			expect(chemObj.getSpectrumInfoValue('Owner')).toEqual('Robert Badger');
 
 			// sample
 			expect(chemObj.getRefMolecule().hasFormula()).toEqual(true);
