@@ -11,6 +11,7 @@
  * requires /utils/kekule.domHelper.js
  * requires /spectroscopy/kekule.spectrum.core.js
  * requires /io/kekule.io.js
+ * requires /io/jcamp/kekule.io.jcamp.base.js
  * requires /io/cml/kekule.io.cml.js
  * requires /localization
  */
@@ -56,6 +57,8 @@ Kekule.IO.CML.SPECTRUM_DATA_OBJREF_FLAG_FIELDNAME = '__$hasObjRef$__'
  */
 Kekule.IO.CmlSpectUtils = {
 	/** @private */
+	NAMESPACE_JCAMP: 'jcamp', // in CMLSpect file, many attributes (especially the name of meta/condition/parameter element) has this namespace (e.g. 'jcamp:NMR_OBSERVERFREQUENCY')
+	/** @private */
 	_spectrumTypeMap: [
 		['NMR', ST.NMR],
 		['infrared', ST.IR],
@@ -89,11 +92,11 @@ Kekule.IO.CmlSpectUtils = {
 	],
 	/** @private */
 	_spectrumInfoKeyMap: [
-		['cml:field', 'observeFrequency'],  //???
-		['jcamp:NMR_OBSERVEFREQUENCY', 'observeFrequency'],
-		['jcamp:NMR_OBSERVENUCLEUS', 'nucleus'],
-		['nmr:OBSERVENUCLEUS', 'nucleus'],
-		['jcamp:resolution', 'resolution']
+		['cml:field', 'NMR.ObserveFrequency'],  //???
+		['jcamp:NMR_OBSERVEFREQUENCY', 'NMR.ObserveFrequency'],
+		['jcamp:NMR_OBSERVENUCLEUS', 'NMR.ObserveNucleus'],
+		['nmr:OBSERVENUCLEUS', 'NMR.ObserveNucleus'],
+		['jcamp:resolution', 'Resolution']
 	],
 	/**
 	 * Get the corresponding {@link Kekule.Spectroscopy.SpectrumType} value for a CML spectrum type string.
@@ -139,9 +142,10 @@ Kekule.IO.CmlSpectUtils = {
 	/**
 	 * Returns a key name for Kekule spectrum corresponding to the CML parameter key.
 	 * @param {String} cmlKey
+	 * @param {String} spectrumType
 	 * @returns {String}
 	 */
-	cmlSpectrumInfoDataKeyToKekule: function(cmlKey)
+	cmlSpectrumInfoDataKeyToKekule: function(cmlKey, spectrumType)
 	{
 		var map = CmlSpectUtils._spectrumInfoKeyMap;
 		for (var i = 0, l = map.length; i < l; ++i)
@@ -149,7 +153,15 @@ Kekule.IO.CmlSpectUtils = {
 			if (cmlKey === map[i][0])
 				return map[i][1];
 		}
-		return Kekule.IO.CmlUtils.cmlNsTokenToKekule(cmlKey);  // default
+		// not found, extract the core part of namespace styled key name
+		var nameDetails = CmlUtils.getCmlNsValueDetails(cmlKey);
+		if (nameDetails.namespace && nameDetails.namespace === CmlSpectUtils.NAMESPACE_JCAMP)  // we may need to check the jcamp dictionary
+		{
+			var jcampName = nameDetails.localName.toUpperCase();
+			return Kekule.IO.Jcamp.Utils.jcampLabelNameToKekule(jcampName, spectrumType);
+		}
+
+		return CmlUtils.cmlNsTokenToKekule(cmlKey);  // default
 	},
 	/**
 	 * Returns a key name for Kekule spectrum corresponding to the CML parameter key.
@@ -1606,12 +1618,15 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 			}
 			else if (dataItem instanceof Kekule.Scalar)  // maybe a single scalar object? check for the name
 			{
-				key = dataItem.getName();
+				var dictRef = dataItem.getInfoValue('dictRef'); // the dictRef storing the original ns:name form of CML attribute value
+				key = dictRef || dataItem.getName();
 				value = dataItem;
 			}
 			if (key)
 			{
-				var kKey = this._convertCmlSpectrumInfoKey(key);
+				var spectrumType = spectrumObj.getSpectrumType();
+				var kKey = this._convertCmlSpectrumInfoKey(key, spectrumType);
+				//console.log(key, kKey);
 				var handled = this._processCmlSpectrumInfoItem(key, kKey, value, spectrumObj, elemTagName);
 				if (!handled)
 					saveMethod.apply(spectrumObj, [kKey, value]);
@@ -1620,9 +1635,9 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 		}
 	},
 	/** @private */
-	_convertCmlSpectrumInfoKey: function(cmlKey)
+	_convertCmlSpectrumInfoKey: function(cmlKey, spectrumType)
 	{
-		var result = CmlSpectUtils.cmlSpectrumInfoDataKeyToKekule(cmlKey);
+		var result = CmlSpectUtils.cmlSpectrumInfoDataKeyToKekule(cmlKey, spectrumType);
 		/*
 		var index = result.indexOf(':');
 		if (index >= 0)
@@ -1634,7 +1649,7 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 	/** @private */
 	_processCmlSpectrumInfoItem: function(cmlKey, kKey, value, spectrumObj, cmlElemTagName)
 	{
-		if (kKey === 'observeFrequency')
+		if (kKey === 'NMR.ObserveFrequency')
 		{
 			// check the scalar value, sometimes in CML the unit is set to hz wrongly, replace it with MHz
 			if (value instanceof Kekule.Scalar)
@@ -1651,11 +1666,11 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 				}
 			}
 		}
-		else if (kKey === 'nucleus' && typeof(value) === 'string')
+		else if (kKey === 'NMR.ObserveNucleus' && typeof(value) === 'string')
 		{
 			var targetNucleus = (value.indexOf('C') >= 0 && value.indexOf('13') >= 0)?
 				Kekule.Spectroscopy.SpectrumNMR.TargetNucleus.C13: Kekule.Spectroscopy.SpectrumNMR.TargetNucleus.H;
-			spectrumObj.setParameter('nucleus', targetNucleus);
+			spectrumObj.setParameter(kKey, targetNucleus);
 			return true;
 		}
 		return false;
