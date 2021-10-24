@@ -141,7 +141,7 @@ Kekule.IO.Jcamp.Labels.addMaps([
 	['.SHUTTERGRIDPOTENTIAL', 'IMS.ShutterGridPotential'],	//IMS
 	['.SHUTTEROPENINGTIME', 'IMS.ShutterOpeningTime'],	//IMS
 	['.ACCELERATINGVOLTAGE', 'MS.AcceleratingVoltage'],	//MS
-	['MSBASEPEAK', 'MS.Basepeak'],
+	['.BASEPEAK', 'MS.Basepeak'],  //MS
 	['.BASEPEAKINTENSITY', 'MS.BasepeakIntensity'],	//MS
 	['.MONOISOTOPICMASS', 'MS.MonoisotopicMass'],	//MS
 	['.NOMINALMASS', 'MS.NominalMass'],	//MS
