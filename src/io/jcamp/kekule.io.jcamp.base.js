@@ -1615,7 +1615,7 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		var labelName = ldr.labelName;
 		var spectrumType = chemObj && chemObj.getSpectrumType && chemObj.getSpectrumType();
 		var preferredInfoPropName = JcampUtils.jcampLabelNameToKekule(labelName, spectrumType);
-		console.log('LDR', labelName, preferredInfoPropName);
+		//console.log('LDR', labelName, preferredInfoPropName);
 		var handlerMap = this.getLdrHandlerMap();
 		var handler = handlerMap[labelName] || handlerMap['_default'];
 		if (handler)
