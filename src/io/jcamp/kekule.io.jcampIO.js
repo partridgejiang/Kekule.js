@@ -221,6 +221,9 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 	}
 });
 
+// register spectrum info prop namespace
+Kekule.Spectroscopy.MetaPropNamespace.register('jcamp');
+
 // register JCAMP data formats
 Kekule.IO.DataFormat.JCAMP_DX = 'jcamp-dx';
 Kekule.IO.MimeType.JCAMP_DX = 'chemical/x-jcamp-dx';

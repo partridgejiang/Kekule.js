@@ -1864,6 +1864,9 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 	},
 });
 
+// register spectrum info prop namespace
+Kekule.Spectroscopy.MetaPropNamespace.register('cml');
+
 // register reader classes
 var RF = Kekule.IO.CmlElementReaderFactory;
 RF.register('spectrum', Kekule.IO.CmlSpectrumReader);

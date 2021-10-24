@@ -6,6 +6,12 @@ var PS = Class.PropertyScope;
 var AU = Kekule.ArrayUtils;
 var KUnit = Kekule.Unit;
 
+Kekule.globalOptions.add('spectrum', {
+	spectrumInfo: {
+		enablePrefixOmissionInGetter: true
+	}
+});
+
 /**
  * Base namespace for spectra.
  * @namespace
@@ -106,8 +112,57 @@ Kekule.Spectroscopy.Utils = {
 		}
 		//console.log(result, scaleBase);
 		return result;
+	},
+	/**
+	 * Generate a suitable label key for storing the spectrum info(meta/condition/parameter...) value.
+	 * @param {String} name The core name of key, e.g. observedFrequency.
+	 * @param {String} spectrumType The spectrum type, e.g. 'NMR'.
+	 * @param {String} namespace The namespace of this label, e.g. 'jcamp', 'cml'.
+	 * @returns {String}
+	 */
+	generateInfoKey: function(name, spectrumType, namespace)
+	{
+		var prefix = spectrumType || namespace;
+		return prefix? prefix + MetaPropNamespace.DELIMITER + name: name;
 	}
 };
+
+/**
+ * Manager for namespaces of spectrum info property name.
+ * @enum
+ */
+Kekule.Spectroscopy.MetaPropNamespace = {
+	/** Delimiter for namespace parts */
+	DELIMITER: '.',
+	/** @private */
+	_namespaces: [],
+	/**
+	 * Register namespace(s).
+	 * @param {Variant} namespace
+	 */
+	register: function(namespace)
+	{
+		AU.pushUnique(MetaPropNamespace._namespaces, namespace);
+	},
+	/**
+	 * Unregister namespace(s).
+	 * @param {Variant} namespace
+	 */
+	unregister: function(namespace)
+	{
+		MetaPropNamespace._namespaces = AU.exclude(MetaPropNamespace._namespaces, namespace);
+	},
+	/**
+	 * Returns all registered namespaces.
+	 * @returns {Array}
+	 */
+	getNamespaces: function()
+	{
+		return AU.clone(MetaPropNamespace._namespaces);
+	}
+};
+/** @ignore */
+var MetaPropNamespace = Kekule.Spectroscopy.MetaPropNamespace;
 
 /**
  * A util object to manage the registered spectrum data value converters.
@@ -2914,10 +2969,42 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	},
 
 	/** @private */
+	_getCandidateInfoPropNames: function(baseName)
+	{
+		if (baseName.indexOf(MetaPropNamespace.DELIMITER) >= 0)  // already in namespace form
+			return [baseName];
+		var prefixes = MetaPropNamespace.getNamespaces();
+		var spectrumType = this.getSpectrumType();
+		if (spectrumType)
+		{
+			prefixes = [spectrumType].concat(prefixes);
+		}
+		var result = [baseName];  // the core name will always be in candicates
+		for (var i = 0, l = prefixes.length; i < l; ++i)
+		{
+			result.push(prefixes[i] + MetaPropNamespace.DELIMITER + baseName);
+		}
+		return result;
+	},
+	/** @private */
 	_getInfoBasedHashPropValue: function(infoKeyName, propName)
 	{
 		var hash = this.getInfoValue(infoKeyName);
-		return hash && hash[propName];
+		if (!hash)
+			return undefined;
+		if (Kekule.globalOptions.spectrum.spectrumInfo.enablePrefixOmissionInGetter)
+		{
+			var candicateNames = this._getCandidateInfoPropNames(propName);
+			for (var i = 0, l = candicateNames.length; i < l; ++i)
+			{
+				var name = candicateNames[i];
+				if (hash[name] !== undefined)
+					return hash[name];
+			}
+			return undefined;
+		}
+		else
+			return hash[propName];
 	},
 	/** @private */
 	_setInfoBasedHashpropValue: function(infoKeyName, propName, value)
