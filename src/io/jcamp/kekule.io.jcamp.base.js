@@ -177,9 +177,10 @@ Kekule.IO.Jcamp.Utils = {
 	/**
 	 * Returns the core name and label type/data type/category of LDR.
 	 * @param {String} labelName
+	 * @param {Bool} checkDataType
 	 * @returns {Hash} {coreName, labelType}
 	 */
-	analysisLdrLabelName: function(labelName)
+	analysisLdrLabelName: function(labelName, checkDataType)
 	{
 		var result;
 		if (labelName.startsWith(JcampConsts.SPECIFIC_LABEL_PREFIX))
@@ -189,11 +190,14 @@ Kekule.IO.Jcamp.Utils = {
 		else
 			result = {'coreName': labelName, 'labelType': JLabelType.GLOBAL, 'labelCategory': JLabelCategory.META};
 
-		var detailInfo = JcampLabelTypeInfos.getInfo(result.coreName, result.labelType);
-		if (detailInfo)
+		if (checkDataType === undefined || checkDataType)
 		{
-			result.dataType = detailInfo.dataType;
-			result.labelCategory = detailInfo.labelCategory;
+			var detailInfo = JcampLabelTypeInfos.getInfo(result.coreName, result.labelType);
+			if (detailInfo)
+			{
+				result.dataType = detailInfo.dataType;
+				result.labelCategory = detailInfo.labelCategory;
+			}
 		}
 		//console.log('label info', result);
 
@@ -254,9 +258,10 @@ Kekule.IO.Jcamp.Utils = {
 	 * Get the corresponding JCAMP LDR name for Kekule spectrum info property name.
 	 * @param {String} kekuleName
 	 * @param {String} spectrumType
+	 * @param {Bool} convOnlyAssured
 	 * @returns {String}
 	 */
-	kekuleLabelNameToJcamp: function(kekuleName, spectrumType)
+	kekuleLabelNameToJcamp: function(kekuleName, spectrumType, convOnlyAssured)
 	{
 		var MetaPropNamespace = Kekule.Spectroscopy.MetaPropNamespace;
 		var maps = JcampLabels.getMaps();
@@ -266,9 +271,14 @@ Kekule.IO.Jcamp.Utils = {
 			if (kekuleName === map[1])
 				return map[0];
 		}
-		// not found, regard it as private label
-		var nameDetail = MetaPropNamespace.getPropertyNameDetail(kekuleName);
-		return JcampConsts.PRIVATE_LABEL_PREFIX + nameDetail.coreName.toUpperCase();
+		if (!convOnlyAssured)
+		{
+			// not found, regard it as private label
+			var nameDetail = MetaPropNamespace.getPropertyNameDetail(kekuleName);
+			return JcampConsts.PRIVATE_LABEL_PREFIX + nameDetail.coreName.toUpperCase();
+		}
+		else
+			return null;
 	},
 	/**
 	 * Returns the first non-empty string line of lines.
