@@ -253,6 +253,19 @@ Kekule.IO.CmlUtils = {
 		return s.replace(/\./g, ':');
 	},
 	/**
+	 * Returns the namespace and local part of cml namespaced value.
+	 * E.g., returns {namespace: 'units', localName: 'hz'} for 'units:hz'.
+	 * @param {String} s
+	 * @returns {String}
+	 */
+	getCmlNsValueDetails: function(s)
+	{
+		var p = s.indexOf(':');
+		var namespace = (p >= 0)? s.substring(0, p): '';
+		var localName = (p >= 0)? s.substr(p + 1): s;
+		return {'namespace': namespace, 'localName': localName};
+	},
+	/**
 	 * Returns the local part of cml namespaced value.
 	 * E.g., returns 'hz' for 'units:hz'.
 	 * @param {String} s
@@ -261,8 +274,8 @@ Kekule.IO.CmlUtils = {
 	getCmlNsValueLocalPart: function(s)
 	{
 		var p = s.indexOf(':');
-		var coreUnit = (p >= 0)? s.substr(p + 1): s;
-		return coreUnit;
+		var localName = (p >= 0)? s.substr(p + 1): s;
+		return localName;
 	},
 	/**
 	 * Get the suitable metric unit symbol for CML unit string.
