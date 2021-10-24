@@ -301,7 +301,7 @@ DCM.register({
 DCM.register({
 	convert: function(value, varDef, fromUnitObj, toUnitObj, spectrumDataSection, spectrum)
 	{
-		var observeFreq = spectrum.getParameter('observeFrequency');
+		var observeFreq = spectrum.getParameter('NMR.ObserveFrequency');
 		if (fromUnitObj.category === KUnit.Frequency)  // from Hz to ppm
 		{
 			var freq = fromUnitObj.convertValueTo(value, observeFreq.getUnit());
@@ -320,7 +320,7 @@ DCM.register({
 	{
 		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)
 		{
-			var observeFreq = spectrum.getParameter('observeFrequency');
+			var observeFreq = spectrum.getParameter('NMR.ObserveFrequency');
 			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
 			{
 				return (fromUnitObj.category === Kekule.Unit.Frequency && toUnitObj.category === Kekule.Unit.Dimensionless)
@@ -334,7 +334,7 @@ DCM.register({
 		var result = [];
 		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)
 		{
-			var observeFreq = spectrum.getParameter('observeFrequency');
+			var observeFreq = spectrum.getParameter('NMR.ObserveFrequency');
 			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
 			{
 				if (fromUnitObj.category === Kekule.Unit.Frequency)
