@@ -132,6 +132,8 @@ Kekule.Spectroscopy.Utils = {
  * @enum
  */
 Kekule.Spectroscopy.MetaPropNamespace = {
+	/** Namespace for custom properties */
+	CUSTOM: 'custom',
 	/** Delimiter for namespace parts */
 	DELIMITER: '.',
 	/** @private */
@@ -159,10 +161,42 @@ Kekule.Spectroscopy.MetaPropNamespace = {
 	getNamespaces: function()
 	{
 		return AU.clone(MetaPropNamespace._namespaces);
+	},
+	/**
+	 * Returns a namespaced name of property.
+	 * @param {String} namespace
+	 * @param {String} coreName
+	 * @returns {string}
+	 */
+	createPropertyName(namespace, coreName)
+	{
+		return (namespace || '') + MetaPropNamespace.DELIMITER + coreName;
+	},
+	/**
+	 * Returns the namespace/core part of a prop name.
+	 * @param {String} propName
+	 * @returns {Hash} A hash of {namespace, coreName}.
+	 */
+	getPropertyNameDetail: function(propName)
+	{
+		var namespace, coreName;
+		var p = propName.lastIndexOf(MetaPropNamespace.DELIMITER);
+		if (p >= 0)
+		{
+			namespace = propName.substring(0, p);
+			coreName = propName.substr(p + 1);
+		}
+		else
+		{
+			coreName = propName;
+		}
+		return {'namespace': namespace, 'coreName': coreName};
 	}
 };
 /** @ignore */
 var MetaPropNamespace = Kekule.Spectroscopy.MetaPropNamespace;
+
+MetaPropNamespace.register(MetaPropNamespace.CUSTOM);
 
 /**
  * A util object to manage the registered spectrum data value converters.
@@ -2862,12 +2896,14 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	{
 		var defs;
 		(function() {
+			var name = infoFieldName || propName;
+			var name2 = name.upperFirst();
 			defs = Object.extend({
 				'getter': function () {
-					return this.getInfoValue(infoFieldName || propName);
+					return this.getInfoValue(name) || this.getInfoValue(name2);
 				},
 				'setter': function(value) {
-					this.setInfoValue(infoFieldName || propName, value);
+					this.setInfoValue(name, value);
 				},
 				'serializable': false
 			}, options);
@@ -2989,7 +3025,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	/** @private */
 	_getInfoBasedHashPropValue: function(infoKeyName, propName)
 	{
-		var hash = this.getInfoValue(infoKeyName);
+		var hash = infoKeyName? this.getInfoValue(infoKeyName): this.getInfo();
 		if (!hash)
 			return undefined;
 		if (Kekule.globalOptions.spectrum.spectrumInfo.enablePrefixOmissionInGetter)
@@ -3049,7 +3085,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	getSpectrumInfoValue: function(key, candicateCategories)
 	{
 		if (!candicateCategories)
-			candicateCategories = ['metaData', 'conditions', 'parameters', 'annotations'];
+			candicateCategories = ['conditions', 'parameters', 'metaData', 'annotations', ''];
 		for (var i = 0, l = candicateCategories.length; i < l; ++i)
 		{
 			var c = candicateCategories[i];
