@@ -31,6 +31,7 @@ Kekule.globalOptions.add('IO.cml', {
 	// options for writer
 	autoInsertHiddenRefMoleculeToSample: true,  // if true, a hidden referred molecule will be automatically insert to the <sample> child element of <spectrum>
 	spectrumDataValueOutputDigitCountAfterDecimalPoint: 8,
+	autoConvertNmrDataFreqToUnit: 'Hz'   // in JSpectView convention, the frequency of NMR continuous spectrum should be in unit Hz
 });
 
 var AU = Kekule.ArrayUtils;
@@ -126,8 +127,8 @@ Kekule.IO.CmlSpectUtils = {
 	],
 	/** @private */
 	_spectrumInfoKeyMap: [
-		['cml:field', 'NMR.ObserveFrequency'],  //???
 		['jcamp:NMR_OBSERVEFREQUENCY', 'NMR.ObserveFrequency'],
+		['cml:field', 'NMR.ObserveFrequency'],  //???
 		['jcamp:NMR_OBSERVENUCLEUS', 'NMR.ObserveNucleus'],
 		['nmr:OBSERVENUCLEUS', 'NMR.ObserveNucleus'],
 		['jcamp:resolution', 'Resolution']
@@ -1386,8 +1387,9 @@ Kekule.IO.CmlSpectrumDataWriter = Class.create(Kekule.IO.CmlSpectrumDataSectionB
 			for (var i = 0, l = keys.length; i < l; ++i)
 			{
 				var key = keys[i];
+				var isIndep = (key === 'independent');
 				var arrayObj = {
-					'_tagName': (key === 'independent')? 'xaxis': 'yaxis',
+					'_tagName': isIndep? 'xaxis': 'yaxis',
 					'varSymbol': dataVarInfo[key].symbol,
 					'unit': dataVarInfo[key].unitSymbol,
 					'dataType': DataType.FLOAT,
@@ -1402,6 +1404,7 @@ Kekule.IO.CmlSpectrumDataWriter = Class.create(Kekule.IO.CmlSpectrumDataSectionB
 				}
 				else
 					arrayObj.values = [];
+				arrayObj = this._prepareUnitConversionInfoForArrayObj(arrayObj, isIndep, spectrumDataSection, options);
 				arrays.push(arrayObj);
 			}
 
@@ -1410,11 +1413,17 @@ Kekule.IO.CmlSpectrumDataWriter = Class.create(Kekule.IO.CmlSpectrumDataSectionB
 			spectrumDataSection.forEach(function(value, index){
 				for (var i = 0, l = arrays.length; i < l; ++i)
 				{
+					var needUnitConversion = arrays[i]._originUnitObj && arrays[i]._unitObj;
 					if (!arrays[i].isContinuous)  // bypass continuous range vars
 					{
 						var symbol = arrays[i].varSymbol;
 						// TODO: here we simple convert the unavailable value (NaN or undefined) to 0, is it safe?
-						arrays[i].values.push(CmlSpectUtils.floatToCmlString(value[symbol] || 0, decimalCount));
+						var dvalue = value[symbol] || 0;
+						if (needUnitConversion)  // need to do unit conversion
+						{
+							dvalue = arrays[i]._originUnitObj.convertValueTo(dvalue, arrays[i]._unitObj);
+						}
+						arrays[i].values.push(CmlSpectUtils.floatToCmlString(dvalue, decimalCount));
 					}
 				}
 			});
@@ -1430,6 +1439,27 @@ Kekule.IO.CmlSpectrumDataWriter = Class.create(Kekule.IO.CmlSpectrumDataSectionB
 				}
 			}
 		}
+	},
+	/** @private */
+	_prepareUnitConversionInfoForArrayObj: function(arrayObj, isIndep, spectrumDataSection, options)
+	{
+		var spectrum = spectrumDataSection.getParentSpectrum();
+		if (isIndep && spectrum && spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR && options.autoConvertNmrDataFreqToUnit)
+		{
+			var unitObj = arrayObj.unit && Kekule.Unit.getUnit(arrayObj.unit);
+			var convTargetUnitObj = Kekule.Unit.getUnit(options.autoConvertNmrDataFreqToUnit);
+			if (unitObj && convTargetUnitObj && unitObj.category === convTargetUnitObj.category && unitObj !== convTargetUnitObj)
+			{
+				arrayObj.unit = options.autoConvertNmrDataFreqToUnit;
+				arrayObj._originUnitObj = unitObj;
+				arrayObj._unitObj = convTargetUnitObj;
+				if (arrayObj.start)
+					arrayObj.start = unitObj.convertValueTo(arrayObj.start, convTargetUnitObj);
+				if (arrayObj.end)
+					arrayObj.end = unitObj.convertValueTo(arrayObj.end, convTargetUnitObj);
+			}
+		}
+		return arrayObj;
 	}
 });
 
@@ -1865,6 +1895,11 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 					{
 						var key = keys[j];
 						var value = spectrum._getInfoBasedHashPropValue(category, key);
+						// In JSpectView Convention, all frequencies in NMR should be in Hz?
+						if (key === 'NMR.ObserveFrequency' && (value instanceof Kekule.Scalar) && options.autoConvertNmrDataFreqToUnit)
+						{
+							value = this._convertScalarUnit(value, options.autoConvertNmrDataFreqToUnit);
+						}
 						if (Kekule.ObjUtils.notUnset(value))
 						{
 							processor.infoWriter.apply(this, [spectrum, Kekule.IO.CmlSpectUtils.kekuleSpectrumInfoDataKeyToCml(key, spectrumType, jcampNsPrefix), value, listElem, options]);
@@ -1873,6 +1908,25 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 				}
 			}
 		}
+	},
+	/** @private */
+	_convertScalarUnit: function(scalar, targetUnit)
+	{
+		var unit = scalar.getUnit();
+		var value = scalar.getValue();
+		if (value)
+		{
+			var unitObj = Kekule.Unit.getUnit(unit);
+			var targetUnitObj = Kekule.Unit.getUnit(targetUnit)
+			if (unitObj && targetUnitObj && unitObj.category === targetUnitObj.category && unitObj !== targetUnitObj)  // need to convert the value
+			{
+				var newScalar = scalar.clone();
+				newScalar.setUnit(targetUnit);
+				newScalar.setValue(unitObj.convertValueTo(value, targetUnitObj));
+				return newScalar;
+			}
+		}
+		return scalar;
 	},
 	/** @private */
 	_getSpectrumInfoProcessors: function()
