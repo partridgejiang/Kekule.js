@@ -1712,19 +1712,21 @@ Kekule.IO.CmlElementWriter = Class.create(Kekule.IO.CmlElementHandler,
 					Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'name', key, this.getDomHelper());
 					Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'content', DataType.StringUtils.serializeValue(value), this.getDomHelper());
 					*/
-					this.writeObjMetaValueToListElem(obj, key, value, metaListElem);
+					this.writeObjMetaValueToListElem(obj, key, null, value, metaListElem);
 				}
 			}
 		}
 	},
 	/** @private */
-	writeObjMetaValueToListElem: function(obj, key, value, metaListElem, metaElemTagName, options)
+	writeObjMetaValueToListElem: function(obj, key, value, metadataType, metaListElem, metaElemTagName, options)
 	{
 		if (!metaElemTagName)
 			metaElemTagName = 'metaData';
 		var metaElem = this.createChildElem(metaElemTagName, metaListElem);
 		Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'name', key, this.getDomHelper());
 		Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'content', DataType.StringUtils.serializeValue(value), this.getDomHelper());
+		if (metadataType)
+			Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'metadataType', metadataType, this.getDomHelper());
 		return metaElem;
 	},
 	/**
@@ -2486,7 +2488,7 @@ Kekule.IO.CmlMetaDataReader = Class.create(Kekule.IO.CmlElementReader,
 	readMeta: function(elem)
 	{
 		var jsonObj = Kekule.DomUtils.fetchAttributeValuesToJson(elem, this.getCoreNamespaceURI(), true);
-		var result = {'key': jsonObj.name, 'value': DataType.StringUtils.deserializeValue(jsonObj.content)};
+		var result = {'key': jsonObj.name, 'value': DataType.StringUtils.deserializeValue(jsonObj.content) ,'metadataType': jsonObj.metadataType};
 		return result;
 	}
 });
