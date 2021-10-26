@@ -37,6 +37,8 @@ Kekule.DomHelper = Class.create(ObjectEx,
 	/** @private */
 	NAMESPACE_DELIMITER: ':',
 	/** @private */
+	XMLNS_URI: 'http://www.w3.org/2000/xmlns/',
+	/** @private */
 	ERR_EMPTY_DOC: 'Document is empty',
 	/** @private */
 	ERR_ELEMENT_NOTSET: 'Element not set',
@@ -215,6 +217,21 @@ Kekule.DomHelper = Class.create(ObjectEx,
 			return null;
 		else
 			return prefix? prefix + this.NAMESPACE_DELIMITER + localName: localName;
+	},
+
+	/**
+	 * Add namespace to a document.
+	 * @param {Object} doc
+	 * @param {String} prefix Can be empty to set the default namespace.
+	 * @param {String} uri
+	 */
+	addNamespace: function(doc, prefix, uri, elem)
+	{
+		if (!elem)
+			elem = doc.documentElement;
+		var attribName = (!prefix)? this.NAMESPACE_DEFINE_PREFIX: this.NAMESPACE_DEFINE_PREFIX + this.NAMESPACE_DELIMITER + prefix;
+		var nsBaseUri = this.XMLNS_URI;
+		this.setAttributeNS(nsBaseUri, attribName, uri, elem);
 	},
 
 	/**

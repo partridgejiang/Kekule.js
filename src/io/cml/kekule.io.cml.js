@@ -1186,6 +1186,7 @@ Kekule.IO.CmlElementWriterFactory = {
  * @augments ObjectEx
  *
  * @property {String} coreNamespaceURI Namespace URI of CML core.
+ * @property {Array} namespaces Namespaces used in a CML document. Each item is has fields {prefix, namespaceURI}.
  */
 Kekule.IO.CmlElementHandler = Class.create(ObjectEx,
 /** @lends Kekule.IO.CmlElementHandler# */
@@ -1230,6 +1231,9 @@ Kekule.IO.CmlElementHandler = Class.create(ObjectEx,
 			//'getter': function() { return Kekule.IO.CML.CML2CORE_NAMESPACE_URI; },
 			//'setter': function() {}
 		});
+		this.defineProp('namespaces', {
+			'dataType': DataType.ARRAY, 'serializable': false
+		});
 		/*
 		this.defineProp('reactionNamespaceURI', {
 			'dataType': DataType.STRING, 'serializable': false,
@@ -1242,6 +1246,26 @@ Kekule.IO.CmlElementHandler = Class.create(ObjectEx,
 		this.defineProp('rootEvoker', {
 			'dataType': DataType.Object, 'serializable': false
 		});
+	},
+
+	/**
+	 * Returns the defined prefix for a namespace URI.
+	 * @param {String} uri
+	 * @return {String} If prefix not found, undefined will be returned.
+	 * @private
+	 */
+	getPrefixForNamespaceUri: function(uri)
+	{
+		var namespaces = this.getNamespaces();
+		if (namespaces)
+		{
+			for (var i = 0, l = namespaces.length; i < l; ++i)
+			{
+				if (namespaces[i].namespaceURI === uri)
+					return namespaces[i].prefix;
+			}
+		}
+		return void(0);
 	},
 
 	/** @private */
@@ -1266,6 +1290,7 @@ Kekule.IO.CmlElementHandler = Class.create(ObjectEx,
 	{
 		childHandler.setDomHelper(this.getDomHelper());
 		childHandler.setCoreNamespaceURI(this.getCoreNamespaceURI());
+		childHandler.setNamespaces(this.getNamespaces());
 		childHandler.setRootEvoker(this.getRootEvoker());
 	},
 	/** @private */
@@ -1792,6 +1817,24 @@ Kekule.IO.CmlElementWriter = Class.create(Kekule.IO.CmlElementHandler,
 			Kekule.$L('ErrorMsg.CML_ELEM_WRITER_TYPE_INPROPER').format(this.getClassName(), DataType.getType(obj)));
 	},
 
+	/**
+	 * Add namespace to XML document.
+	 * @param {String} prefix
+	 * @param {String} uri
+	 * @private
+	 */
+	addNamespace: function(doc, prefix, uri, elem)
+	{
+		this.getDomHelper().addNamespace(doc, prefix, uri, elem);
+	},
+	/** @private */
+	addNamespaces: function(doc, namespaces, elem)
+	{
+		for (var i = 0, l = namespaces.length; i < l; ++i)
+		{
+			this.addNamespace(doc, namespaces[i].prefix, namespaces[i].namespaceURI, elem);
+		}
+	},
 	/**
 	 * Called after the whole CML document is written.
 	 * @param {Bool} cascade Whether calling the doneWritingDocument method of child writers.
@@ -4702,6 +4745,7 @@ Kekule.IO.CmlRootReader = Class.create(Kekule.IO.CmlElementReader,
 			}
 		}
 		this.setCoreNamespaceURI(legalCoreUri || null);
+		this.setNamespaces(namespaces);
 	}
 });
 
@@ -4894,6 +4938,8 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 	initProperties: function()
 	{
 		this.defineProp('prettyPrint', {'dataType': DataType.BOOL, 'defaultValue': true});
+		// private, storing the root element writer
+		this.defineProp('rootElemWriter', {'dataType': DataType.OBJECT, 'setter': null, 'serializable': false});
 	},
 	/** @private */
 	doWriteData: function(obj, dataType, format, options)
@@ -4907,6 +4953,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 			var result;
 			try
 			{
+				this.setPropStoreFieldValue('rootElemWriter', writer);
 				var op = Object.extend({}, Kekule.globalOptions.IO.cml);
 				op = Object.extend(op, options || {});
 				writer.setCoreNamespaceURI(nsUri);
@@ -4920,6 +4967,7 @@ Kekule.IO.CmlWriter = Class.create(Kekule.IO.ChemDataWriter,
 			}
 			finally
 			{
+				this.setPropStoreFieldValue('rootElemWriter', null);
 				writer.finalize();
 			}
 			return result;

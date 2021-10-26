@@ -51,13 +51,47 @@ Kekule.IO.CmlUtils._cmlUnitConvMap.push(['moverz', 'm/z', 'm/z', false]);
 Kekule.IO.CML.SPECTRUM_OBJREF_FIELDNAME = '__$objRef$__';
 Kekule.IO.CML.SPECTRUM_DATA_OBJREF_FLAG_FIELDNAME = '__$hasObjRef$__'
 
+/** @ignore */
+Kekule.IO.CML.Spect = {};
+
+/**
+ * Some consts for CMLSpect.
+ * @object
+ */
+Kekule.IO.CML.Spect.Consts = {
+	SI_UNITS_NAMESPACE_DEF_PREFIX: 'siUnits',
+	SI_UNITS_NAMESPACE_URI: 'http://www.xml-cml.org/units/siUnits',
+	UNITS_NAMESPACE_DEF_PREFIX: 'units',
+	UNITS_NAMESPACE_URI: 'http://www.xml-cml.org/units/units',
+	JSPECVIEW_NAMESPACE_DEF_PREFIX: 'jspecview',
+	JSPECVIEW_NAMESPACE_URI: 'http://jspecview.sf.net/convention.html',
+	JCAMP_NAMESPACE_DEF_PREFIX: 'jcamp',
+	JCAMP_NAMESPACE_URI: 'http://www.iupac.org/jcamp/dict',
+	JCAMP_UNITS_NAMESPACE_DEF_PREFIX: 'jcampUnits',
+	JCAMP_UNITS_NAMESPACE_URI: 'http://www.iupac.org/jcamp/dict/units',
+	CML_DICT_NAMESPACE_DEF_PREFIX: 'cml',
+	CML_DICT_NAMESPACE_URI: 'http://www.xml-cml.org/dict/cmlDict',
+	XML_SCHEMA_INSTANCE_NAMESPACE_DEF_PREFIX: 'xsi',
+	XML_SCHEMA_INSTANCE_NAMESPACE_URI: 'http://www.w3.org/2001/XMLSchema-instance',
+	CMLSPECT_SCHEMA_LOCATIONS_ATTRIBNAME: 'schemaLocation',
+	CMLSPECT_SCHEMA_LOCATIONS: [
+		'http://www.xml-cml.org/dict/jcampDict dict/jcampDict.xml',
+		'http://www.xml-cml.org/schema schema.xsd',
+		'http://www.xml-cml.org/dict/cml dict/cmlDict.xml',
+		'http://www.xml-cml.org/dict/cmlDict dict/simpleCmlDict.xml',
+		'http://www.xml-cml.org/units/units dict/unitsDict.xml',
+		'http://www.xml-cml.org/units/siUnits dict/siUnitsDict.xml'
+	]
+};
+var CMLSpectConsts = Kekule.IO.CML.Spect.Consts;
+
 /**
  * Util functions for CMLSpect data.
  * @class
  */
 Kekule.IO.CmlSpectUtils = {
-	/** @private */
-	NAMESPACE_JCAMP: 'jcamp', // in CMLSpect file, many attributes (especially the name of meta/condition/parameter element) has this namespace (e.g. 'jcamp:NMR_OBSERVERFREQUENCY')
+	/* @private */
+	//NAMESPACE_JCAMP: 'jcamp', // in CMLSpect file, many attributes (especially the name of meta/condition/parameter element) has this namespace (e.g. 'jcamp:NMR_OBSERVERFREQUENCY')
 	/** @private */
 	_spectrumTypeMap: [
 		['NMR', ST.NMR],
@@ -142,10 +176,13 @@ Kekule.IO.CmlSpectUtils = {
 	 * Returns a key name for Kekule spectrum corresponding to the CML parameter key.
 	 * @param {String} cmlKey
 	 * @param {String} spectrumType
+	 * @param {String} jcampNsPrefix
 	 * @returns {String}
 	 */
-	cmlSpectrumInfoDataKeyToKekule: function(cmlKey, spectrumType)
+	cmlSpectrumInfoDataKeyToKekule: function(cmlKey, spectrumType, jcampNsPrefix)
 	{
+		if (!jcampNsPrefix)
+			jcampNsPrefix = CMLSpectConsts.JCAMP_NAMESPACE_DEF_PREFIX; //CmlSpectUtils.NAMESPACE_JCAMP;
 		var map = CmlSpectUtils._spectrumInfoKeyMap;
 		for (var i = 0, l = map.length; i < l; ++i)
 		{
@@ -154,7 +191,7 @@ Kekule.IO.CmlSpectUtils = {
 		}
 		// not found, extract the core part of namespace styled key name
 		var nameDetails = CmlUtils.getCmlNsValueDetails(cmlKey);
-		if (nameDetails.namespace && nameDetails.namespace === CmlSpectUtils.NAMESPACE_JCAMP)  // we may need to check the jcamp dictionary
+		if (nameDetails.namespace && nameDetails.namespace === jcampNsPrefix)  // we may need to check the jcamp dictionary
 		{
 			var localName = nameDetails.localName;
 			if (spectrumType)
@@ -173,10 +210,14 @@ Kekule.IO.CmlSpectUtils = {
 	/**
 	 * Returns a key name for Kekule spectrum corresponding to the CML parameter key.
 	 * @param {String} cmlKey
+	 * @param {String} spectrumType
+	 * @param {String} jcampNsPrefix
 	 * @returns {String}
 	 */
-	kekuleSpectrumInfoDataKeyToCml: function(kekuleKey, spectrumType)
+	kekuleSpectrumInfoDataKeyToCml: function(kekuleKey, spectrumType, jcampNsPrefix)
 	{
+		if (!jcampNsPrefix)
+			jcampNsPrefix = CMLSpectConsts.JCAMP_NAMESPACE_DEF_PREFIX;  //CmlSpectUtils.NAMESPACE_JCAMP
 		var map = CmlSpectUtils._spectrumInfoKeyMap;
 		for (var i = 0, l = map.length; i < l; ++i)
 		{
@@ -185,15 +226,15 @@ Kekule.IO.CmlSpectUtils = {
 		}
 		// not found in map, check if kekuleKey is based on JCAMP? if so, add the corresponding JCAMP namespace
 		var nameDetails = Kekule.Spectroscopy.MetaPropNamespace.getPropertyNameDetail(kekuleKey);
-		if (nameDetails.namespace === CmlSpectUtils.NAMESPACE_JCAMP)  // explicit jcamp label name
+		if (nameDetails.namespace === jcampNsPrefix)  // explicit jcamp label name
 			return nameDetails.namespace + ':' + nameDetails.coreName;
 		else
 		{
 			var jcampLabelName = Kekule.IO.Jcamp.Utils.kekuleLabelNameToJcamp(kekuleKey, spectrumType, true);
-			console.log('is jcamp?', kekuleKey, jcampLabelName);
+			//console.log('is jcamp?', kekuleKey, jcampLabelName);
 			if (jcampLabelName)
 			{
-				return CmlSpectUtils._convPossibleJcampLabelNameToCml(jcampLabelName, spectrumType);
+				return CmlSpectUtils._convPossibleJcampLabelNameToCml(jcampLabelName, spectrumType, jcampNsPrefix);
 			}
 			else  // not found in JCAMP label name map, custom name?
 				return nameDetails.namespace + ':' + nameDetails.coreName;
@@ -207,14 +248,14 @@ Kekule.IO.CmlSpectUtils = {
 		//return Kekule.IO.CmlUtils.kekuleNsTokenToCml(kekuleKey);  // default
 	},
 	/** @private */
-	_convPossibleJcampLabelNameToCml: function(jcampLabelName, spectrumType)
+	_convPossibleJcampLabelNameToCml: function(jcampLabelName, spectrumType, jcampNsPrefix)
 	{
 		var nameDetails = Kekule.IO.Jcamp.Utils.analysisLdrLabelName(jcampLabelName, false);
 		var isSpecific = nameDetails.labelType === Kekule.IO.Jcamp.LabelType.SPECIFIC;
 		var isPrivate = nameDetails.labelType === Kekule.IO.Jcamp.LabelType.PRIVATE;
 		var coreName = nameDetails.coreName;
 		var localName = (isSpecific && spectrumType)? spectrumType + '_' + coreName: coreName;
-		return isPrivate? localName: CmlSpectUtils.NAMESPACE_JCAMP + ':' + localName;
+		return isPrivate? localName: /*CmlSpectUtils.NAMESPACE_JCAMP*/jcampNsPrefix + ':' + localName;
 	},
 	/**
 	 * Convert a CML peak shape string to value of {@link Kekule.Spectroscopy.PeakShape}.
@@ -1662,8 +1703,9 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 			}
 			if (key)
 			{
+				var jcampNsPrefix = this.getPrefixForNamespaceUri(CMLSpectConsts.JCAMP_NAMESPACE_URI) || null;
 				var spectrumType = spectrumObj.getSpectrumType();
-				var kKey = this._convertCmlSpectrumInfoKey(key, spectrumType);
+				var kKey = this._convertCmlSpectrumInfoKey(key, spectrumType, jcampNsPrefix);
 				//console.log(key, kKey);
 				var handled = this._processCmlSpectrumInfoItem(key, kKey, value, spectrumObj, elemTagName);
 				if (!handled)
@@ -1673,9 +1715,9 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 		}
 	},
 	/** @private */
-	_convertCmlSpectrumInfoKey: function(cmlKey, spectrumType)
+	_convertCmlSpectrumInfoKey: function(cmlKey, spectrumType, jcampNsPrefix)
 	{
-		var result = CmlSpectUtils.cmlSpectrumInfoDataKeyToKekule(cmlKey, spectrumType);
+		var result = CmlSpectUtils.cmlSpectrumInfoDataKeyToKekule(cmlKey, spectrumType, jcampNsPrefix);
 		/*
 		var index = result.indexOf(':');
 		if (index >= 0)
@@ -1739,6 +1781,10 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 	/** @ignore */
 	doWriteObject: function(obj, targetElem, options)
 	{
+		// ensure add essential namespaces and schema location
+		var namespaces = this.getSpectNamespaces();
+		this.addNamespaces(targetElem.ownerDocument, namespaces);
+		this._addSchemaLocation(targetElem.ownerDocument.documentElement);
 		return this.writeSpectrum(obj, targetElem, options);
 	},
 	/** @ignore */
@@ -1803,6 +1849,7 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 		var infoCategories = spectrum.getSpectrumInfoCategories();
 		var processors = this._getSpectrumInfoProcessors();
 		var spectrumType = spectrum.getSpectrumType();
+		var jcampNsPrefix = this.getPrefixForNamespaceUri(CMLSpectConsts.JCAMP_NAMESPACE_URI) || null;
 		for (var i = 0, l = infoCategories.length; i < l; ++i)
 		{
 			var category = infoCategories[i];
@@ -1820,7 +1867,7 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 						var value = spectrum._getInfoBasedHashPropValue(category, key);
 						if (Kekule.ObjUtils.notUnset(value))
 						{
-							processor.infoWriter.apply(this, [spectrum, Kekule.IO.CmlSpectUtils.kekuleSpectrumInfoDataKeyToCml(key, spectrumType), value, listElem, options]);
+							processor.infoWriter.apply(this, [spectrum, Kekule.IO.CmlSpectUtils.kekuleSpectrumInfoDataKeyToCml(key, spectrumType, jcampNsPrefix), value, listElem, options]);
 						}
 					}
 				}
@@ -1917,6 +1964,34 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 		}
 		return result;
 	},
+	/** @private */
+	getSpectNamespaces: function()
+	{
+		var createNsPair = function(prefix, uri)
+		{
+			return {'prefix': prefix, 'namespaceURI': uri};
+		}
+		var result = [
+			createNsPair(CMLSpectConsts.XML_SCHEMA_INSTANCE_NAMESPACE_DEF_PREFIX, CMLSpectConsts.XML_SCHEMA_INSTANCE_NAMESPACE_URI),
+			createNsPair(CMLSpectConsts.SI_UNITS_NAMESPACE_DEF_PREFIX, CMLSpectConsts.SI_UNITS_NAMESPACE_URI),
+			createNsPair(CMLSpectConsts.UNITS_NAMESPACE_DEF_PREFIX, CMLSpectConsts.UNITS_NAMESPACE_URI),
+			createNsPair(CMLSpectConsts.JSPECVIEW_NAMESPACE_DEF_PREFIX, CMLSpectConsts.JSPECVIEW_NAMESPACE_URI),
+			createNsPair(CMLSpectConsts.JCAMP_NAMESPACE_DEF_PREFIX, CMLSpectConsts.JCAMP_NAMESPACE_URI),
+			createNsPair(CMLSpectConsts.JCAMP_UNITS_NAMESPACE_DEF_PREFIX, CMLSpectConsts.JCAMP_UNITS_NAMESPACE_URI),
+			createNsPair(CMLSpectConsts.CML_DICT_NAMESPACE_DEF_PREFIX, CMLSpectConsts.CML_DICT_NAMESPACE_URI),
+		];
+		return result;
+	},
+	/** @private */
+	_addSchemaLocation: function(docElem)
+	{
+		this.getDomHelper().setAttributeNS(
+			CMLSpectConsts.XML_SCHEMA_INSTANCE_NAMESPACE_URI,
+			CMLSpectConsts.CMLSPECT_SCHEMA_LOCATIONS_ATTRIBNAME,
+			CMLSpectConsts.CMLSPECT_SCHEMA_LOCATIONS.join('    '),
+			docElem
+		);
+	}
 });
 
 // register spectrum info prop namespace
