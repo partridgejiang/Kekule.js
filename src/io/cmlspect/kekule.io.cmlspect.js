@@ -82,7 +82,9 @@ Kekule.IO.CML.Spect.Consts = {
 		'http://www.xml-cml.org/dict/cmlDict dict/simpleCmlDict.xml',
 		'http://www.xml-cml.org/units/units dict/unitsDict.xml',
 		'http://www.xml-cml.org/units/siUnits dict/siUnitsDict.xml'
-	]
+	],
+
+	ANNOTATION_METATYPE: 'annotation'
 };
 var CMLSpectConsts = Kekule.IO.CML.Spect.Consts;
 
@@ -1687,12 +1689,24 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 	_handleInfoData: function(elemTagName, childResult, spectrumObj)
 	{
 		//console.log(elemTagName, childResult);
+		var _saveInfoDataItem = function(key, value, dataItem, elemTagName)
+		{
+			if (elemTagName === 'metadatalist')
+			{
+				var metaType = dataItem.metadataType;
+				if (metaType === CMLSpectConsts.ANNOTATION_METATYPE)  // is annotation
+					spectrumObj.setAnnotation(key, value);
+				else
+					spectrumObj.setMeta(key, value);
+			}
+		};
 		var getSaveMethod = function(elemTagName, spectrumObj)
 		{
 			var saveMethod = null;
 			if (elemTagName === 'metadatalist')
 			{
-				saveMethod = spectrumObj.setMeta;
+				//saveMethod = spectrumObj.setMeta;
+				saveMethod = null;  // will use _saveMetaDataItem instead
 			}
 			else if (elemTagName === 'parameterlist')
 			{
@@ -1737,9 +1751,14 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 				var spectrumType = spectrumObj.getSpectrumType();
 				var kKey = this._convertCmlSpectrumInfoKey(key, spectrumType, jcampNsPrefix);
 				//console.log(key, kKey);
-				var handled = this._processCmlSpectrumInfoItem(key, kKey, value, spectrumObj, elemTagName);
+				var handled = this._processCmlSpectrumInfoItem(key, kKey, value, dataItem, spectrumObj, elemTagName);
 				if (!handled)
-					saveMethod.apply(spectrumObj, [kKey, value]);
+				{
+					if (saveMethod)
+						saveMethod.apply(spectrumObj, [kKey, value]);
+					else // use custom save method for meta data
+						_saveInfoDataItem(kKey, value, dataItem, elemTagName);
+				}
 				// TODO: ignore other situations currently
 			}
 		}
@@ -1757,7 +1776,7 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 		return result;
 	},
 	/** @private */
-	_processCmlSpectrumInfoItem: function(cmlKey, kKey, value, spectrumObj, cmlElemTagName)
+	_processCmlSpectrumInfoItem: function(cmlKey, kKey, value, dataItem, spectrumObj, cmlElemTagName)
 	{
 		if (kKey === 'NMR.ObserveFrequency')
 		{
@@ -1952,12 +1971,12 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 	/** @private */
 	_writeSpectrumMeta: function(spectrum, key, value, listElem, options)
 	{
-		this.writeObjMetaValueToListElem(spectrum, key, value, listElem, null, options);
+		this.writeObjMetaValueToListElem(spectrum, key, value, null, listElem, null, options);
 	},
 	/** @private */
 	_writeSpectrumAnnotation: function(spectrum, key, value, listElem, options)
 	{
-		this.writeObjMetaValueToListElem(spectrum, key, value, listElem, null, options);
+		this.writeObjMetaValueToListElem(spectrum, key, value, CMLSpectConsts.ANNOTATION_METATYPE, listElem, null, options);
 	},
 	/** @private */
 	_writeSpectrumCondition: function(spectrum, key, value, listElem, options)
@@ -1970,7 +1989,7 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 		}
 		else
 		{
-			this.writeObjMetaValueToListElem(spectrum, key, value, listElem, null, options);
+			this.writeObjMetaValueToListElem(spectrum, key, value, null, listElem, null, options);
 		}
 	},
 	/** @private */
