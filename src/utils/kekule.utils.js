@@ -462,11 +462,12 @@ Kekule.ArrayUtils = {
 	 * If obj already inside array, also returns index of obj in array.
 	 * @param {Array} targetArray Target array.
 	 * @param {Variant} obj Must not be null.
+	 * @param {Bool} reserveNestedArray
 	 * @return {Int} Index of obj in array.
 	 */
-	pushUnique: function(targetArray, obj)
+	pushUnique: function(targetArray, obj, reserveNestedArray)
 	{
-		var r = Kekule.ArrayUtils.pushUniqueEx(targetArray, obj);
+		var r = Kekule.ArrayUtils.pushUniqueEx(targetArray, obj, reserveNestedArray);
 		return r? r.index: null;
 	},
 	/**
@@ -474,24 +475,28 @@ Kekule.ArrayUtils = {
 	 * If obj already inside array, returns index of obj and false.
 	 * @param {Array} targetArray Target array.
 	 * @param {Variant} obj Must not be null.
+	 * @param {Bool} reserveNestedArray
 	 * @return {Hash} {index, isPushed} hash. Index of obj in array.
 	 */
-	pushUniqueEx: function(targetArray, obj)
+	pushUniqueEx: function(targetArray, obj, reserveNestedArray)
 	{
 		if (DataType.isArrayValue(obj))
 		{
 			var r;
+			var pushFunc = (!reserveNestedArray)? Kekule.ArrayUtils.pushUniqueEx: Kekule.ArrayUtils._pushUniqueItemEx;
 			for (var i = 0, l = obj.length; i < l; ++i)
 			{
 				if (Kekule.ObjUtils.isUnset(r))
-					r = Kekule.ArrayUtils.pushUniqueEx(targetArray, obj[i]);
+					r = pushFunc(targetArray, obj[i], reserveNestedArray);
 				else
-					Kekule.ArrayUtils.pushUniqueEx(targetArray, obj[i]);
+					pushFunc(targetArray, obj[i], reserveNestedArray);
 			}
 			return r;
 		}
 		else
 		{
+			return Kekule.ArrayUtils._pushUniqueItemEx(targetArray, obj);
+			/*
 			if (!obj)
 				return {'index': -1, 'isPushed': false};
 			var index = targetArray.indexOf(obj);
@@ -501,7 +506,21 @@ Kekule.ArrayUtils = {
 			}
 			else // already inside, return -index of obj
 	 			return {'index': index, 'isPushed': false};
+			*/
 	 }
+	},
+	/** @private */
+	_pushUniqueItemEx: function(targetArray, item)
+	{
+		if (!item)
+			return {'index': -1, 'isPushed': false};
+		var index = targetArray.indexOf(item);
+		if (index < 0) // obj not in array, push
+		{
+			return {'index': targetArray.push(item), 'isPushed': true};
+		}
+		else // already inside, return -index of obj
+			return {'index': index, 'isPushed': false};
 	},
 	/**
 	 * Insert obj to index of array and returns the index of newly inserted obj.

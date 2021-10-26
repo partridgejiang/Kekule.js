@@ -83,6 +83,7 @@ test/misc/touchEventTest.html
 /src/_extras/browserAddOns/chrome
 /src/_devUtils/compressUtil
 /src/_devUtils/cmlUnitUtil
+/src/_devUtils/jcampLabelUtil
 /utils/superRemover
 /website
 /tutorial/build

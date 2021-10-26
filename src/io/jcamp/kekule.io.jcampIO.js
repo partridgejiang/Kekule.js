@@ -43,7 +43,17 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 	_parseLdrLines: function(lines)
 	{
 		var p = lines[0].indexOf(JcampConsts.DATA_LABEL_TERMINATOR);
-		var slabel = lines[0].substring(JcampConsts.DATA_LABEL_FLAG.length, p).trim();
+		var slabel;
+		var isEmptyLabel = false;
+		if (p < 0)   // LDR with no '=', a empty label, e.g. ##END
+		{
+			slabel = lines[0].substring(JcampConsts.DATA_LABEL_FLAG.length).trim();
+			isEmptyLabel = true;
+		}
+		else
+		{
+			var slabel = lines[0].substring(JcampConsts.DATA_LABEL_FLAG.length, p).trim();
+		}
 		if (!slabel)   // no label, leading with ##=, a comment LDR, currently bypass it
 		{
 			// TODO: handle comment LDR
@@ -51,10 +61,14 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		}
 		else
 		{
-			var valueLines = [this._removeInlineComments(lines[0].substr(p + 1)).trim()];
-			for (var i = 1, l = lines.length; i < l; ++i)
+			var valueLines = null;
+			if (!isEmptyLabel)
 			{
-				valueLines.push(this._removeInlineComments(lines[i].trim()));
+				valueLines = [this._removeInlineComments(lines[0].substr(p + 1)).trim()];
+				for (var i = 1, l = lines.length; i < l; ++i)
+				{
+					valueLines.push(this._removeInlineComments(lines[i].trim()));
+				}
 			}
 			return {'labelName': Jcamp.Utils.standardizeLdrLabelName(slabel), 'valueLines': valueLines};
 		}
@@ -206,6 +220,9 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		return result;
 	}
 });
+
+// register spectrum info prop namespace
+Kekule.Spectroscopy.MetaPropNamespace.register('jcamp');
 
 // register JCAMP data formats
 Kekule.IO.DataFormat.JCAMP_DX = 'jcamp-dx';

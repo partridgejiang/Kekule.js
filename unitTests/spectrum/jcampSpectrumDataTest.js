@@ -16,7 +16,7 @@ describe('Test of some core data and functions of spectra module', function(){
 
 			// test stored information
 			expect(chemObj.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.MS);
-			expect(chemObj.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.00');
+			expect(chemObj.getSpectrumInfoValue('JcampDxVersion')).toEqual('5.00');
 
 			// spectrum data
 			var spectrumData = chemObj.getData();
@@ -45,7 +45,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			expect(obj1 instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 
 			// test stored information
-			expect(obj1.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.0');
+			expect(obj1.getSpectrumInfoValue('JcampDxVersion')).toEqual('5.0');
 			expect(obj1.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
 
 			// spectrum data
@@ -66,7 +66,7 @@ describe('Test of some core data and functions of spectra module', function(){
 				expect(obj2 instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 
 				// test stored information
-				expect(obj2.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.0');
+				expect(obj2.getSpectrumInfoValue('JcampDxVersion')).toEqual('5.0');
 				expect(obj2.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
 
 				// spectrum data
@@ -115,7 +115,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			expect(obj1 instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 
 			// test stored information
-			expect(obj1.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.0');
+			expect(obj1.getSpectrumInfoValue('JcampDxVersion')).toEqual('5.0');
 			expect(obj1.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
 
 			// spectrum data
@@ -136,7 +136,7 @@ describe('Test of some core data and functions of spectra module', function(){
 				expect(obj2 instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 
 				// test stored information
-				expect(obj2.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.0');
+				expect(obj2.getSpectrumInfoValue('JcampDxVersion')).toEqual('5.0');
 				expect(obj2.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
 
 				// spectrum data
@@ -186,7 +186,7 @@ describe('Test of some core data and functions of spectra module', function(){
 
 			// test stored information
 			expect(chemObj.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
-			expect(chemObj.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.00');
+			expect(chemObj.getSpectrumInfoValue('JcampDxVersion')).toEqual('5.00');
 
 			// spectrum data
 			var spectrumData = chemObj.getData();
@@ -221,7 +221,7 @@ describe('Test of some core data and functions of spectra module', function(){
 
 			// test stored information
 			expect(chemObj.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.MS);
-			expect(chemObj.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.00');
+			expect(chemObj.getSpectrumInfoValue('JcampDxVersion')).toEqual('5.00');
 
 			// spectrum data
 			var spectrumData = chemObj.getData();
@@ -269,7 +269,7 @@ describe('Test of some core data and functions of spectra module', function(){
 
 			// test stored information
 			expect(spectrum.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
-			expect(spectrum.getSpectrumInfoValue('jcamp.jcampDxVersion')).toEqual('5.00');
+			expect(spectrum.getSpectrumInfoValue('JcampDxVersion')).toEqual('5.00');
 
 			// spectrum data
 			var spectrumData = spectrum.getData();
