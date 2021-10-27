@@ -407,6 +407,8 @@ Kekule.IO.CmlSpectrumDataSectionBaseWriter = Class.create(Kekule.IO.CmlElementWr
 			var currInfoItem = result[currKey];
 			currInfoItem.symbol = varDef.getSymbol();
 			currInfoItem.unitSymbol = varDef.getUnit();
+			currInfoItem.name = varDef.getName();
+			currInfoItem.description = varDef.getDescription();
 
 			var continuosRange = targetDataSection.getContinuousVarRange(i);
 			if (continuosRange)
@@ -1239,7 +1241,7 @@ Kekule.IO.CmlSpectrumDataReader = Class.create(Kekule.IO.CmlElementReader,
 			}
 			else if (fname === 'title')
 			{
-				initParams.displayLabel = value;
+				initParams.name = value;
 			}
 			else if (fname === 'start' || fname === 'end' || fname === 'size' || fname === 'stepsize')
 			{
@@ -1279,7 +1281,7 @@ Kekule.IO.CmlSpectrumDataReader = Class.create(Kekule.IO.CmlElementReader,
 			var varDefParams = axisVarDefParamList[i];
 			var initParams = varDefParams.initParams;
 
-			var varDef = Kekule.IO.CmlSpectUtils.getSpectrumVarDef(spectrumObj, initParams.symbol, initParams.unit, null, initParams.dependency);
+			var varDef = Kekule.IO.CmlSpectUtils.getSpectrumVarDef(spectrumObj, initParams.symbol, initParams.unit, initParams.name, initParams.dependency);
 			if (varDef && !varDef.getDisplayLabel() && initParams.displayLabel)
 				varDef.setDisplayLabel(initParams.displayLabel);
 			if (!varDef)
@@ -1394,6 +1396,7 @@ Kekule.IO.CmlSpectrumDataWriter = Class.create(Kekule.IO.CmlSpectrumDataSectionB
 					'_tagName': isIndep? 'xaxis': 'yaxis',
 					'varSymbol': dataVarInfo[key].symbol,
 					'unit': dataVarInfo[key].unitSymbol,
+					'title': dataVarInfo[key].name,
 					'dataType': DataType.FLOAT,
 					'size': DataType.count || spectrumDataSection.getDataCount()
 				};
