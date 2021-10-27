@@ -130,6 +130,79 @@ Kekule.NumUtils = {
 		else
 			return n.toString();
 	},
+	/**
+	 * Output a string with precision length.
+	 * Not the same to Number.toPrecision, this method will not pad with zero to the right.
+	 * For example, call toPrecision(5.3456, 2) will return '5.35',
+	 * but call toPrecision(5.1, 2) will simply return '5.1'.
+	 * @param {Number} num
+	 * @param {Int} precision
+	 * @param {Bool} doNotPadZeroOnRight
+	 * @param {Bool} preserveIntPart If true, when the digits of number int part larger than precision length, all of them will be preserved.
+	 * @returns {String}
+	 */
+	toPrecision: function(num, precision, doNotPadZeroOnRight, preserveIntPart)
+	{
+		var sign = Math.sign(num);
+		var n = Math.abs(num);
+		var decimalPointPos = Kekule.NumUtils.getDecimalPointPos(n);
+		var precisionPos = decimalPointPos + 1 - precision;
+		var result;
+		if (precisionPos >= 0)
+			result = preserveIntPart? Math.round(n): n.toPrecision(precision);
+		else
+		{
+			var v = Math.round(n * Math.pow(10, -precisionPos));
+			var s = v.toString();
+			var strLength = s.length;
+			var dpos = Math.abs(precisionPos);
+			if (strLength === dpos)
+				result = '0.' + s;
+			else if (strLength > dpos)
+				result = s.substr(0, strLength - dpos) + '.' + s.substr(strLength - dpos);
+			else
+				result = 0.0.toFixed(dpos - strLength) + s;
+			if (doNotPadZeroOnRight)
+			{
+				var removeCount = 0;
+				var c = result.charAt(result.length - 1 - removeCount);
+				while (c === '0' || c === '.')
+				{
+					++removeCount;
+					if (c === '.')
+						break;
+					else
+						c = result.charAt(result.length - 1 - removeCount);
+				}
+				result = result.substr(0, result.length - removeCount);
+			}
+		}
+		if (sign < 0)
+			result = '-' + result;
+		return result;
+	},
+	/**
+	 * Returns the position of decimal point to the first digit of number.
+	 * E,g. getDecimalPointPos(224.22) === 2, getDecimalPointPos(0.0022422) = -3, getDecimalPointPos(0) = 0,
+	 * @param {Number} num
+	 * @returns {Int}
+	 */
+	getDecimalPointPos: function(num)
+	{
+		if (Kekule.NumUtils.isFloatEqual(num, 0))
+			return 0;
+		var n = Math.abs(num);
+		var ratio = (n > 1)? 10: 0.1;
+		var delta = (n > 1)? 1: -1;
+		var compValue = 1;
+		var result = 0;
+		while ((n > 1 && compValue <= n) || (n < 1 && compValue > n))
+		{
+			compValue *= ratio;
+			result += delta;
+		}
+		return (n > 1)? (result - 1): result;
+	},
 
 	/**
 	 * Check if f1 and f2 are equal.
