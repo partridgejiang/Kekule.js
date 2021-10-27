@@ -2163,6 +2163,13 @@ Kekule.ObjComparer = {
 		var D = DataType;
 		if (v1 === v2)
 			return 0;
+		var type1 = D.getType(v1);
+		var type2 = D.getType(v2);
+		if (type1 === 'number')  // two float number
+		{
+			if (Kekule.NumUtils.isFloatEqual(v1, v2))
+				return 0;
+		}
 		// the two following comparison handles same type simple values, such as number, bool, string and date
 		if (v1 < v2 && !(v1 > v2))
 			return -1;
@@ -2171,8 +2178,6 @@ Kekule.ObjComparer = {
 		else  // need more complex check
 		{
 			var result = null;  // not determinated
-			var type1 = D.getType(v1);
-			var type2 = D.getType(v2);
 			if (type1 !== type2)  // not same type
 			{
 				var typeIndexes = [
@@ -2215,11 +2220,7 @@ Kekule.ObjComparer = {
 						}
 						else if (type1 === DataType.OBJECT)  // two values are objects
 						{
-							// TODO: not very efficient, need to refine in future
-							var s1 = JSON.toString(v1);
-							var s2 = JSON.toString(v2);
-							result = (s1 < s2)? -1:
-									(s1 > s2)? 1: 0;
+							result = Kekule.ObjComparer._compareHash(v1, v2, options);
 						}
 						else
 							result = null;
@@ -2239,6 +2240,42 @@ Kekule.ObjComparer = {
 			}
 			return result;
 		}
+	},
+	/**
+	 * Compare on two hash values, used for object comparison.
+	 * @param {Hash} v1
+	 * @param {Hash} v2
+	 * @param {Hash} options
+	 * @returns {Int}
+	 * @private
+	 */
+	_compareHash: function(obj1, obj2, options)
+	{
+		var fields1 = Kekule.ObjUtils.getOwnedFieldNames(obj1) || [];
+		var fields2 = Kekule.ObjUtils.getOwnedFieldNames(obj2) || [];
+		var result = fields1.length - fields2.length;
+		if (!result)
+		{
+			fields1.sort();
+			fields2.sort();
+			result = Kekule.ArrayUtils.compare(fields1, fields2);
+			if (!result)
+			{
+				for (var i = 0, l = fields1.length; i < l; ++i)
+				{
+					var key = fields1[i];
+					var value1 = obj1[key];
+					var value2 = obj2[key];
+					result = Kekule.ObjComparer.compare(value1, value2, options);
+					if (result)
+					{
+						console.log(key, result, value1, value2);
+						break;
+					}
+				}
+			}
+		}
+		return result;
 	}
 };
 
@@ -4222,7 +4259,17 @@ Kekule.Scalar = Class.create(Kekule.ChemObject,
 		this.defineProp('errorValue', {'dataType': DataType.PRIMARY});
 		this.defineProp('unit', {'dataType': DataType.STRING});
 		this.defineProp('title', {'dataType': DataType.STRING});
-	}
+	},
+	/** @ignore */
+	doGetComparisonPropNames: function(options)
+	{
+		var result = this.tryApplySuper('doGetComparisonPropNames', [options]);
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			return (result || []).concat(['name', 'value', 'errorValue', 'unit', 'title']);
+		}
+		return result;
+	},
 });
 
 /**
