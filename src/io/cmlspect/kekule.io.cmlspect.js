@@ -85,7 +85,8 @@ Kekule.IO.CML.Spect.Consts = {
 		'http://www.xml-cml.org/units/siUnits dict/siUnitsDict.xml'
 	],
 
-	ANNOTATION_METATYPE: 'annotation'
+	ANNOTATION_METATYPE: 'annotation',
+	INFO_METATYPE: 'info'
 };
 var CMLSpectConsts = Kekule.IO.CML.Spect.Consts;
 
@@ -1705,8 +1706,13 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 				var metaType = dataItem.metadataType;
 				if (metaType === CMLSpectConsts.ANNOTATION_METATYPE)  // is annotation
 					spectrumObj.setAnnotation(key, value);
+				else if (metaType === CMLSpectConsts.INFO_METATYPE)  // is normal info
+					spectrumObj.setInfoValue(key, value);
 				else
+				{
+					//console.log('set meta', key, value);
 					spectrumObj.setMeta(key, value);
+				}
 			}
 		};
 		var getSaveMethod = function(elemTagName, spectrumObj)
@@ -1854,6 +1860,12 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 			result = AU.exclude(result, ['metaData', 'parameters', 'conditions', 'annotations']);
 		}
 		return result;
+	},
+	/** @ignore */
+	doWriteObjInfoValueItem: function(key, value, obj, parentListElem, options)
+	{
+		// write normal info value with a specified metaType
+		return this.writeObjMetaValueToListElem(obj, key, value, CMLSpectConsts.INFO_METATYPE, parentListElem);
 	},
 	/** @private */
 	writeSpectrum: function(spectrum, targetElem, options)
