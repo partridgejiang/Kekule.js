@@ -30,7 +30,8 @@ Kekule.globalOptions.add('IO.cml', {
 	autoHideSampleInsideSpectrum: true,  // if true, the sample molecule inside <spectrum> will be hidden from displaying
 	// options for writer
 	autoInsertHiddenRefMoleculeToSample: true,  // if true, a hidden referred molecule will be automatically insert to the <sample> child element of <spectrum>
-	spectrumDataValueOutputDigitCountAfterDecimalPoint: 8,
+	//spectrumDataValueOutputDigitCountAfterDecimalPoint: 8,
+	spectrumDataValueOutputPrecisionCount: 8,
 	autoConvertNmrDataFreqToUnit: 'Hz'   // in JSpectView convention, the frequency of NMR continuous spectrum should be in unit Hz
 });
 
@@ -332,7 +333,8 @@ Kekule.IO.CmlSpectUtils = {
 	floatToCmlString: function(value, maxDigitCount)
 	{
 		if (maxDigitCount)
-			return Kekule.NumUtils.toDecimals(value, maxDigitCount);
+			//return Kekule.NumUtils.toDecimals(value, maxDigitCount);
+			return value.toPrecision(maxDigitCount);
 		else
 			return value.toString();
 	},
@@ -907,10 +909,13 @@ Kekule.IO.CmlSpectrumPeakWriter = Class.create(Kekule.IO.CmlElementWriter,
 		var domHelper = this.getDomHelper();
 		var cmlHash= this._peakHashToCmlHash(peakObj);
 		var keys = Kekule.ObjUtils.getOwnedFieldNames(cmlHash);
+		var decimalCount = options.spectrumDataValueOutputPrecisionCount || 0;
 		for (var i = 0, l = keys.length; i < l; ++i)
 		{
 			var key = keys[i];
 			var value = cmlHash[key];
+			if (['xvalue', 'yvalue'].indexOf(key.toLowerCase()) >= 0)
+				CmlDomUtils.setCmlElemAttribute(targetElem, key, CmlSpectUtils.floatToCmlString(value, decimalCount), domHelper);
 			if (key.toLowerCase() === 'structure' && DataType.isObjectValue(value))  // sub structure
 				this.writePeakSubStructure(value, targetElem, options);
 			else
@@ -1414,7 +1419,7 @@ Kekule.IO.CmlSpectrumDataWriter = Class.create(Kekule.IO.CmlSpectrumDataSectionB
 			}
 
 			// collect array values
-			var decimalCount = (options && options.spectrumDataValueOutputDigitCountAfterDecimalPoint) || 0;
+			var decimalCount = (options && options.spectrumDataValueOutputPrecisionCount) || 0;
 			spectrumDataSection.forEach(function(value, index){
 				for (var i = 0, l = arrays.length; i < l; ++i)
 				{
@@ -1428,6 +1433,7 @@ Kekule.IO.CmlSpectrumDataWriter = Class.create(Kekule.IO.CmlSpectrumDataSectionB
 						{
 							dvalue = arrays[i]._originUnitObj.convertValueTo(dvalue, arrays[i]._unitObj);
 						}
+						//var allowedError = allowedErrorRate? dvalue * allowedErrorRate
 						arrays[i].values.push(CmlSpectUtils.floatToCmlString(dvalue, decimalCount));
 					}
 				}
