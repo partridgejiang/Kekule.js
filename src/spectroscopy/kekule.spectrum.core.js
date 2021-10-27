@@ -1875,7 +1875,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var result = this.tryApplySuper('doGetComparisonPropNames', [options]);
 		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
-			result = (result || []).concat(/*'name', 'title', 'defPeakRoot', */ 'localVarInfos', 'mode', 'dataItems');
+			result = (result || []).concat(/*'name', 'title',*/  'defPeakRoot', 'localVarInfos', 'mode', 'dataItems');
 		}
 		return result;
 	},
@@ -1899,7 +1899,19 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	{
 		var varInfos1 = section1.getActualLocalVarInfos();
 		var varInfos2 = section2.getActualLocalVarInfos();
-		var result = this.doCompareOnValue(varInfos1, varInfos2, options);
+		var result = varInfos1.length - varInfos2.length;
+		if (!result && !(options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)) // local var info should not affect spectrum data greatly
+		{
+			for (var i = 0, l = varInfos1.length; i < l; ++i)
+			{
+				var info1 = varInfos1[i];
+				var info2 = varInfos2[i];
+				result = Kekule.ObjComparer.compare(info1, info2, options);
+				if (result)
+					break;
+			}
+		}
+		//var result = this.doCompareOnValue(varInfos1, varInfos2, options);
 		//console.log('varinfo', result, varInfos1, varInfos2);
 		if (!result)  // further compare the var definitions of
 		{
@@ -1917,14 +1929,24 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	/** @private */
 	doCompareDataItems: function(section1, section2, options)
 	{
+		var getArrayValueAt = function(section, i)
+		{
+			var hashValue = section.getHashValueAt(i);
+			return section._itemHashToArray(hashValue);
+		};
 		var result = section1.getDataCount() - section2.getDataCount();
 		if (!result)
 		{
 			for (var i = 0, l = section1.getDataCount(); i < l; ++i)
 			{
+				/*
 				var rawValue1 = section1.getRawValueAt(i);
 				var rawValue2 = section2.getRawValueAt(i);
 				result = this._compareDataRawValue(rawValue1, rawValue2, options);
+				*/
+				var value1 = getArrayValueAt(section1, i);
+				var value2 = getArrayValueAt(section1, i);
+				result = this._compareDataRawValue(value1, value2, options);
 				// and the extra info of value
 				if (!result)
 				{
@@ -3425,7 +3447,11 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		}
 		else
 		{
-			return this.tryApplySuper('doCompareProperty', [targetObj, propName, options]);
+			//var result = this.tryApplySuper('doCompareProperty', [targetObj, propName, options]);
+			var v1 = this.getPropValue(propName);
+			var v2 = targetObj.getPropValue(propName);
+			var result = this.doCompareOnValue(v1, v2, options);
+			return result;
 		}
 	}
 
