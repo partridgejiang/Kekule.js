@@ -3926,11 +3926,14 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		else
 		{
 			// first extract all properties that should be compared
+			/*
 			propNames = this.doGetComparisonPropNames(options);
 			if (!propNames)  // returns null, need to compare all public and published properties
 			{
 				propNames = this.doGetDefaultComparisonPropNames();
 			}
+			*/
+			propNames = this.getComparisonPropNames(options);
 		}
 		// then compare each property values
 		var result = 0;
@@ -3942,6 +3945,22 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		}
 		// all properties returns 0 (equal), returns 0
 		return 0;
+	},
+	/**
+	 * Returns the essential property names that should be handled during object comparison.
+	 * Descendants may override this method.
+	 * @param {Hash} options
+	 * @returns {Array} Returns property names.
+	 * @private
+	 */
+	getComparisonPropNames: function(options)
+	{
+		var propNames = this.doGetComparisonPropNames(options);
+		if (!propNames)  // returns null, need to compare all public and published properties
+		{
+			propNames = this.doGetDefaultComparisonPropNames();
+		}
+		return propNames;
 	},
 	/**
 	 * Returns all essential property names that should be handled during object comparison.
@@ -4141,6 +4160,27 @@ Kekule.VarDefinition = Class.create(ObjectEx,
 	notifyInfoChange: function()
 	{
 		this.notifyPropSet('info', this.getPropStoreFieldValue('info'));
+	},
+	// methods for comparison
+	/** @private */
+	doCompare: function(targetObj, options)
+	{
+		var result = 0;
+		var compProps;
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+			compProps = ['unit', 'dependency', 'info'];
+		else
+			compProps = ['name', 'symbol', 'unit', 'dependency', 'info', 'displayLabel', 'description'];
+		for (var i = 0, l = compProps.length; i < l; ++i)
+		{
+			var name = compProps[i];
+			var v1 = this.getPropValue(name);
+			var v2 = targetObj.getPropValue(name);
+			result = Kekule.ObjComparer._compareValue(v1, v2, options);
+			if (!result)
+				break;
+		}
+		return result;
 	}
 });
 
@@ -4639,6 +4679,17 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 				else
 					result = Kekule.BoxUtils.getContainerBox(result, box);
 			}
+		}
+		return result;
+	},
+
+	/** @ignore */
+	getComparisonPropNames: function(options)
+	{
+		var result = this.tryApplySuper('getComparisonPropNames', [options]);
+		if (result && this._transparent)
+		{
+			result = Kekule.ArrayUtils.exclude(result, ['parent', 'owner']);
 		}
 		return result;
 	}
