@@ -2435,6 +2435,17 @@ Kekule.IO.CmlArrayWriter = Class.create(Kekule.IO.CmlElementWriter,
 	writeArrayObj: function(arrayObj, targetElem, options)
 	{
 		var domHelper = this.getDomHelper();
+		// simple info fields
+		//var specialFields = ['unit', 'dataType', 'size', 'start', 'end', 'values'];
+		//var fields = Kekule.ArrayUtils.exclude(Kekule.ObjUtils.getOwnedFieldNames(arrayObj), specialFields);
+		var fields = ['id', 'title', 'dictRef'];
+		for (var i = 0, l = fields.length; i < l; ++i)
+		{
+			var v = arrayObj[fields[i]];
+			if (Kekule.ObjUtils.notUnset(v))
+				CmlDomUtils.setCmlElemAttribute(targetElem, fields[i], v, domHelper);
+		}
+
 		// write unit / dataType attribs
 		if (arrayObj.unit)
 			CmlDomUtils.setCmlElemAttribute(targetElem, 'units', CmlUtils.metricsUnitSymbolToCmlUnitStr(arrayObj.unit), domHelper);
@@ -2457,6 +2468,10 @@ Kekule.IO.CmlArrayWriter = Class.create(Kekule.IO.CmlElementWriter,
 		{
 			var valueDelimiter = arrayObj.delimiter || this.getDefaultArrayValueDelimiter();
 			Kekule.DomUtils.setElementText(targetElem, values.join(valueDelimiter));
+			if (valueDelimiter !== this.getDefaultArrayValueDelimiter())
+			{
+				CmlDomUtils.setCmlElemAttribute(targetElem, 'delimiter', valueDelimiter, domHelper);
+			}
 		}
 	}
 });
