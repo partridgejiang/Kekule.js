@@ -96,7 +96,7 @@ describe('Test of some core data and functions of spectra module', function() {
 			expect(spec.getSpectrumType()).toEqual(Kekule.Spectroscopy.SpectrumType.NMR);
 
 			// metas
-			expect(spec.getSpectrumInfoValue('NMR.ObserveFrequency').getValue()).toEqual('500');  // the <scalar> element has dataType="xsd:string" attribute!
+			expect(spec.getSpectrumInfoValue('NMR.ObserveFrequency').getValue()).toEqual(500);
 			expect(spec.getSpectrumInfoValue('NMR.ObserveFrequency').getUnit()).toEqual('MHz');
 			expect(spec.getSpectrumInfoValue('NMR.ObserveNucleus')).toEqual('H');
 			expect(spec.getSpectrumInfoValue('ObserveNucleus')).toEqual('H');  // test for prefix omit
