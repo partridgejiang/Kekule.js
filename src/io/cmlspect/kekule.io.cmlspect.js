@@ -334,8 +334,8 @@ Kekule.IO.CmlSpectUtils = {
 	floatToCmlString: function(value, maxDigitCount)
 	{
 		if (maxDigitCount)
-			//return Kekule.NumUtils.toDecimals(value, maxDigitCount);
-			return value.toPrecision(maxDigitCount);
+			return Kekule.NumUtils.toPrecision(value, maxDigitCount, true, true);
+			//return value.toPrecision(maxDigitCount);
 		else
 			return value.toString();
 	},
