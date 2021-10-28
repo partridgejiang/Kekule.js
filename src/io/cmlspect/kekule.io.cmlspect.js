@@ -1930,11 +1930,11 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 				listElem = processor.listElemGetter.apply(this, [targetElem, domHelper]);
 				if (listElem)
 				{
-					var keys = spectrum._getAllKeysOfInfoBasedHashProp(category);
+					var keys = spectrum.getSpectrumInfoKeysOfCategory(category);
 					for (var j = 0, jj = keys.length; j < jj; ++j)
 					{
 						var key = keys[j];
-						var value = spectrum._getInfoBasedHashPropValue(category, key);
+						var value = spectrum.getSpectrumInfoValue(key, category);
 						// In JSpectView Convention, all frequencies in NMR should be in Hz?
 						if (key === 'NMR.ObserveFrequency' && (value instanceof Kekule.Scalar) && options.autoConvertNmrDataFreqToUnit)
 						{
