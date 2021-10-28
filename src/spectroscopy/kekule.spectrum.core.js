@@ -3192,14 +3192,14 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		return result;
 	},
 	/** @private */
-	_getInfoBasedHashPropValue: function(infoKeyName, propName)
+	_getSpectrumInfoValueOfCategory: function(category, key)
 	{
-		var hash = infoKeyName? this.getInfoValue(infoKeyName): this.getInfo();
+		var hash = category? this.getInfoValue(category): this.getInfo();
 		if (!hash)
 			return undefined;
 		if (Kekule.globalOptions.spectrum.spectrumInfo.enablePrefixOmissionInGetter)
 		{
-			var candicateNames = this._getCandidateInfoPropNames(propName);
+			var candicateNames = this._getCandidateInfoPropNames(key);
 			for (var i = 0, l = candicateNames.length; i < l; ++i)
 			{
 				var name = candicateNames[i];
@@ -3209,24 +3209,50 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 			return undefined;
 		}
 		else
-			return hash[propName];
+			return hash[key];
 	},
-	/** @private */
-	_setInfoBasedHashpropValue: function(infoKeyName, propName, value)
+	/**
+	 * Set the spectrum info value of a category.
+	 * @param {String} category
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setSpectrumInfoValue: function(category, key, value)
 	{
-		var hash = this.getInfoValue(infoKeyName);
-		if (!hash)
+		if (category)
 		{
-			hash = {};
-			this.setInfoValue(infoKeyName, hash);
+			var hash = this.getInfoValue(category);
+			if (!hash)
+			{
+				hash = {};
+				this.setInfoValue(category, hash);
+			}
+			hash[key] = value;
 		}
-		hash[propName] = value;
+		else
+			this.setInfoValue(key, value);
+		return this;
 	},
-	/** @private */
-	_getAllKeysOfInfoBasedHashProp: function(infoKeyName)
+	/**
+	 * Returns all keys of a spectrum info category.
+	 * @param {String} spectrumInfoCategory
+	 * @returns {Array}
+	 */
+	getSpectrumInfoKeysOfCategory: function(spectrumInfoCategory)
 	{
-		var hash = this.getInfoValue(infoKeyName);
-		return hash? Kekule.ObjUtils.getOwnedFieldNames(hash, false): [];
+		if (spectrumInfoCategory)
+		{
+			var hash = this.getInfoValue(spectrumInfoCategory);
+			return hash ? Kekule.ObjUtils.getOwnedFieldNames(hash, false) : [];
+		}
+		else if (spectrumInfoCategory === '')  // retrieve the keys at the top level of info property
+		{
+			var result = this.getInfoKeys();
+			result = AU.exclude(result, this.getSpectrumInfoCategories());
+			return result;
+		}
+		else
+			return [];
 	},
 	/**
 	 * Returns the spectrum info category names existed in current spectrum.
@@ -3239,7 +3265,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		for (var i = 0, l = candicateCategories.length; i < l; ++i)
 		{
 			var c = candicateCategories[i];
-			var keys = this._getAllKeysOfInfoBasedHashProp(c);
+			var keys = this.getSpectrumInfoKeysOfCategory(c);
 			if (keys && keys.length)
 				result.push(c);
 		}
@@ -3248,17 +3274,20 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	/**
 	 * Returns value of spectrum meta/condition/parameter/annotation.
 	 * @param {String} key
-	 * @param {Array} candicateCategories
+	 * @param {Variant} candicateCategories A single category or an array of categories.
 	 * @returns {Variant}
 	 */
 	getSpectrumInfoValue: function(key, candicateCategories)
 	{
+		var categories;
 		if (!candicateCategories)
-			candicateCategories = ['conditions', 'parameters', 'metaData', 'annotations', ''];
-		for (var i = 0, l = candicateCategories.length; i < l; ++i)
+			categories = ['conditions', 'parameters', 'metaData', 'annotations', ''];
+		else
+			categories = AU.toArray(candicateCategories);
+		for (var i = 0, l = categories.length; i < l; ++i)
 		{
-			var c = candicateCategories[i];
-			var v = this._getInfoBasedHashPropValue(c, key);
+			var c = categories[i];
+			var v = this._getSpectrumInfoValueOfCategory(c, key);
 			if (Kekule.ObjUtils.notUnset(v))
 				return v;
 		}
@@ -3271,7 +3300,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getMeta: function(key)
 	{
-		return this._getInfoBasedHashPropValue('metaData', key);
+		return this._getSpectrumInfoValueOfCategory('metaData', key);
 	},
 	/**
 	 * Set the value of a spectrum meta data.
@@ -3280,7 +3309,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	setMeta: function(key, value)
 	{
-		this._setInfoBasedHashpropValue('metaData', key, value);
+		this.setSpectrumInfoValue('metaData', key, value);
 		return this;
 	},
 	/**
@@ -3289,7 +3318,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getMetaKeys: function()
 	{
-		return this._getAllKeysOfInfoBasedHashProp('metaData');
+		return this.getSpectrumInfoKeysOfCategory('metaData');
 	},
 	/**
 	 * Returns the value of a spectrum condition.
@@ -3298,7 +3327,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getCondition: function(key)
 	{
-		return this._getInfoBasedHashPropValue('conditions', key);
+		return this._getSpectrumInfoValueOfCategory('conditions', key);
 	},
 	/**
 	 * Set the value of a spectrum condition.
@@ -3307,7 +3336,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	setCondition: function(key, value)
 	{
-		this._setInfoBasedHashpropValue('conditions', key, value);
+		this.setSpectrumInfoValue('conditions', key, value);
 		return this;
 	},
 	/**
@@ -3316,7 +3345,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getConditionKeys: function()
 	{
-		return this._getAllKeysOfInfoBasedHashProp('conditions');
+		return this.getSpectrumInfoKeysOfCategory('conditions');
 	},
 	/**
 	 * Returns the value of a spectrum parameter.
@@ -3325,7 +3354,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getParameter: function(key)
 	{
-		return this._getInfoBasedHashPropValue('parameters', key);
+		return this._getSpectrumInfoValueOfCategory('parameters', key);
 	},
 	/**
 	 * Set the value of a spectrum parameter.
@@ -3334,7 +3363,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	setParameter: function(key, value)
 	{
-		this._setInfoBasedHashpropValue('parameters', key, value);
+		this.setSpectrumInfoValue('parameters', key, value);
 		return this;
 	},
 	/**
@@ -3343,7 +3372,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getParameterKeys: function()
 	{
-		return this._getAllKeysOfInfoBasedHashProp('parameters');
+		return this.getSpectrumInfoKeysOfCategory('parameters');
 	},
 	/**
 	 * Returns the value of a spectrum annotation.
@@ -3352,7 +3381,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getAnnotation: function(key)
 	{
-		return this._getInfoBasedHashPropValue('annotations', key);
+		return this._getSpectrumInfoValueOfCategory('annotations', key);
 	},
 	/**
 	 * Set the value of a spectrum annotation.
@@ -3361,7 +3390,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	setAnnotation: function(key, value)
 	{
-		this._setInfoBasedHashpropValue('annotations', key, value);
+		this.setSpectrumInfoValue('annotations', key, value);
 		return this;
 	},
 	/**
@@ -3370,7 +3399,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getAnnotationKeys: function()
 	{
-		return this._getAllKeysOfInfoBasedHashProp('annotations');
+		return this.getSpectrumInfoKeysOfCategory('annotations');
 	},
 
 	/*
