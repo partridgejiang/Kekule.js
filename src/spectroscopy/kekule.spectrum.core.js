@@ -661,6 +661,12 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	},
 	*/
 
+	/** @ignore */
+	isEmpty: function()
+	{
+		return this.getDataCount() <= 0;
+	},
+
 	/**
 	 * Returns whether this data section containing the peak data.
 	 * @returns {Bool}
@@ -2220,6 +2226,21 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 		},
 
 		/**
+		 * Check if there are concrete data in child data sections.
+		 * @returns {Bool}
+		 */
+		isEmpty: function()
+		{
+			var result = true;
+			for (var i = 0, l = this.getSectionCount(); i < l; ++i)
+			{
+				if (!this.getSectionAt(i).isEmpty())
+					return false;
+			}
+			return result;
+		},
+
+		/**
 		 * Create and append a new {@link Kekule.Spectroscopy.SpectrumDataSection}.
 		 * @param {Array} variables Array of local variable symbol or definition used by secion.
 		 * @param {Int} mode
@@ -3047,6 +3068,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	/** @private */
 	_initDelegatedMethods: function()
 	{
+		this._defineDataDelegatedMethod('isEmpty');
 		this._defineDataDelegatedMethod('createDataSection', 'createSection');
 		this._defineDataDelegatedMethod('clearDataSection', 'clearSection');
 		this._defineDataDelegatedMethod('getDataSectionCount', 'getSectionCount');
