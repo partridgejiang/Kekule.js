@@ -669,6 +669,29 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	{
 		return this.getMode() === Kekule.Spectroscopy.DataMode.PEAK;
 	},
+	/**
+	 * Returns whether this data section containing the peak data and assignments.
+	 * @returns {Bool}
+	 */
+	hasPeakAssignments: function()
+	{
+		if (this.isPeakSection())
+		{
+			var result = false;
+			for (var i = 0, l = this.getDataCount(); i < l; ++i)
+			{
+				var extra = this.getExtraInfoAt(i);
+				if (extra && extra && extra.hasAssignments && extra.hasAssignments())
+				{
+					result = true;
+					break;
+				}
+			}
+			return result;
+		}
+		else
+			return false;
+	},
 
 	/**
 	 * Returns the actual parent SpectrumData object.
@@ -2872,6 +2895,15 @@ Kekule.Spectroscopy.SpectrumPeakDetails = Class.create(Kekule.ChemObject,
 	{
 		return 'p';
 	},
+	/**
+	 * Returns whether this peak detail has assignments info.
+	 * @returns {Bool}
+	 */
+	hasAssignments: function()
+	{
+		var a = this.getAssignments();
+		return !!(a && a.length);
+	},
 	/** @ignore */
 	doGetComparisonPropNames: function(options)
 	{
@@ -2910,15 +2942,6 @@ Kekule.Spectroscopy.SpectrumNMR = {
 	TargetNucleus: {
 		C13: 'C13',
 		H: 'H'
-	}
-};
-/**
- * Some constants used by MS spectrum.
- * @object
- */
-Kekule.Spectroscopy.SpectrumMS = {
-	SpectrometerType: {
-
 	}
 };
 
