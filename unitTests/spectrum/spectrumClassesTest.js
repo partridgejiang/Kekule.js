@@ -59,6 +59,7 @@ describe('Test of some core data and functions of spectra module', function(){
 			new Kekule.VarDefinition({'symbol': 'd', 'units': 'unitR', 'dependency': Kekule.VarDependency.DEPENDENT})
 		];
 		var sData = new Kekule.Spectroscopy.SpectrumData(null, variables);
+		expect(sData.isEmpty()).toEqual(true);
 		sData.setContinuousVarRange('x', 0, 10);
 		sData.setContinuousVarRange('z', 5, 0);
 		sData.setDefaultVarValue('d', 10);
@@ -68,6 +69,7 @@ describe('Test of some core data and functions of spectra module', function(){
 		sData.appendData({y: 3});
 		sData.appendData({y: 4});
 		sData.appendData({y: 5});
+		expect(sData.isEmpty()).toEqual(!true);
 
 		expect(sData.getHashValueAt(0).x).toEqual(0);
 		expect(sData.getHashValueAt(1).x).toEqual(2);
@@ -101,6 +103,7 @@ describe('Test of some core data and functions of spectra module', function(){
 
 		var spectrum = new Kekule.Spectroscopy.Spectrum();
 		spectrum.setVariables(variables);
+		expect(spectrum.isEmpty()).toEqual(true);
 
 		var sData = spectrum.getData(); //new Kekule.Spectroscopy.SpectrumData(null, variables);
 		sData.setDefaultVarValue('d', 20);
@@ -116,6 +119,8 @@ describe('Test of some core data and functions of spectra module', function(){
 		sData.setValueAt(5, {x: 6, y: 6, z: 6, r: -6, 'extra1': 'extra1Value5'});
 		sData.setValueAt(4, {x: 5, y: 5, z: 5, r: -5, 'extra1': 'extra1Value5'});
 		sData.setExtraInfoAt(1, {'extra2': 'extra2Value1'});
+
+		expect(spectrum.isEmpty()).toEqual(!true);
 
 		// serialize and deserialize
 		var json1 = {};
