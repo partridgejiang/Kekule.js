@@ -146,15 +146,34 @@ describe('Test of some core data and functions of spectra module', function(){
 	});
 	*/
 
-	it('Kekule.IO.JcampLdrValueParser test', function(){
+	it('Kekule.IO.Jcamp.LdrValueParserCoder test', function(){
 		// note the month param in Date constructor starts from 0
-		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['1913/04/05', ''])).toEqual(new Date(1913, 3, 5));
-		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['1913/4/5', ''])).toEqual(new Date(1913, 3, 5));
-		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['1998/08/12 23:18:02'])).toEqual(new Date(1998, 7, 12, 23, 18, 2));
-		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['1998/08/12 23:18:02.'])).toEqual(new Date(1998, 7, 12, 23, 18, 2));
-		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['1998/08/12  23:18:02.0010'])).toEqual(new Date(1998, 7, 12, 23, 18, 2, 10));
-		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['1998/08/12  23:18:02.0010 +0500'])).toEqual(new Date(1998, 7, 12, 23, 18, 2, 10));
-		expect(Kekule.IO.Jcamp.LdrValueParser.longDateParser(['98/08/12 23:18:02.0010 +0500'])).toEqual(new Date(98, 7, 12, 23, 18, 2, 10));
+		var items = [
+			['1913/04/05 00:00:00', new Date(1913, 3, 5), true],
+			['1913/04/05', new Date(1913, 3, 5)],
+			['1913/4/5', new Date(1913, 3, 5)],
+			['1998/08/12 23:18:02', new Date(1998, 7, 12, 23, 18, 2), true],
+			['1998/08/12 23:18:02.', new Date(1998, 7, 12, 23, 18, 2)],
+			['1998/08/12 23:18:02.0010', new Date(1998, 7, 12, 23, 18, 2, 10), true],
+			['1998/08/12  23:18:02.0010 +0500', new Date(1998, 7, 12, 23, 18, 2, 10)],
+			['98/08/12  23:18:02.0010 +0500', new Date(98, 7, 12, 23, 18, 2, 10)]
+		];
+		items.forEach(function(item, index){
+			var parsed = Kekule.IO.Jcamp.LdrValueParserCoder.longDateParser(Kekule.ArrayUtils.toArray(item[0]));
+			expect(parsed).toEqual(item[1]);
+			//console.log(index, ':', item[0], parsed, item[1]);
+			if (item[2])
+				expect(Kekule.IO.Jcamp.LdrValueParserCoder.longDateCoder(item[1])).toEqual(item[0]);
+		});
+		/*
+		expect(Kekule.IO.Jcamp.LdrValueParserCoder.longDateParser(['1913/04/05', ''])).toEqual(new Date(1913, 3, 5));
+		expect(Kekule.IO.Jcamp.LdrValueParserCoder.longDateParser(['1913/4/5', ''])).toEqual(new Date(1913, 3, 5));
+		expect(Kekule.IO.Jcamp.LdrValueParserCoder.longDateParser(['1998/08/12 23:18:02'])).toEqual(new Date(1998, 7, 12, 23, 18, 2));
+		expect(Kekule.IO.Jcamp.LdrValueParserCoder.longDateParser(['1998/08/12 23:18:02.'])).toEqual(new Date(1998, 7, 12, 23, 18, 2));
+		expect(Kekule.IO.Jcamp.LdrValueParserCoder.longDateParser(['1998/08/12  23:18:02.0010'])).toEqual(new Date(1998, 7, 12, 23, 18, 2, 10));
+		expect(Kekule.IO.Jcamp.LdrValueParserCoder.longDateParser(['1998/08/12  23:18:02.0010 +0500'])).toEqual(new Date(1998, 7, 12, 23, 18, 2, 10));
+		expect(Kekule.IO.Jcamp.LdrValueParserCoder.longDateParser(['98/08/12 23:18:02.0010 +0500'])).toEqual(new Date(98, 7, 12, 23, 18, 2, 10));
+		*/
 	});
 
 	var DT = Kekule.IO.Jcamp.DigitCharType;
