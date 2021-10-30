@@ -203,6 +203,20 @@ Kekule.NumUtils = {
 		}
 		return (n > 1)? (result - 1): result;
 	},
+	/**
+	 * Returns the heading digit of a number.
+	 * For example, it returns 3 for number 35.12, returns 1 for number 0.123.
+	 * @param {String} num
+	 */
+	getHeadingDigit: function(num)
+	{
+		if (Kekule.NumUtils.isFloatEqual(num, 0))
+			return 0;
+		var n = Math.abs(num);
+		var decimalPointPos = Kekule.NumUtils.getDecimalPointPos(n);
+		var c = Math.pow(10, decimalPointPos);
+		return Math.floor(n / c);
+	},
 
 	/**
 	 * Check if f1 and f2 are equal.
