@@ -2361,12 +2361,13 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 		 * @param {Array} sections
 		 * @param {Array} targetVariables Array of variable definition or symbol.
 		 *   If not set, all variables will be calculated.
+		 * @param {Hash} options Extra calculation options, same as the options in {@link Kekule.Spectroscopy.SpectrumDataSection.calcDataRange}.
 		 * @returns {Hash}
 		 */
-		calcDataRangeOfSections: function (sections, targetVariables) {
+		calcDataRangeOfSections: function (sections, targetVariables, options) {
 			var result = {};
 			for (var i = 0, l = sections.length; i < l; ++i) {
-				var range = sections[i].calcDataRange(targetVariables);
+				var range = sections[i].calcDataRange(targetVariables, options);
 				result = Kekule.Spectroscopy.Utils.mergeDataRange(result, range);
 			}
 			return result;
