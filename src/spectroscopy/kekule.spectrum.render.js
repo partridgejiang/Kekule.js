@@ -693,8 +693,16 @@ Kekule.Render.Spectrum2DRenderUtils = {
 		{
 			if (isIndependent)
 			{
-				if (axisUnitSymbol === KU.Frequency.WAVE_NUMBER)
+				if (axisUnitSymbol)
+				{
+					var unitObj = KU.getUnit(axisUnitSymbol);
+					if (unitObj.category === KU.WaveNumber)
+						return false;
+				}
+				/*
+				if (axisUnitSymbol === KU.WaveNumber.RECIPROCAL_CENTIMETER)
 					result = false;
+				*/
 			}
 		}
 		return result;
