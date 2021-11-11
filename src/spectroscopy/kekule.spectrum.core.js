@@ -330,7 +330,8 @@ DCM.register({
 		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)
 		{
 			var observeFreq = spectrum.getParameter('NMR.ObserveFrequency');
-			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
+			var freqNum = observeFreq && observeFreq.getValue();
+			if (observeFreq && freqNum && Kekule.NumUtils.isNormalNumber(freqNum) && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
 			{
 				return (fromUnitObj.category === Kekule.Unit.Frequency && toUnitObj.category === Kekule.Unit.Dimensionless)
 					|| (fromUnitObj.category === Kekule.Unit.Dimensionless && toUnitObj.category === Kekule.Unit.Frequency);
@@ -344,7 +345,8 @@ DCM.register({
 		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)
 		{
 			var observeFreq = spectrum.getParameter('NMR.ObserveFrequency');
-			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
+			var freqNum = observeFreq && observeFreq.getValue();
+			if (observeFreq && freqNum && Kekule.NumUtils.isNormalNumber(freqNum) && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
 			{
 				if (fromUnitObj.category === Kekule.Unit.Frequency)
 					result.push(Kekule.Unit.Dimensionless.PARTS_PER_MILLION);
