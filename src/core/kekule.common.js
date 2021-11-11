@@ -4168,6 +4168,13 @@ Kekule.VarDefinition = Class.create(ObjectEx,
 			});
 	},
 	/**
+	 * Returns whether the var is a independent one
+	 */
+	isIndependent: function()
+	{
+		return this.getDependency() !== Kekule.VarDependency.DEPENDENT;
+	},
+	/**
 	 * Returns all keys in {@link Kekule.ChemObject#info} property.
 	 * @returns {Array}
 	 */
