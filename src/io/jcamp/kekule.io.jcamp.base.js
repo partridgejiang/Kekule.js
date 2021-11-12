@@ -19,6 +19,7 @@ var AU = Kekule.ArrayUtils;
  */
 Kekule.globalOptions.add('IO.jcamp', {
 	enableXYDataValueCheck: true,
+	dataValueCheckAllowedErrorRatio: 0.001,   // allow 0.1% error of X/Y value check
 	maxCharsPerLine: 80,   // theoretically, there should be no more than 80 chars per line in JCAMP file
 });
 
@@ -751,8 +752,9 @@ Kekule.IO.Jcamp.Utils = {
 		var isNextContiLine = false;
 		var prevEndWithDif = false;
 		var abscissaInterval;
+		var lineCount = strLines.length;
 
-		var appendDecodedBufferToResult = function(result, buffer, doAbscissaValueCheck, doOrdinateValueCheck, prevEndWithDif)
+		var appendDecodedBufferToResult = function(result, buffer, doAbscissaValueCheck, doOrdinateValueCheck, prevEndWithDif, totalLineCount)
 		{
 			//if (doOrdinateValueCheck)
 			if (prevEndWithDif)  // prev line end with DIF form, next line should has a duplicated value check item
@@ -785,14 +787,14 @@ Kekule.IO.Jcamp.Utils = {
 				}
 			}
 			if (doAbscissaValueCheck)
-				checkAbscissaInterval(buffer, result[result.length - 1]);
+				checkAbscissaInterval(buffer, result[result.length - 1], totalLineCount);
 			/*
 			if (result[result.length - 1])
 				console.log('push buffer', result[result.length - 1], (buffer[0] - result[result.length - 1][0]) / (result[result.length - 1].length - 1));
 			*/
 			result.push(buffer);
 		}
-		var checkAbscissaInterval = function(currGroup, prevGroup)
+		var checkAbscissaInterval = function(currGroup, prevGroup, lineCount)
 		{
 			if (currGroup && prevGroup)
 			{
@@ -802,11 +804,12 @@ Kekule.IO.Jcamp.Utils = {
 				// console.log('prev interval', abscissaInterval, 'curr', currInterval);
 				if (abscissaInterval)
 				{
-					var allowedError = Math.max(Math.abs(currInterval)) * 0.001;  // TODO: current fixed to 0.1% of error
+					var abscissaRange = Math.min(Math.abs(currInterval), Math.abs(abscissaInterval)) * (lineCount || 1);
+					var allowedError = abscissaRange * (Kekule.globalOptions.IO.jcamp.dataValueCheckAllowedErrorRatio || 0.0001);
 					//if (!Kekule.NumUtils.isFloatEqual(currInterval, abscissaInterval, allowedError))
 					if (JcampUtils.compareFloat(currInterval, abscissaInterval, allowedError) !== 0)
 					{
-						//console.log('X check error', currInterval, abscissaInterval);
+						console.log('X check error', currInterval, abscissaInterval, allowedError);
 						Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_X_VALUE_CHECK_ERROR'));
 					}
 				}
@@ -832,13 +835,13 @@ Kekule.IO.Jcamp.Utils = {
 			isNextContiLine = endWithContiMark;
 			if (!isNextContiLine)  // no continous line, do value check and put buffer to result
 			{
-				appendDecodedBufferToResult(result, buffer, op.doValueCheck, op.doValueCheck && prevEndWithDif, prevEndWithDif);
+				appendDecodedBufferToResult(result, buffer, op.doValueCheck, op.doValueCheck && prevEndWithDif, prevEndWithDif, lineCount);
 				buffer = [];
 			}
 			prevEndWithDif = decodeValues.__$lastValueType__ === JcampDigitType.DIF;  // if prev line ends with DIF, may need to do a value check on next line
 		}
 		if (buffer.length)    // last unhandled buffer
-			appendDecodedBufferToResult(result, buffer, op.doValueCheck, op.doValueCheck && prevEndWithDif, prevEndWithDif);
+			appendDecodedBufferToResult(result, buffer, op.doValueCheck, op.doValueCheck && prevEndWithDif, prevEndWithDif, lineCount);
 		return result;
 	},
 
