@@ -200,6 +200,15 @@ Kekule.Spectroscopy.MetaPropNamespace = {
 			coreName = propName;
 		}
 		return {'namespace': namespace, 'coreName': coreName};
+	},
+	/**
+	 * Returns the core part of a prop name.
+	 * @param {String} propName
+	 * @returns {String}
+	 */
+	getPropertyCoreName: function(propName)
+	{
+		return MetaPropNamespace.getPropertyNameDetail(propName).coreName;
 	}
 };
 /** @ignore */
@@ -1915,15 +1924,20 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	{
 		if (propName === 'dataItems')
 		{
+			//console.log('compare dataItems', this.doCompareDataItems(this, targetObj, options));
 			// the values in dataItems are float, so they need to be compared with NumUtils
 			return this.doCompareDataItems(this, targetObj, options);
 		}
 		else if (propName === 'localVarInfos')
 		{
+			//console.log('compare localVarInfos', this.doCompareLocalVarInfos(this, targetObj, options));
 			return this.doCompareLocalVarInfos(this, targetObj, options);
 		}
 		else
+		{
+			//console.log('compare property', propName, this.tryApplySuper('doCompareProperty', [targetObj, propName, options]));
 			return this.tryApplySuper('doCompareProperty', [targetObj, propName, options]);
+		}
 	},
 	/** @private */
 	doCompareLocalVarInfos: function(section1, section2, options)
@@ -1966,6 +1980,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			return section._itemHashToArray(hashValue);
 		};
 		var result = section1.getDataCount() - section2.getDataCount();
+		//console.log('dataCount', section1.getDataCount(), section2.getDataCount());
 		if (!result)
 		{
 			for (var i = 0, l = section1.getDataCount(); i < l; ++i)
@@ -1981,13 +1996,14 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 				// and the extra info of value
 				if (!result)
 				{
-					var extra1 = section1.getExtraInfoAt(i);
-					var extra2 = section2.getExtraInfoAt(i);
+					var extra1 = section1.getExtraInfoAt(i) || null;
+					var extra2 = section2.getExtraInfoAt(i) || null;
 					result = this.doCompareOnValue(extra1, extra2, options);
+					//console.log('compare extra', i, extra1, extra2, result);
 				}
 				if (result)
 				{
-					console.log('compare', i, rawValue1, rawValue2, result);
+					//console.log('compare', i, value1, value2, result);
 					break;
 				}
 			}
@@ -3508,7 +3524,10 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			// variables will be compared at the dataSections level, so it should not be included here
-			result = (result || []).concat(['refMolecules', 'metaData', 'conditions', 'parameters', /*'variables',*/ 'dataSections']);
+			result = (result || []).concat([
+				'refMolecules', 'metaData', 'conditions', 'parameters', /*'variables',*/ 'dataSections',
+				//'_spectrumInfos_'   // a fake property, to manually comparing on metaData/conditions/parameters
+			]);
 		}
 		return result;
 	},
@@ -3520,7 +3539,36 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 			// dataSections is a ChemObjList, when comparing, we extract the section array directly
 			var sections1 = this.getDataSections().getItems();
 			var sections2 = targetObj.getDataSections().getItems();
+			//console.log('compare', propName, this.doCompareOnValue(sections1, sections2, options));
 			return this.doCompareOnValue(sections1, sections2, options);
+		}
+		else if (['metaData', 'conditions', 'parameters'].indexOf(propName) >= 0)
+		{
+			//var candicateCategories = ['metaData', 'conditions', 'parameters'];
+			var widerCandicateCategories = ['metaData', 'conditions', 'parameters', 'annotations'];
+			var srcKeys = this.getSpectrumInfoKeysOfCategory(propName); //(this.getMetaKeys() || []).concat(this.getParameterKeys() || []).concat(this.getConditionKeys() || []);
+			for (var i = 0, l = srcKeys.length; i < l; ++i)
+			{
+				var key = srcKeys[i];
+				var v1 = this.getSpectrumInfoValue(key, [propName]);
+				var v2 = targetObj.getSpectrumInfoValue(key, widerCandicateCategories);
+				if (Kekule.ObjUtils.isUnset(v2))
+				{
+					var coreKey = MetaPropNamespace.getPropertyCoreName(key);
+					v2 = targetObj.getSpectrumInfoValue(coreKey, widerCandicateCategories);
+				}
+				var result = this.doCompareOnValue(v1, v2, options);
+				if (result)
+				{
+					//console.log('diff', key, v1, v2, result);
+					return result;
+				}
+				else
+				{
+					//console.log('same', key, v1, v2, result);
+				}
+			}
+			return 0;
 		}
 		else
 		{
@@ -3528,6 +3576,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 			var v1 = this.getPropValue(propName);
 			var v2 = targetObj.getPropValue(propName);
 			var result = this.doCompareOnValue(v1, v2, options);
+			//console.log('compare', propName, v1, v2, result);
 			return result;
 		}
 	}
