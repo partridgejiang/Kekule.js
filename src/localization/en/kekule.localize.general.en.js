@@ -141,6 +141,9 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	JCAMP_DATA_TABLE_VAR_LIST_FORMAT_UNSUPPORTED: 'Unsupported JCAMP variable list format: {0}',
 	JCAMP_NTUPLES_BEGIN_END_NAME_NOT_MATCH: 'Ntuples name not match in begin/end labels: {0} and {1}',
 	JCAMP_NTUPLES_PAGE_DECLARATION_FORMAT_ERROR: 'Malformed JCAMP ntuples page declaration: {0}',
+	// io/jcamp/kekule.io.jcamp.dx.js
+	JCAMP_LDR_TARGET_UNIT_NOT_MATCH_WITH_DETAIL: 'The unit of property {0} ({1}) can not be converted to the request one ({2}) for JCAMP {3} LDR',
+	FAILED_TO_ASSIGN_SYMBOL_TO_VARIABLE: 'Fail to assign a symbol to variable {0}',
 	// spectroscopy/kekule.spectrum.render.js
 	VISIBLE_DATA_RANGE_IS_EMPTY: 'The visible range of data is empty, unable to draw the spectrum',
 

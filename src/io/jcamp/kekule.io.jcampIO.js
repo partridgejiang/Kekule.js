@@ -64,10 +64,15 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 			var valueLines = null;
 			if (!isEmptyLabel)
 			{
-				valueLines = [this._removeInlineComments(lines[0].substr(p + 1)).trim()];
+				valueLines = [];
+				var s = this._removeInlineComments(lines[0].substr(p + 1)).trim();
+				//if (s)
+				valueLines.push(s || '');
 				for (var i = 1, l = lines.length; i < l; ++i)
 				{
-					valueLines.push(this._removeInlineComments(lines[i].trim()));
+					s = this._removeInlineComments(lines[i].trim());
+					if (s)
+						valueLines.push(s);
 				}
 			}
 			return {'labelName': Jcamp.Utils.standardizeLdrLabelName(slabel), 'valueLines': valueLines};
@@ -82,7 +87,7 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 	 */
 	doCreateAnalysisTree: function(data)
 	{
-		var _createBlock = Jcamp.Utils._createBlock;
+		var _createBlock = Jcamp.BlockUtils.createBlock;
 
 		var root = _createBlock();
 		var currBlock = root;
@@ -93,8 +98,11 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 			var ldrParseResult = self._parseLdrLines(lines);
 			if (ldrParseResult)
 			{
+				/*
 				block.ldrs.push(ldrParseResult);
 				block.ldrIndexes[ldrParseResult.labelName] = block.ldrs.length - 1;
+				*/
+				Jcamp.BlockUtils.addLdrToBlock(block, ldrParseResult);
 			}
 			return ldrParseResult;
 		};
@@ -172,8 +180,7 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		{
 			Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_WITHOUT_TITLE_LINE'));
 		}
-		//console.log(this._getNestedBlockLevelCount(rootBlock));
-		if (Jcamp.Utils._getNestedBlockLevelCount(rootBlock) > 2)
+		if (Jcamp.BlockUtils.getNestedBlockLevelCount(rootBlock) > 2)
 		{
 			Kekule.error(Kekule.$L('ErrorMsg.JCAMP_MORE_THAN_TWO_NEST_LEVEL'));
 		}
@@ -203,14 +210,16 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		var tree = this.buildAnalysisTree(data);
 		// phase 2, convert the raw data in analysis tree to JS values
 		var rootBlock = tree.blocks[0];  // the root block
-		var meta = Jcamp.Utils._getBlockMeta(rootBlock);
+		var meta = Jcamp.BlockUtils.getBlockMeta(rootBlock);
 		var readerClass = Jcamp.BlockReaderManager.getReaderClass(meta.blockType, meta.format);
 		if (readerClass)
 		{
 			var reader = new readerClass();
 			try
 			{
-				result = reader.doReadData(rootBlock, null, null, options);   // use doReadData instead of readData, since child readers do not need to store srcInfo
+				var op = Object.extend({}, Kekule.globalOptions.IO.jcamp);
+				op = Object.extend(op, options || {});
+				result = reader.doReadData(rootBlock, null, null, op);   // use doReadData instead of readData, since child readers do not need to store srcInfo
 			}
 			finally
 			{
@@ -221,14 +230,96 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 	}
 });
 
+/**
+ * Writer for JCAMP document.
+ * It receives a chem object and output JCAMP format string.
+ * @class
+ * @augments Kekule.IO.ChemDataWriter
+ */
+Kekule.IO.JcampWriter = Class.create(Kekule.IO.ChemDataWriter,
+/** @lends Kekule.IO.JcampWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.JcampWriter',
+	/** @ignore */
+	doWriteData: function(obj, dataType, format, options)
+	{
+		var targetObj = obj;
+		var concreteWriter = this.doGetChildWriter(targetObj);
+		if (!concreteWriter && obj.getChildAt && obj.getChildCount)
+		{
+			// TODO: unfinished
+			for (var i = 0, l = obj.getChildCount(); i < l; ++i)
+			{
+				var child = obj.getChildAt(i);
+				concreteWriter = this.doGetChildWriter(child);
+				if (concreteWriter)
+				{
+					targetObj = child;
+					break;
+				}
+			}
+		}
+		if (concreteWriter && targetObj)
+		{
+			var op = Object.extend({}, Kekule.globalOptions.IO.jcamp);
+			op = Object.extend(op, options || {});
+			var block = concreteWriter.writeData(targetObj, dataType, format, op);
+			var lines = this.encodeBlockToTextLines(block);
+			concreteWriter.finalize();
+			return lines.join('\n');
+		}
+		else
+			return '';
+	},
+	/** @private */
+	doGetChildWriter: function(chemObj)
+	{
+		var wClass = Jcamp.BlockWriterManager.getWriterClass(chemObj);
+		if (wClass)
+			return new wClass();
+		else
+			return null;
+	},
+	/**
+	 * Output block to text.
+	 * @param {Object} block
+	 * @returns {Array} Array of string.
+	 */
+	encodeBlockToTextLines: function(block)
+	{
+		var ldrs = block.ldrs;
+		var codes = [];
+		for (var i = 0, l = ldrs.length; i < l; ++i)
+		{
+			var ldr = ldrs[i];
+			var labelName = ldr.labelName;
+			var valueLines = ldr.valueLines || [];
+			//console.log(labelName, valueLines);
+			var s = Jcamp.Consts.DATA_LABEL_FLAG + labelName + Jcamp.Consts.DATA_LABEL_TERMINATOR + valueLines.join('\n');
+			codes.push(s);
+		}
+		// child blocks
+		var childBlocks = block.blocks || [];
+		for (var i = 0, l = childBlocks.length; i < l; ++i)
+		{
+			codes = codes.concat(this.encodeBlockToTextLines(childBlocks[i]));
+		}
+		return codes;
+	}
+});
+
 // register spectrum info prop namespace
 Kekule.Spectroscopy.MetaPropNamespace.register('jcamp');
 
 // register JCAMP data formats
 Kekule.IO.DataFormat.JCAMP_DX = 'jcamp-dx';
 Kekule.IO.MimeType.JCAMP_DX = 'chemical/x-jcamp-dx';
-Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.JCAMP_DX, Kekule.IO.MimeType.JCAMP_DX, ['jcamp', 'dx', 'jdx', 'jcm'],
+Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.JCAMP_DX, Kekule.IO.MimeType.JCAMP_DX, ['jcm', 'jdx', 'dx', 'jcamp'],
 		Kekule.IO.ChemDataType.TEXT, 'JCAMP-DX format');
 Kekule.IO.ChemDataReaderManager.register(Kekule.IO.DataFormat.JCAMP_DX, Kekule.IO.JcampReader, [Kekule.IO.DataFormat.JCAMP_DX]);
+Kekule.IO.ChemDataWriterManager.register(Kekule.IO.DataFormat.JCAMP_DX, Kekule.IO.JcampWriter,
+		[Kekule.Spectroscopy.Spectrum, Kekule.ChemObjList, Kekule.ChemSpace],
+		[Kekule.IO.DataFormat.JCAMP_DX]);
 
 })();
