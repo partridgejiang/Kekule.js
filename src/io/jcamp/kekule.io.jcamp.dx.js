@@ -43,7 +43,7 @@ Kekule.IO.Jcamp.SpectrumDataStorageStyle = {
 Kekule.globalOptions.add('IO.jcamp', {
 	outputDxVersion: '5.00',
 	dxDataStorageStyle: Kekule.IO.Jcamp.SpectrumDataStorageStyle.SMART,
-	dxDataAllowedSavingErrorRatio: 0.001,  // allow 0.1% error when saving data to JCAMP-DX format
+	dxDataAllowedSavingErrorRatio: 0.0001,  // allow 0.1% error when saving data to JCAMP-DX format
 	dxDataPreferredOrdinateScaledRange: {min: -32767, max: 32767},
 	dxDataAsdfTableOutputForm: Jcamp.AsdfForm.DIF_DUP  // default output form of ASDF data table
 });
@@ -201,10 +201,11 @@ Kekule.IO.Jcamp.DxUtils = {
 	calcNumFactorForRange: function(minValue, maxValue, allowedErrorRatio, preferredScaleRangeMin, preferredScaleRangeMax)
 	{
 		//var factor = Math.min(Math.abs(minValue), Math.abs(maxValue)) * allowedErrorRatio;
-		var factor = allowedErrorRatio;
-		if (minValue / factor > preferredScaleRangeMin && maxValue / factor < preferredScaleRangeMax)  // we can even use a larger factor
+		var factor = Math.abs(maxValue - minValue) * allowedErrorRatio;
+		//var factor = Math.min(allowedError / Math.abs(minValue), allowedError / Math.abs(maxValue));
+		if (Kekule.ObjUtils.notUnset(preferredScaleRangeMin) && Kekule.ObjUtils.notUnset(preferredScaleRangeMax))
 		{
-			if (Kekule.ObjUtils.notUnset(preferredScaleRangeMin) && Kekule.ObjUtils.notUnset(preferredScaleRangeMax))
+			if (minValue / factor > preferredScaleRangeMin && maxValue / factor < preferredScaleRangeMax)  // we can even use a smaller factor?
 			{
 				var pfactor1 = Math.max(minValue / preferredScaleRangeMin, 0);  // avoid negative factor
 				var pfactor2 = Math.max(maxValue / preferredScaleRangeMax, 0);
@@ -212,9 +213,10 @@ Kekule.IO.Jcamp.DxUtils = {
 					(!pfactor2) ? pfactor1 :
 						Math.max(pfactor1, pfactor2);
 				if (pfactor)
-					factor = Math.max(factor, pfactor);
+					factor = Math.min(factor, pfactor);
 			}
 		}
+		//console.log(minValue, maxValue, factor);
 		return factor;
 	}
 };
