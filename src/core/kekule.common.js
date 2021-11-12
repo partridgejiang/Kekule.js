@@ -3866,7 +3866,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 *   For example, you can use {'method': {@link Kekule.ComparisonMethod.CHEM_STRUCTURE}} to indicating that only the chem structure
 	 *   data should be compared. <br />
 	 *   You can also use {'properties': ['propName1', 'propName2']} to manually assign properties that
-	 *   need to be compared. <br />
+	 *   need to be compared, or use {'ignoredProperties: ['propName1]} to bypass some properties in comparison. <br />
 	 *   Custom comparison method can also be appointed as {'customMethod': myComparisonFunc}, then the
 	 *   comparison will be actually called as myComparisonFunc(thisObj, targetObj, options).
 	 * @returns {Int} Returns 0 when two objects are equivalent,
@@ -3972,10 +3972,14 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			*/
 			propNames = this.getComparisonPropNames(options);
 		}
+		var ignoredPropNames = options && options.ignoredProperties;
 		// then compare each property values
 		var result = 0;
 		for (var i = 0, l = propNames.length; i < l; ++i)
 		{
+			var propName = propNames[i];
+			if (ignoredPropNames && ignoredPropNames.indexOf(propName) >= 0)
+				continue;
 			result = this.doCompareProperty(targetObj, propNames[i], options);
 			if (result !== 0)
 				return result;
