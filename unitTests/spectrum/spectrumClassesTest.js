@@ -182,32 +182,53 @@ describe('Test of some core data and functions of spectra module', function(){
 	});
 
 	var DT = Kekule.IO.Jcamp.DigitCharType;
+	var AF = Kekule.IO.Jcamp.AsdfForm;
 	var asdfDecodeTestCases = [
-		{'src': '1000 2000  2001, 2002 ;2003 2003 2003', 'value': [1000, 2000, 2001, 2002, 2003, 2003, 2003], 'lastValueType': DT.ASCII},  // ASCII format
-		{'src': '1000 2000 ? 2001, ? 2002 ;2003 2003 2003', 'value': [1000, 2000, NaN, 2001, NaN, 2002, 2003, 2003, 2003], 'lastValueType': DT.ASCII},
-		{'src': '1000 2000  -2001, +2002 ;2003 2003 -2003', 'value': [1000, 2000, -2001, 2002, 2003, 2003, -2003], 'lastValueType': DT.PAC},
-		{'src': '1000.23 2000.7  -2001.4, +2002.2 ;2003.1 2003 -2003', 'value': [1000.23, 2000.7, -2001.4, 2002.2, 2003.1, 2003, -2003], 'lastValueType': DT.PAC},
-		{'src': '+1000+2000+2001+2002+2003+2003+2003', 'value': [1000, 2000, 2001, 2002, 2003, 2003, 2003], 'lastValueType': DT.PAC},   // PAC format
-		{'src': '+1000+2000-2001+2002+2003+2003-2003', 'value': [1000, 2000, -2001, 2002, 2003, 2003, -2003], 'lastValueType': DT.PAC},
-		{'src': 'A000B000B001B002B003B003B003', 'value': [1000, 2000, 2001, 2002, 2003, 2003, 2003], 'lastValueType': DT.SQZ},   // SQZ format
-		{'src': 'A000B000b001B002B003B003b003', 'value': [1000, 2000, -2001, 2002, 2003, 2003, -2003], 'lastValueType': DT.SQZ},
-		{'src': '10B0C0C0B0A0@abc', 'value': [10 , 20 , 30 , 30 ,	20 , 10 , 0 , -1 , -2 , -3], 'lastValueType': DT.SQZ},
-		{'src': 'A000J000JJJ%%', 'value': [1000, 2000, 2001, 2002, 2003, 2003, 2003], 'lastValueType': DT.DIF},   // DIF format
-		{'src': '10J0J0%j0j0j0jjj', 'value': [10 , 20 , 30 , 30 ,	20 , 10 , 0 , -1 , -2 , -3], 'lastValueType': DT.DIF},
-		{'src': '50U', 'value': [50, 50, 50], 'lastValueType': DT.ASCII},   // DUP format
-		{'src': '50%U', 'value': [50, 50, 50, 50], 'lastValueType': DT.DIF},
-		{'src': 'A000J000TJ%%', 'value': [1000, 2000, 3000, 3001, 3001, 3001], 'lastValueType': DT.DIF},
+		{'src': '1000 2000 2001 2002 2003 2003 2003', 'value': [1000, 2000, 2001, 2002, 2003, 2003, 2003], 'lastValueType': DT.ASCII, 'form': AF.AFFN, 'reversible': true},  // ASCII format
+		{'src': '1000 2000  2001, 2002 ;2003 2003 2003', 'value': [1000, 2000, 2001, 2002, 2003, 2003, 2003], 'lastValueType': DT.ASCII, 'form': AF.AFFN},
+		{'src': '1000 2000 ? 2001 ? 2002 2003 2003 2003', 'value': [1000, 2000, NaN, 2001, NaN, 2002, 2003, 2003, 2003], 'lastValueType': DT.ASCII, 'form': AF.AFFN, 'reversible': true},
+		{'src': '1000 2000 ? 2001, ? 2002 ;2003 2003 2003', 'value': [1000, 2000, NaN, 2001, NaN, 2002, 2003, 2003, 2003], 'lastValueType': DT.ASCII, 'form': AF.AFFN},
+		{'src': '1000 2000  -2001, +2002 ;2003 2003 -2003', 'value': [1000, 2000, -2001, 2002, 2003, 2003, -2003], 'lastValueType': DT.PAC, 'form': AF.PAC},
+		{'src': '1000.23 2000.7  -2001.4, +2002.2 ;2003.1 2003 -2003', 'value': [1000.23, 2000.7, -2001.4, 2002.2, 2003.1, 2003, -2003], 'lastValueType': DT.PAC, 'form': AF.PAC},
+		{'src': '+1000+2000+2001+2002+2003+2003+2003', 'value': [1000, 2000, 2001, 2002, 2003, 2003, 2003], 'lastValueType': DT.PAC, 'form': AF.PAC, 'reversible': true},   // PAC format
+		{'src': '+1000+2000-2001+2002+2003+2003-2003', 'value': [1000, 2000, -2001, 2002, 2003, 2003, -2003], 'lastValueType': DT.PAC, 'form': AF.PAC, 'reversible': true},
+		{'src': 'A000B000B001B002B003B003B003', 'value': [1000, 2000, 2001, 2002, 2003, 2003, 2003], 'lastValueType': DT.SQZ, 'form': AF.SQZ, 'reversible': true},   // SQZ format
+		{'src': 'A000B000b001B002B003B003b003', 'value': [1000, 2000, -2001, 2002, 2003, 2003, -2003], 'lastValueType': DT.SQZ, 'form': AF.SQZ, 'reversible': true},
+		{'src': 'A0B0C0C0B0A0@abc', 'value': [10 , 20 , 30 , 30 ,	20 , 10 , 0 , -1 , -2 , -3], 'lastValueType': DT.SQZ, 'form': AF.SQZ, 'reversible': true},
+		{'src': '10B0C0C0B0A0@abc', 'value': [10 , 20 , 30 , 30 ,	20 , 10 , 0 , -1 , -2 , -3], 'lastValueType': DT.SQZ, 'form': AF.SQZ},
+		{'src': 'A000J000JJJ%%', 'value': [1000, 2000, 2001, 2002, 2003, 2003, 2003], 'lastValueType': DT.DIF, 'form': AF.DIF, 'reversible': true},   // DIF format
+		{'src': 'A0J0J0%j0j0j0jjj', 'value': [10 , 20 , 30 , 30 ,	20 , 10 , 0 , -1 , -2 , -3], 'lastValueType': DT.DIF, 'form': AF.DIF, 'reversible': true},
+		{'src': '10J0J0%j0j0j0jjj', 'value': [10 , 20 , 30 , 30 ,	20 , 10 , 0 , -1 , -2 , -3], 'lastValueType': DT.DIF, 'form': AF.DIF},
+		{'src': 'E0U', 'value': [50, 50, 50], 'lastValueType': DT.SQZ, 'form': AF.SQZ_DUP, 'reversible': true},   // DUP format
+		{'src': '50U', 'value': [50, 50, 50], 'lastValueType': DT.ASCII, 'form': AF.SQZ_DUP},
+		{'src': 'E0%U', 'value': [50, 50, 50, 50], 'lastValueType': DT.DIF, 'form': AF.DIF_DUP, 'reversible': true},
+		{'src': '50%U', 'value': [50, 50, 50, 50], 'lastValueType': DT.DIF, 'form': AF.DIF_DUP},
+		{'src': 'A000J000TJ%T', 'value': [1000, 2000, 3000, 3001, 3001, 3001], 'lastValueType': DT.DIF,'form':  AF.DIF_DUP, 'reversible': true},
+		{'src': 'A000J000TJ%T?A000J000TJ%T', 'value': [1000, 2000, 3000, 3001, 3001, 3001, NaN, 1000, 2000, 3000, 3001, 3001, 3001], 'lastValueType': DT.DIF,'form':  AF.DIF_DUP, 'reversible': true},
+		{'src': 'A000J000TJ%%', 'value': [1000, 2000, 3000, 3001, 3001, 3001], 'lastValueType': DT.DIF,'form':  AF.DIF},
+		{'src': 'A000J000J000J%%', 'value': [1000, 2000, 3000, 3001, 3001, 3001], 'lastValueType': DT.DIF,'form':  AF.DIF, 'reversible': true},
 		{'src': '608.3 A000J000TJ%%', 'value': [608.3, 1000, 2000, 3000, 3001, 3001, 3001], 'lastValueType': DT.DIF},
 		{'src': '608.3? A000J000TJ%%?', 'value': [608.3, NaN, 1000, 2000, 3000, 3001, 3001, 3001, NaN], 'lastValueType': DT._ABNORMAL_VALUE},
-		{'src': '10J0T%j0UjU', 'value': [10 , 20 , 30 , 30 ,	20 , 10 , 0 , -1 , -2 , -3], 'lastValueType': DT.DIF},
+		{'src': 'A0J0T%j0UjU', 'value': [10 , 20 , 30 , 30 ,	20 , 10 , 0 , -1 , -2 , -3], 'lastValueType': DT.DIF, 'form': AF.DIF_DUP, 'reversible': true},
+		{'src': '10J0T%j0UjU', 'value': [10 , 20 , 30 , 30 ,	20 , 10 , 0 , -1 , -2 , -3], 'lastValueType': DT.DIF, 'form': AF.DIF_DUP},
 		{'src': '-121.7 78 +35.5 10J0T%j0UjU', 'value': [-121.7, 78, +35.5, 10 , 20 , 30 , 30 ,	20 , 10 , 0 , -1 , -2 , -3], 'lastValueType': DT.DIF},
 		{'src': '.12 -.23 30.T 10J0T%j0UjU', 'value': [0.12, -0.23, 30, 30, 10 , 20 , 30 , 30 ,	20 , 10 , 0 , -1 , -2 , -3], 'lastValueType': DT.DIF},
 		// complex
 		{
 			//'src': '@VKT%TLkj%J%KLJ%njKjL%kL%jJULJ%kLKl%lLMNPNPRLJOQTOJ1P',
+			'src': '@%UKT%TLkj%J%KLJ%njKjL%kL%jJULJ%kLK1%lLMNPNPRLJ0QTOJ1P',
+			'value': [0, 0, 0, 0, 2, 4, 4, 4, 7, 5, 4, 4, 5, 5, 7, 10, 11, 11, 6, 5, 7, 6, 9, 9, 7, 10, 10, 9, 10, 11, 12, 15, 16, 16, 14, 17, 38, 38, 35, 38, 42, 47, 54, 59, 66, 75, 78, 88, 96, 104, 110, 121, 128],
+			'lastValueType': DT.DIF,
+			'form': AF.DIF_DUP,
+			'reversible': true
+		},
+		{
+			//'src': '@VKT%TLkj%J%KLJ%njKjL%kL%jJULJ%kLKl%lLMNPNPRLJOQTOJ1P',
 			'src': '@VKT%TLkj%J%KLJ%njKjL%kL%jJULJ%kLK1%lLMNPNPRLJ0QTOJ1P',
 			'value': [0, 0, 0, 0, 2, 4, 4, 4, 7, 5, 4, 4, 5, 5, 7, 10, 11, 11, 6, 5, 7, 6, 9, 9, 7, 10, 10, 9, 10, 11, 12, 15, 16, 16, 14, 17, 38, 38, 35, 38, 42, 47, 54, 59, 66, 75, 78, 88, 96, 104, 110, 121, 128],
-			'lastValueType': DT.DIF
+			'lastValueType': DT.DIF,
+			'form': AF.DIF_DUP,
+			'reversible': !true
 		}
 	];
 
@@ -225,15 +246,24 @@ describe('Test of some core data and functions of spectra module', function(){
 	for (var i = 0, l = asdfDecodeTestCases.length; i < l; ++i)
 	{
 		var testCase = asdfDecodeTestCases[i];
-		(function _test(testCase)
+		(function _test(testCase, i)
 		{
-			it('Kekule.IO.JcampUtils ASDF decode test: ' + testCase.src, function () {
+			it('Kekule.IO.JcampUtils ASDF decode/encode test: ' + testCase.src, function () {
+				// decode
 				var decodeValue = Kekule.IO.Jcamp.Utils.decodeAsdfLine(testCase.src);
 				//console.log('expect to equal ', i, decodeValue, testCase.value, decodeValue.__$lastValueType__);
 				expect(Kekule.ArrayUtils.compare(decodeValue, testCase.value, asdfDecodeItemCompareFunc) === 0).toEqual(true);
 				expect(decodeValue.__$lastValueType__).toEqual(testCase.lastValueType);
+				// encode
+				//console.log('case', i, testCase.src, testCase.reversible);
+				if (testCase.reversible)
+				{
+					var encodeValue = Kekule.IO.Jcamp.Utils.encodeAsdfLine(testCase.value, testCase.form);
+					expect(encodeValue).toEqual(testCase.src);
+					//console.log(i, 'encode', testCase.value, '/', encodeValue, '/', testCase.src, encodeValue === testCase.src);
+				}
 			});
-		})(testCase);
+		})(testCase, i);
 	}
 
 	var affnGroupDecodeTestCases = [

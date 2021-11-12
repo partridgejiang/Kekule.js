@@ -36,7 +36,7 @@ describe('Test of the I/O functions of spectrum', function() {
 		return true;
 	};
 
-	var outputFormats = ['cml'];
+	var outputFormats = [/*'cml',*/ 'jcamp-dx'];
 	var srcTestFiles = [
 
 		'cmlSpect/example0.cml',
@@ -50,10 +50,12 @@ describe('Test of the I/O functions of spectrum', function() {
 		//'jcamp/ISAS_CDX.DX',  // TODO: the M/A variables in JCAMP can not be handled in CML yet
 		'jcamp/ISAS_MS1.DX',
 		'jcamp/ISAS_MS3.DX',
-		'jcamp/TESTNTUP.DX'
+		'jcamp/TESTNTUP.DX',
+		'jcamp/10038695_13C.jcamp'
 
 		//'jcamp/BRUKDIF.DX'
 	];
+
 
 	srcTestFiles.forEach(function(srcFile){
 		it('Test reader/writer based on src ' + srcFile, function(done) {
@@ -62,7 +64,8 @@ describe('Test of the I/O functions of spectrum', function() {
 				var spectrum = getSpectrumInside(chemObj);
 				expect(spectrum instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 
-				outputFormats.forEach(function(format){
+				outputFormats.forEach(function(format) {
+					var compareOptions = {method: Kekule.ComparisonMethod.CHEM_STRUCTURE};
 					var outputData = Kekule.IO.saveFormatData(chemObj, format);
 					// reload it and check whether the reload object are equal to the original spectrum
 					var chemObj2 = Kekule.IO.loadFormatData(outputData, format);
@@ -70,7 +73,30 @@ describe('Test of the I/O functions of spectrum', function() {
 					expect(spectrum2 instanceof Kekule.Spectroscopy.Spectrum).toEqual(true);
 					//spectrum2.getActiveDataSection().setRawValueAt(1, [0, 0]);
 					//expect(isSpectrumEqual(spectrum, spectrum2)).toEqual(true);
-					expect(spectrum.equal(spectrum2, {method: Kekule.ComparisonMethod.CHEM_STRUCTURE})).toEqual(true);
+					var spectrum1 = spectrum;
+					if (srcFile.endsWith('.cml') && format === 'jcamp-dx')
+					{
+						spectrum1 = spectrum.clone();
+						// CML file may containing refMolecules that can not be handled by JCAMP now, remove it
+						spectrum1.setRefMolecules(undefined);
+						spectrum2.setRefMolecules(undefined);
+						// CML file may containing peak details that can not be handled by JCAMP now, remove them
+						for (var i = 0, l = spectrum1.getDataSectionCount(); i < l; ++i)
+						{
+							var section = spectrum1.getDataSectionAt(i);
+							if (section.isPeakSection())
+							{
+								for (var j = 0, jj = section.getDataCount(); j < jj; ++j)
+								{
+									section.setExtraInfoAt(j, undefined);
+								}
+							}
+						}
+						// the meta may be different in CML/JCAMP
+						compareOptions.ignoredProperties = ['metaData', 'conditions', 'parameters'];
+					}
+
+					expect(spectrum1.equal(spectrum2, compareOptions)).toEqual(true);
 					spectrum2.finalize();
 				});
 
