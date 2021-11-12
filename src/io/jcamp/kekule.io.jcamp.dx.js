@@ -288,6 +288,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	/** @ignore */
 	initPropValues: function()
 	{
+		this.tryApplySuper('initPropValues');
 		this._initCurrVarInfos();
 	},
 	/** @private */
