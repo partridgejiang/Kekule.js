@@ -63,7 +63,7 @@ Kekule.IO.Jcamp.Consts = {
 	DATA_VARLIST_FORMAT_VAR_GROUPS: 5,
 
 	GROUPED_VALUE_GROUP_DELIMITER: '\n',
-	GROUPED_VALUE_GROUP_DELIMITER_PATTERN: /[;\s]/g,
+	GROUPED_VALUE_GROUP_DELIMITER_PATTERN: /[;\s+]/g,
 	GROUPED_VALUE_ITEM_DELIMITER: ',',
 	GROUPED_VALUE_ITEM_DELIMITER_PATTERN: /,/g,
 	GROUPED_VALUE_STR_ENCLOSER_LEADING: '<',
@@ -75,7 +75,10 @@ Kekule.IO.Jcamp.Consts = {
 
 	VALUE_STR_EXPLICIT_QUOTE: '"',
 
-	VALUE_ABNORMAL_NUM: '?'
+	VALUE_ABNORMAL_NUM: '?',
+
+	MOL_FORMULA_SUP_PREFIX: '^',
+	MOL_FORMULA_SUB_PREFIX: '/',
 };
 var JcampConsts = Kekule.IO.Jcamp.Consts;
 
@@ -176,6 +179,38 @@ Kekule.IO.Jcamp.Utils = {
 		if (Kekule.ObjUtils.isUnset(allowedError))
 			allowedError = Math.max(Math.abs(v1), Math.abs(v2)) * 0.01;  // TODO: current fixed to 1% of error
 		return Kekule.NumUtils.compareFloat(v1, v2, allowedError);
+	},
+	/**
+	 * Calculate a suitable factor for converting to integers from a set of floats.
+	 * This function is used for storing spectrum data into JCAMP-DX data table, or converting atom coord to integer in JCAMP-CS.
+	 * @param {Number} minValue Min value of original data set.
+	 * @param {Number} maxValue Max value of original data set.
+	 * @param {Float} allowErrorRatio Permitted error, e.g. 0.001 for 0.1%.
+	 * @param {Int} preferredScaleRangeMin If set, the rescaled data items should be larger than this value. It should be a negative value.
+	 * @param {Int} preferredScaleRangeMax If set, the rescaled data items should be less than this value. It should be a positive value.
+	 */
+	calcNumFactorForRange: function(minValue, maxValue, allowedErrorRatio, preferredScaleRangeMin, preferredScaleRangeMax)
+	{
+		//var factor = Math.min(Math.abs(minValue), Math.abs(maxValue)) * allowedErrorRatio;
+		var factor = 1;
+		if (allowedErrorRatio)
+			factor = Math.abs(maxValue - minValue) * allowedErrorRatio;
+		//var factor = Math.min(allowedError / Math.abs(minValue), allowedError / Math.abs(maxValue));
+		if (Kekule.ObjUtils.notUnset(preferredScaleRangeMin) && Kekule.ObjUtils.notUnset(preferredScaleRangeMax))
+		{
+			if (minValue / factor > preferredScaleRangeMin && maxValue / factor < preferredScaleRangeMax)  // we can even use a smaller factor?
+			{
+				var pfactor1 = Math.max(minValue / preferredScaleRangeMin, 0);  // avoid negative factor
+				var pfactor2 = Math.max(maxValue / preferredScaleRangeMax, 0);
+				var pfactor = (!pfactor1) ? pfactor2 :
+					(!pfactor2) ? pfactor1 :
+						Math.max(pfactor1, pfactor2);
+				if (pfactor)
+					factor = Math.min(factor, pfactor);
+			}
+		}
+		//console.log(minValue, maxValue, factor);
+		return factor;
 	},
 	/**
 	 * Remove all slashes, dashes, spaces, underlines and make all letters captializd.
@@ -1136,7 +1171,7 @@ Kekule.IO.Jcamp.Utils = {
 					}
 				}
 				else
-				{;
+				{
 					var patternGroupList = /^(([a-zA-Z]\,?)+)$/;
 					var matchResult = text.match(patternGroupList);
 					if (matchResult)
@@ -1417,7 +1452,7 @@ Kekule.IO.Jcamp.LabelTypeInfos.createInfo = function(labelName, dataType, labelT
 		labelCategory = (labelType === JLabelType.GLOBAL)? JLabelCategory.META: JLabelCategory.ANNOTATION;
 	if (labelType === JLabelType.SPECIFIC && !name.startsWith(JcampConsts.SPECIFIC_LABEL_PREFIX))
 		name = JcampConsts.SPECIFIC_LABEL_PREFIX + name;
-	else if (labelType === JLabelType.PRIVATE && !name.start(JcampConsts.PRIVATE_LABEL_PREFIX))
+	else if (labelType === JLabelType.PRIVATE && !name.startsWith(JcampConsts.PRIVATE_LABEL_PREFIX))
 		name = JcampConsts.PRIVATE_LABEL_PREFIX + name;
 	var result = {
 		'labelName': name,
@@ -1877,6 +1912,71 @@ Kekule.IO.Jcamp.LdrValueParserCoder = {
 			result = JcampLdrValueParser.groupedDataTableParser(lines, options);
 		}
 		return result;
+	},
+
+	/** @private */
+	molecularFormulaParser: function(lines, options)
+	{
+		var formula;
+		var formulaText = lines[0].trim();
+		if (formulaText && Kekule.MolecularFormula)
+		{
+			// actually, the formula text can be used directly in Kekule.js, just need to replace the sub/sup prefixes
+			formulaText = formulaText.replace(new RegExp(Jcamp.Consts.MOL_FORMULA_SUP_PREFIX, 'g'), ' ');
+			formulaText = formulaText.replace(new RegExp(Jcamp.Consts.MOL_FORMULA_SUB_PREFIX, 'g'), '');
+			formula = Kekule.FormulaUtils.textToFormula(formulaText);
+		}
+		return formula || formulaText;
+	},
+	/** @private */
+	molecularFormulaCoder: function(value, options)
+	{
+		if (Kekule.MolecularFormula && value instanceof Kekule.MolecularFormula)  // value is formula
+		{
+			var sections = AU.clone(value.getSections());
+			// sort
+			var getSortIndexes = function(formulaSection)
+			{
+				var primary = 'ZZZZZ', secondary = 0;
+				var atom = formulaSection.obj;
+				if (atom)
+				{
+					if (atom.getSymbol)
+						primary = atom.getSymbol();
+					// C/H will be put to head of seq
+					if (primary === 'C')
+						primary = '0';
+					else if (primary === 'H')
+						primary = '1';
+					if (atom.getMassNumber)
+						secondary = atom.getMassNumber() || 0;
+				}
+				return [primary, secondary];
+			};
+			sections.sort(function(sec1, sec2){
+				var i1 = getSortIndexes(sec1);
+				var i2 = getSortIndexes(sec2);
+				return AU.compare(i1, i2);
+			});
+
+			var outputItems = [];
+			for (var i = 0, l = sections.length; i < l; ++i)
+			{
+				var sec = sections[i];
+				var atom = sec.obj;
+				var count = sec.count;
+				var symbol = atom.getLabel && atom.getLabel();
+				if (atom.getMassNumber && atom.getMassNumber())
+					symbol = Jcamp.Consts.MOL_FORMULA_SUP_PREFIX + symbol;
+				if (count > 1)
+					symbol += count;
+				outputItems.push(symbol);
+			}
+			var valueLine = outputItems.join(' ');
+			return [valueLine];
+		}
+		else   // value is simple string
+			return [value];
 	}
 }
 var JcampLdrValueParser = Kekule.IO.Jcamp.LdrValueParserCoder;
@@ -1892,12 +1992,14 @@ JcampLdrValueParser.registerParser(null, JValueType.MULTILINE_AFFN_GROUP, JcampL
 JcampLdrValueParser.registerParser(null, JValueType.DATA_TABLE, JcampLdrValueParser.ntuplesDataTableParser);
 JcampLdrValueParser.registerParser(null, JValueType.STRING_GROUP, JcampLdrValueParser.stringGroupParser);
 JcampLdrValueParser.registerParser(null, JValueType.SIMPLE_AFFN_GROUP, JcampLdrValueParser.simpleAffnGroupParser);
+JcampLdrValueParser.registerParser('MOLFORM', null, JcampLdrValueParser.molecularFormulaParser);
 JcampLdrValueParser.registerCoder(null, JValueType.AFFN, JcampLdrValueParser.affnCoder);
 JcampLdrValueParser.registerCoder(null, JValueType.ASDF, JcampLdrValueParser.asdfCoder);
 JcampLdrValueParser.registerCoder(null, JValueType.STRING, JcampLdrValueParser.stringCoder);
 JcampLdrValueParser.registerCoder(null, JValueType.DATETIME, JcampLdrValueParser.longDateCoder);
 JcampLdrValueParser.registerCoder(null, JValueType.STRING_GROUP, JcampLdrValueParser.stringGroupCoder);
 JcampLdrValueParser.registerCoder(null, JValueType.SIMPLE_AFFN_GROUP, JcampLdrValueParser.simpleAffnGroupCoder);
+JcampLdrValueParser.registerCoder('MOLFORM', null, JcampLdrValueParser.molecularFormulaCoder);
 
 
 /**
@@ -1957,7 +2059,7 @@ Kekule.IO.Jcamp.BlockWriterManager = {
 		for (var i = ws.length - 1; i >= 0; --i)
 		{
 			var item = ws[i];
-			if ((iu(chemObjClass) || chemObjClass === item.objClass)
+			if ((iu(chemObjClass) || ClassEx.isOrIsDescendantOf(chemObjClass, item.objClass))
 				&& (iu(writerClass) || writerClass === item.writerClass))
 				return i;
 		}
@@ -2027,6 +2129,7 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		//map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjProp.bind(this, 'title');  // TITLE
 		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjInfoProp.bind(this, JcampConsts.LABEL_BLOCK_BEGIN);  // TITLE
 		map[JcampConsts.LABEL_DX_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, JcampConsts.LABEL_DX_VERSION);  // JCAMP-DX
+		map[JcampConsts.LABEL_CS_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, JcampConsts.LABEL_CS_VERSION);  // JCAMP-CS
 		map[JcampConsts.LABEL_BLOCK_END] = this._ignoreLdrHandler;  // block end, need not to store value of this ldr
 		var doStoreDateTimeLdrBind = this.doStoreDateTimeLdr.bind(this);
 		map['DATE'] = doStoreDateTimeLdrBind;
@@ -2495,6 +2598,33 @@ Kekule.IO.Jcamp.BlockWriter = Class.create(Kekule.IO.ChemDataWriter,
 	{
 		// do nothing here
 	},
+	/*
+	 * Save some basic meta LDRs to block, including OWNER/ORIGIN, etc.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Object} block
+	 * @param {Hash} options
+	 * @private
+	 */
+	/*
+	doSaveBasicMetaToBlock: function(chemObj, block, options)
+	{
+
+	},
+	*/
+	/*
+	 * Returns a hash that containing the basic meta key/values to writing to JCAMP data.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Hash} options
+	 * @returns {Hash} The result should containing the following fields: {OWNER, ORIGIN}.
+	 * @private
+	 */
+	/*
+	getBasicMetaForJcamp: function(chemObj, options)
+	{
+		return {};
+	},
+	*/
 	/** @private */
 	createLdr: function(jsName, jsValue, preferredJcampLabelName)
 	{
