@@ -4,8 +4,33 @@
 
 describe('IO Test of different file formats', function(){
 
+	var removeBondStereos = function(mol)
+	{
+		for (var i = 0, l = mol.getConnectorCount(); i < l; ++i)
+		{
+			var connector = mol.getConnectorAt(i);
+			if (connector.setStereo && connector.getStereo())
+			{
+				//console.log('remove stereo', i);
+				connector.setStereo(Kekule.BondStereo.NONE);
+			}
+		}
+	}
+	var removeExplicitHCounts = function(mol)
+	{
+		for (var i = 0, l = mol.getNodeCount(); i < l; ++i)
+		{
+			var node = mol.getNodeAt(i);
+			if (node.setExplicitHydrogenCount && node.getExplicitHydrogenCount())
+			{
+				node.setExplicitHydrogenCount(null);
+			}
+		}
+	}
+
 	var testIO = function(title, fileUrl, formatIds)
 	{
+		//console.log(fileUrl, formatIds);
 		it(title, function(done){
 			Kekule.IO.loadUrlData('data/' + fileUrl, function(chemObj, success){
 				expect(chemObj).not.toBeNull();
@@ -17,14 +42,27 @@ describe('IO Test of different file formats', function(){
 					expect(data).not.toBeNull();
 					var chemObj2 = Kekule.IO.loadFormatData(data, formatId);
 					expect(chemObj2).not.toBeNull();
+					//console.log(chemObj1.getNodeCount(), chemObj2.getNodeCount());
 					chemObj2.standardize();
-
-					expect(chemObj1.getNodeCount()).toEqual(chemObj2.getNodeCount());
-					expect(chemObj1.getConnectorCount()).toEqual(chemObj2.getConnectorCount());
 
 					if (chemObj1 instanceof Kekule.StructureFragment)
 					{
-						var compareResult = chemObj1.isSameStructureWith(chemObj2);
+						var compareResult, compareTarget;
+						if (formatId === 'jcamp-dx')  // JCAMP-CS format can not store the stereo information of bond, remove them before comparison
+						{
+							compareTarget = chemObj1.clone();
+							removeBondStereos(compareTarget);
+							//removeExplicitHCounts(compareTarget);
+							compareTarget.standardize();
+						}
+						else
+							compareTarget = chemObj1;
+
+						expect(compareTarget.getNodeCount()).toEqual(chemObj2.getNodeCount());
+						expect(compareTarget.getConnectorCount()).toEqual(chemObj2.getConnectorCount());
+
+						compareResult = compareTarget.isSameStructureWith(chemObj2);
+
 						/*
 						if (!compareResult)
 						{
@@ -33,6 +71,10 @@ describe('IO Test of different file formats', function(){
 						}
 						*/
 						expect(compareResult).toBeTruthy();
+					}
+					else
+					{
+						console.log('not molecule', chemObj1.getClassName())
 					}
 				});
 				done();
@@ -58,7 +100,9 @@ describe('IO Test of different file formats', function(){
 
 		'json/DoubleRingInSubgroup.kcj', 'json/FischerProjection1.kcj', 'json/NestedSubgroup.kcj', 'json/PhCOOH.kcj', 'json/subgroups.kcj'
 	];
-	var formats = ['mol', 'sd', 'mol3k', 'cml', 'Kekule-JSON', 'Kekule-XML'];
+	var formats = ['mol', 'sd', 'mol3k', 'cml', 'jcamp-dx', 'Kekule-JSON', 'Kekule-XML'];
+	//var srcUrls = ['mdl/choloylcoa.mol'];
+	//var formats = ['mol', 'jcamp-dx'];
 	srcUrls.forEach(function(url){
 		testIO('Test on url: ' + url, url, formats);
 	});
