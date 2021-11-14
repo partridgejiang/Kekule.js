@@ -2921,11 +2921,11 @@ Kekule.CoordUtils = {
 	},
 
 	/**
-	 * Returns a minial box that contains all coords.
-	 * @param {Array} coords Array of coords.
-	 * @returns {Hash}
+	 * Returns the min/max corner coords which can form a container box for all coords.
+	 * @param {Array} coords
+	 * @returns {Hash} A hash of {min, max}.
 	 */
-	getContainerBox: function(coords)
+	getContainerBoxCorners: function(coords)
 	{
 		var minCoord = {};
 		var maxCoord = {};
@@ -2950,7 +2950,18 @@ Kekule.CoordUtils = {
 				maxCoord.z = Math.max(maxCoord.z, coord.z);
 			}
 		}
-
+		return {'min': minCoord, 'max': maxCoord};
+	},
+	/**
+	 * Returns a minial box that contains all coords.
+	 * @param {Array} coords Array of coords.
+	 * @returns {Hash}
+	 */
+	getContainerBox: function(coords)
+	{
+		var corners = Kekule.CoordUtils.getContainerBoxCorners(coords);
+		var minCoord = corners.min;
+		var maxCoord = corners.max;
 		return Kekule.BoxUtils.createBox(minCoord, maxCoord);
 	}
 };
