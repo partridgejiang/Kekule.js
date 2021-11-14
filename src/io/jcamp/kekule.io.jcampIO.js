@@ -315,11 +315,11 @@ Kekule.Spectroscopy.MetaPropNamespace.register('jcamp');
 // register JCAMP data formats
 Kekule.IO.DataFormat.JCAMP_DX = 'jcamp-dx';
 Kekule.IO.MimeType.JCAMP_DX = 'chemical/x-jcamp-dx';
-Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.JCAMP_DX, Kekule.IO.MimeType.JCAMP_DX, ['jcm', 'jdx', 'dx', 'jcamp'],
+Kekule.IO.DataFormatsManager.register(Kekule.IO.DataFormat.JCAMP_DX, Kekule.IO.MimeType.JCAMP_DX, ['jdx', 'dx', 'jcm', 'jcamp'],
 		Kekule.IO.ChemDataType.TEXT, 'JCAMP-DX format');
 Kekule.IO.ChemDataReaderManager.register(Kekule.IO.DataFormat.JCAMP_DX, Kekule.IO.JcampReader, [Kekule.IO.DataFormat.JCAMP_DX]);
 Kekule.IO.ChemDataWriterManager.register(Kekule.IO.DataFormat.JCAMP_DX, Kekule.IO.JcampWriter,
-		[Kekule.Spectroscopy.Spectrum, Kekule.ChemObjList, Kekule.ChemSpace],
+		[Kekule.Spectroscopy.Spectrum, Kekule.StructureFragment, Kekule.ChemObjList, Kekule.ChemSpace],
 		[Kekule.IO.DataFormat.JCAMP_DX]);
 
 })();

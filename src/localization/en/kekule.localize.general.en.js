@@ -144,6 +144,8 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	// io/jcamp/kekule.io.jcamp.dx.js
 	JCAMP_LDR_TARGET_UNIT_NOT_MATCH_WITH_DETAIL: 'The unit of property {0} ({1}) can not be converted to the request one ({2}) for JCAMP {3} LDR',
 	FAILED_TO_ASSIGN_SYMBOL_TO_VARIABLE: 'Fail to assign a symbol to variable {0}',
+	// io/jcamp/kekule.io.jcamp.cs.js
+	JCAMP_IMPLICIT_HYDROGEN_COUNT_NOT_MATCH_DETAIL: 'Unmatched implicit hydrogen count for atom {0}({1}), expect {2} but found {3}',
 	// spectroscopy/kekule.spectrum.render.js
 	VISIBLE_DATA_RANGE_IS_EMPTY: 'The visible range of data is empty, unable to draw the spectrum',
 
