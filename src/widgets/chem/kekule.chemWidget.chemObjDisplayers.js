@@ -1176,7 +1176,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		{
 			//console.log('generate coords');
 			var is3D = this.getCoordMode() === Kekule.CoordMode.COORD3D;
-			var hasCoords = chemObj.nodesHasCoordOfMode(this.getCoordMode(), this.getAllowCoordBorrow(), true);
+			var hasCoords = (chemObj.getNodeCount() <= 0) || chemObj.nodesHasCoordOfMode(this.getCoordMode(), this.getAllowCoordBorrow(), true);
 			if (!hasCoords)  // auto generate
 			{
 				var serviceName = is3D? Kekule.Calculator.Services.GEN3D: Kekule.Calculator.Services.GEN2D;
