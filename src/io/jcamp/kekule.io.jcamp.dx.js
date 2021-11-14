@@ -189,35 +189,10 @@ Kekule.IO.Jcamp.DxUtils = {
 		}
 		return symbol.toUpperCase();
 	},
-	/**
-	 * Calculate a suitable factor for converting to integers from a set of floats.
-	 * This function is used for storing spectrum data into JCAMP-DX data table.
-	 * @param {Number} minValue Min value of original data set.
-	 * @param {Number} maxValue Max value of original data set.
-	 * @param {Float} allowErrorRatio Permitted error, e.g. 0.001 for 0.1%.
-	 * @param {Int} preferredScaleRangeMin If set, the rescaled data items should be larger than this value. It should be a negative value.
-	 * @param {Int} preferredScaleRangeMax If set, the rescaled data items should be less than this value. It should be a positive value.
-	 */
+	/** @private */
 	calcNumFactorForRange: function(minValue, maxValue, allowedErrorRatio, preferredScaleRangeMin, preferredScaleRangeMax)
 	{
-		//var factor = Math.min(Math.abs(minValue), Math.abs(maxValue)) * allowedErrorRatio;
-		var factor = Math.abs(maxValue - minValue) * allowedErrorRatio;
-		//var factor = Math.min(allowedError / Math.abs(minValue), allowedError / Math.abs(maxValue));
-		if (Kekule.ObjUtils.notUnset(preferredScaleRangeMin) && Kekule.ObjUtils.notUnset(preferredScaleRangeMax))
-		{
-			if (minValue / factor > preferredScaleRangeMin && maxValue / factor < preferredScaleRangeMax)  // we can even use a smaller factor?
-			{
-				var pfactor1 = Math.max(minValue / preferredScaleRangeMin, 0);  // avoid negative factor
-				var pfactor2 = Math.max(maxValue / preferredScaleRangeMax, 0);
-				var pfactor = (!pfactor1) ? pfactor2 :
-					(!pfactor2) ? pfactor1 :
-						Math.max(pfactor1, pfactor2);
-				if (pfactor)
-					factor = Math.min(factor, pfactor);
-			}
-		}
-		//console.log(minValue, maxValue, factor);
-		return factor;
+		return Jcamp.Utils.calcNumFactorForRange(minValue, maxValue, allowedErrorRatio, preferredScaleRangeMin, preferredScaleRangeMax);
 	}
 };
 
@@ -968,7 +943,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 });
 
 /**
- * Writer for reading a DX data block of JCAMP document tree.
+ * Writer for writing a DX data block to JCAMP document tree.
  * The input chem object should be an instance of {@link Kekule.Spectroscopy.Spectrum}.
  * @class
  * @augments Kekule.IO.Jcamp.BlockWriter
@@ -1008,6 +983,7 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 	/** @ignore */
 	doSaveChemObjToBlock: function(chemObj, block, options)
 	{
+		this.tryApplySuper('doSaveChemObjToBlock', [chemObj, block, options]);
 		this.doSaveSpectrumKeyMetaToBlock(chemObj, block, options);
 		this.doSaveSpectrumInfoToBlock(chemObj, block, options);
 		this.doSaveSpectrumDataToBlock(chemObj, block, options);
