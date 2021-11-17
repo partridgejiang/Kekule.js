@@ -404,16 +404,16 @@ Kekule.Render.CoordAxisRender2DUtils = {
 		if (ordinateSizes)
 		{
 			if (params.ordinateAxisPosition === 0)  // ordinate on left
-				abscissaRenderBox.x1 += ordinateSizes.total.x;
+				abscissaRenderBox.x1 += Math.min(ordinateSizes.total.x, abscissaRenderBox.x2 - abscissaRenderBox.x1);  // avoid x1 > x2
 			else
-				abscissaRenderBox.x2 -= ordinateSizes.total.x;
+				abscissaRenderBox.x2 -= Math.min(ordinateSizes.total.x, abscissaRenderBox.x2 - abscissaRenderBox.x1);  // avoid x1 > x2
 		}
 		if (abscissaSizes)
 		{
 			if (params.abscissaAxisPosition === 1)  // abscissa on top
-				ordinateRenderBox.y1 += abscissaSizes.total.y;
+				ordinateRenderBox.y1 += Math.min(abscissaSizes.total.y, ordinateRenderBox.y2 - ordinateRenderBox.y1);  // avoid y2 > y1
 			else
-				ordinateRenderBox.y2 -= abscissaSizes.total.y;
+				ordinateRenderBox.y2 -= Math.min(abscissaSizes.total.y, ordinateRenderBox.y2 - ordinateRenderBox.y1);  // avoid y2 > y1
 		}
 
 		if (drawAbscissa)
@@ -428,7 +428,8 @@ Kekule.Render.CoordAxisRender2DUtils = {
 				actualParams.abscissaDataRange, actualParams.abscissaScales, scaleLabels,
 				actualParams.abscissaUnitLabel, actualParams.abscissaLabel, abscissaSizes, renderOptions, true, actualParams.abscissaAxisPosition === 1,
 				actualParams.abscissaReversedDirection);
-			drawBridge.addToGroup(elem, result);
+			if (elem)
+				drawBridge.addToGroup(elem, result);
 		}
 		if (drawOrdinate)
 		{
@@ -437,7 +438,8 @@ Kekule.Render.CoordAxisRender2DUtils = {
 				actualParams.ordinateDataRange, actualParams.ordinateScales, scaleLabels,
 				actualParams.ordinateUnitLabel, actualParams.ordinateLabel, ordinateSizes, renderOptions, false, actualParams.ordinateAxisPosition !== 1,
 				actualParams.ordinateReversedDirection);
-			drawBridge.addToGroup(elem, result);
+			if (elem)
+				drawBridge.addToGroup(elem, result);
 		}
 
 		/*
@@ -465,7 +467,6 @@ Kekule.Render.CoordAxisRender2DUtils = {
 	{
 		var BXA = Kekule.Render.BoxXAlignment;
 		var BYA = Kekule.Render.BoxYAlignment;
-		var result = drawBridge.createGroup(context);
 		var alignOnTopOrLeft = isOnTopOrLeft;
 		var primaryAxis = isAbscissa? 'x': 'y';
 		var secondaryAxis = isAbscissa? 'y': 'x';
@@ -476,6 +477,10 @@ Kekule.Render.CoordAxisRender2DUtils = {
 		//var secondarySizeDir = isAbscissa? 'height': 'width';
 
 		var stageSize = {'x': renderBox.x2 - renderBox.x1, 'y': renderBox.y2 - renderBox.y1};
+		if (stageSize.x <= 0 || stageSize.y <= 0)  // size is too small to draw
+			return null;
+
+		var result = drawBridge.createGroup(context);
 		var basePos = {'x': renderBox.x1, 'y': renderBox.y1};
 		var isMaxValueOnRightOrBottom = isAbscissa? !isReversedDir: isReversedDir;
 		var coord = {}, coord2 = {};
@@ -534,7 +539,7 @@ Kekule.Render.CoordAxisRender2DUtils = {
 			var basedScaleLabelSize = stageSize[primaryAxis] / (scaleLabels.length - 1);
 			var currScaleLabelSize = basedScaleLabelSize;
 			var labelPerScales = 1;
-			while (currScaleLabelSize < elementSizes.scaleLabel[primaryAxis])
+			while (currScaleLabelSize < elementSizes.scaleLabel[primaryAxis] && basedScaleLabelSize > 0)
 			{
 				++labelPerScales;
 				currScaleLabelSize += basedScaleLabelSize;
