@@ -2280,6 +2280,7 @@ Kekule.CoordUtils = {
 	calcTransform2DMatrix: function(options, reverseOrder)
 	{
 		var M = Kekule.MatrixUtils;
+		var notUnset = Kekule.ObjUtils.notUnset;
 		var op = options || {};
 		var center = op.center;
 		if (center)  // center point set, need translate before rotate and scale
@@ -2311,12 +2312,12 @@ Kekule.CoordUtils = {
 		var scale = op.scale;
 		var scaleX = op.scaleX;
 		var scaleY = op.scaleY;
-		var defScale = scale || 1;
-		if (scale || scaleX || scaleY)
+		var defScale = Kekule.oneOf(scale, 1);
+		if (notUnset(scale) || notUnset(scaleX) || notUnset(scaleY))
 		{
 			var scaleMatrix = M.create(3, 3);
-			M.setValue(scaleMatrix, 1, 1, scaleX || defScale);
-			M.setValue(scaleMatrix, 2, 2, scaleY || defScale);
+			M.setValue(scaleMatrix, 1, 1, Kekule.oneOf(scaleX, defScale));
+			M.setValue(scaleMatrix, 2, 2, Kekule.oneOf(scaleY, defScale));
 			M.setValue(scaleMatrix, 3, 3, 1);
 		}
 		// translate matrix
@@ -2387,16 +2388,17 @@ Kekule.CoordUtils = {
 	 */
 	calcInverseTransform2DMatrix: function(options)
 	{
+		var notUnset = Kekule.ObjUtils.notUnset;
 		var op = Object.create(options);
 		if (options.center)
 		{
 			op.center = {x: options.center.x, y: options.center.y};
 		}
-		if (op.scale)
+		if (notUnset(op.scale))
 			op.scale = 1 / op.scale;
-		if (op.scaleX)
+		if (notUnset(op.scaleX))
 			op.scaleX = 1 / op.scaleX;
-		if (op.scaleY)
+		if (notUnset(op.scaleY))
 			op.scaleY = 1 / op.scaleY;
 		if (op.translateX)
 			op.translateX = -op.translateX;
@@ -2647,6 +2649,7 @@ Kekule.CoordUtils = {
 	 */
 	calcTransform3DMatrix: function(options)
 	{
+		var notUnset = Kekule.ObjUtils.notUnset;
 		var M = Kekule.MatrixUtils;
 		var op = options || {};
 		var center = op.center;
@@ -2735,13 +2738,13 @@ Kekule.CoordUtils = {
 		var scaleX = op.scaleX;
 		var scaleY = op.scaleY;
 		var scaleZ = op.scaleZ;
-		if (scale || scaleX || scaleY || scaleZ)
+		if (notUnset(scale) || notUnset(scaleX) || notUnset(scaleY) || notUnset(scaleZ))
 		{
-			var defScale = scale || 1;
+			var defScale = Kekule.oneOf(scale, 1);
 			var scaleMatrix = M.create(4, 4);
-			M.setValue(scaleMatrix, 1, 1, scaleX || defScale);
-			M.setValue(scaleMatrix, 2, 2, scaleY || defScale);
-			M.setValue(scaleMatrix, 3, 3, scaleZ || defScale);
+			M.setValue(scaleMatrix, 1, 1, Kekule.oneOf(scaleX, defScale));
+			M.setValue(scaleMatrix, 2, 2, Kekule.oneOf(scaleY, defScale));
+			M.setValue(scaleMatrix, 3, 3, Kekule.oneOf(scaleZ, defScale));
 			M.setValue(scaleMatrix, 4, 4, 1);
 		}
 		// translate matrix
@@ -2792,18 +2795,19 @@ Kekule.CoordUtils = {
 	 */
 	calcInverseTransform3DMatrix: function(options)
 	{
+		var notUnset = Kekule.ObjUtils.notUnset;
 		var op = Object.create(options);
 		if (options.center)
 		{
 			op.center = {x: options.center.x, y: options.center.y, z: options.center.z};
 		}
-		if (op.scale)
+		if (notUnset(op.scale))
 			op.scale = 1 / op.scale;
-		if (op.scaleX)
+		if (notUnset(op.scaleX))
 			op.scaleX = 1 / op.scaleX;
-		if (op.scaleY)
+		if (notUnset(op.scaleY))
 			op.scaleY = 1 / op.scaleY;
-		if (op.scaleZ)
+		if (notUnset(op.scaleZ))
 			op.scaleZ = 1 / op.scaleZ;
 		if (op.translateX)
 			op.translateX = -op.translateX;
