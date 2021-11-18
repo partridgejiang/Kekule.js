@@ -1217,13 +1217,16 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 				var range = varRanges[details.symbol];
 				details.range = range;
 				// calculator factor for range
-				var factor = Jcamp.DxUtils.calcNumFactorForRange(
-					range.min, range.max,
-					options.dxDataAllowedSavingErrorRatio,
-					options.dxDataPreferredOrdinateScaledRange.min, options.dxDataPreferredOrdinateScaledRange.max);  // TODO: currently apply this preferred range to all vars, not only ordinate
-				details.factor = factor;
-				details.min = range.min;
-				details.max = range.max;
+				if (range)
+				{
+					var factor = Jcamp.DxUtils.calcNumFactorForRange(
+						range.min, range.max,
+						options.dxDataAllowedSavingErrorRatio,
+						options.dxDataPreferredOrdinateScaledRange.min, options.dxDataPreferredOrdinateScaledRange.max);  // TODO: currently apply this preferred range to all vars, not only ordinate
+					details.factor = factor;
+					details.min = range.min;
+					details.max = range.max;
+				}
 				result.push(details);
 				usedSymbols.push(details.symbol);
 			}
