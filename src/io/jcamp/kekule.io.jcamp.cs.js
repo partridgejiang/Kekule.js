@@ -24,6 +24,8 @@ Kekule.globalOptions.add('IO.jcamp', {
 	outputCsVersion: '3.7',    // The CS version when writing to JCAMP-CS data
 	csCoordAllowedSavingErrorRatio: 0.0001,  // allow 0.01% error when saving atom coords to JCAMP-CS format
 	csCoordPreferredScaledRange: {min: -16384, max: 16384},
+	autoScaleCsRasterCoords: true,   // whether scale the XY raster value of CS data to a suitable length for rendering
+	csRasterAutoScaleRefLength: Kekule.globalOptions.structure.defaultBondLength2D || 0.8
 });
 
 /** @ignore */
@@ -502,166 +504,203 @@ Kekule.IO.Jcamp.CsDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		var molCoordFactor = infos.coordFactor || this.getCurrCoordFactor() || 1;
 		var molCoordCenter = infos.coordCenter || this.getCurrCoordCenter();
 		var molRasterInfos = infos.rasterInfos || this.getCurrRasterInfos() || [];
-		var molRasterFactor = infos.rasterFactor || this.getCurrRasterFactor() || molCoordFactor || 1;
+		var molRasterFactor = infos.rasterFactor || this.getCurrRasterFactor();
 		var molRasterCenter = infos.rasterCenter || this.getCurrRasterCenter();
+		var needRasterScale;
 		//console.log(molAtomInfos, molBondInfos);
 		//console.log(molRasterFactor, molRasterCenter);
 
-		// create atoms
-		var atoms = [];
-		for (var i = 0, l = molAtomInfos.length; i < l; ++i)
+		molecule.beginUpdate();
+
+		try
 		{
-			var info = molAtomInfos[i];
-			if (info)
+
+			// create atoms
+			var atoms = [];
+			for (var i = 0, l = molAtomInfos.length; i < l; ++i)
 			{
-				var atom;
-				if (info.symbol && info.symbol !== Jcamp.Consts.MOL_ATOM_SYMBOL_ANY)
-				{
-					var isoDetails = Jcamp.CsUtils.getJcampIsotopeIdDetails(info.symbol);
-					atom = molecule.appendAtom(isoDetails.symbol, isoDetails.massNumber);
-				}
-				else
-				{
-					atom = new Kekule.Pseudoatom(null, Kekule.PseudoatomType.ANY);
-					molecule.appendNode(atom);
-				}
-				atoms[i] = atom;
-			}
-		}
-		// set coord2D/3D of atoms by raster and coord infos
-		var CU = Kekule.CoordUtils;
-		if (molCoordInfos.length)
-		{
-			var centerCoord = molCoordCenter || {'x': 0, 'y': 0, 'z': 0};
-			for (var i = 0, l = molCoordInfos.length; i < l; ++i)
-			{
-				var info = molCoordInfos[i];
+				var info = molAtomInfos[i];
 				if (info)
 				{
-					var atom = atoms[info.atomIndex];
-					if (atom)
+					var atom;
+					if (info.symbol && info.symbol !== Jcamp.Consts.MOL_ATOM_SYMBOL_ANY)
 					{
-						var coord = CU.multiply(CU.add({'x': info.x, 'y': info.y, 'z': info.z}, centerCoord), molCoordFactor);
-						atom.setCoord3D(coord);
+						var isoDetails = Jcamp.CsUtils.getJcampIsotopeIdDetails(info.symbol);
+						atom = molecule.appendAtom(isoDetails.symbol, isoDetails.massNumber);
+					}
+					else
+					{
+						atom = new Kekule.Pseudoatom(null, Kekule.PseudoatomType.ANY);
+						molecule.appendNode(atom);
+					}
+					atoms[i] = atom;
+				}
+			}
+			// set coord2D/3D of atoms by raster and coord infos
+			var CU = Kekule.CoordUtils;
+			if (molCoordInfos.length)
+			{
+				var centerCoord = molCoordCenter || {'x': 0, 'y': 0, 'z': 0};
+				for (var i = 0, l = molCoordInfos.length; i < l; ++i)
+				{
+					var info = molCoordInfos[i];
+					if (info)
+					{
+						var atom = atoms[info.atomIndex];
+						if (atom)
+						{
+							var coord = CU.multiply(CU.add({'x': info.x, 'y': info.y, 'z': info.z}, centerCoord), molCoordFactor);
+							atom.setCoord3D(coord);
+						}
 					}
 				}
 			}
-		}
-		if (molRasterInfos.length)
-		{
-			var centerCoord = molRasterCenter || {'x': 0, 'y': 0};
-			for (var i = 0, l = molRasterInfos.length; i < l; ++i)
+			if (molRasterInfos.length)
 			{
-				var info = molRasterInfos[i];
+				needRasterScale = !molRasterFactor && options.autoScaleCsRasterCoords && options.csRasterAutoScaleRefLength;
+				var centerCoord = molRasterCenter || {'x': 0, 'y': 0};
+				for (var i = 0, l = molRasterInfos.length; i < l; ++i)
+				{
+					var info = molRasterInfos[i];
+					if (info)
+					{
+						var atom = atoms[info.atomIndex];
+						if (atom)
+						{
+							var coord = CU.multiply(CU.add({'x': info.x, 'y': info.y}, centerCoord), molRasterFactor || 1);
+							//coord = CU.divide(coord, 10000);
+							atom.setCoord2D(coord);
+							if (info.z)  // set to zIndex2D property of atom
+								atom.setZIndex2D(info.z);
+						}
+					}
+				}
+			}
+
+			// create bonds
+			var bondLengthes = [];
+			for (var i = 0, l = molBondInfos.length; i < l; ++i)
+			{
+				var info = molBondInfos[i];
 				if (info)
 				{
-					var atom = atoms[info.atomIndex];
+					var atom1 = atoms[info.atomIndex1];
+					var atom2 = atoms[info.atomIndex2];
+					var sBondType = info.bondType;
+					var bondTypeAndOrder = Jcamp.CsUtils.jcampBondTypeToKekule(sBondType);
+					var bond = molecule.appendBond([atom1, atom2], bondTypeAndOrder.bondOrder, bondTypeAndOrder.bondType);
+					if (needRasterScale)
+					{
+						var bondLength = CU.getDistance(atom1.getCoord2D(), atom2.getCoord2D());
+						if (bondLength)
+							bondLengthes.push(bondLength);
+					}
+					if (options.determinateBondStereoByZIndex)
+					{
+						if (bondTypeAndOrder.bondType === Kekule.BondType.COVALENT && bondTypeAndOrder.bondOrder === Kekule.BondOrder.SINGLE)
+						{
+							// determinate the wedge or hash bond style by z index of atom1/atom2
+							var zIndex1 = atom1.getZIndex2D() || 0;
+							var zIndex2 = atom2.getZIndex2D() || 0;
+							var stereo = (zIndex1 < zIndex2) ? Kekule.BondStereo.UP :
+								(zIndex1 > zIndex2) ? Kekule.BondStereo.DOWN :
+								null;
+							if (!stereo && zIndex1 > 0 && options.enableCloserBondBetweenPositiveZIndexAtoms)  // zIndex1 == zIndex2 > 0
+								stereo = Kekule.BondStereo.CLOSER;
+							if (stereo)
+								bond.setStereo(stereo);
+						}
+					}
+				}
+			}
+			// adjust raster coords if needed
+			if (needRasterScale && bondLengthes.length)
+			{
+				var median = Kekule.ArrayUtils.getMedian(bondLengthes);
+				var rasterScale = options.csRasterAutoScaleRefLength / median;
+				for (var i = 0, l = atoms.length; i < l; ++i)
+				{
+					var atom = atoms[i];
 					if (atom)
 					{
-						var coord = CU.multiply(CU.add({'x': info.x, 'y': info.y}, centerCoord), molRasterFactor);
-						atom.setCoord2D(coord);
-						if (info.z)  // set to zIndex2D property of atom
-							atom.setZIndex2D(info.z);
+						var oldRaster = atom.getCoord2D();
+						if (oldRaster)
+							atom.setCoord2D(CU.multiply(oldRaster, rasterScale));
 					}
 				}
 			}
-		}
 
-		// create bonds
-		for (var i = 0, l = molBondInfos.length; i < l; ++i)
-		{
-			var info = molBondInfos[i];
-			if (info)
+			// map charges and radicals
+			for (var i = 0, l = molChargeInfos.length; i < l; ++i)
 			{
-				var atom1 = atoms[info.atomIndex1];
-				var atom2 = atoms[info.atomIndex2];
-				var sBondType = info.bondType;
-				var bondTypeAndOrder = Jcamp.CsUtils.jcampBondTypeToKekule(sBondType);
-				var bond = molecule.appendBond([atom1, atom2], bondTypeAndOrder.bondOrder, bondTypeAndOrder.bondType);
-				if (options.determinateBondStereoByZIndex)
+				var info = molChargeInfos[i];
+				if (info && info.charge)
 				{
-					if (bondTypeAndOrder.bondType === Kekule.BondType.COVALENT && bondTypeAndOrder.bondOrder === Kekule.BondOrder.SINGLE)
+					// TODO: currently the charge a averaged to each delocalization atom
+					var delocalizationAtomCount = info.atomIndexes.length;
+					if (delocalizationAtomCount)
 					{
-						// determinate the wedge or hash bond style by z index of atom1/atom2
-						var zIndex1 = atom1.getZIndex2D() || 0;
-						var zIndex2 = atom2.getZIndex2D() || 0;
-						var stereo = (zIndex1 < zIndex2) ? Kekule.BondStereo.UP :
-							(zIndex1 > zIndex2) ? Kekule.BondStereo.DOWN :
-							null;
-						if (!stereo && zIndex1 > 0 && options.enableCloserBondBetweenPositiveZIndexAtoms)  // zIndex1 == zIndex2 > 0
-							stereo = Kekule.BondStereo.CLOSER;
-						if (stereo)
-							bond.setStereo(stereo);
+						var chargedAtoms = [];
+						for (var j = 0; j < delocalizationAtomCount; ++j)
+						{
+							var atomIndex = info.atomIndexes[j];
+							if (atoms[atomIndex])
+								chargedAtoms.push(atoms[atomIndex]);
+						}
+						var averageCharge = info.charge / chargedAtoms.length;
+						for (var j = 0, jj = chargedAtoms.length; j < jj; ++j)
+						{
+							chargedAtoms[j].setCharge(averageCharge);
+						}
 					}
 				}
 			}
-		}
-		// map charges and radicals
-		for (var i = 0, l = molChargeInfos.length; i < l; ++i)
-		{
-			var info = molChargeInfos[i];
-			if (info && info.charge)
+			for (var i = 0, l = molRadicalInfos.length; i < l; ++i)
 			{
-				// TODO: currently the charge a averaged to each delocalization atom
-				var delocalizationAtomCount = info.atomIndexes.length;
-				if (delocalizationAtomCount)
+				var info = molRadicalInfos[i];
+				var radical = info && info.radical;
+				if (radical)
 				{
-					var chargedAtoms = [];
-					for (var j = 0; j < delocalizationAtomCount; ++j)
+					// all atoms has the same radical
+					for (var j = 0, jj = info.atomIndexes.length; j < jj; ++j)
 					{
-						var atomIndex = info.atomIndexes[j];
-						if (atoms[atomIndex])
-							chargedAtoms.push(atoms[atomIndex]);
-					}
-					var averageCharge = info.charge / chargedAtoms.length;
-					for (var j = 0, jj = chargedAtoms.length; j < jj; ++j)
-					{
-						chargedAtoms[j].setCharge(averageCharge);
+						var atom = atoms[info.atomIndexes[j]];
+						if (atom)
+							atom.setRadical(Jcamp.CsUtils.jcampRadicalToKekule(radical));
 					}
 				}
 			}
-		}
-		for (var i = 0, l = molRadicalInfos.length; i < l; ++i)
-		{
-			var info = molRadicalInfos[i];
-			var radical = info && info.radical;
-			if (radical)
-			{
-				// all atoms has the same radical
-				for (var j = 0, jj = info.atomIndexes.length; j < jj; ++j)
-				{
-					var atom = atoms[info.atomIndexes[j]];
-					if (atom)
-						atom.setRadical(Jcamp.CsUtils.jcampRadicalToKekule(radical));
-				}
-			}
-		}
 
-		// use the explicit H count to validate the molecule structure, or set explicit H count
-		for (var i = 0, l = molAtomInfos.length; i < l; ++i)
-		{
-			var info = molAtomInfos[i];
-			if (info)
+			// use the explicit H count to validate the molecule structure, or set explicit H count
+			for (var i = 0, l = molAtomInfos.length; i < l; ++i)
 			{
-				var atom = atoms[i];
-				var storedImplicitHCount = info.implicitHCount;
-				if (OU.notUnset(storedImplicitHCount))
+				var info = molAtomInfos[i];
+				if (info)
 				{
-					var calculatedImplicitHCount = atom.getImplicitHydrogenCount();
-					if (storedImplicitHCount !== calculatedImplicitHCount)
+					var atom = atoms[i];
+					var storedImplicitHCount = info.implicitHCount;
+					if (OU.notUnset(storedImplicitHCount))
 					{
-						if (atom.setExplicitHydrogenCount)
-							atom.setExplicitHydrogenCount(storedImplicitHCount);
-						else
-							Kekule.error(Kekule.$L('ErrorMsg.JCAMP_IMPLICIT_HYDROGEN_COUNT_NOT_MATCH_DETAIL').format(i, info.symbol, storedImplicitHCount, calculatedImplicitHCount));
+						var calculatedImplicitHCount = atom.getImplicitHydrogenCount();
+						if (storedImplicitHCount !== calculatedImplicitHCount)
+						{
+							if (atom.setExplicitHydrogenCount)
+								atom.setExplicitHydrogenCount(storedImplicitHCount);
+							else
+								Kekule.error(Kekule.$L('ErrorMsg.JCAMP_IMPLICIT_HYDROGEN_COUNT_NOT_MATCH_DETAIL').format(i, info.symbol, storedImplicitHCount, calculatedImplicitHCount));
+						}
 					}
 				}
 			}
-		}
 
-		// if molecule ctab been built, we shall now clear the formula of it to avoid possible insync
-		if (molecule.hasCtab() && molecule.hasFormula())
-			molecule.removeFormula();
+			// if molecule ctab been built, we shall now clear the formula of it to avoid possible insync
+			if (molecule.hasCtab() && molecule.hasFormula())
+				molecule.removeFormula();
+		}
+		finally
+		{
+			molecule.endUpdate();
+		}
 	}
 });
 
