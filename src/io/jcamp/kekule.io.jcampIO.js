@@ -248,15 +248,17 @@ Kekule.IO.JcampWriter = Class.create(Kekule.IO.ChemDataWriter,
 		var concreteWriter = this.doGetChildWriter(targetObj);
 		if (!concreteWriter && obj.getChildAt && obj.getChildCount)
 		{
-			// TODO: unfinished
 			for (var i = 0, l = obj.getChildCount(); i < l; ++i)
 			{
 				var child = obj.getChildAt(i);
-				concreteWriter = this.doGetChildWriter(child);
-				if (concreteWriter)
+				if (child)
 				{
-					targetObj = child;
-					break;
+					concreteWriter = this.doGetChildWriter(child);
+					if (concreteWriter)
+					{
+						targetObj = child;
+						break;
+					}
 				}
 			}
 		}
@@ -265,7 +267,9 @@ Kekule.IO.JcampWriter = Class.create(Kekule.IO.ChemDataWriter,
 			var op = Object.extend({}, Kekule.globalOptions.IO.jcamp);
 			op = Object.extend(op, options || {});
 			var block = concreteWriter.writeData(targetObj, dataType, format, op);
-			var lines = this.encodeBlockToTextLines(block);
+			var lines = [];
+			if (block)
+				lines = this.encodeBlockToTextLines(block);
 			concreteWriter.finalize();
 			return lines.join('\n');
 		}
@@ -290,20 +294,34 @@ Kekule.IO.JcampWriter = Class.create(Kekule.IO.ChemDataWriter,
 	{
 		var ldrs = block.ldrs;
 		var codes = [];
+		var blockEndLdr;
 		for (var i = 0, l = ldrs.length; i < l; ++i)
 		{
 			var ldr = ldrs[i];
 			var labelName = ldr.labelName;
-			var valueLines = ldr.valueLines || [];
-			//console.log(labelName, valueLines);
-			var s = Jcamp.Consts.DATA_LABEL_FLAG + labelName + Jcamp.Consts.DATA_LABEL_TERMINATOR + valueLines.join('\n');
-			codes.push(s);
+			if (labelName === JcampConsts.LABEL_BLOCK_END)  // the end label must be written after child blocks
+			{
+				blockEndLdr = ldr;
+			}
+			else
+			{
+				var valueLines = ldr.valueLines || [];
+				//console.log(labelName, valueLines);
+				var s = Jcamp.Consts.DATA_LABEL_FLAG + labelName + Jcamp.Consts.DATA_LABEL_TERMINATOR + valueLines.join('\n');
+				codes.push(s);
+			}
 		}
 		// child blocks
 		var childBlocks = block.blocks || [];
 		for (var i = 0, l = childBlocks.length; i < l; ++i)
 		{
 			codes = codes.concat(this.encodeBlockToTextLines(childBlocks[i]));
+		}
+		// write the end LDR
+		if (blockEndLdr)
+		{
+			var s = Jcamp.Consts.DATA_LABEL_FLAG + blockEndLdr.labelName + Jcamp.Consts.DATA_LABEL_TERMINATOR + (ldr.valueLines || []).join('\n');
+			codes.push(s);
 		}
 		return codes;
 	}
