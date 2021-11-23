@@ -1308,7 +1308,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			var doCanonicalize = this._needToCanonicalizeBeforeSaving() && this.getDisplayerConfigs().getIoConfigs().getCanonicalizeBeforeSave();
 			if (doCanonicalize && obj.standardize)  // canonicalize first
 			{
-				var obj = obj.clone? obj.clone(true): obj;  // clone with id
+				//var obj = obj.clone? obj.clone(true): obj;  // clone with id
+				var obj = this._cloneSavingTargetObj(obj);
 				obj.standardize(this.getStandardizationOptions());
 			}
 			if (!dataType)
@@ -1324,6 +1325,12 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			Kekule.error(/*Kekule.ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT*/Kekule.$L('ErrorMsg.NO_SUITABLE_WRITER_FOR_FORMAT'));
 			return null;
 		}
+	},
+	/** @private */
+	_cloneSavingTargetObj: function(obj)
+	{
+		var result = obj.clone? obj.clone(true): obj;  // clone with id
+		return result;
 	},
 	/**
 	 * Return whether this displayer need to canonicalize molecule before save.

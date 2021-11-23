@@ -274,6 +274,20 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		else
 			return this.tryApplySuper('getSavingTargetObj')  /* $super() */;
 	},
+	/** @ignore */
+	_cloneSavingTargetObj: function(obj)
+	{
+		var space = this.getChemSpace();
+		var childCount = space.getChildCount();
+		if (childCount === 1 && obj === space.getChildAt(0))
+		{
+			// The objRef properties are related with chemspace, if clone obj only, the relation may be lost
+			var clonedSpace = space.clone(true);
+			return clonedSpace.getChildAt(0);
+		}
+		else
+			return this.tryApplySuper('_cloneSavingTargetObj', [obj]);
+	},
 
 	/** @ignore */
 	createDefaultConfigs: function()
