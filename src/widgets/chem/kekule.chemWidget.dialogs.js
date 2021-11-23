@@ -327,8 +327,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 	/** @ignore */
 	close: function(/*$super, */result)
 	{
-		if (!this.getChemObj())  // chemObj not load by file, need to analysis direct input data
-		{
+		{  // feed dataDetails before closing
 			if (this.isPositiveResult(result))
 			{
 				var data = this._dataEditor.getValue();
