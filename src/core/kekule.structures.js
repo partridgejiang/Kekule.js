@@ -37,6 +37,10 @@ Kekule.StructureComparationLevel = {
 	DEFAULT: 4
 };
 
+Kekule.globalOptions.add('structure', {
+	defaultBondLength2D: 0.8,  // a default C-C bond length for generating 2D coordinates of new structures
+	defaultBondLength3D: 1.5  // a default C-C bond length for generating 3D coordinates of new structures
+});
 /*
  * Default options to compare chem structures.
  * @object
