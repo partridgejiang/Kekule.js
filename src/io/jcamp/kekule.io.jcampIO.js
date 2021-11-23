@@ -32,7 +32,18 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 	{
 		this.tryApplySuper('initialize', options);
 	},
-
+	/** @ignore */
+	doFinalize: function()
+	{
+		this.tryApplySuper('doFinalize');
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('blockIdObjMap', {'dataType': DataType.HASH, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+		// an array to save the information of cross references, each item containing fields: {refType, srcBlockId, targetBlockId, srcReader}
+		this.defineProp('crossRefs', {'dataType': DataType.ARRAY, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+	},
 	/** @private */
 	_removeInlineComments: function(str)
 	{
@@ -202,6 +213,66 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 			return null;
 	},
 
+	/**
+	 * Add a map item of blockId-chemObject.
+	 * @param {String} blockId
+	 * @param {Kekule.ChemObject} chemObj
+	 */
+	setObjWithBlockId: function(blockId, chemObj)
+	{
+		this.getBlockIdObjMap()[blockId] = chemObj;
+	},
+	/**
+	 * Retrieve a chem object from block id in map.
+	 * @param {String} blockId
+	 * @returns {Kekule.ChemObject}
+	 */
+	getObjFromBlockId: function(blockId)
+	{
+		return this.getBlockIdObjMap()[blockId];
+	},
+	/**
+	 * Add a cross reference item that need to be handled later.
+	 * @param {Kekule.IO.ChemDataReader} srcReader
+	 * @param {String} srcBlockId
+	 * @param {String} targetBlockId
+	 * @param {Int} refType
+	 * @param {String} refTypeText
+	 */
+	addCrossRefItem: function(srcReader, srcBlockId, targetBlockId, refType, refTypeText)
+	{
+		this.getCrossRefs().push({
+			'srcReader': srcReader,
+			'srcBlockId': srcBlockId,
+			'targetBlockId': targetBlockId,
+			'refType': refType,
+			'refTypeText': refTypeText
+		});
+	},
+
+	/**
+	 * Build the cross reference relations after all objects are read from data.
+	 * @private
+	 */
+	doHandleCrossRefs: function()
+	{
+		var refs = this.getCrossRefs() || [];
+		for (var i = 0, l = refs.length; i < l; ++i)
+		{
+			var item = refs[i];
+			var reader = item.srcReader;
+			if (reader && reader.doBuildCrossRef)
+			{
+				var srcObj = this.getObjFromBlockId(item.srcBlockId);
+				var targetObj = this.getObjFromBlockId(item.targetBlockId);
+				if (srcObj && targetObj)
+				{
+					reader.doBuildCrossRef(srcObj, targetObj, item.refType, item.refTypeText);
+				}
+			}
+		}
+	},
+
 	/** @private */
 	doReadData: function(data, dataType, format, options)
 	{
@@ -215,11 +286,15 @@ Kekule.IO.JcampReader = Class.create(Kekule.IO.ChemDataReader,
 		if (readerClass)
 		{
 			var reader = new readerClass();
+			reader.setParentReader(this);
 			try
 			{
 				var op = Object.extend({}, Kekule.globalOptions.IO.jcamp);
 				op = Object.extend(op, options || {});
+				this.setPropStoreFieldValue('blockIdObjMap', {});
+				this.setPropStoreFieldValue('crossRefs', []);
 				result = reader.doReadData(rootBlock, null, null, op);   // use doReadData instead of readData, since child readers do not need to store srcInfo
+				this.doHandleCrossRefs();
 			}
 			finally
 			{
@@ -241,6 +316,14 @@ Kekule.IO.JcampWriter = Class.create(Kekule.IO.ChemDataWriter,
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.JcampWriter',
+	/** @private */
+	initProperties: function()
+	{
+		// storing the max value of child block id
+		this.defineProp('maxBlockId', {'dataType': DataType.INT, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+		// a private object to map source chem object to block
+		this.defineProp('objBlockIdMap', {'dataType': DataType.OBJECT, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+	},
 	/** @ignore */
 	doWriteData: function(obj, dataType, format, options)
 	{
@@ -264,8 +347,10 @@ Kekule.IO.JcampWriter = Class.create(Kekule.IO.ChemDataWriter,
 		}
 		if (concreteWriter && targetObj)
 		{
+			this._prepareWriting();
 			var op = Object.extend({}, Kekule.globalOptions.IO.jcamp);
 			op = Object.extend(op, options || {});
+			concreteWriter.setParentWriter(this);
 			var block = concreteWriter.writeData(targetObj, dataType, format, op);
 			var lines = [];
 			if (block)
@@ -275,6 +360,14 @@ Kekule.IO.JcampWriter = Class.create(Kekule.IO.ChemDataWriter,
 		}
 		else
 			return '';
+	},
+	/** @private */
+	_prepareWriting: function()
+	{
+		this.setPropStoreFieldValue('maxBlockId', 0);
+		if (this.getObjBlockIdMap())
+			this.getObjBlockIdMap().finalize();
+		this.setPropStoreFieldValue('objBlockIdMap', new Kekule.MapEx());
 	},
 	/** @private */
 	doGetChildWriter: function(chemObj)
@@ -324,6 +417,36 @@ Kekule.IO.JcampWriter = Class.create(Kekule.IO.ChemDataWriter,
 			codes.push(s);
 		}
 		return codes;
+	},
+
+	/**
+	 * Generate a unique block id for child writer.
+	 * @returns {String}
+	 */
+	generateUniqueBlockId: function()
+	{
+		var i = this.getMaxBlockId();
+		var newId = ++i;
+		this.setPropStoreFieldValue('maxBlockId', newId);
+		return newId.toString();
+	},
+	/**
+	 * Set a chemObj-block id map.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Hash} blockInfo Including fields {id, dataType}
+	 */
+	setBlockInfoForObj: function(chemObj, blockInfo)
+	{
+		this.getObjBlockIdMap().set(chemObj, blockInfo);
+	},
+	/**
+	 * Retrieve the block info associated with chem object.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @returns {Hash}
+	 */
+	getBlockInfoFromObj: function(chemObj)
+	{
+		return this.getObjBlockIdMap().get(chemObj);
 	}
 });
 

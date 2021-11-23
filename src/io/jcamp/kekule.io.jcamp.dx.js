@@ -45,7 +45,8 @@ Kekule.globalOptions.add('IO.jcamp', {
 	dxDataStorageStyle: Kekule.IO.Jcamp.SpectrumDataStorageStyle.SMART,
 	dxDataAllowedSavingErrorRatio: 0.0001,  // allow 0.1% error when saving data to JCAMP-DX format
 	dxDataPreferredOrdinateScaledRange: {min: -32767, max: 32767},
-	dxDataAsdfTableOutputForm: Jcamp.AsdfForm.DIF_DUP  // default output form of ASDF data table
+	dxDataAsdfTableOutputForm: Jcamp.AsdfForm.DIF_DUP,  // default output form of ASDF data table
+	useDxMinMaxValueAsDisplayRange: false   // whether regard the MINX/Y-MAXX/Y as the display range of all spectrum in file
 });
 
 /**
@@ -259,6 +260,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				return i && i.varRawInfos;
 			}
 		});
+		this.defineProp('dataSectionsWithPeakAssignments', {'dataType': DataType.ARRAY, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
 	},
 	/** @ignore */
 	initPropValues: function()
@@ -493,9 +495,10 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				var spectrumData = chemObj.getData();
 				spectrumData.setVariables(varDefinitions);
 				var isContinuous = (ldr.labelName.indexOf('PEAK') < 0) && (ldr.labelName.indexOf('ASSIGNMENT') < 0);
+				var isPeakAssignments = (ldr.labelName.indexOf('ASSIGNMENT') >= 0);
 				spectrumData.setMode(isContinuous? Kekule.Spectroscopy.DataMode.CONTINUOUS: Kekule.Spectroscopy.DataMode.PEAK);
 
-				var spectrumDataSection = this._createSpectrumDataSectionByFormat(formatDetail, dataValue.values, varInfos, spectrumData, this.getCurrOptions());
+				var spectrumDataSection = this._createSpectrumDataSectionByFormat(formatDetail, dataValue.values, varInfos, spectrumData, isPeakAssignments, this.getCurrOptions());
 				/*
 				if (spectrumData)
 					chemObj.setData(spectrumData);
@@ -542,6 +545,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 	_createSpectrumVariableDefinitions: function(varInfos)
 	{
 		var result = [];
+		var options = this.getCurrOptions();
 		for (var i = 0, l = varInfos.length; i < l; ++i)
 		{
 			var info = varInfos[i];
@@ -564,11 +568,13 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				//'maxValue': info.maxValue,
 				'dependency': Kekule.ObjUtils.notUnset(info.dependency)? info.dependency: Kekule.VarDependency.DEPENDENT
 			});
-			if (Kekule.ObjUtils.notUnset(info.minValue) && Kekule.ObjUtils.notUnset(info.maxValue))
+
+			if (Kekule.ObjUtils.notUnset(info.minValue) && Kekule.ObjUtils.notUnset(info.maxValue) && options.useDxMinMaxValueAsDisplayRange)
 			{
 				if (info.minValue !== info.maxValue)  // some times these value are all 0, means unavailable values?
 					def.setInfoValue('displayRange', {'min': info.minValue, 'max': info.maxValue});
 			}
+
 			result.push(def);
 		}
 		return result;
@@ -605,9 +611,10 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		var localVarSymbols = formatDetail.vars;
 
 		var isContinuous = (plotDescriptor.indexOf('PEAK') < 0) && (plotDescriptor.indexOf('ASSIGNMENT') < 0);
+		var isPeakAssignments = (plotDescriptor.indexOf('ASSIGNMENT') >= 0);
 		var dataMode = isContinuous? Kekule.Spectroscopy.DataMode.CONTINUOUS: Kekule.Spectroscopy.DataMode.PEAK;
 
-		var spectrumDataSection = this._createSpectrumDataSectionByFormat(formatDetail, dataValue.values, varInfos, spectrumData, this.getCurrOptions());
+		var spectrumDataSection = this._createSpectrumDataSectionByFormat(formatDetail, dataValue.values, varInfos, spectrumData, isPeakAssignments, this.getCurrOptions());
 		spectrumDataSection.setMode(dataMode);
 		var pageInfo = ntuplesInfos['PAGE'];
 		spectrumDataSection.setName(pageInfo.varSymbol + ': ' + pageInfo.sValue);
@@ -782,7 +789,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		return dataValue * (varInfo.factor || 1);
 	},
 	/** @private */
-	_createSpectrumDataSectionByFormat: function(formatDetail, data, varinfos, parentSpectrumData, options)
+	_createSpectrumDataSectionByFormat: function(formatDetail, data, varinfos, parentSpectrumData, isPeakAssignments, options)
 	{
 		var result;
 		if (formatDetail.format === Jcamp.Consts.DATA_VARLIST_FORMAT_XYDATA)
@@ -793,9 +800,12 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		{
 			result = this._createXyPointsFormatSpectrumDataSection(formatDetail, data, varinfos, parentSpectrumData, options);
 		}
-		else if (formatDetail.format === Jcamp.Consts.DATA_VARLIST_FORMAT_VAR_GROUPS)
+		else if (formatDetail.format === Jcamp.Consts.DATA_VARLIST_FORMAT_VAR_GROUPS) // may containing peak assignments
 		{
-			result = this._createVarGroupFormatSpectrumDataSection(formatDetail, data, varinfos, parentSpectrumData, options);
+			if (isPeakAssignments)
+				result = this._createPeakAssignmentsVarGroupFormatSpectrumDataSection(formatDetail, data, varinfos, parentSpectrumData, options);
+			else
+				result = this._createVarGroupFormatSpectrumDataSection(formatDetail, data, varinfos, parentSpectrumData, options);
 		}
 		//console.log('data', formatDetail, varinfos, result);
 		//console.log('section', result.calcDataRange('Y'));
@@ -899,7 +909,14 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			for (var i = 0, l = data.length; i < l; ++i)
 			{
 				// each item is a data group, containing values of all variables
-				result.appendData(data[i]);
+				var dataValues = data[i];
+				var actualValues = [];
+				for (var j = 0, jj = dataValues.length; j < jj; ++j)
+				{
+					var v = this._calcActualVarValue(dataValues[j], varInfos[j]);
+					actualValues.push(v);
+				}
+				result.appendData(actualValues);
 			}
 			result.setDataSorted(true);
 		}
@@ -908,6 +925,89 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			result.endUpdate();
 		}
 		return result;
+	},
+	/** @private */
+	_createPeakAssignmentsVarGroupFormatSpectrumDataSection: function(formatDetail, data, varInfos, parentSpectrumData, options)
+	{
+		//console.log(formatDetail, varInfos);
+		var hasAssignments = false;
+		// check if there is really assignment var (A) and peak width (W)
+		// TODO: in NTuple, how to find out the assignment and width var if they are with different symbol?
+		var normalVarSymbols = formatDetail.vars.slice(0, 2);
+		var specialVarTypes = [null, null];  // A: assignment, W: peak width, M: multiplicity
+		if (formatDetail.vars.length > 2)  // XYA or XYWA
+		{
+			for (var i = 2, l = formatDetail.vars.length; i < l; ++i)
+			{
+				var symbolType = formatDetail.vars[i].toUpperCase()[0];
+				if (['A', 'W', 'M'].indexOf(symbolType) >= 0)
+					specialVarTypes.push(symbolType);
+				else
+				{
+					specialVarTypes.push(null);
+					normalVarSymbols.push(formatDetail.vars[i]);
+				}
+			}
+
+			var hasPeakAssignments = false;
+			var result = parentSpectrumData.createSection(normalVarSymbols);
+			result.beginUpdate();
+			try
+			{
+				for (var i = 0, l = data.length; i < l; ++i)
+				{
+					// each item is a data group, containing values of all variables
+					if (specialVarTypes.length)
+					{
+						var originValues = data[i];
+						var inputValues = [];
+						var extraDataItem = {};
+						for (var j = 0, jj = specialVarTypes.length; j < jj; ++j)  // handle special var values
+						{
+							var vType = specialVarTypes[j];
+							if (vType === 'M')  // muliplicity
+							{
+								// TODO: does JCAMP support peak muliplicity? And how to do the conversion?
+							}
+							else if (vType === 'W')  // width
+							{
+								inputValues.push(originValues[j]);
+							}
+							else if (vType === 'A')  // peak assignment
+							{
+								if (Kekule.ObjUtils.notUnset(originValues[j]))
+									extraDataItem.peakAssignmentRaw = originValues[j];
+							}
+							else
+							{
+								var actualValue = this._calcActualVarValue(originValues[j], varInfos[j]);
+								inputValues.push(actualValue);
+							}
+						}
+						if (Kekule.ObjUtils.getOwnedFieldNames(extraDataItem).length)
+						{
+							inputValues._extra = new Kekule.Spectroscopy.SpectrumPeakDetails();
+							inputValues._extra._peakAssignmentRaw = extraDataItem.peakAssignmentRaw;
+							hasPeakAssignments = true;
+						}
+						//console.log(originValues, inputValues);
+						result.appendData(inputValues);
+					}
+					else
+						result.appendData(data[i]);
+				}
+				result.setDataSorted(true);
+				if (hasPeakAssignments)
+					this.getDataSectionsWithPeakAssignments().push(result);
+			}
+			finally
+			{
+				result.endUpdate();
+			}
+			return result;
+		}
+		else  // with no special assigment
+			return this._createVarGroupFormatSpectrumDataSection(formatDetail, data, varInfos, parentSpectrumData, options);
 	},
 	/** @private */
 	_isSpectrumDataLdr: function(ldr, block, chemObj)
@@ -935,10 +1035,49 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		{
 			result = new Kekule.Spectroscopy.Spectrum();
 			//result = [new Kekule.Spectroscopy.Spectrum()];   // TODO: if multiple NTUPLES exists in a file, there may be need to create several Spectrum instances
+			this.setPropStoreFieldValue('dataSectionsWithPeakAssignments', []);
 		}
 		else
 			result = this.tryApplySuper('doCreateChemObjForBlock', [block]);
 		return result;
+	},
+	/** @ignore */
+	doBuildCrossRef: function(srcObj, targetObj, refType, refTypeText)
+	{
+		this.tryApplySuper('doBuildCrossRef', [srcObj, targetObj, refType, refTypeText]);
+		if (refType === Jcamp.CrossRefType.STRUCTURE && targetObj instanceof Kekule.StructureFragment && srcObj instanceof Kekule.Spectroscopy.Spectrum)
+		{
+			Jcamp.Utils.addMoleculeSpectrumCrossRef(srcObj, targetObj);
+			var sections = this.getDataSectionsWithPeakAssignments();
+			if (sections.length)
+			{
+				for (var i = 0, l = sections.length; i < l; ++i)
+				{
+					this._buildPeakAssignmentRefs(sections[i], targetObj);
+				}
+			}
+		}
+	},
+	/** @private */
+	_buildPeakAssignmentRefs: function(dataSection, targetMol)
+	{
+		for (var i = 0, l = dataSection.getDataCount(); i < l; ++i)
+		{
+			var extra = dataSection.getExtraInfoAt(i);
+			if (extra && extra._peakAssignmentRaw)
+			{
+				var atomIndex = parseInt(extra._peakAssignmentRaw);
+				if (Kekule.NumUtils.isNormalNumber(atomIndex) && atomIndex > 0)  // the atom index starts with 1
+				{
+					var atom = targetMol.getNodeAt(atomIndex - 1);
+					if (atom)
+					{
+						extra.setAssignment(atom);
+						delete extra._peakAssignmentRaw;
+					}
+				}
+			}
+		}
 	}
 });
 
@@ -958,6 +1097,8 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 	{
 		// private ,storing the map of Jcamp var symbol to Kekule var symbol
 		this.defineProp('varSymbolMap', {'dataType': DataType.HASH, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+		//this.defineProp('sectionPeakAssignmentInfoCache', {'dataType': DataType.OBJECT, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+		//this.defineProp('peakSectionInfo', {'dataType': DataType.HASH, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
 	},
 	/** @ignore */
 	_initLdrCreators: function()
@@ -970,6 +1111,13 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 		map['parameters.NMR.SolventReference'] = this._scalarWithSpecifiedUnitLdrCreator.bind(this, Kekule.Unit.Dimensionless.PARTS_PER_MILLION);
 		map['parameters.NMR.Delay'] = this._scalarWithSpecifiedUnitLdrCreator.bind(this, Kekule.Unit.Time.MICROSECOND);
 	},
+	/* @ignore */
+	doWriteBlock: function(chemObj, options)
+	{
+		// retrieve and store peak information first
+		//this.setPropStoreFieldValue('peakSectionInfo', new Kekule.MapEx());
+		return this.tryApplySuper('doWriteBlock', [chemObj, options]);
+	},
 	/** @ignore */
 	getTitleForBlock: function(chemObj)
 	{
@@ -981,19 +1129,52 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 		this.saveToLdrInBlock(block, chemObj, '', options.outputDxVersion || Kekule.globalOptions.IO.jcamp.outputDxVersion, Jcamp.Consts.LABEL_DX_VERSION);
 	},
 	/** @ignore */
+	doGetDataTypeForBlock: function(chemObj)
+	{
+		return this.doGetJcampSpectrumDataType(chemObj);
+	},
+	/** @ignore */
 	doSaveChemObjToBlock: function(chemObj, block, options)
 	{
 		this.tryApplySuper('doSaveChemObjToBlock', [chemObj, block, options]);
+		// DATA CLASS placeholder
+		this.saveToLdrInBlock(block, chemObj, '', '', 'DATA CLASS');
+		// cross ref
+		this.doSaveChemObjCrossRefToBlock(chemObj, block, options);
+		// spectrum data
+		this.doSaveSpectrumDataToBlock(chemObj, block, options);
+	},
+	/** @private */
+	doSaveChemObjCrossRefToBlock: function(chemObj, block, options)
+	{
+		var refMol = chemObj.getRefMolecule();
+		//console.log(refMol);
+		if (refMol)
+		{
+			var refBlockInfo = this.getBlockInfoFromObj(refMol);
+			if (refBlockInfo && refBlockInfo.id)
+			{
+				var refText = 'STRUCTURE' + Jcamp.Consts.CROSS_REF_TYPE_TERMINATOR +
+					' BLOCK_ID' + Jcamp.Consts.DATA_LABEL_TERMINATOR + refBlockInfo.id;
+				this.saveToLdrInBlock(block, chemObj, '', refText, Jcamp.Consts.LABEL_CROSS_REF);
+			}
+		}
+	},
+	/** @ignore */
+	doSaveChemObjInfoToBlock: function(chemObj, block, options)
+	{
+		// do not inherited parent method here, since we have specified saving functions here
 		this.doSaveSpectrumKeyMetaToBlock(chemObj, block, options);
 		this.doSaveSpectrumInfoToBlock(chemObj, block, options);
-		this.doSaveSpectrumDataToBlock(chemObj, block, options);
 	},
 	/** @private */
 	doSaveSpectrumKeyMetaToBlock: function(chemObj, block, options)
 	{
+		/*
 		// save the spectrum type
 		var jcampType = this.doGetJcampSpectrumDataType(chemObj);
-		this.saveToLdrInBlock(block, chemObj, '', jcampType, 'DATA TYPE', true);
+		this.saveToLdrInBlock(block, chemObj, '', jcampType, Jcamp.Consts.LABEL_DATA_TYPE, true);
+		*/
 	},
 	/** @private */
 	doGetJcampSpectrumDataType: function(spectrum)
@@ -1087,6 +1268,15 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 		}
 	},
 	/** @private */
+	doInsertDataClassToBlock: function(chemObj, block, dataClass, options)
+	{
+		if (dataClass)
+		{
+			var ldr = this.createLdrRaw('DATA CLASS', [dataClass]);
+			this.setLdrInBlock(block, ldr, true);  // overwrite the placeholder
+		}
+	},
+	/** @private */
 	doSaveSpectrumDataToBlock: function(spectrum, block, options)
 	{
 		var storageStyle = this.doGetSpectrumDataStorageStyle(spectrum, options);
@@ -1130,7 +1320,12 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 		if (isPeak)  // TODO: currently the assignments are not considered
 		{
 			var varCount = dataSection.getActualLocalVarInfos().length;
-			return (varCount <= 2)? Jcamp.Consts.DATA_VARLIST_FORMAT_XYPOINTS: Jcamp.Consts.DATA_VARLIST_FORMAT_XYWPOINTS;
+
+			var hasAssignments = dataSection.hasPeakAssignments();
+			if (hasAssignments)
+				return Jcamp.Consts.DATA_VARLIST_FORMAT_VAR_GROUPS;
+			else
+				return (varCount <= 2)? Jcamp.Consts.DATA_VARLIST_FORMAT_XYPOINTS: Jcamp.Consts.DATA_VARLIST_FORMAT_XYWPOINTS;
 		}
 		else  // continuous data
 		{
@@ -1145,12 +1340,14 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 	doGetSpectrumVariableInfoOfSections: function(spectrum, spectrumSections, options)
 	{
 		var result = [];
+		var hasPeakAssignment = false;
 		// collect all used varDefs
 		var varDefs = [];
 		var sectionDataDetailsMap = new Kekule.MapEx();
 		for (var i = 0, l = spectrumSections.length; i < l; ++i)
 		{
 			var section = spectrumSections[i];
+			hasPeakAssignment = hasPeakAssignment || section.hasPeakAssignments();
 			var firstSectionValue = {}, lastSectionValue = {};
 			if (section.getDataCount())
 			{
@@ -1238,6 +1435,22 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 			}
 			*/
 		}
+
+		if (hasPeakAssignment)  // add additional peak assignment var A
+		{
+			result.push({
+				'symbol': 'A',
+				'Name': 'Peak assignment',
+				'isIndependent': false,
+				'dependency': Kekule.VarDependency.DEPENDENT,
+				'unit': Kekule.Unit.Arbitrary.ARBITRARY.symbol,
+				'dim': null,
+				'varForm': 'STRING',
+				'_varDef': new Kekule.Spectroscopy.SpectrumVarDefinition(),
+				'_isPeakAssignment': true   // special flag for peak assignment
+			});
+		}
+
 		sectionDataDetailsMap.finalize();
 		return result;
 	},
@@ -1372,7 +1585,7 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 				//labelName = 'XYPOINTS';
 				labelName = section.isPeakSection()? 'PEAK TABLE': 'XYPOINTS';
 			}
-			else if (dataStorageFormat === Jcamp.Consts.DATA_VARLIST_FORMAT_VAR_GROUPS)  // peak table
+			else if (dataStorageFormat === Jcamp.Consts.DATA_VARLIST_FORMAT_VAR_GROUPS)  // may has peak assigments
 			{
 				//if (!section.hasPeakAssignments())  // normal
 				/*
@@ -1380,12 +1593,14 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 				formatDescriptor = Jcamp.Utils.generateDataTableFormatDescriptor(dataStorageFormat, ['X', 'Y']);
 				labelName = 'PEAK TABLE';
 				*/
-				// TODO: save peak X/Y/W data only, now ignoring peak width/assignments
-				// XY, or XYW, only one independent var, and at most two dependent vars
-				var varSymbols = (varDetails.length <= 2)? ['X', 'Y']: ['X', 'Y', 'W'];
-				var dataLines = this._createVarGroupFormatDataLines(section, indepVarDetailList, depVarDetailList, options);
+				var hasPeakAssignments = section.hasPeakAssignments();
+				// XY, or XYW, or XYWA only one independent var, and at most three dependent vars
+				var varSymbols = (varDetails.length <= 2)? ['X', 'Y']:
+					(varDetails.length <= 3)? (hasPeakAssignments? ['X', 'Y', 'A']: ['X', 'Y', 'W']):
+					['X', 'Y', 'W', 'A'];
+				var dataLines = this._createVarGroupFormatDataLines(section, indepVarDetailList, depVarDetailList, hasPeakAssignments, options);
 				formatDescriptor = Jcamp.Utils.generateDataTableFormatDescriptor(dataStorageFormat, varSymbols);
-				labelName = 'PEAK TABLE';
+				labelName = hasPeakAssignments? 'PEAK ASSIGNMENTS': 'PEAK TABLE';
 			}
 
 			if (dataLines && formatDescriptor)
@@ -1396,6 +1611,7 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 			{
 				var ldr = {'labelName': labelName, 'valueLines': dataLines};
 				this.setLdrInBlock(block, ldr, true);
+				this.doInsertDataClassToBlock(spectrum, block, labelName, options);
 			}
 		}
 	},
@@ -1481,6 +1697,8 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 		// NTuple end
 		this.saveToLdrInBlock(block, spectrum, '', ntupleName, 'END NTUPLES');
 
+		this.doInsertDataClassToBlock(spectrum, block, 'NTUPLES', options);
+
 		varDefJcampSymbolMap.finalize();
 	},
 	/** @private */
@@ -1513,6 +1731,20 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 				}
 			}
 		}
+		var hasPeakAssignments = false;
+		// check if peak assignment var detail exists and push it to dep vars
+		for (var i = varDetails.length - 1; i >= 0; --i)
+		{
+			var varDetail = varDetails[i];
+			if (varDetail._isPeakAssignment)
+			{
+				hasPeakAssignments = true;
+				depVarDetails.push(varDetail);
+				var jcampVarSymbol = varDefJcampSymbolMap.get(varDetail._varDef);
+				depVarJcampSymbols.push(jcampVarSymbol);
+				break;
+			}
+		}
 
 		// the concrete data
 		var dataStorageFormat = this.doGetSpectrumSectionDataStorageFormat(spectrum, section, options);
@@ -1526,18 +1758,20 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 		}
 		else if (dataStorageFormat === Jcamp.Consts.DATA_VARLIST_FORMAT_XYPOINTS || dataStorageFormat === Jcamp.Consts.DATA_VARLIST_FORMAT_XYWPOINTS)
 		{
-			dataFormatStr = section.isPeakSection()? 'PEAK TABLE':
-				(dataStorageFormat === Jcamp.Consts.DATA_VARLIST_FORMAT_XYWPOINTS)? 'XYWPOINTS': 'XYPOINTS';
+			dataFormatStr = section.isPeakSection()? 'PEAK TABLE': 'XYPOINTS';
+				//(dataStorageFormat === Jcamp.Consts.DATA_VARLIST_FORMAT_XYWPOINTS)? 'XYWPOINTS': 'XYPOINTS';
 			// In XYPoints format, we can record only two vars
 			var indepVarDetail = indepVarDetails[0], depVarDetail = depVarDetails[0];
-			var dataLines = this._createXyPointsFormatDataLines(section, indepVarDetail, depVarDetail, options);
+			dataLines = this._createXyPointsFormatDataLines(section, indepVarDetail, depVarDetail, options);
 			//dataLines.unshift('(XY..XY)');  // format string
 			formatDescriptor = Jcamp.Utils.generateDataTableFormatDescriptor(dataStorageFormat, [indepVarJcampSymbols[0], depVarJcampSymbols[0]]);
 		}
 		else if (dataStorageFormat === Jcamp.Consts.DATA_VARLIST_FORMAT_VAR_GROUPS)  // peak assignment
 		{
-			dataFormatStr = 'PEAK ASSIGNMENTS';
-			// TODO: to save peak data, including peak width/assignments
+			dataFormatStr = hasPeakAssignments? 'PEAK ASSIGNMENTS': 'PEAK TABLE';
+			var varSymbols = [].concat(indepVarJcampSymbols).concat(depVarJcampSymbols);
+			formatDescriptor = Jcamp.Utils.generateDataTableFormatDescriptor(dataStorageFormat, varSymbols);
+			dataLines = this._createVarGroupFormatDataLines(section, indepVarDetails, depVarDetails, hasPeakAssignments, options);
 		}
 
 		if (dataLines)
@@ -1561,6 +1795,10 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 			}
 			values.push(value);
 		}
+		var encodeAffnVarDefValue = function(value)
+		{
+			return Kekule.ObjUtils.isUnset(value)? '': Jcamp.LdrValueParserCoder.affnCoder(value);
+		}
 
 		//console.log(jcampVarSymbols, varDetails);
 		for (var i = 0, l = jcampVarSymbols.length; i < l; ++i)
@@ -1572,14 +1810,14 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 			addValueToLdrItem('SYMBOL', jcampSymbol);
 			addValueToLdrItem('VARNAME', varDetail.name || '');
 			addValueToLdrItem('VARTYPE', varType);
-			addValueToLdrItem('VARFORM', 'ASDF');  //TODO: var form, AFFN or ASDF, currently fixed to ASDF, anyway AFFN is also a specified form of ASDF
-			addValueToLdrItem('VARDIM', Jcamp.LdrValueParserCoder.affnCoder(varDetail.dim || 0));
-			addValueToLdrItem('UNITS', Jcamp.DxUtils.mertricsUnitSymbolToDxUnit(varDetail.unit));
-			addValueToLdrItem('FIRST', Jcamp.LdrValueParserCoder.affnCoder(varDetail.first));
-			addValueToLdrItem('LAST', Jcamp.LdrValueParserCoder.affnCoder(varDetail.last));
-			addValueToLdrItem('MIN',  Jcamp.LdrValueParserCoder.affnCoder(varDetail.min));
-			addValueToLdrItem('MAX', Jcamp.LdrValueParserCoder.affnCoder(varDetail.max));
-			addValueToLdrItem('FACTOR', Jcamp.LdrValueParserCoder.affnCoder(varDetail.factor));
+			addValueToLdrItem('VARFORM', varDetail.varForm || 'ASDF');  //TODO: var form, AFFN or ASDF, currently fixed to ASDF, anyway AFFN is also a specified form of ASDF
+			addValueToLdrItem('VARDIM', encodeAffnVarDefValue(varDetail.dim || 0));
+			addValueToLdrItem('UNITS', varDetail.unit? Jcamp.DxUtils.mertricsUnitSymbolToDxUnit(varDetail.unit): '');
+			addValueToLdrItem('FIRST', encodeAffnVarDefValue(varDetail.first));
+			addValueToLdrItem('LAST', encodeAffnVarDefValue(varDetail.last));
+			addValueToLdrItem('MIN',  encodeAffnVarDefValue(varDetail.min));
+			addValueToLdrItem('MAX', encodeAffnVarDefValue(varDetail.max));
+			addValueToLdrItem('FACTOR', encodeAffnVarDefValue(varDetail.factor));
 		}
 		//console.log(ldrItems);
 		// create LDR and save to block
@@ -1595,22 +1833,42 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 	},
 
 	/** @private */
-	_createVarGroupFormatDataLines: function(spectrumSection, indepVarDetailList, depVarDetailList, options)
+	_createVarGroupFormatDataLines: function(spectrumSection, indepVarDetailList, depVarDetailList, withPeakAssignment, options)
 	{
 		var allVarDetails = [].concat(indepVarDetailList).concat(depVarDetailList);
 		var valueGroups = [];
+		var refMolecule = spectrumSection.getParentSpectrum().getRefMolecule();
+		//var handlePeakAssignment = withPeakAssignment && refMolecule;  // if refMolecule is empty, peak will actually not be handled
 		spectrumSection.forEach(function(hashValue, index){
 			var valueItem = [];
 			for (var i = 0, l = allVarDetails.length; i < l; ++i)
 			{
-				var varDetail = allVarDetails[i];
-				var originalValue = hashValue[varDetail.symbol];
 				var v;
-				// original value may be string in XYMA
-				if (typeof(originalValue) === 'number')
-					v = Math.round(originalValue / varDetail.factor || 1);
-				else
-					v = originalValue;  // TODO: need to handle A (assignment) string
+				var varDetail = allVarDetails[i];
+				if (!varDetail._isPeakAssignment)
+				{
+					var originalValue = hashValue[varDetail.symbol];
+					// original value may be string in XYMA
+					if (typeof(originalValue) === 'number')
+						v = Math.round(originalValue / varDetail.factor || 1);
+					else
+						v = originalValue;
+				}
+				else if (withPeakAssignment)  // handle A (assignment) string
+				{
+					var assignmentIndex = -1;
+					var extra = spectrumSection.getExtraInfoOf(hashValue);
+					if (extra && extra.getAssignment && refMolecule)
+					{
+						var assignmentObj = extra.getAssignment();
+						if (assignmentObj && refMolecule)
+							assignmentIndex = refMolecule.indexOfNode(assignmentObj);
+					}
+					if (assignmentIndex >= 0)
+						v = (assignmentIndex + 1).toString();
+					else    // no assignment
+						v = '';
+				}
 				valueItem.push(v);
 			}
 			valueGroups.push(valueItem);
@@ -1763,7 +2021,10 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 				}
 			}
 		}
-		return this.createLdr(jsName, value, preferredJcampLabelName);
+		if (Kekule.NumUtils.isNormalNumber(value))
+			return this.createLdr(jsName, value, preferredJcampLabelName);
+		else
+			return null;
 	},
 	_nmrObserveNucleusLdrCreator: function(jsName, jsValue, chemObj, preferredJcampLabelName)
 	{

@@ -274,11 +274,22 @@ Kekule.IO.Jcamp.CsDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		}, this.getCurrOptions());
 		return result;
 	},
+
+	/** @ignore */
+	doBuildCrossRef: function(srcObj, targetObj, refType, refTypeText)
+	{
+		this.tryApplySuper('doBuildCrossRef', [srcObj, targetObj, refType, refTypeText]);
+		if (refType === Jcamp.CrossRefType.SPECTRUM && srcObj instanceof Kekule.StructureFragment && targetObj instanceof Kekule.Spectroscopy.Spectrum)
+		{
+			Jcamp.Utils.addMoleculeSpectrumCrossRef(targetObj, srcObj);
+		}
+	},
+
 	/** @ignore */
 	_initLdrHandlers: function()
 	{
 		var map = this.tryApplySuper('_initLdrHandlers');
-		map[Jcamp.Consts.LABEL_BLOCK_BEGIN] = this.doStoreSpectrumTitleLdr.bind(this);
+		//map[Jcamp.Consts.LABEL_BLOCK_BEGIN] = this.doStoreTitleLdr.bind(this);
 		// MOLFORM, ATOMLIST, BONDLIST, CHARGE
 		map[Jcamp.Consts.LABEL_MOL_NAMES] = this.doStoreMolNamesLdr.bind(this);
 		map[Jcamp.Consts.LABEL_MOL_FORMULA] = this.doStoreMolFormulaLdr.bind(this);
@@ -307,11 +318,13 @@ Kekule.IO.Jcamp.CsDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			'STEREOCENTER', 'STEREOPAIR', 'STEREOMOLECULE'  // TODO: currently all stereo are not handled in reading JCAMP-CS
 		];
 	},
-	/** @private */
-	doStoreSpectrumTitleLdr: function(ldr, block, chemObj, preferredInfoPropName)
+	/* @private */
+	/*
+	doStoreTitleLdr: function(ldr, block, chemObj, preferredInfoPropName)
 	{
 		chemObj.setInfoValue('title', Jcamp.LdrValueParserCoder.parseValue(ldr));
 	},
+	*/
 	/** @private */
 	doStoreMolNamesLdr: function(ldr, block, chemObj, preferredInfoPropName)
 	{
@@ -757,7 +770,7 @@ Kekule.IO.Jcamp.CsDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 				clonedMol.finalize();
 			}
 			// info
-			this.doSaveMolInfoToBlock(chemObj, block, options);
+			//this.doSaveMolInfoToBlock(chemObj, block, options);
 			// formula
 			this.doSaveMolFormulaToBlock(chemObj, block, options);
 
@@ -806,7 +819,8 @@ Kekule.IO.Jcamp.CsDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 			atomIndexMap.finalize();
 		}
 	},
-	/** @private */
+	/* @private */
+	/*
 	doSaveMolInfoToBlock: function(chemObj, block, options)
 	{
 		// infos
@@ -823,7 +837,9 @@ Kekule.IO.Jcamp.CsDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 		// generate datetime
 		this.saveToLdrInBlock(block, chemObj, '', new Date(), 'LONGDATE', false);
 	},
-	/** @private */
+	*/
+	/* @private */
+	/*
 	doSaveMolInfoItemToBlock: function(chemObj, infoKey, infoJsCascadeName, infoValue, block, options)
 	{
 		var ignoredInfoKeys = ['title', 'date'];
@@ -837,6 +853,7 @@ Kekule.IO.Jcamp.CsDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 			this.saveToLdrInBlock(block, chemObj, infoJsCascadeName, infoValue, jcampLabelName, false);  // do not overwrite existing labels
 		}
 	},
+	*/
 	/** @private */
 	doSaveMolFormulaToBlock: function(chemObj, block, options)
 	{

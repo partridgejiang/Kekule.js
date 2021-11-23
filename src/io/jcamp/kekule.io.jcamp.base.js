@@ -39,6 +39,12 @@ Kekule.IO.Jcamp.Consts = {
 	SPECIFIC_LABEL_PREFIX: '.',
 	LABEL_BLOCK_BEGIN: 'TITLE',
 	LABEL_BLOCK_END: 'END',
+	LABEL_DATA_TYPE: 'DATATYPE',
+	//LABEL_DATA_CLASS: 'DATACLASS',
+	LABEL_BLOCK_COUNT: 'BLOCKS',
+	LABEL_BLOCK_ID: 'BLOCKID',
+	LABEL_CROSS_REF: 'CROSSREFERENCE',
+
 	INLINE_COMMENT_FLAG: '$$',
 	TABLE_LINE_CONTI_MARK: '=',
 	UNKNOWN_VALUE: NaN,  // special value indicating an unknown variable value in data table
@@ -57,9 +63,11 @@ Kekule.IO.Jcamp.Consts = {
 
 	SIMPLE_VALUE_DELIMITER: ',',
 
+	CROSS_REF_TYPE_TERMINATOR: ':',  // to delimiter a cross reference text, e.g. 'STRUCTURE: BLOCK_ID= 1', 'NMR PEAK ASSIGNMENTS: BLOCK_ID= 2'
+
 	DATA_VARLIST_FORMAT_XYDATA: 1,
 	DATA_VARLIST_FORMAT_XYPOINTS: 2,
-	DATA_VARLIST_FORMAT_XYWPOINTS: 2,  // (XYW...XYW) for peak table
+	DATA_VARLIST_FORMAT_XYWPOINTS: 2,  // (XYW...XYW) for peak table, now we can handle this same as XYPOINTS
 	DATA_VARLIST_FORMAT_VAR_GROUPS: 5,
 
 	GROUPED_VALUE_GROUP_DELIMITER: '\n',
@@ -92,7 +100,7 @@ Kekule.IO.Jcamp.Format = {
 };
 
 /**
- * Enueration of JCAMP data block types.
+ * Enumeration of JCAMP data block types.
  * @enum
  */
 Kekule.IO.Jcamp.BlockType = {
@@ -100,6 +108,16 @@ Kekule.IO.Jcamp.BlockType = {
 	DATA: 0,
 	/** Link block */
 	LINK: 1
+};
+
+/**
+ * Enumeration of JCAMP cross reference target tyoes.
+ * @enum
+ */
+Kekule.IO.Jcamp.CrossRefType = {
+	SPECTRUM: 1,
+	STRUCTURE: 2,
+	UNKNOWN: 0
 };
 
 /**
@@ -192,9 +210,18 @@ Kekule.IO.Jcamp.Utils = {
 	calcNumFactorForRange: function(minValue, maxValue, allowedErrorRatio, preferredScaleRangeMin, preferredScaleRangeMax)
 	{
 		//var factor = Math.min(Math.abs(minValue), Math.abs(maxValue)) * allowedErrorRatio;
+		if (Kekule.NumUtils.isFloatEqual(minValue, maxValue))
+		{
+			if (Kekule.ObjUtils.notUnset(preferredScaleRangeMin) && Kekule.ObjUtils.notUnset(preferredScaleRangeMax))
+			{
+				if (minValue > preferredScaleRangeMin && maxValue < preferredScaleRangeMax)
+					return 1;
+			}
+		}
 		var factor = 1;
+		var errorBase = Math.abs(maxValue - minValue) || Math.max(Math.abs(maxValue), Math.abs(minValue));
 		if (allowedErrorRatio)
-			factor = Math.abs(maxValue - minValue) * allowedErrorRatio;
+			factor = errorBase * allowedErrorRatio;
 		//var factor = Math.min(allowedError / Math.abs(minValue), allowedError / Math.abs(maxValue));
 		if (Kekule.ObjUtils.notUnset(preferredScaleRangeMin) && Kekule.ObjUtils.notUnset(preferredScaleRangeMax))
 		{
@@ -337,6 +364,44 @@ Kekule.IO.Jcamp.Utils = {
 		else
 			return null;
 	},
+
+	/**
+	 * Retrieve detail of cross reference from the text
+	 * @param {String} crossRefText
+	 * @returns {Hash} Including fields {refType, refTypeText, blockID}.
+	 */
+	getCrossReferenceDetail: function(crossRefText)
+	{
+		var parts = crossRefText.split(JcampConsts.CROSS_REF_TYPE_TERMINATOR);
+		var refTypeText = parts[0].trim();
+		var refType = (refTypeText.toUpperCase() === 'STRUCTURE')? Jcamp.CrossRefType.STRUCTURE: Jcamp.CrossRefType.SPECTRUM;
+		var blockPart = parts[1] && parts[1].trim();
+		var blockId;
+		if (blockPart && blockPart.toUpperCase().indexOf('BLOCK') >= 0)  // here we check just word block, since the total key may be 'BLOCK_ID', 'BLOCK ID'...
+		{
+			var blockId = blockPart.split(JcampConsts.DATA_LABEL_TERMINATOR)[1];
+			if (blockId)
+				blockId = blockId.trim();
+		}
+		var result = {'refType': refType, 'refTypeText': refTypeText, 'blockId': blockId};
+		return result;
+	},
+
+	/**
+	 * Add molecule to the {@link Kekule.Spectroscopy.Spectrum.refMolecules}.
+	 * @param {Kekule.Spectroscopy.Spectrum} spectrum
+	 * @param {Kekule.StructureFragment} molecule
+	 */
+	addMoleculeSpectrumCrossRef: function(spectrum, molecule)
+	{
+		var refMols = spectrum.getRefMolecules() || [];
+		if (refMols.indexOf(molecule) < 0)
+		{
+			refMols.push(molecule);
+			spectrum.setRefMolecules(refMols);
+		}
+	},
+
 	/**
 	 * Returns the first non-empty string line of lines.
 	 * @param {Array} lines
@@ -1075,7 +1140,7 @@ Kekule.IO.Jcamp.Utils = {
 			if (typeof(v) === 'number')
 				sv = Kekule.NumUtils.isNormalNumber(v)? v.toString(): JcampConsts.VALUE_ABNORMAL_NUM;
 			else   // a string value
-				sv = JcampConsts.GROUPED_VALUE_STR_ENCLOSER_LEADING + v.toString() + JcampConsts.GROUPED_VALUE_EXPLICIT_GROUP_TAILING;
+				sv = JcampConsts.GROUPED_VALUE_STR_ENCLOSER_LEADING + v.toString() + JcampConsts.GROUPED_VALUE_STR_ENCLOSER_TAILING;
 			parts.push(sv);
 		}
 		return parts.join(JcampConsts.GROUPED_VALUE_ITEM_DELIMITER);
@@ -2112,9 +2177,23 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		// A false value means this LDR need not to be handled.
 		// ldrSetterMap['_default'] is treated as the default setter.
 		// Each functions has params (ldr, block, targetChemObj, preferredInfoPropName)
-		this.defineProp('ldrHandlerMap', {'dataType': DataType.HASH, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
+		this.defineProp('ldrHandlerMap', {'dataType': DataType.HASH, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+		// storing current block id
+		this.defineProp('blockId', {'dataType': DataType.STRING, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
 
 		this.defineProp('currOptions', {'dataType': DataType.HASH, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+		this.defineProp('parentReader', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('rootReader', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,
+			'getter': function()
+			{
+				var p = this.getParentReader();
+				if (p)
+					return p.getRootReader? p.getRootReader(): p;
+				else
+					return this;
+			}
+		});
 	},
 	/** @private */
 	_initLdrHandlers: function()
@@ -2127,14 +2206,17 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		*/
 		map['_default'] = this._defaultLdrHandler.bind(this);
 		//map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjProp.bind(this, 'title');  // TITLE
-		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjInfoProp.bind(this, JcampConsts.LABEL_BLOCK_BEGIN);  // TITLE
+		//map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjInfoProp.bind(this, JcampConsts.LABEL_BLOCK_BEGIN);  // TITLE
+		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreTitleLdr.bind(this);  // TITLE
 		map[JcampConsts.LABEL_DX_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, JcampConsts.LABEL_DX_VERSION);  // JCAMP-DX
 		map[JcampConsts.LABEL_CS_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, JcampConsts.LABEL_CS_VERSION);  // JCAMP-CS
+		map[JcampConsts.LABEL_BLOCK_ID] = this.doStoreBlockIdLdr.bind(this);   // BLOCK_ID
 		map[JcampConsts.LABEL_BLOCK_END] = this._ignoreLdrHandler;  // block end, need not to store value of this ldr
 		var doStoreDateTimeLdrBind = this.doStoreDateTimeLdr.bind(this);
 		map['DATE'] = doStoreDateTimeLdrBind;
 		map['TIME'] = doStoreDateTimeLdrBind;
 		map['LONGDATE'] = doStoreDateTimeLdrBind;
+		map[JcampConsts.LABEL_CROSS_REF] = this.doStoreCrossRefLdr.bind(this);
 		return map;
 	},
 	/** @private */
@@ -2152,6 +2234,43 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 	_getBlockMeta: function(block)
 	{
 		return JcampBlockUtils.getBlockMeta(block);
+	},
+
+	/**
+	 * Add a map item of blockId-chemObject.
+	 * @param {String} blockId
+	 * @param {Kekule.ChemObject} chemObj
+	 */
+	setObjWithBlockId: function(blockId, chemObj)
+	{
+		var rootReader = this.getRootReader();
+		if (rootReader && rootReader.setObjWithBlockId)
+			rootReader.setObjWithBlockId(blockId, chemObj);
+	},
+	/**
+	 * Retrieve a chem object from block id in map.
+	 * @param {String} blockId
+	 * @returns {Kekule.ChemObject}
+	 */
+	getObjFromBlockId: function(blockId)
+	{
+		var rootReader = this.getRootReader();
+		if (rootReader && rootReader.getObjFromBlockId)
+			return rootReader.getObjFromBlockId(blockId);
+		else
+			return null;
+	},
+	/**
+	 * Add a new cross reference item that need to be handled later.
+	 * @param {String} targetBlockId
+	 * @param {Int} refType
+	 * @param {String} refTypeText
+	 */
+	addCrossRef: function(targetBlockId, refType, refTypeText)
+	{
+		var rootReader = this.getRootReader();
+		if (rootReader && rootReader.addCrossRefItem)
+			rootReader.addCrossRefItem(this, this.getBlockId(), targetBlockId, refType, refTypeText);
 	},
 
 	/**
@@ -2248,6 +2367,26 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 	},
 
 	/** @private */
+	doStoreTitleLdr: function(ldr, block, chemObj, preferredInfoPropName)
+	{
+		chemObj.setInfoValue('title', Jcamp.LdrValueParserCoder.parseValue(ldr));
+	},
+	/** @private */
+	doStoreBlockIdLdr: function(ldr, block, chemObj, preferredInfoPropName)
+	{
+		this.setPropStoreFieldValue('blockId', Jcamp.LdrValueParserCoder.parseValue(ldr));
+	},
+	/** @private */
+	doStoreCrossRefLdr: function(ldr, block, chemObj, preferredInfoPropName)
+	{
+		var value = Jcamp.LdrValueParserCoder.parseValue(ldr);
+		var detail = Jcamp.Utils.getCrossReferenceDetail(value);
+		if (detail.blockId)  // ref to another block, and the block may be not read yet, we must store the reference and handle later
+		{
+			this.addCrossRef(detail.blockId, detail.refType, detail.refTypeText);
+		}
+	},
+	/** @private */
 	doStoreLdrToChemObjInfoProp: function(name, ldr, block, chemObj, preferredInfoPropName)
 	{
 		var ldrValue = JcampLdrValueParser.parseValue(ldr);
@@ -2331,6 +2470,20 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 			handler(ldr, block, chemObj, preferredInfoPropName);
 	},
 	/**
+	 * Build the cross reference relation between src/target object.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemObject} srcObj
+	 * @param {Kekule.ChemObject} targetObj
+	 * @param {Int} refType
+	 * @param {String} refTypeText
+	 * @private
+	 */
+	doBuildCrossRef: function(srcObj, targetObj, refType, refTypeText)
+	{
+		// do nothing here
+		//console.log('doBuildCrossRef', srcObj, targetObj, refType, refTypeText);
+	},
+	/**
 	 * Process a block in the analysis tree.
 	 * Decendants may override this method.
 	 * @param {Hash} block
@@ -2380,6 +2533,8 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		if (result)
 		{
 			this.doSetChemObjFromBlock(block, result);
+			if (this.getBlockId())
+				this.setObjWithBlockId(this.getBlockId(), result);
 		}
 		return result;
 	},
@@ -2402,16 +2557,48 @@ Kekule.IO.Jcamp.DataBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.Jcamp.DataBlockReader'
 });
+
 /**
  * Reader for reading link block of JCAMP document tree.
  * @class
  * @augments Kekule.IO.Jcamp.BlockReader
  */
 Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
-/** @lends Kekule.IO.Jcamp.BlockReader# */
+/** @lends Kekule.IO.Jcamp.LinkBlockReader# */
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.Jcamp.LinkBlockReader',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('childReaders', {'dataType': DataType.ARRAY, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+	},
+	/** @ignore */
+	doFinalize: function()
+	{
+		this._finalizeChildReaders();
+		this.tryApplySuper('doFinalize');
+	},
+	/** @private */
+	_finalizeChildReaders: function()
+	{
+		var childReaders = this.getChildReaders();
+		if (childReaders)
+		{
+			for (var i = 0, l = childReaders.length; i < l; ++i)
+			{
+				childReaders[i].finalize();
+			}
+		}
+		this.setPropStoreFieldValue('childReaders', []);
+	},
+	/** @ignore */
+	_initLdrHandlers: function()
+	{
+		var map = this.tryApplySuper('_initLdrHandlers');
+		map[JcampConsts.LABEL_DATA_TYPE] = this._ignoreLdrHandler;
+		map[JcampConsts.LABEL_BLOCK_COUNT] = this._ignoreLdrHandler;
+	},
 	/** @ignore */
 	doCreateChemObjForBlock: function(block)
 	{
@@ -2435,9 +2622,10 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 		}
 		else  // create obj list
 		{
-			result = this.tryApplySuper('doReadBlock', [block]);
+			result = this.tryApplySuper('doReadBlock', [block, options]);
 		}
 		// handle child blocks
+		this._finalizeChildReaders();  // free old child readers
 		var childObjs = [];
 		for (var i = 0, l = block.blocks.length; i < l; ++i)
 		{
@@ -2446,10 +2634,11 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 			var readerClass = jcampBlockReaderManager.getReaderClass(meta.blockType, meta.format);
 			if (readerClass)
 			{
-				var reader = new readerClass();
+				//var reader = new readerClass();
+				var reader = this._createChildReader(readerClass);
 				try
 				{
-					var childObj = reader.doReadData(childBlock, options);    // use doReadData instead of readData, since child readers do not need to store srcInfo
+					var childObj = reader.doReadData(childBlock, null, null, options);    // use doReadData instead of readData, since child readers do not need to store srcInfo
 					if (childObj)
 					{
 						/*
@@ -2463,7 +2652,8 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 				}
 				finally
 				{
-					reader.finalize();
+					//reader.finalize();
+					// do not finalize child reader here, since it may be used in handling cross references later
 				}
 			}
 		}
@@ -2480,6 +2670,17 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 			return result;
 		}
 	},
+	/** @private */
+	_createChildReader: function(readerClass)
+	{
+		var result = new readerClass();
+		if (result)
+		{
+			result.setParentReader(this);
+			this.getChildReaders().push(result);
+		}
+		return result;
+	}
 });
 jcampBlockReaderManager.register(Jcamp.BlockType.LINK, '*', Kekule.IO.Jcamp.LinkBlockReader);  // register
 jcampBlockReaderManager.register(Jcamp.BlockType.DATA, '*', Kekule.IO.Jcamp.DataBlockReader);  // register
@@ -2505,12 +2706,75 @@ Kekule.IO.Jcamp.BlockWriter = Class.create(Kekule.IO.ChemDataWriter,
 	/** @private */
 	initProperties: function()
 	{
+		// Indicating whether a block ID ldr should be created
+		//this.defineProp('needBlockIdLdr', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PRIVATE});
+		// storing current block id
+		this.defineProp('blockId', {'dataType': DataType.STRING, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+		this.defineProp('blockDataType', {'dataType': DataType.STRING, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
 		// private, a hash object. The hash key is jsName (usually cascaded property name), value is the function to create LDR.
 		// ldrHandlerMap['_default'] is treated as the default creator.
 		// Each functions has params (jsName, jsValue, chemObj, preferredJcampLabelName) returning a new LDR object or null.
 		// The former will be saved to block.
 		this.defineProp('ldrCreatorMap', {'dataType': DataType.HASH, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
+
+		this.defineProp('parentWriter', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('rootWriter', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,
+			'getter': function()
+			{
+				var p = this.getParentWriter();
+				if (p)
+					return p.getRootWriter? p.getRootWriter(): p;
+				else
+					return this;
+			}
+		});
 	},
+
+	/**
+	 * Generate a unique block id and suitable data type for this chemObj.
+	 * @returns {String}
+	 * @private
+	 */
+	assignBlockIdAndDataType: function(chemObj)
+	{
+		var rootWriter = this.getRootWriter();
+		var id = rootWriter && rootWriter.generateUniqueBlockId();
+		if (id)
+		{
+			this.setBlockId(id);
+		}
+		var dataType = this.doGetDataTypeForBlock(chemObj)
+		if (dataType)
+			this.setBlockDataType(dataType);
+		if (chemObj)
+			this.setBlockInfoForObj(chemObj, {'id': id, 'dataType': dataType});
+		return id;
+	},
+	/**
+	 * Set a chemObj-block info map.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Hash} blockInfo
+	 * @private
+	 */
+	setBlockInfoForObj: function(chemObj, blockInfo)
+	{
+		var rootWriter = this.getRootWriter();
+		if (rootWriter)
+			rootWriter.setBlockInfoForObj(chemObj, blockInfo);
+	},
+	/**
+	 * Retrieve the block info associated with chem object.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @returns {Hash}
+	 * @private
+	 */
+	getBlockInfoFromObj: function(chemObj)
+	{
+		var rootWriter = this.getRootWriter();
+		return rootWriter && rootWriter.getBlockInfoFromObj(chemObj);
+	},
+
 	/** @private */
 	getLdrCreator: function(jsName)
 	{
@@ -2556,6 +2820,12 @@ Kekule.IO.Jcamp.BlockWriter = Class.create(Kekule.IO.ChemDataWriter,
 			var title = this.getTitleForBlock(chemObj);
 			this.saveToLdrInBlock(result, chemObj,'', title, JcampConsts.LABEL_BLOCK_BEGIN);
 			this.doSaveJcampVersionToBlock(chemObj, result, options);
+			var dataType = this.getDataTypeForBlock(chemObj);
+			if (dataType)
+				this.saveToLdrInBlock(result, chemObj, '', dataType, JcampConsts.LABEL_DATA_TYPE);
+			if (this.getBlockId())
+				this.doSaveBlockIdToBlock(chemObj, result, options);
+			this.doSaveChemObjInfoToBlock(chemObj, result, options);
 			this.doSaveChemObjToBlock(chemObj, result, options);
 			// block end
 			this.saveToLdrInBlock(result, chemObj,'', '', JcampConsts.LABEL_BLOCK_END);
@@ -2573,17 +2843,101 @@ Kekule.IO.Jcamp.BlockWriter = Class.create(Kekule.IO.ChemDataWriter,
 		return null;
 	},
 	/**
+	 * Returns the suitable data type string of block that need to be write to block.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @returns {String}
+	 * @private
+	 */
+	getDataTypeForBlock: function(chemObj)
+	{
+		return (this.getBlockDataType()) || this.doGetDataTypeForBlock(chemObj);
+	},
+	/**
+	 * Do concrete work of getDataTypeForBlock.
+	 * Descendants should override this method.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @returns {String}
+	 * @private
+	 */
+	doGetDataTypeForBlock: function(chemObj)
+	{
+		return null;
+	},
+	/**
 	 * Save the JCAMP-DX/CS version to block.
 	 * Descendants should override this method to do the concrete job.
 	 * @param {Kekule.ChemObject} chemObj
 	 * @param {Object} block
 	 * @param {Hash} options
-	 * @returns {Object}
 	 * @private
 	 */
 	doSaveJcampVersionToBlock: function(chemObj, block, options)
 	{
 		// do nothing here
+	},
+	/**
+	 * Create a blockId LDR to block.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Object} block
+	 * @param {Hash} options
+	 * @private
+	 */
+	doSaveBlockIdToBlock: function(chemObj, block, options)
+	{
+		var id = this.getBlockId();
+		if (id)
+		{
+			this.saveToLdrInBlock(block, chemObj, '', id, JcampConsts.LABEL_BLOCK_ID);
+		}
+	},
+	/**
+	 * Save the info values of chemObj to block.
+	 * Descendants should override this method to do the concrete job.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Object} block
+	 * @param {Hash} options
+	 * @private
+	 */
+	doSaveChemObjInfoToBlock: function(chemObj, block, options)
+	{
+		// infos
+		var keys = chemObj.getInfoKeys();
+		var ignoredInfoKeys = this.doGetIgnoredChemObjInfoKeys(chemObj, options);
+		for (var i = 0, l = keys.length; i < l; ++i)
+		{
+			var key = keys[i];
+			if (ignoredInfoKeys.indexOf(key) >= 0)
+				continue;
+			var jsValue = chemObj.getInfoValue(key);
+			if (Kekule.ObjUtils.notUnset(jsValue))
+			{
+				this.doSaveChemObjInfoItemToBlock(chemObj, key, 'info.' + key, jsValue, block, options);
+			}
+		}
+		// generate datetime if it does not exists
+		if (!Jcamp.BlockUtils.getBlockLdr(block, 'LONGDATE'))
+			this.saveToLdrInBlock(block, chemObj, '', new Date(), 'LONGDATE', false);
+	},
+	/** @private */
+	doSaveChemObjInfoItemToBlock: function(chemObj, infoKey, infoJsCascadeName, infoValue, block, options)
+	{
+		var ignoredLabels = this.doGetIgnoredChemObjInfoJcampLabelNames(chemObj, options);
+		// those labels are handled individually, do not save here
+		var jcampLabelName = Jcamp.Utils.kekuleLabelNameToJcamp(infoKey, null);
+		if (ignoredLabels.indexOf(jcampLabelName) < 0)
+		{
+			this.saveToLdrInBlock(block, chemObj, infoJsCascadeName, infoValue, jcampLabelName, false);  // do not overwrite existing labels
+		}
+	},
+	/** @private */
+	doGetIgnoredChemObjInfoKeys: function(chemObj, options)
+	{
+		return ['title', /* 'date' */];
+	},
+	/** @private */
+	doGetIgnoredChemObjInfoJcampLabelNames: function(chemObj, options)
+	{
+		return [Jcamp.Consts.LABEL_BLOCK_BEGIN, Jcamp.Consts.LABEL_BLOCK_END, Jcamp.Consts.LABEL_DX_VERSION, Jcamp.Consts.LABEL_CS_VERSION];
 	},
 	/**
 	 * Write chem object to a JCAMP block object.
@@ -2677,7 +3031,7 @@ Kekule.IO.Jcamp.BlockWriter = Class.create(Kekule.IO.ChemDataWriter,
 		var index = Jcamp.BlockUtils.getLabelIndex(labelName, block);
 		if (index >= 0 && overwriteExisted)   // replace the old one
 		{
-			var oldLdr = Jcamp.BlockUtils.getLdrAt(index);
+			var oldLdr = Jcamp.BlockUtils.getLdrAt(index, block);
 			oldLdr.valueLines = ldr.valueLines;
 		}
 		else  // create new one
@@ -2705,5 +3059,217 @@ Kekule.IO.Jcamp.BlockWriter = Class.create(Kekule.IO.ChemDataWriter,
 		return JcampLdrValueParser.encodeValue(labelName, this._convJsValueToBasicType(value));
 	}
 });
+
+/**
+ * Base writer to write {@link Kekule.ChemObjList} or {@link Kekule.ChemSpace} data to JCAMP link block.
+ * @class
+ * @augments Kekule.IO.Jcamp.BlockWriter
+ */
+Kekule.IO.Jcamp.LinkBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
+/** @lends Kekule.IO.Jcamp.LinkBlockWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.Jcamp.LinkBlockWriter',
+	/** @private */
+	initProperties: function()
+	{
+		// private, a object to map child object with its writer instances
+		this.defineProp('childObjWriterClassMap', {'dataType': DataType.OBJECT, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
+		this.defineProp('targetChildObjs', {'dataType': DataType.ARRAY, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
+	},
+	/** @ignore */
+	doWriteData: function(obj, dataType, format, options)  // returns a JCAMP block object
+	{
+		var mapDetail = this.doCreateChildObjWriterClassMap(obj);
+		if (mapDetail.children.length > 0)
+		{
+			this.setPropStoreFieldValue('childObjWriterClassMap', mapDetail.map);
+			this.setPropStoreFieldValue('targetChildObjs', mapDetail.children);
+			return this.tryApplySuper('doWriteData', [obj, dataType, format, options]);
+		}
+		else
+			return null;
+	},
+	/** @ignore */
+	getTitleForBlock: function(chemObj)
+	{
+		return chemObj.getInfoValue('title') || chemObj.getId();
+	},
+	/** @ignore */
+	doSaveJcampVersionToBlock: function(chemObj, block, options)
+	{
+		this.saveToLdrInBlock(block, chemObj, '', options.outputDxVersion, Jcamp.Consts.LABEL_DX_VERSION);
+	},
+	/** @ignore */
+	doGetDataTypeForBlock: function(chemObj)
+	{
+		return 'LINK';
+	},
+	/** @ignore */
+	doSaveChemObjToBlock: function(chemObj, block, options)
+	{
+		/*
+		// set the DATATYPE to link block
+		this.saveToLdrInBlock(block, chemObj, '', 'LINK', Jcamp.Consts.LABEL_DATA_TYPE);
+		*/
+		// then iterate the children
+		var childObjs = this.getTargetChildObjs();
+		//if (chemObj.getChildAt && chemObj.getChildCount)
+		if (childObjs.length)
+		{
+			//var spectrumObjs = [], otherObjs = [];
+			var writerMap = new Kekule.MapEx();
+			try
+			{
+				// iterate children, create a obj-writer map and assign the block id
+				//for (var i = 0, l = chemObj.getChildCount(); i < l; ++i)
+				for (var i = 0, l = childObjs.length; i < l; ++i)
+				{
+					//var child = chemObj.getChildAt(i);
+					var child = childObjs[i];
+					if (child)
+					{
+						var childWriterClass = this.getChildObjWriterClassMap().get(child);
+						if (childWriterClass)
+						{
+							var childWriter = this._createChildWriter(childWriterClass);
+							childWriter.assignBlockIdAndDataType(child);
+							writerMap.set(child, childWriter);
+							/*
+							if (child instanceof Kekule.Spectroscopy.Spectrum)
+								spectrumObjs.push(child);
+							else
+								otherObjs.push(child);
+							*/
+						}
+					}
+				}
+				//var targetObjs = otherObjs.concat(spectrumObjs);  // ensure spectrums be created last, for the cross references
+				var targetObjs = childObjs;
+				// do the concrete writing
+				for (var i = 0, l = targetObjs.length; i < l; ++i)
+				{
+					var child = targetObjs[i];
+					var childWriter = writerMap.get(child);
+					try
+					{
+						var childBlock = childWriter.writeData(child, null, null, options);
+						if (childBlock)
+						{
+							this.doAppendChildBlock(block, childBlock, options);
+						}
+					}
+					finally
+					{
+						childWriter.finalize();
+					}
+				}
+			}
+			finally
+			{
+				writerMap.finalize();
+			}
+			/*
+			for (var i = 0, l = chemObj.getChildCount(); i < l; ++i)
+			{
+				var child = chemObj.getChildAt(i);
+				if (child)
+				{
+					var childWriterClass = this.getChildObjWriterClassMap().get(child);
+					if (childWriterClass)
+					{
+						try
+						{
+							var childWriter = this._createChildWriter(childWriterClass);
+							var childBlock = childWriter.writeData(child, null, null, options);
+							if (childBlock)
+							{
+								this.doAppendChildBlock(block, childBlock, options);
+							}
+						}
+						finally
+						{
+							childWriter.finalize();
+						}
+					}
+				}
+			}
+			*/
+		}
+		// block count
+		this.saveToLdrInBlock(block, chemObj, '', block.blocks.length, Jcamp.Consts.LABEL_BLOCK_COUNT, true);
+	},
+	/** @private */
+	doCreateChildObjWriterClassMap: function(rootObj)
+	{
+		var self = this;
+		var result = {'map': new Kekule.MapEx(), 'children': null};
+		var spectrumObjs = [], otherObjs = [];
+		var iterateForChildWriter = function(parentObj)
+		{
+			if (!parentObj.getChildCount || !parentObj.getChildAt)
+				return;
+			else
+			{
+				for (var i = 0, l = parentObj.getChildCount(); i < l; ++i)
+				{
+					var child = parentObj.getChildAt(i);
+					if (child)
+					{
+						var childWriterClass = self.doGetChildWriterClass(child);
+						if (childWriterClass)
+						{
+							if (childWriterClass === self.getClass())   // child is actually a list, we need to iterate its children
+							{
+								iterateForChildWriter(child);
+							}
+							else
+							{
+								result.map.set(child, childWriterClass);
+								//result.children.push(child);parentObj
+								//++result.childCount;
+								if (child instanceof Kekule.Spectroscopy.Spectrum)
+									spectrumObjs.push(child);
+								else
+									otherObjs.push(child);
+							}
+						}
+					}
+				}
+			}
+		};
+
+		iterateForChildWriter(rootObj);
+		result.children = otherObjs.concat(spectrumObjs);   // ensure spectrum after molecule for cross references
+		return result;
+	},
+	/** @private */
+	doGetChildWriterClass: function(chemObj)
+	{
+		var wClass = Jcamp.BlockWriterManager.getWriterClass(chemObj);
+		return wClass || null;
+	},
+	/** @private */
+	_createChildWriter: function(childWriterClass)
+	{
+		var result = new childWriterClass();
+		result.setParentWriter(this);
+		return result;
+	},
+	/**
+	 * Append child block data to current block.
+	 * @param {Object} block
+	 * @param {Object} childBlock
+	 * @param {Hash} options
+	 */
+	doAppendChildBlock: function(block, childBlock, options)
+	{
+		if (childBlock)
+			block.blocks.push(childBlock);
+	}
+});
+
+Jcamp.BlockWriterManager.register(Kekule.ChemObjList, Kekule.IO.Jcamp.LinkBlockWriter);
+Jcamp.BlockWriterManager.register(Kekule.ChemSpace, Kekule.IO.Jcamp.LinkBlockWriter);
 
 })();
