@@ -46,7 +46,9 @@ Kekule.globalOptions.add('IO.jcamp', {
 	dxDataAllowedSavingErrorRatio: 0.0001,  // allow 0.1% error when saving data to JCAMP-DX format
 	dxDataPreferredOrdinateScaledRange: {min: -32767, max: 32767},
 	dxDataAsdfTableOutputForm: Jcamp.AsdfForm.DIF_DUP,  // default output form of ASDF data table
-	useDxMinMaxValueAsDisplayRange: false   // whether regard the MINX/Y-MAXX/Y as the display range of all spectrum in file
+	useDxMinMaxValueAsDisplayRange: false,   // whether regard the MINX/Y-MAXX/Y as the display range of all spectrum in file
+	disablePeakAssignmentReading: false,
+	disablePeakAssignmentWriting: false
 });
 
 /**
@@ -975,7 +977,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 							}
 							else if (vType === 'A')  // peak assignment
 							{
-								if (Kekule.ObjUtils.notUnset(originValues[j]))
+								if (Kekule.ObjUtils.notUnset(originValues[j]) && !options.disablePeakAssignmentReading)
 									extraDataItem.peakAssignmentRaw = originValues[j];
 							}
 							else
@@ -1322,7 +1324,7 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 			var varCount = dataSection.getActualLocalVarInfos().length;
 
 			var hasAssignments = dataSection.hasPeakAssignments();
-			if (hasAssignments)
+			if (hasAssignments && !options.disablePeakAssignmentWriting)
 				return Jcamp.Consts.DATA_VARLIST_FORMAT_VAR_GROUPS;
 			else
 				return (varCount <= 2)? Jcamp.Consts.DATA_VARLIST_FORMAT_XYPOINTS: Jcamp.Consts.DATA_VARLIST_FORMAT_XYWPOINTS;
