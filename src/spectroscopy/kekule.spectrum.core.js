@@ -1998,6 +1998,11 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 				{
 					var extra1 = section1.getExtraInfoAt(i) || null;
 					var extra2 = section2.getExtraInfoAt(i) || null;
+					// empty spectrum peak details should be regarded as containing no information
+					if (extra1 && extra1.isEmpty())
+						extra1 = null;
+					if (extra2 && extra2.isEmpty())
+						extra2 = null;
 					result = this.doCompareOnValue(extra1, extra2, options);
 					//console.log('compare extra', i, extra1, extra2, result);
 				}
@@ -2935,6 +2940,12 @@ Kekule.Spectroscopy.SpectrumPeakDetails = Class.create(Kekule.ChemObject,
 	{
 		return 'p';
 	},
+	/** @ignore */
+	isEmpty: function()
+	{
+		var assignments = this.getAssignments();
+		return !this.getShape() && Kekule.ObjUtils.isUnset(this.getMultiplicity()) && (!assignments || !assignments.length);
+	},
 	/**
 	 * Returns whether this peak detail has assignments info.
 	 * @returns {Bool}
@@ -3206,6 +3217,21 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		if (data)
 			data.setOwner(newOwner);
 		this.tryApplySuper('ownerChanged', [newOwner, oldOwner]);
+	},
+	/** @ignore */
+	isEmpty: function()
+	{
+		if (this.getDataSectionCount() <= 0)
+			return true;
+		else
+		{
+			for (var i = 0, l = this.getDataSectionCount(); i < l; ++i)
+			{
+				if (!this.getDataSectionAt(i).isEmpty())
+					return false;
+			}
+			return true;
+		}
 	},
 
 	/** @ignore */
