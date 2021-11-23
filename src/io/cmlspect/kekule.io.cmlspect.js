@@ -30,7 +30,8 @@ Kekule.globalOptions.add('IO.cml', {
 	autoHideSampleInsideSpectrum: true,  // if true, the sample molecule inside <spectrum> will be hidden from displaying
 	// options for writer
 	autoInsertHiddenRefMoleculeToSample: true,  // if true, a hidden referred molecule will be automatically insert to the <sample> child element of <spectrum>
-	spectrumDataValueOutputDigitCountAfterDecimalPoint: 8,
+	//spectrumDataValueOutputDigitCountAfterDecimalPoint: 8,
+	spectrumDataValueOutputPrecisionCount: 8,
 	autoConvertNmrDataFreqToUnit: 'Hz'   // in JSpectView convention, the frequency of NMR continuous spectrum should be in unit Hz
 });
 
@@ -84,7 +85,8 @@ Kekule.IO.CML.Spect.Consts = {
 		'http://www.xml-cml.org/units/siUnits dict/siUnitsDict.xml'
 	],
 
-	ANNOTATION_METATYPE: 'annotation'
+	ANNOTATION_METATYPE: 'annotation',
+	INFO_METATYPE: 'info'
 };
 var CMLSpectConsts = Kekule.IO.CML.Spect.Consts;
 
@@ -332,7 +334,8 @@ Kekule.IO.CmlSpectUtils = {
 	floatToCmlString: function(value, maxDigitCount)
 	{
 		if (maxDigitCount)
-			return Kekule.NumUtils.toDecimals(value, maxDigitCount);
+			return Kekule.NumUtils.toPrecision(value, maxDigitCount, true, true);
+			//return value.toPrecision(maxDigitCount);
 		else
 			return value.toString();
 	},
@@ -407,6 +410,8 @@ Kekule.IO.CmlSpectrumDataSectionBaseWriter = Class.create(Kekule.IO.CmlElementWr
 			var currInfoItem = result[currKey];
 			currInfoItem.symbol = varDef.getSymbol();
 			currInfoItem.unitSymbol = varDef.getUnit();
+			currInfoItem.name = varDef.getName();
+			currInfoItem.description = varDef.getDescription();
 
 			var continuosRange = targetDataSection.getContinuousVarRange(i);
 			if (continuosRange)
@@ -905,10 +910,13 @@ Kekule.IO.CmlSpectrumPeakWriter = Class.create(Kekule.IO.CmlElementWriter,
 		var domHelper = this.getDomHelper();
 		var cmlHash= this._peakHashToCmlHash(peakObj);
 		var keys = Kekule.ObjUtils.getOwnedFieldNames(cmlHash);
+		var decimalCount = options.spectrumDataValueOutputPrecisionCount || 0;
 		for (var i = 0, l = keys.length; i < l; ++i)
 		{
 			var key = keys[i];
 			var value = cmlHash[key];
+			if (['xvalue', 'yvalue'].indexOf(key.toLowerCase()) >= 0)
+				CmlDomUtils.setCmlElemAttribute(targetElem, key, CmlSpectUtils.floatToCmlString(value, decimalCount), domHelper);
 			if (key.toLowerCase() === 'structure' && DataType.isObjectValue(value))  // sub structure
 				this.writePeakSubStructure(value, targetElem, options);
 			else
@@ -1239,7 +1247,7 @@ Kekule.IO.CmlSpectrumDataReader = Class.create(Kekule.IO.CmlElementReader,
 			}
 			else if (fname === 'title')
 			{
-				initParams.displayLabel = value;
+				initParams.name = value;
 			}
 			else if (fname === 'start' || fname === 'end' || fname === 'size' || fname === 'stepsize')
 			{
@@ -1279,7 +1287,7 @@ Kekule.IO.CmlSpectrumDataReader = Class.create(Kekule.IO.CmlElementReader,
 			var varDefParams = axisVarDefParamList[i];
 			var initParams = varDefParams.initParams;
 
-			var varDef = Kekule.IO.CmlSpectUtils.getSpectrumVarDef(spectrumObj, initParams.symbol, initParams.unit, null, initParams.dependency);
+			var varDef = Kekule.IO.CmlSpectUtils.getSpectrumVarDef(spectrumObj, initParams.symbol, initParams.unit, initParams.name, initParams.dependency);
 			if (varDef && !varDef.getDisplayLabel() && initParams.displayLabel)
 				varDef.setDisplayLabel(initParams.displayLabel);
 			if (!varDef)
@@ -1394,6 +1402,7 @@ Kekule.IO.CmlSpectrumDataWriter = Class.create(Kekule.IO.CmlSpectrumDataSectionB
 					'_tagName': isIndep? 'xaxis': 'yaxis',
 					'varSymbol': dataVarInfo[key].symbol,
 					'unit': dataVarInfo[key].unitSymbol,
+					'title': dataVarInfo[key].name,
 					'dataType': DataType.FLOAT,
 					'size': DataType.count || spectrumDataSection.getDataCount()
 				};
@@ -1411,7 +1420,7 @@ Kekule.IO.CmlSpectrumDataWriter = Class.create(Kekule.IO.CmlSpectrumDataSectionB
 			}
 
 			// collect array values
-			var decimalCount = (options && options.spectrumDataValueOutputDigitCountAfterDecimalPoint) || 0;
+			var decimalCount = (options && options.spectrumDataValueOutputPrecisionCount) || 0;
 			spectrumDataSection.forEach(function(value, index){
 				for (var i = 0, l = arrays.length; i < l; ++i)
 				{
@@ -1425,6 +1434,7 @@ Kekule.IO.CmlSpectrumDataWriter = Class.create(Kekule.IO.CmlSpectrumDataSectionB
 						{
 							dvalue = arrays[i]._originUnitObj.convertValueTo(dvalue, arrays[i]._unitObj);
 						}
+						//var allowedError = allowedErrorRate? dvalue * allowedErrorRate
 						arrays[i].values.push(CmlSpectUtils.floatToCmlString(dvalue, decimalCount));
 					}
 				}
@@ -1696,8 +1706,13 @@ Kekule.IO.CmlSpectrumReader = Class.create(Kekule.IO.CmlElementReader,
 				var metaType = dataItem.metadataType;
 				if (metaType === CMLSpectConsts.ANNOTATION_METATYPE)  // is annotation
 					spectrumObj.setAnnotation(key, value);
+				else if (metaType === CMLSpectConsts.INFO_METATYPE)  // is normal info
+					spectrumObj.setInfoValue(key, value);
 				else
+				{
+					//console.log('set meta', key, value);
 					spectrumObj.setMeta(key, value);
+				}
 			}
 		};
 		var getSaveMethod = function(elemTagName, spectrumObj)
@@ -1846,6 +1861,12 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 		}
 		return result;
 	},
+	/** @ignore */
+	doWriteObjInfoValueItem: function(key, value, obj, parentListElem, options)
+	{
+		// write normal info value with a specified metaType
+		return this.writeObjMetaValueToListElem(obj, key, value, CMLSpectConsts.INFO_METATYPE, parentListElem);
+	},
 	/** @private */
 	writeSpectrum: function(spectrum, targetElem, options)
 	{
@@ -1909,11 +1930,11 @@ Kekule.IO.CmlSpectrumWriter = Class.create(Kekule.IO.CmlElementWriter,
 				listElem = processor.listElemGetter.apply(this, [targetElem, domHelper]);
 				if (listElem)
 				{
-					var keys = spectrum._getAllKeysOfInfoBasedHashProp(category);
+					var keys = spectrum.getSpectrumInfoKeysOfCategory(category);
 					for (var j = 0, jj = keys.length; j < jj; ++j)
 					{
 						var key = keys[j];
-						var value = spectrum._getInfoBasedHashPropValue(category, key);
+						var value = spectrum.getSpectrumInfoValue(key, category);
 						// In JSpectView Convention, all frequencies in NMR should be in Hz?
 						if (key === 'NMR.ObserveFrequency' && (value instanceof Kekule.Scalar) && options.autoConvertNmrDataFreqToUnit)
 						{

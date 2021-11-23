@@ -1706,16 +1706,22 @@ Kekule.IO.CmlElementWriter = Class.create(Kekule.IO.CmlElementHandler,
 					//Kekule.IO.CmlDomUtils.setCmlElemAttribute(elem, keys[i], value, this.getDomHelper());
 					// add meta
 					if (!metaListElem)
-						metaListElem = this.createChildElem('metaDataList', elem);
+						metaListElem = this.getOrCreateChildElem('metaDataList', elem);
 					/*
 					var metaElem = this.createChildElem('metaData', metaListElem);
 					Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'name', key, this.getDomHelper());
 					Kekule.IO.CmlDomUtils.setCmlElemAttribute(metaElem, 'content', DataType.StringUtils.serializeValue(value), this.getDomHelper());
 					*/
-					this.writeObjMetaValueToListElem(obj, key, null, value, metaListElem);
+					//this.writeObjMetaValueToListElem(obj, key, null, value, metaListElem);
+					this.doWriteObjInfoValueItem(key, value, obj, metaListElem, options);
 				}
 			}
 		}
+	},
+	/** @private */
+	doWriteObjInfoValueItem: function(key, value, obj, parentListElem, options)
+	{
+		return this.writeObjMetaValueToListElem(obj, key, null, value, parentListElem);
 	},
 	/** @private */
 	writeObjMetaValueToListElem: function(obj, key, value, metadataType, metaListElem, metaElemTagName, options)
@@ -1776,6 +1782,21 @@ Kekule.IO.CmlElementWriter = Class.create(Kekule.IO.CmlElementHandler,
 		var result = this.getDomHelper().createElementNS(ns, qualifiedName);
 		if (parentElem)
 			parentElem.appendChild(result);
+		return result;
+	},
+	/**
+	 * Returns the child element of certain condition. If the element does not exists, just create it.
+	 * @param {String} qualifiedName
+	 * @param {Object} parentElem
+	 * @param {String} namespaceURI
+	 * @returns {Object}
+	 * @private
+	 */
+	getOrCreateChildElem: function(localName, parentElem, namespaceURI)
+	{
+		var result = this.getDomHelper().getElementsByTagNameNS(namespaceURI, localName, parentElem)[0];
+		if (!result)
+			result = this.createChildElem(localName, parentElem, namespaceURI);
 		return result;
 	},
 	/**
@@ -2435,6 +2456,17 @@ Kekule.IO.CmlArrayWriter = Class.create(Kekule.IO.CmlElementWriter,
 	writeArrayObj: function(arrayObj, targetElem, options)
 	{
 		var domHelper = this.getDomHelper();
+		// simple info fields
+		//var specialFields = ['unit', 'dataType', 'size', 'start', 'end', 'values'];
+		//var fields = Kekule.ArrayUtils.exclude(Kekule.ObjUtils.getOwnedFieldNames(arrayObj), specialFields);
+		var fields = ['id', 'title', 'dictRef'];
+		for (var i = 0, l = fields.length; i < l; ++i)
+		{
+			var v = arrayObj[fields[i]];
+			if (Kekule.ObjUtils.notUnset(v))
+				CmlDomUtils.setCmlElemAttribute(targetElem, fields[i], v, domHelper);
+		}
+
 		// write unit / dataType attribs
 		if (arrayObj.unit)
 			CmlDomUtils.setCmlElemAttribute(targetElem, 'units', CmlUtils.metricsUnitSymbolToCmlUnitStr(arrayObj.unit), domHelper);
@@ -2457,6 +2489,10 @@ Kekule.IO.CmlArrayWriter = Class.create(Kekule.IO.CmlElementWriter,
 		{
 			var valueDelimiter = arrayObj.delimiter || this.getDefaultArrayValueDelimiter();
 			Kekule.DomUtils.setElementText(targetElem, values.join(valueDelimiter));
+			if (valueDelimiter !== this.getDefaultArrayValueDelimiter())
+			{
+				CmlDomUtils.setCmlElemAttribute(targetElem, 'delimiter', valueDelimiter, domHelper);
+			}
 		}
 	}
 });

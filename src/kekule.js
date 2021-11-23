@@ -545,6 +545,7 @@ var kekuleFiles = {
 			'io/jcamp/kekule.io.jcamp.base.js',
 			'io/jcamp/kekule.io.jcamp.labels.js',
 			'io/jcamp/kekule.io.jcamp.dx.js',
+			'io/jcamp/kekule.io.jcamp.cs.js',
 			'io/jcamp/kekule.io.jcampIO.js',
 			'io/cmlspect/kekule.io.cmlspect.js'
 		]

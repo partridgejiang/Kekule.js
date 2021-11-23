@@ -123,7 +123,7 @@
 	<spectrum id="nmrshiftdb10074894"
 		moleculeRef="nmrshiftdb10026026" type="NMR">
 		<conditionList xmlns="http://www.xml-cml.org/schema">
-			<scalar dataType="xsd:string" dictRef="cml:field"
+			<scalar dataType="xsd:float" dictRef="cml:field"
 				units="siUnits:hertz">500</scalar>
 			<scalar dataType="xsd:string" dictRef="cml:temp"
 				units="siUnits:k">Unreported</scalar>

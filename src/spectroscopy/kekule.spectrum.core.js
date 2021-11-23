@@ -9,8 +9,17 @@ var KUnit = Kekule.Unit;
 Kekule.globalOptions.add('spectrum', {
 	spectrumInfo: {
 		enablePrefixOmissionInGetter: true
+	},
+	data: {
+		allowedComparisonErrorRate: 5e-8
 	}
 });
+
+/**
+ * A comparison flag, comparing the key properties and data of spectrum only.
+ * @ignore
+ */
+Kekule.ComparisonMethod.SPECTRUM_DATA = 30;
 
 /**
  * Base namespace for spectra.
@@ -191,6 +200,15 @@ Kekule.Spectroscopy.MetaPropNamespace = {
 			coreName = propName;
 		}
 		return {'namespace': namespace, 'coreName': coreName};
+	},
+	/**
+	 * Returns the core part of a prop name.
+	 * @param {String} propName
+	 * @returns {String}
+	 */
+	getPropertyCoreName: function(propName)
+	{
+		return MetaPropNamespace.getPropertyNameDetail(propName).coreName;
 	}
 };
 /** @ignore */
@@ -321,7 +339,8 @@ DCM.register({
 		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)
 		{
 			var observeFreq = spectrum.getParameter('NMR.ObserveFrequency');
-			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
+			var freqNum = observeFreq && observeFreq.getValue();
+			if (observeFreq && freqNum && Kekule.NumUtils.isNormalNumber(freqNum) && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
 			{
 				return (fromUnitObj.category === Kekule.Unit.Frequency && toUnitObj.category === Kekule.Unit.Dimensionless)
 					|| (fromUnitObj.category === Kekule.Unit.Dimensionless && toUnitObj.category === Kekule.Unit.Frequency);
@@ -335,7 +354,8 @@ DCM.register({
 		if (spectrum.getSpectrumType() === Kekule.Spectroscopy.SpectrumType.NMR)
 		{
 			var observeFreq = spectrum.getParameter('NMR.ObserveFrequency');
-			if (observeFreq && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
+			var freqNum = observeFreq && observeFreq.getValue();
+			if (observeFreq && freqNum && Kekule.NumUtils.isNormalNumber(freqNum) && Kekule.Unit.getUnit(observeFreq.getUnit()).category === Kekule.Unit.Frequency)
 			{
 				if (fromUnitObj.category === Kekule.Unit.Frequency)
 					result.push(Kekule.Unit.Dimensionless.PARTS_PER_MILLION);
@@ -652,6 +672,12 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	},
 	*/
 
+	/** @ignore */
+	isEmpty: function()
+	{
+		return this.getDataCount() <= 0;
+	},
+
 	/**
 	 * Returns whether this data section containing the peak data.
 	 * @returns {Bool}
@@ -659,6 +685,29 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	isPeakSection: function()
 	{
 		return this.getMode() === Kekule.Spectroscopy.DataMode.PEAK;
+	},
+	/**
+	 * Returns whether this data section containing the peak data and assignments.
+	 * @returns {Bool}
+	 */
+	hasPeakAssignments: function()
+	{
+		if (this.isPeakSection())
+		{
+			var result = false;
+			for (var i = 0, l = this.getDataCount(); i < l; ++i)
+			{
+				var extra = this.getExtraInfoAt(i);
+				if (extra && extra && extra.hasAssignments && extra.hasAssignments())
+				{
+					result = true;
+					break;
+				}
+			}
+			return result;
+		}
+		else
+			return false;
 	},
 
 	/**
@@ -1846,6 +1895,165 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			}
 		}
 		return this;
+	},
+
+	// methods about comparison
+	/** @ignore */
+	getComparisonPropNames: function(options)
+	{
+		var result = this.tryApplySuper('getComparisonPropNames', [options]);
+		if (result)
+		{
+			result = AU.exclude(result, ['parent', 'owner']);  // parent is a spectrum object, causing recursions in comparison
+			AU.pushUnique(result, 'dataItems');   // the data items property is private, and will not be added to comparison by default
+		}
+		return result;
+	},
+	/** @ignore */
+	doGetComparisonPropNames: function(options)
+	{
+		var result = this.tryApplySuper('doGetComparisonPropNames', [options]);
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			result = (result || []).concat(/*'name', 'title',*/  'defPeakRoot', 'localVarInfos', 'mode', 'dataItems');
+		}
+		return result;
+	},
+	/** @ignore */
+	doCompareProperty: function(targetObj, propName, options)
+	{
+		if (propName === 'dataItems')
+		{
+			//console.log('compare dataItems', this.doCompareDataItems(this, targetObj, options));
+			// the values in dataItems are float, so they need to be compared with NumUtils
+			return this.doCompareDataItems(this, targetObj, options);
+		}
+		else if (propName === 'localVarInfos')
+		{
+			//console.log('compare localVarInfos', this.doCompareLocalVarInfos(this, targetObj, options));
+			return this.doCompareLocalVarInfos(this, targetObj, options);
+		}
+		else
+		{
+			//console.log('compare property', propName, this.tryApplySuper('doCompareProperty', [targetObj, propName, options]));
+			return this.tryApplySuper('doCompareProperty', [targetObj, propName, options]);
+		}
+	},
+	/** @private */
+	doCompareLocalVarInfos: function(section1, section2, options)
+	{
+		var varInfos1 = section1.getActualLocalVarInfos();
+		var varInfos2 = section2.getActualLocalVarInfos();
+		var result = varInfos1.length - varInfos2.length;
+		if (!result && !(options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)) // local var info should not affect spectrum data greatly
+		{
+			for (var i = 0, l = varInfos1.length; i < l; ++i)
+			{
+				var info1 = varInfos1[i];
+				var info2 = varInfos2[i];
+				result = Kekule.ObjComparer.compare(info1, info2, options);
+				if (result)
+					break;
+			}
+		}
+		//var result = this.doCompareOnValue(varInfos1, varInfos2, options);
+		//console.log('varinfo', result, varInfos1, varInfos2);
+		if (!result)  // further compare the var definitions of
+		{
+			for (var i = 0, l = varInfos1.length; i < l; ++i)
+			{
+				var def1 = section1.getLocalVarDef(i);
+				var def2 = section1.getLocalVarDef(i);
+				result = this.doCompareOnValue(def1, def2, options);
+				if (result)
+					break;
+			}
+		}
+		return result;
+	},
+	/** @private */
+	doCompareDataItems: function(section1, section2, options)
+	{
+		var getArrayValueAt = function(section, i)
+		{
+			var hashValue = section.getHashValueAt(i);
+			return section._itemHashToArray(hashValue);
+		};
+		var result = section1.getDataCount() - section2.getDataCount();
+		//console.log('dataCount', section1.getDataCount(), section2.getDataCount());
+		if (!result)
+		{
+			for (var i = 0, l = section1.getDataCount(); i < l; ++i)
+			{
+				/*
+				var rawValue1 = section1.getRawValueAt(i);
+				var rawValue2 = section2.getRawValueAt(i);
+				result = this._compareDataRawValue(rawValue1, rawValue2, options);
+				*/
+				var value1 = getArrayValueAt(section1, i);
+				var value2 = getArrayValueAt(section1, i);
+				result = this._compareDataRawValue(value1, value2, options);
+				// and the extra info of value
+				if (!result)
+				{
+					var extra1 = section1.getExtraInfoAt(i) || null;
+					var extra2 = section2.getExtraInfoAt(i) || null;
+					// empty spectrum peak details should be regarded as containing no information
+					if (extra1 && extra1.isEmpty())
+						extra1 = null;
+					if (extra2 && extra2.isEmpty())
+						extra2 = null;
+					result = this.doCompareOnValue(extra1, extra2, options);
+					//console.log('compare extra', i, extra1, extra2, result);
+				}
+				if (result)
+				{
+					//console.log('compare', i, value1, value2, result);
+					break;
+				}
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_compareDataRawValue: function(v1, v2, options)
+	{
+		var result;
+		if (!v1 && !v2)
+			return 0;
+		else if (v1 && !v2)
+			return 1;
+		else if (!v1 && v2)
+			return -1;
+		else
+		{
+			result = (v1.length || -1) - (v2.length || -1);
+			if (!result)  // compare each values
+			{
+				var NumUtils = Kekule.NumUtils;
+				var errorRate = options.allowedComparisonErrorRate || Kekule.globalOptions.spectrum.data.allowedComparisonErrorRate || 5e-8;
+				for (var i = 0, l = v1.length; i < l; ++i)
+				{
+					var value1 = v1[i];
+					var value2 = v2[i];
+					if (NumUtils.isNormalNumber(value1) && NumUtils.isNormalNumber(value2))
+					{
+						if (NumUtils.isFloatEqual(value1, value2, Math.abs(value1 * errorRate)))  // TODO: the error value is fixed now
+							result = 0;
+						else
+						{
+							result = Math.sign(value1 - value2);
+							//console.log('float diff', value1, value2);
+						}
+					}
+					else
+						result = this.doCompareOnValue(v1, v2, options)
+					if (result)
+						break;
+				}
+			}
+		}
+		return result;
 	}
 });
 
@@ -2041,13 +2249,28 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 		},
 
 		/**
+		 * Check if there are concrete data in child data sections.
+		 * @returns {Bool}
+		 */
+		isEmpty: function()
+		{
+			var result = true;
+			for (var i = 0, l = this.getSectionCount(); i < l; ++i)
+			{
+				if (!this.getSectionAt(i).isEmpty())
+					return false;
+			}
+			return result;
+		},
+
+		/**
 		 * Create and append a new {@link Kekule.Spectroscopy.SpectrumDataSection}.
 		 * @param {Array} variables Array of local variable symbol or definition used by secion.
 		 * @param {Int} mode
 		 * @returns {Kekule.Spectroscopy.SpectrumDataSection}
 		 */
 		createSection: function (variables, mode) {
-			var result = new Kekule.Spectroscopy.SpectrumDataSection(null, this, variables);
+			var result = new Kekule.Spectroscopy.SpectrumDataSection(undefined, this, variables);
 			//result.setVariables(variables);
 			result.setMode(mode || this.getMode());
 			this.getSections().appendChild(result);
@@ -2161,12 +2384,13 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 		 * @param {Array} sections
 		 * @param {Array} targetVariables Array of variable definition or symbol.
 		 *   If not set, all variables will be calculated.
+		 * @param {Hash} options Extra calculation options, same as the options in {@link Kekule.Spectroscopy.SpectrumDataSection.calcDataRange}.
 		 * @returns {Hash}
 		 */
-		calcDataRangeOfSections: function (sections, targetVariables) {
+		calcDataRangeOfSections: function (sections, targetVariables, options) {
 			var result = {};
 			for (var i = 0, l = sections.length; i < l; ++i) {
-				var range = sections[i].calcDataRange(targetVariables);
+				var range = sections[i].calcDataRange(targetVariables, options);
 				result = Kekule.Spectroscopy.Utils.mergeDataRange(result, range);
 			}
 			return result;
@@ -2715,6 +2939,34 @@ Kekule.Spectroscopy.SpectrumPeakDetails = Class.create(Kekule.ChemObject,
 	getAutoIdPrefix: function()
 	{
 		return 'p';
+	},
+	/** @ignore */
+	isEmpty: function()
+	{
+		var assignments = this.getAssignments();
+		return !this.getShape() && Kekule.ObjUtils.isUnset(this.getMultiplicity()) && (!assignments || !assignments.length);
+	},
+	/**
+	 * Returns whether this peak detail has assignments info.
+	 * @returns {Bool}
+	 */
+	hasAssignments: function()
+	{
+		var a = this.getAssignments();
+		return !!(a && a.length);
+	},
+	/** @ignore */
+	doGetComparisonPropNames: function(options)
+	{
+		var result = this.tryApplySuper('doGetComparisonPropNames', [options]);
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			result = result || [];
+			result.unshift('shape');
+			result.unshift('multiplicity');
+			result.unshift('assignments');
+		}
+		return result;
 	}
 });
 
@@ -2741,15 +2993,6 @@ Kekule.Spectroscopy.SpectrumNMR = {
 	TargetNucleus: {
 		C13: 'C13',
 		H: 'H'
-	}
-};
-/**
- * Some constants used by MS spectrum.
- * @object
- */
-Kekule.Spectroscopy.SpectrumMS = {
-	SpectrometerType: {
-
 	}
 };
 
@@ -2855,6 +3098,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	/** @private */
 	_initDelegatedMethods: function()
 	{
+		this._defineDataDelegatedMethod('isEmpty');
 		this._defineDataDelegatedMethod('createDataSection', 'createSection');
 		this._defineDataDelegatedMethod('clearDataSection', 'clearSection');
 		this._defineDataDelegatedMethod('getDataSectionCount', 'getSectionCount');
@@ -2974,6 +3218,21 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 			data.setOwner(newOwner);
 		this.tryApplySuper('ownerChanged', [newOwner, oldOwner]);
 	},
+	/** @ignore */
+	isEmpty: function()
+	{
+		if (this.getDataSectionCount() <= 0)
+			return true;
+		else
+		{
+			for (var i = 0, l = this.getDataSectionCount(); i < l; ++i)
+			{
+				if (!this.getDataSectionAt(i).isEmpty())
+					return false;
+			}
+			return true;
+		}
+	},
 
 	/** @ignore */
 	getChildSubgroupNames: function()
@@ -3023,14 +3282,14 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		return result;
 	},
 	/** @private */
-	_getInfoBasedHashPropValue: function(infoKeyName, propName)
+	_getSpectrumInfoValueOfCategory: function(category, key)
 	{
-		var hash = infoKeyName? this.getInfoValue(infoKeyName): this.getInfo();
+		var hash = category? this.getInfoValue(category): this.getInfo();
 		if (!hash)
 			return undefined;
 		if (Kekule.globalOptions.spectrum.spectrumInfo.enablePrefixOmissionInGetter)
 		{
-			var candicateNames = this._getCandidateInfoPropNames(propName);
+			var candicateNames = this._getCandidateInfoPropNames(key);
 			for (var i = 0, l = candicateNames.length; i < l; ++i)
 			{
 				var name = candicateNames[i];
@@ -3040,24 +3299,50 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 			return undefined;
 		}
 		else
-			return hash[propName];
+			return hash[key];
 	},
-	/** @private */
-	_setInfoBasedHashpropValue: function(infoKeyName, propName, value)
+	/**
+	 * Set the spectrum info value of a category.
+	 * @param {String} category
+	 * @param {String} key
+	 * @param {Variant} value
+	 */
+	setSpectrumInfoValue: function(category, key, value)
 	{
-		var hash = this.getInfoValue(infoKeyName);
-		if (!hash)
+		if (category)
 		{
-			hash = {};
-			this.setInfoValue(infoKeyName, hash);
+			var hash = this.getInfoValue(category);
+			if (!hash)
+			{
+				hash = {};
+				this.setInfoValue(category, hash);
+			}
+			hash[key] = value;
 		}
-		hash[propName] = value;
+		else
+			this.setInfoValue(key, value);
+		return this;
 	},
-	/** @private */
-	_getAllKeysOfInfoBasedHashProp: function(infoKeyName)
+	/**
+	 * Returns all keys of a spectrum info category.
+	 * @param {String} spectrumInfoCategory
+	 * @returns {Array}
+	 */
+	getSpectrumInfoKeysOfCategory: function(spectrumInfoCategory)
 	{
-		var hash = this.getInfoValue(infoKeyName);
-		return hash? Kekule.ObjUtils.getOwnedFieldNames(hash, false): [];
+		if (spectrumInfoCategory)
+		{
+			var hash = this.getInfoValue(spectrumInfoCategory);
+			return hash ? Kekule.ObjUtils.getOwnedFieldNames(hash, false) : [];
+		}
+		else if (spectrumInfoCategory === '')  // retrieve the keys at the top level of info property
+		{
+			var result = this.getInfoKeys();
+			result = AU.exclude(result, this.getSpectrumInfoCategories());
+			return result;
+		}
+		else
+			return [];
 	},
 	/**
 	 * Returns the spectrum info category names existed in current spectrum.
@@ -3070,7 +3355,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		for (var i = 0, l = candicateCategories.length; i < l; ++i)
 		{
 			var c = candicateCategories[i];
-			var keys = this._getAllKeysOfInfoBasedHashProp(c);
+			var keys = this.getSpectrumInfoKeysOfCategory(c);
 			if (keys && keys.length)
 				result.push(c);
 		}
@@ -3079,17 +3364,20 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	/**
 	 * Returns value of spectrum meta/condition/parameter/annotation.
 	 * @param {String} key
-	 * @param {Array} candicateCategories
+	 * @param {Variant} candicateCategories A single category or an array of categories.
 	 * @returns {Variant}
 	 */
 	getSpectrumInfoValue: function(key, candicateCategories)
 	{
+		var categories;
 		if (!candicateCategories)
-			candicateCategories = ['conditions', 'parameters', 'metaData', 'annotations', ''];
-		for (var i = 0, l = candicateCategories.length; i < l; ++i)
+			categories = ['conditions', 'parameters', 'metaData', 'annotations', ''];
+		else
+			categories = AU.toArray(candicateCategories);
+		for (var i = 0, l = categories.length; i < l; ++i)
 		{
-			var c = candicateCategories[i];
-			var v = this._getInfoBasedHashPropValue(c, key);
+			var c = categories[i];
+			var v = this._getSpectrumInfoValueOfCategory(c, key);
 			if (Kekule.ObjUtils.notUnset(v))
 				return v;
 		}
@@ -3102,7 +3390,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getMeta: function(key)
 	{
-		return this._getInfoBasedHashPropValue('metaData', key);
+		return this._getSpectrumInfoValueOfCategory('metaData', key);
 	},
 	/**
 	 * Set the value of a spectrum meta data.
@@ -3111,7 +3399,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	setMeta: function(key, value)
 	{
-		this._setInfoBasedHashpropValue('metaData', key, value);
+		this.setSpectrumInfoValue('metaData', key, value);
 		return this;
 	},
 	/**
@@ -3120,7 +3408,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getMetaKeys: function()
 	{
-		return this._getAllKeysOfInfoBasedHashProp('metaData');
+		return this.getSpectrumInfoKeysOfCategory('metaData');
 	},
 	/**
 	 * Returns the value of a spectrum condition.
@@ -3129,7 +3417,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getCondition: function(key)
 	{
-		return this._getInfoBasedHashPropValue('conditions', key);
+		return this._getSpectrumInfoValueOfCategory('conditions', key);
 	},
 	/**
 	 * Set the value of a spectrum condition.
@@ -3138,7 +3426,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	setCondition: function(key, value)
 	{
-		this._setInfoBasedHashpropValue('conditions', key, value);
+		this.setSpectrumInfoValue('conditions', key, value);
 		return this;
 	},
 	/**
@@ -3147,7 +3435,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getConditionKeys: function()
 	{
-		return this._getAllKeysOfInfoBasedHashProp('conditions');
+		return this.getSpectrumInfoKeysOfCategory('conditions');
 	},
 	/**
 	 * Returns the value of a spectrum parameter.
@@ -3156,7 +3444,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getParameter: function(key)
 	{
-		return this._getInfoBasedHashPropValue('parameters', key);
+		return this._getSpectrumInfoValueOfCategory('parameters', key);
 	},
 	/**
 	 * Set the value of a spectrum parameter.
@@ -3165,7 +3453,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	setParameter: function(key, value)
 	{
-		this._setInfoBasedHashpropValue('parameters', key, value);
+		this.setSpectrumInfoValue('parameters', key, value);
 		return this;
 	},
 	/**
@@ -3174,7 +3462,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getParameterKeys: function()
 	{
-		return this._getAllKeysOfInfoBasedHashProp('parameters');
+		return this.getSpectrumInfoKeysOfCategory('parameters');
 	},
 	/**
 	 * Returns the value of a spectrum annotation.
@@ -3183,7 +3471,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getAnnotation: function(key)
 	{
-		return this._getInfoBasedHashPropValue('annotations', key);
+		return this._getSpectrumInfoValueOfCategory('annotations', key);
 	},
 	/**
 	 * Set the value of a spectrum annotation.
@@ -3192,7 +3480,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	setAnnotation: function(key, value)
 	{
-		this._setInfoBasedHashpropValue('annotations', key, value);
+		this.setSpectrumInfoValue('annotations', key, value);
 		return this;
 	},
 	/**
@@ -3201,7 +3489,7 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 	 */
 	getAnnotationKeys: function()
 	{
-		return this._getAllKeysOfInfoBasedHashProp('annotations');
+		return this.getSpectrumInfoKeysOfCategory('annotations');
 	},
 
 	/*
@@ -3242,6 +3530,82 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		}
 		return result;
 	},
+
+	// methods about object comparison
+	/** @ignore*/
+	getComparisonPropNames: function(options)
+	{
+		var result = this.tryApplySuper('getComparisonPropNames', [options]);
+		// remove data property from comparison, since dataSections property are included
+		var index = result.indexOf('data');
+		if (index >= 0)
+			result.splice(index, 1);
+		//console.log('props', result);
+		return result;
+	},
+	/** @ignore*/
+	doGetComparisonPropNames: function(options)
+	{
+		var result = this.tryApplySuper('doGetComparisonPropNames', [options]);
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			// variables will be compared at the dataSections level, so it should not be included here
+			result = (result || []).concat([
+				'refMolecules', 'metaData', 'conditions', 'parameters', /*'variables',*/ 'dataSections',
+				//'_spectrumInfos_'   // a fake property, to manually comparing on metaData/conditions/parameters
+			]);
+		}
+		return result;
+	},
+	/** @ignore */
+	doCompareProperty: function(targetObj, propName, options)
+	{
+		if (propName === 'dataSections' && options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			// dataSections is a ChemObjList, when comparing, we extract the section array directly
+			var sections1 = this.getDataSections().getItems();
+			var sections2 = targetObj.getDataSections().getItems();
+			//console.log('compare', propName, this.doCompareOnValue(sections1, sections2, options));
+			return this.doCompareOnValue(sections1, sections2, options);
+		}
+		else if (['metaData', 'conditions', 'parameters'].indexOf(propName) >= 0)
+		{
+			//var candicateCategories = ['metaData', 'conditions', 'parameters'];
+			var widerCandicateCategories = ['metaData', 'conditions', 'parameters', 'annotations'];
+			var srcKeys = this.getSpectrumInfoKeysOfCategory(propName); //(this.getMetaKeys() || []).concat(this.getParameterKeys() || []).concat(this.getConditionKeys() || []);
+			for (var i = 0, l = srcKeys.length; i < l; ++i)
+			{
+				var key = srcKeys[i];
+				var v1 = this.getSpectrumInfoValue(key, [propName]);
+				var v2 = targetObj.getSpectrumInfoValue(key, widerCandicateCategories);
+				if (Kekule.ObjUtils.isUnset(v2))
+				{
+					var coreKey = MetaPropNamespace.getPropertyCoreName(key);
+					v2 = targetObj.getSpectrumInfoValue(coreKey, widerCandicateCategories);
+				}
+				var result = this.doCompareOnValue(v1, v2, options);
+				if (result)
+				{
+					//console.log('diff', key, v1, v2, result);
+					return result;
+				}
+				else
+				{
+					//console.log('same', key, v1, v2, result);
+				}
+			}
+			return 0;
+		}
+		else
+		{
+			//var result = this.tryApplySuper('doCompareProperty', [targetObj, propName, options]);
+			var v1 = this.getPropValue(propName);
+			var v2 = targetObj.getPropValue(propName);
+			var result = this.doCompareOnValue(v1, v2, options);
+			//console.log('compare', propName, v1, v2, result);
+			return result;
+		}
+	}
 
 	/*
 	 * Returns all keys in {@link Kekule.Spectroscopy.Spectrum#spectrumParams} property.

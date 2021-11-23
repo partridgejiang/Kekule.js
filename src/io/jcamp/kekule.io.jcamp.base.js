@@ -18,7 +18,9 @@ var AU = Kekule.ArrayUtils;
  * @object
  */
 Kekule.globalOptions.add('IO.jcamp', {
-	enableXYDataValueCheck: true
+	enableXYDataValueCheck: true,
+	dataValueCheckAllowedErrorRatio: 0.001,   // allow 0.1% error of X/Y value check
+	maxCharsPerLine: 80,   // theoretically, there should be no more than 80 chars per line in JCAMP file
 });
 
 /**
@@ -37,6 +39,12 @@ Kekule.IO.Jcamp.Consts = {
 	SPECIFIC_LABEL_PREFIX: '.',
 	LABEL_BLOCK_BEGIN: 'TITLE',
 	LABEL_BLOCK_END: 'END',
+	LABEL_DATA_TYPE: 'DATATYPE',
+	//LABEL_DATA_CLASS: 'DATACLASS',
+	LABEL_BLOCK_COUNT: 'BLOCKS',
+	LABEL_BLOCK_ID: 'BLOCKID',
+	LABEL_CROSS_REF: 'CROSSREFERENCE',
+
 	INLINE_COMMENT_FLAG: '$$',
 	TABLE_LINE_CONTI_MARK: '=',
 	UNKNOWN_VALUE: NaN,  // special value indicating an unknown variable value in data table
@@ -55,18 +63,30 @@ Kekule.IO.Jcamp.Consts = {
 
 	SIMPLE_VALUE_DELIMITER: ',',
 
+	CROSS_REF_TYPE_TERMINATOR: ':',  // to delimiter a cross reference text, e.g. 'STRUCTURE: BLOCK_ID= 1', 'NMR PEAK ASSIGNMENTS: BLOCK_ID= 2'
+
 	DATA_VARLIST_FORMAT_XYDATA: 1,
 	DATA_VARLIST_FORMAT_XYPOINTS: 2,
-	DATA_VARLIST_FORMAT_VAR_GROUPS: 3,
+	DATA_VARLIST_FORMAT_XYWPOINTS: 2,  // (XYW...XYW) for peak table, now we can handle this same as XYPOINTS
+	DATA_VARLIST_FORMAT_VAR_GROUPS: 5,
 
-	GROUPED_VALUE_GROUP_DELIMITER: /[;\s]/g,
-	GROUPED_VALUE_ITEM_DELIMITER: /,/g,
+	GROUPED_VALUE_GROUP_DELIMITER: '\n',
+	GROUPED_VALUE_GROUP_DELIMITER_PATTERN: /[;\s+]/g,
+	GROUPED_VALUE_ITEM_DELIMITER: ',',
+	GROUPED_VALUE_ITEM_DELIMITER_PATTERN: /,/g,
 	GROUPED_VALUE_STR_ENCLOSER_LEADING: '<',
 	GROUPED_VALUE_STR_ENCLOSER_TAILING: '>',
 	GROUPED_VALUE_EXPLICIT_GROUP_LEADING: '(',
 	GROUPED_VALUE_EXPLICIT_GROUP_TAILING: ')',
 
+	NTUPLE_DEFINITION_ITEM_DELIMITER: ',\t',
+
 	VALUE_STR_EXPLICIT_QUOTE: '"',
+
+	VALUE_ABNORMAL_NUM: '?',
+
+	MOL_FORMULA_SUP_PREFIX: '^',
+	MOL_FORMULA_SUB_PREFIX: '/',
 };
 var JcampConsts = Kekule.IO.Jcamp.Consts;
 
@@ -80,7 +100,7 @@ Kekule.IO.Jcamp.Format = {
 };
 
 /**
- * Enueration of JCAMP data block types.
+ * Enumeration of JCAMP data block types.
  * @enum
  */
 Kekule.IO.Jcamp.BlockType = {
@@ -88,6 +108,29 @@ Kekule.IO.Jcamp.BlockType = {
 	DATA: 0,
 	/** Link block */
 	LINK: 1
+};
+
+/**
+ * Enumeration of JCAMP cross reference target tyoes.
+ * @enum
+ */
+Kekule.IO.Jcamp.CrossRefType = {
+	SPECTRUM: 1,
+	STRUCTURE: 2,
+	UNKNOWN: 0
+};
+
+/**
+ * Enumeration of JCAMP ASDF data forms.
+ * @enum
+ */
+Kekule.IO.Jcamp.AsdfForm = {
+	AFFN: 1,
+	PAC: 2,
+	SQZ: 3,
+	DIF: 4,
+	SQZ_DUP: 13,
+	DIF_DUP: 14
 };
 
 /**
@@ -152,8 +195,49 @@ Kekule.IO.Jcamp.Utils = {
 	compareFloat: function(v1, v2, allowedError)
 	{
 		if (Kekule.ObjUtils.isUnset(allowedError))
-			allowedError = Math.min(Math.abs(v1), Math.abs(v2)) * 0.01;  // TODO: current fixed to 1% of error
+			allowedError = Math.max(Math.abs(v1), Math.abs(v2)) * 0.01;  // TODO: current fixed to 1% of error
 		return Kekule.NumUtils.compareFloat(v1, v2, allowedError);
+	},
+	/**
+	 * Calculate a suitable factor for converting to integers from a set of floats.
+	 * This function is used for storing spectrum data into JCAMP-DX data table, or converting atom coord to integer in JCAMP-CS.
+	 * @param {Number} minValue Min value of original data set.
+	 * @param {Number} maxValue Max value of original data set.
+	 * @param {Float} allowErrorRatio Permitted error, e.g. 0.001 for 0.1%.
+	 * @param {Int} preferredScaleRangeMin If set, the rescaled data items should be larger than this value. It should be a negative value.
+	 * @param {Int} preferredScaleRangeMax If set, the rescaled data items should be less than this value. It should be a positive value.
+	 */
+	calcNumFactorForRange: function(minValue, maxValue, allowedErrorRatio, preferredScaleRangeMin, preferredScaleRangeMax)
+	{
+		//var factor = Math.min(Math.abs(minValue), Math.abs(maxValue)) * allowedErrorRatio;
+		if (Kekule.NumUtils.isFloatEqual(minValue, maxValue))
+		{
+			if (Kekule.ObjUtils.notUnset(preferredScaleRangeMin) && Kekule.ObjUtils.notUnset(preferredScaleRangeMax))
+			{
+				if (minValue > preferredScaleRangeMin && maxValue < preferredScaleRangeMax)
+					return 1;
+			}
+		}
+		var factor = 1;
+		var errorBase = Math.abs(maxValue - minValue) || Math.max(Math.abs(maxValue), Math.abs(minValue));
+		if (allowedErrorRatio)
+			factor = errorBase * allowedErrorRatio;
+		//var factor = Math.min(allowedError / Math.abs(minValue), allowedError / Math.abs(maxValue));
+		if (Kekule.ObjUtils.notUnset(preferredScaleRangeMin) && Kekule.ObjUtils.notUnset(preferredScaleRangeMax))
+		{
+			if (minValue / factor > preferredScaleRangeMin && maxValue / factor < preferredScaleRangeMax)  // we can even use a smaller factor?
+			{
+				var pfactor1 = Math.max(minValue / preferredScaleRangeMin, 0);  // avoid negative factor
+				var pfactor2 = Math.max(maxValue / preferredScaleRangeMax, 0);
+				var pfactor = (!pfactor1) ? pfactor2 :
+					(!pfactor2) ? pfactor1 :
+						Math.max(pfactor1, pfactor2);
+				if (pfactor)
+					factor = Math.min(factor, pfactor);
+			}
+		}
+		//console.log(minValue, maxValue, factor);
+		return factor;
 	},
 	/**
 	 * Remove all slashes, dashes, spaces, underlines and make all letters captializd.
@@ -280,6 +364,44 @@ Kekule.IO.Jcamp.Utils = {
 		else
 			return null;
 	},
+
+	/**
+	 * Retrieve detail of cross reference from the text
+	 * @param {String} crossRefText
+	 * @returns {Hash} Including fields {refType, refTypeText, blockID}.
+	 */
+	getCrossReferenceDetail: function(crossRefText)
+	{
+		var parts = crossRefText.split(JcampConsts.CROSS_REF_TYPE_TERMINATOR);
+		var refTypeText = parts[0].trim();
+		var refType = (refTypeText.toUpperCase() === 'STRUCTURE')? Jcamp.CrossRefType.STRUCTURE: Jcamp.CrossRefType.SPECTRUM;
+		var blockPart = parts[1] && parts[1].trim();
+		var blockId;
+		if (blockPart && blockPart.toUpperCase().indexOf('BLOCK') >= 0)  // here we check just word block, since the total key may be 'BLOCK_ID', 'BLOCK ID'...
+		{
+			var blockId = blockPart.split(JcampConsts.DATA_LABEL_TERMINATOR)[1];
+			if (blockId)
+				blockId = blockId.trim();
+		}
+		var result = {'refType': refType, 'refTypeText': refTypeText, 'blockId': blockId};
+		return result;
+	},
+
+	/**
+	 * Add molecule to the {@link Kekule.Spectroscopy.Spectrum.refMolecules}.
+	 * @param {Kekule.Spectroscopy.Spectrum} spectrum
+	 * @param {Kekule.StructureFragment} molecule
+	 */
+	addMoleculeSpectrumCrossRef: function(spectrum, molecule)
+	{
+		var refMols = spectrum.getRefMolecules() || [];
+		if (refMols.indexOf(molecule) < 0)
+		{
+			refMols.push(molecule);
+			spectrum.setRefMolecules(refMols);
+		}
+	},
+
 	/**
 	 * Returns the first non-empty string line of lines.
 	 * @param {Array} lines
@@ -306,7 +428,7 @@ Kekule.IO.Jcamp.Utils = {
 	getAsdfDigitInfo: function(char)
 	{
 		var result = {};
-		if (char === '?')
+		if (char === JcampConsts.VALUE_ABNORMAL_NUM)
 		{
 			result.digitType = JcampDigitType._ABNORMAL_VALUE;
 			result.value = null;
@@ -530,9 +652,196 @@ Kekule.IO.Jcamp.Utils = {
 		return result;
 	},
 	/**
+	 * Encode an array of integes into ASDF format.
+	 * @param {Array} numbers
+	 * @param {String} format Compression format.
+	 * @returns {String}
+	 */
+	encodeAsdfLine: function(numbers, format)
+	{
+		var F = Kekule.IO.Jcamp.AsdfForm;
+		if (format === F.AFFN)
+			return JcampUtils._encodeNumbersToAffnLine(numbers);
+		else if (format === F.PAC)
+			return JcampUtils._encodeNumbersToPacLine(numbers);
+		else if (format === F.SQZ)
+			return JcampUtils._encodeNumbersToSqzLine(numbers, false);
+		else if (format === F.SQZ_DUP)
+			return JcampUtils._encodeNumbersToSqzLine(numbers, true);
+		else if (format === F.DIF)
+			return JcampUtils._encodeNumbersToDifLine(numbers, false);
+		else if (format === F.DIF_DUP)
+			return JcampUtils._encodeNumbersToDifLine(numbers, true);
+		else  // default
+			return JcampUtils._encodeNumbersToDifLine(numbers, true);
+	},
+	/** @private */
+	_encodeNumbersToAffnLine: function(numbers)
+	{
+		var seq = [];
+		for (var i = 0, l = numbers.length; i < l; ++i)
+		{
+			var n = numbers[i];
+			var s = (Kekule.NumUtils.isNormalNumber(n))? n.toString(): JcampConsts.VALUE_ABNORMAL_NUM;
+			seq.push(s);
+		}
+		return seq.join(' ');
+	},
+	/** @private */
+	_encodeNumbersToPacLine: function(numbers)
+	{
+		var strs = [];
+		for (var i = 0, l = numbers.length; i < l; ++i)
+		{
+			var s;
+			var n = numbers[i];
+			if (Kekule.NumUtils.isNormalNumber(n))
+			{
+				var sign = (n >= 0)? '+': '-';
+				s = sign + Math.abs(n).toString();
+			}
+			else
+				s = JcampConsts.VALUE_ABNORMAL_NUM;
+			strs.push(s);
+		}
+		return strs.join('');
+	},
+	/** @private */
+	_encodeNumbersToSqzLine: function(numbers, enableDup)
+	{
+		return JcampUtils._numSeqToCompressedFormString(numbers, 'A', 'a', '@', enableDup);
+	},
+	/** @private */
+	_encodeNumbersToDifLine: function(numbers, enableDup)
+	{
+		/*
+		var sHead = JcampUtils._encodeNumbersToSqzLine([numbers[0]]);  // the first number should always be in SQZ form
+		var difSeq = [];
+		var last = 0;
+		for (var i = 0, l = numbers.length; i < l; ++i)
+		{
+			var n = numbers[i];
+			if (Kekule.NumUtils.isNormalNumber(n))
+			{
+				var dif = numbers[i] - last;
+				difSeq.push(dif);
+				last = n;
+			}
+			else
+			{
+				difSeq.push(n);
+				last = 0;
+			}
+		}
+		var result = sHead + JcampUtils._numSeqToCompressedFormString(difSeq, 'J', 'j', '%', enableDup);
+		return result;
+		*/
+		// we need to split the numbers to several sub sequences, at the heading and when meeting the abnormal number,
+		// a new seq should be created and starting with a SQZ number
+		var subsets = [];
+		var currSet = {'seq': []};
+		subsets.push(currSet);
+		var pushToCurrSet = function(num)
+		{
+			var isNormalNum = Kekule.NumUtils.isNormalNumber(num);
+			if (!isNormalNum)
+			{
+				if (Kekule.ObjUtils.isUnset(currSet.head))
+					currSet.head = num;
+				else
+					currSet.seq.push(num);
+				currSet = {'seq': []};  // create new set
+				subsets.push(currSet);
+			}
+			else  // is normal number
+			{
+				if (Kekule.ObjUtils.isUnset(currSet.head))
+				{
+					currSet.head = num;
+				}
+				else
+				{
+					currSet.seq.push(num - currSet.last);
+				}
+				currSet.last = num;
+			}
+		}
+		for (var i = 0, l = numbers.length; i < l; ++i)
+		{
+			var n = numbers[i];
+			pushToCurrSet(n);
+		}
+		// iterate subsets
+		var strs = [];
+		for (var i = 0, l = subsets.length; i < l; ++i)
+		{
+			var subset = subsets[i];
+			if (Kekule.ObjUtils.notUnset(subset.head))  // subset not empty
+			{
+				strs.push(JcampUtils._encodeNumbersToSqzLine([subset.head]));
+				if (subset.seq.length)
+					strs.push(JcampUtils._numSeqToCompressedFormString(subset.seq, 'J', 'j', '%', enableDup));
+			}
+		}
+		return strs.join('');
+	},
+	/** @private */
+	_numToCompressedFormString: function(number, positiveBase, negativeBase, zeroBase)
+	{
+		// assume number is a int
+		if (!Kekule.NumUtils.isNormalNumber(number))
+			return JcampConsts.VALUE_ABNORMAL_NUM;
+		else if (number === 0)
+			return zeroBase;
+		var s = Math.abs(number).toString();
+		var firstDigit = Kekule.NumUtils.getHeadingDigit(number);
+		var sFirst = (number > 0)? String.fromCharCode(positiveBase.charCodeAt(0) + (firstDigit - 1)):
+			String.fromCharCode(negativeBase.charCodeAt(0) + (firstDigit - 1));
+		s = sFirst + s.substr(1);
+		return s;
+	},
+	/** @private */
+	_numSeqToCompressedFormString: function(numSeq, positiveBase, negativeBase, zeroBase, enableDup)
+	{
+		var seq = [];
+		var lastNum;
+		var dupCount = 0;
+		var dupChars = ['S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 's'];  // The dup 1 (S) is actually useless
+		for (var i = 0, l = numSeq.length; i < l; ++i)
+		{
+			var dupHandled = false;
+			var n = numSeq[i];
+			if (enableDup)
+			{
+				if (n === lastNum)  // NaN !== NaN
+				{
+					++dupCount;
+					dupHandled = true;
+				}
+				else
+				{
+					if (dupCount)  // output last dup
+					{
+						seq.push(dupChars[dupCount]);
+						dupCount = 0;
+					}
+				}
+			}
+			if (!dupHandled)  // output the normal number
+			{
+				var s = JcampUtils._numToCompressedFormString(n, positiveBase, negativeBase, zeroBase);
+				seq.push(s);
+			}
+			lastNum = n;
+		}
+		if (enableDup && dupCount)
+			seq.push(dupChars[dupCount]);
+		return seq.join('');
+	},
+	/**
 	 * Parse a AFFN or ASDF table, returns array of number groups ([[a,b,c], [e,f,g]]).
 	 * @param {Array} strLines
-	 * @param {Hash} options Additional options for value check. It should contain fields: {abscissaFirst, abscissaLast, pointCount}
+	 * @param {Hash} options Additional options for value check.
 	 * @returns {Array}
 	 */
 	decodeAsdfTableLines: function(strLines, options)
@@ -543,40 +852,49 @@ Kekule.IO.Jcamp.Utils = {
 		var isNextContiLine = false;
 		var prevEndWithDif = false;
 		var abscissaInterval;
+		var lineCount = strLines.length;
 
-		var appendDecodedBufferToResult = function(result, buffer, doAbscissaValueCheck, doOrdinateValueCheck)
+		var appendDecodedBufferToResult = function(result, buffer, doAbscissaValueCheck, doOrdinateValueCheck, prevEndWithDif, totalLineCount)
 		{
-			if (doOrdinateValueCheck)
+			//if (doOrdinateValueCheck)
+			if (prevEndWithDif)  // prev line end with DIF form, next line should has a duplicated value check item
 			{
 				var lastValues = result[result.length - 1];
 				//console.log('lastValues', lastValues, result);
 				if (lastValues && lastValues.length)
 				{
-					// check the last value of prev line and first ordinate value of this line
-					var prevEndOrdinateValue = lastValues[lastValues.length - 1];
-					var currHeadOrdinateValue = buffer[1];
-					//console.log(doOrdinateValueCheck, prevEndOrdinateValue, currHeadOrdinateValue);
-					if ((typeof(prevEndOrdinateValue) === 'number' && Kekule.ObjUtils.notUnset(prevEndOrdinateValue))
-						&& (typeof(currHeadOrdinateValue) === 'number' && Kekule.ObjUtils.notUnset(currHeadOrdinateValue)))
+					if (doOrdinateValueCheck)
 					{
-						if (!Kekule.NumUtils.isFloatEqual(prevEndOrdinateValue, currHeadOrdinateValue))
-							Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_Y_VALUE_CHECK_ERROR'));
-						else  // check passed, remove the tailing check value of previous line, not the heading Y value of this line!
+						// check the last value of prev line and first ordinate value of this line
+						var prevEndOrdinateValue = lastValues[lastValues.length - 1];
+						var currHeadOrdinateValue = buffer[1];
+						//console.log(doOrdinateValueCheck, prevEndOrdinateValue, currHeadOrdinateValue);
+						if ((typeof (prevEndOrdinateValue) === 'number' && Kekule.ObjUtils.notUnset(prevEndOrdinateValue))
+							&& (typeof (currHeadOrdinateValue) === 'number' && Kekule.ObjUtils.notUnset(currHeadOrdinateValue)))
 						{
-							lastValues.pop();
+							if (!Kekule.NumUtils.isFloatEqual(prevEndOrdinateValue, currHeadOrdinateValue))
+								Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_Y_VALUE_CHECK_ERROR'));
+							else  // check passed, remove the tailing check value of previous line, not the heading Y value of this line!
+							{
+								lastValues.pop();
+							}
 						}
+					}
+					else // bypass the check, but still remove the duplicated ordinate value
+					{
+						lastValues.pop();
 					}
 				}
 			}
 			if (doAbscissaValueCheck)
-				checkAbscissaInterval(buffer, result[result.length - 1]);
+				checkAbscissaInterval(buffer, result[result.length - 1], totalLineCount);
 			/*
 			if (result[result.length - 1])
 				console.log('push buffer', result[result.length - 1], (buffer[0] - result[result.length - 1][0]) / (result[result.length - 1].length - 1));
 			*/
 			result.push(buffer);
 		}
-		var checkAbscissaInterval = function(currGroup, prevGroup)
+		var checkAbscissaInterval = function(currGroup, prevGroup, lineCount)
 		{
 			if (currGroup && prevGroup)
 			{
@@ -586,11 +904,12 @@ Kekule.IO.Jcamp.Utils = {
 				// console.log('prev interval', abscissaInterval, 'curr', currInterval);
 				if (abscissaInterval)
 				{
-					//var allowedError = Math.max(Math.abs(currInterval)) * 0.001;  // TODO: current fixed to 0.1% of error
+					var abscissaRange = Math.min(Math.abs(currInterval), Math.abs(abscissaInterval)) * (lineCount || 1);
+					var allowedError = abscissaRange * (Kekule.globalOptions.IO.jcamp.dataValueCheckAllowedErrorRatio || 0.0001);
 					//if (!Kekule.NumUtils.isFloatEqual(currInterval, abscissaInterval, allowedError))
-					if (JcampUtils.compareFloat(currInterval, abscissaInterval) !== 0)
+					if (JcampUtils.compareFloat(currInterval, abscissaInterval, allowedError) !== 0)
 					{
-						//console.log('X check error', currInterval, abscissaInterval);
+						console.log('X check error', currInterval, abscissaInterval, allowedError);
 						Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_X_VALUE_CHECK_ERROR'));
 					}
 				}
@@ -616,13 +935,46 @@ Kekule.IO.Jcamp.Utils = {
 			isNextContiLine = endWithContiMark;
 			if (!isNextContiLine)  // no continous line, do value check and put buffer to result
 			{
-				appendDecodedBufferToResult(result, buffer, op.doValueCheck, op.doValueCheck && prevEndWithDif);
+				appendDecodedBufferToResult(result, buffer, op.doValueCheck, op.doValueCheck && prevEndWithDif, prevEndWithDif, lineCount);
 				buffer = [];
 			}
 			prevEndWithDif = decodeValues.__$lastValueType__ === JcampDigitType.DIF;  // if prev line ends with DIF, may need to do a value check on next line
 		}
 		if (buffer.length)    // last unhandled buffer
-			appendDecodedBufferToResult(result, buffer, op.doValueCheck, op.doValueCheck && prevEndWithDif);
+			appendDecodedBufferToResult(result, buffer, op.doValueCheck, op.doValueCheck && prevEndWithDif, prevEndWithDif, lineCount);
+		return result;
+	},
+
+	/**
+	 * Encode a AFFN or ASDF table, returns array of strings ([line1, line2]).
+	 * @param {Array} numLines Each item is a line of numbers.
+	 * @param {Int} asdfForm
+	 * @param {Hash} options Additional options for encode. Can include fields: {abscissaFirst}
+	 * @returns {Array}
+	 */
+	encodeAsdfTableLines: function(numLines, asdfForm, options)
+	{
+		var op = options || {};
+		var result = [];
+		for (var i = 0, l = numLines.length; i < l; ++i)
+		{
+			var numbers = numLines[i];
+			var numSeq;
+			var s = '';
+			if (numbers.length)
+			{
+				if (op.abscissaFirst)  // the first number is abscissa value while the rest are ordinates
+				{
+					s += JcampUtils._encodeNumbersToAffnLine([numbers[0]]) + ' ';  // the first is always be AFFN
+					numSeq = numbers.slice(1);
+				}
+				else
+					numSeq = numbers;
+				s += JcampUtils.encodeAsdfLine(numSeq, asdfForm);
+			}
+			result.push(s);
+		}
+		//console.log('encode', numLines, result);
 		return result;
 	},
 
@@ -694,8 +1046,8 @@ Kekule.IO.Jcamp.Utils = {
 					c.match(/\s/)? CharTypes.BLANK:
 					c.match(JcampConsts.GROUPED_VALUE_STR_ENCLOSER_LEADING)? CharTypes.STR_ENCLOSER_LEADING:
 					c.match(JcampConsts.GROUPED_VALUE_STR_ENCLOSER_TAILING)? CharTypes.STR_ENCLOSER_TAILING:
-					c.match(JcampConsts.GROUPED_VALUE_GROUP_DELIMITER)? (insideExplicitGroup? CharTypes.ITEM_DELIMITER: CharTypes.GROUP_DELIMITER):
-					c.match(JcampConsts.GROUPED_VALUE_ITEM_DELIMITER)? CharTypes.ITEM_DELIMITER:
+					c.match(JcampConsts.GROUPED_VALUE_GROUP_DELIMITER_PATTERN)? (insideExplicitGroup? CharTypes.ITEM_DELIMITER: CharTypes.GROUP_DELIMITER):
+					c.match(JcampConsts.GROUPED_VALUE_ITEM_DELIMITER_PATTERN)? CharTypes.ITEM_DELIMITER:
 					CharTypes.STRING;
 		};
 
@@ -770,6 +1122,30 @@ Kekule.IO.Jcamp.Utils = {
 		pushCurrGroup();
 		return result;
 	},
+
+	/**
+	 * Encode a line of data string for XYPOINTS/PEAK TABLE LDR.
+	 * Usually the values are numbers, but it may contain strings too.
+	 * @param {Array} values
+	 * @param {Hash} options;
+	 * @returns {String}
+	 */
+	encodeAffnGroupLine: function(values, options)
+	{
+		var parts = [];
+		for (var i = 0, l = values.length; i < l; ++i)
+		{
+			var v = values[i];
+			var sv;
+			if (typeof(v) === 'number')
+				sv = Kekule.NumUtils.isNormalNumber(v)? v.toString(): JcampConsts.VALUE_ABNORMAL_NUM;
+			else   // a string value
+				sv = JcampConsts.GROUPED_VALUE_STR_ENCLOSER_LEADING + v.toString() + JcampConsts.GROUPED_VALUE_STR_ENCLOSER_TAILING;
+			parts.push(sv);
+		}
+		return parts.join(JcampConsts.GROUPED_VALUE_ITEM_DELIMITER);
+	},
+
 	/**
 	 * Parse lines of data string in XYPOINTS/PEAK TABLE LDR.
 	 * Usually the values are divided into groups with delimiter semicolons or space,
@@ -785,6 +1161,25 @@ Kekule.IO.Jcamp.Utils = {
 		{
 			var line = lines[i];
 			result = result.concat(JcampUtils.decodeAffnGroupLine(line));
+		}
+		return result;
+	},
+	/**
+	 * Encode strings from value groups for XYPOINTS/PEAK TABLE LDR.
+	 * @param {Array} valueGroups Each item is a child array of individual values.
+	 * @param {Hash} options;
+	 * @returns {Array}
+	 */
+	encodeAffnGroupTableLines: function(valueGroups, options)
+	{
+		var result = [];
+		for (var i = 0, l = valueGroups.length; i < l; ++i)
+		{
+			var group = valueGroups[i];
+			var s = JcampUtils.encodeAffnGroupLine(group, options);
+			if (options && options.explicitlyEnclosed)
+				s = JcampConsts.GROUPED_VALUE_EXPLICIT_GROUP_LEADING + s + JcampConsts.GROUPED_VALUE_EXPLICIT_GROUP_TAILING;
+			result.push(s);
 		}
 		return result;
 	},
@@ -835,7 +1230,9 @@ Kekule.IO.Jcamp.Utils = {
 							if (!matchResult[1].charAt(i).match(/\s/))
 								vars.push(matchResult[1].charAt(i));
 						}
-						return {'format': JcampConsts.DATA_VARLIST_FORMAT_XYPOINTS, 'vars': vars};
+						return (vars.length <= 2)?
+							{'format': JcampConsts.DATA_VARLIST_FORMAT_XYPOINTS, 'vars': vars}:
+							{'format': JcampConsts.DATA_VARLIST_FORMAT_XYWPOINTS, 'vars': vars};
 					}
 				}
 				else
@@ -857,6 +1254,38 @@ Kekule.IO.Jcamp.Utils = {
 			return Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VAR_LIST_FORMAT_UNSUPPORTED', formatText));
 		}
 	},
+	/**
+	 * Generate a data table format string from format and var symbols.
+	 * @param {Int} format
+	 * @param {Array} varSymbols
+	 * @returns {String} Format string such as (X++(Y..Y)), (XY..XY), etc.
+	 */
+	generateDataTableFormatDescriptor: function(format, varSymbols)
+	{
+		if (format === JcampConsts.DATA_VARLIST_FORMAT_XYDATA)
+		{
+			return (JcampConsts.DATA_FORMAT_GROUP_LEADING + '{0}++' + JcampConsts.DATA_FORMAT_GROUP_LEADING +
+				'{1}' + JcampConsts.DATA_FORMAT_LOOP + '{1}' + JcampConsts.DATA_FORMAT_GROUP_TAILING + JcampConsts.DATA_FORMAT_GROUP_TAILING).format(varSymbols[0], varSymbols[1]);
+		}
+		else if (format === JcampConsts.DATA_VARLIST_FORMAT_XYPOINTS || format === JcampConsts.DATA_VARLIST_FORMAT_XYWPOINTS)
+		{
+			var varListTemplateParts = [];
+			for (var i = 0, l = varSymbols.length; i < l; ++i)
+			{
+				varListTemplateParts.push('{' + i + '}');
+			}
+			var varListTemplate = varListTemplateParts.join('');
+			var template = JcampConsts.DATA_FORMAT_GROUP_LEADING + varListTemplate + JcampConsts.DATA_FORMAT_LOOP + varListTemplate + JcampConsts.DATA_FORMAT_GROUP_TAILING;
+			return template.format.apply(template, varSymbols);
+		}
+		else if (format === JcampConsts.DATA_VARLIST_FORMAT_VAR_GROUPS)
+		{
+			return JcampConsts.DATA_FORMAT_GROUP_LEADING + varSymbols.join('') + JcampConsts.DATA_FORMAT_GROUP_TAILING;
+		}
+		else
+			return '';
+	},
+
 	/**
 	 * Returns details about variable name/format and plot descriptor from the format text of DATA TABLE LDR.
 	 * @param {String} formatText Such as (X++(Y..Y)), XYDATA; (XY..XY), XYPOINTS etc.
@@ -889,15 +1318,96 @@ Kekule.IO.Jcamp.Utils = {
 		else
 			Kekule.error(Kekule.$L('ErrorMsg.JCAMP_DATA_TABLE_VAR_LIST_FORMAT_ERROR', formatText));
 	},
+	/**
+	 * Generate a data table format string and plot string from format and var symbols.
+	 * @param {Int} format
+	 * @param {Array} varSymbols
+	 * @returns {Hash} Such as {format: '(X++(Y..Y))', plot: 'XYDATA'}.
+	 */
+	generateDataTableFormatAndPlotDescriptors: function(format, varSymbols)
+	{
+		var sFormat = JcampUtils.generateDataTableFormatDescriptor(format, varSymbols);
+		var sPlot;
+		if (format === JcampConsts.DATA_VARLIST_FORMAT_XYDATA)
+			sPlot = 'XYDATA';
+		else if (format === JcampConsts.DATA_VARLIST_FORMAT_XYPOINTS)
+			sPlot = 'XYPOINTS';
+		else if (format === JcampConsts.DATA_VARLIST_FORMAT_VAR_GROUPS)
+		{
+			if (varSymbols.length <= 2)
+				sPlot = 'PEAK TABLE';
+			else
+				sPlot = 'PEAK ASSIGNMENTS'
+		}
+		return {'format': sFormat, 'plot': sPlot};
+	},
+	/**
+	 * Generate a data table format string and plot from format and var symbols.
+	 * @param {Int} format
+	 * @param {Array} varSymbols
+	 * @returns {String} Format string such as (X++(Y..Y)), XYDATA ; (XY..XY), XYPOINTS etc.
+	 */
+	generateDataTableFormatAndPlotString: function(format, varSymbols)
+	{
+		var details = JcampUtils.generateDataTableFormatAndPlotDescriptors(format, varSymbols);
+		return details.format + JcampConsts.DATA_FORMAT_PLOT_DESCRIPTOR_DELIMITER + details.plot;
+	}
+};
+var JcampUtils = Kekule.IO.Jcamp.Utils;
 
+Kekule.IO.Jcamp.BlockUtils = {
 	// methods about JCAMP block object from analysis tree
-	/** @private */
-	_createBlock: function(parent)
+	/**
+	 * Create a new JCAMP block object.
+	 * @param {Object} parent Parent block.
+	 * @returns {Object}
+	 */
+	createBlock: function(parent)
 	{
 		return {'blocks': [], 'ldrs': [], 'ldrIndexes': {}, '_parent': parent}
 	},
 	/** @private */
-	_getNestedBlockLevelCount: function(analysisTree)
+	setBlockParent: function(block, parent)
+	{
+		block._parent = parent;
+		return block;
+	},
+	/**
+	 * Returns the index of label in block.
+	 * @param {String} labelName
+	 * @param {Object} block
+	 * @returns {Int}
+	 */
+	getLabelIndex: function(labelName, block)
+	{
+		return block.ldrIndexes[labelName] || -1;
+	},
+	/**
+	 * Get the LDR object at index of block.
+	 * @param {Int} index
+	 * @param {Object} block
+	 * @returns {Object}
+	 */
+	getLdrAt: function(index, block)
+	{
+		return block.ldrs[index];
+	},
+	/**
+	 * Add a ldr record to JCAMP block.
+	 * @param {Object} block
+	 * @param {Object} ldrObj Should has fields {labelName, valueLines}.
+	 */
+	addLdrToBlock: function(block, ldrObj)
+	{
+		block.ldrs.push(ldrObj);
+		block.ldrIndexes[ldrObj.labelName] = block.ldrs.length - 1;
+	},
+	/**
+	 * Returns the nested level of a JCAMP analysis tree.
+	 * @param {Object} analysisTree
+	 * @returns {Int}
+	 */
+	getNestedBlockLevelCount: function(analysisTree)
 	{
 		var result = 1;
 		var blocks = analysisTree.blocks;
@@ -906,7 +1416,7 @@ Kekule.IO.Jcamp.Utils = {
 			var maxSubBlockLevelCount = 0;
 			for (var i = 0, l = blocks.length; i < l; ++i)
 			{
-				var c = this._getNestedBlockLevelCount(blocks[i]);
+				var c = JcampBlockUtils.getNestedBlockLevelCount(blocks[i]);
 				if (c > maxSubBlockLevelCount)
 					maxSubBlockLevelCount = c;
 			}
@@ -919,9 +1429,8 @@ Kekule.IO.Jcamp.Utils = {
 	 * @param {Object} block
 	 * @param {String} labelName
 	 * @returns {Hash}
-	 * @private
 	 */
-	_getBlockLdr: function(block, labelName)
+	getBlockLdr: function(block, labelName)
 	{
 		var index = block.ldrIndexes[labelName];
 		return (index >= 0)? block.ldrs[index]: null;
@@ -929,9 +1438,9 @@ Kekule.IO.Jcamp.Utils = {
 	/**
 	 * Returns the meta info (type, format...) of a block.
 	 * @param {Object} block
-	 * @private
+	 * @returns {Hash}
 	 */
-	_getBlockMeta: function(block)
+	getBlockMeta: function(block)
 	{
 		var result = block.meta;
 		if (!result)
@@ -947,7 +1456,8 @@ Kekule.IO.Jcamp.Utils = {
 		return result;
 	}
 };
-var JcampUtils = Kekule.IO.Jcamp.Utils;
+
+var JcampBlockUtils = Kekule.IO.Jcamp.BlockUtils;
 
 /**
  * Enumeration of LDR value types
@@ -1007,7 +1517,7 @@ Kekule.IO.Jcamp.LabelTypeInfos.createInfo = function(labelName, dataType, labelT
 		labelCategory = (labelType === JLabelType.GLOBAL)? JLabelCategory.META: JLabelCategory.ANNOTATION;
 	if (labelType === JLabelType.SPECIFIC && !name.startsWith(JcampConsts.SPECIFIC_LABEL_PREFIX))
 		name = JcampConsts.SPECIFIC_LABEL_PREFIX + name;
-	else if (labelType === JLabelType.PRIVATE && !name.start(JcampConsts.PRIVATE_LABEL_PREFIX))
+	else if (labelType === JLabelType.PRIVATE && !name.startsWith(JcampConsts.PRIVATE_LABEL_PREFIX))
 		name = JcampConsts.PRIVATE_LABEL_PREFIX + name;
 	var result = {
 		'labelName': name,
@@ -1052,8 +1562,8 @@ _createLabelTypeInfos([
 	// global labels
 	['TITLE', JValueType.STRING, null, JLabelCategory.GLOBAL],
 	//['JCAMP-DX', JValueType.STRING],    // JCAMP-DX version
-	['JCAMPDX', JValueType.STRING],    // JCAMP-DX version
-	['JCAMPCX', JValueType.STRING],    // JCAMP-CX version
+	['JCAMPDX', JValueType.STRING, null, JLabelCategory.ANNOTATION],    // JCAMP-DX version
+	['JCAMPCX', JValueType.STRING, null, JLabelCategory.ANNOTATION],    // JCAMP-CX version
 	['DATA TYPE', JValueType.STRING],   // spectrum type
 	['BLOCKS', JValueType.AFFN],        // child block count
 	['END', JValueType.NONE],           // block end mark, value should be ignored
@@ -1151,9 +1661,14 @@ _createLabelTypeInfos([
 ]);
 
 
-Kekule.IO.Jcamp.LdrValueParser = {
+Kekule.IO.Jcamp.LdrValueParserCoder = {
 	/** @private */
 	_parserFuncs: {
+		byLabelName: {},
+		byDataType: {}
+	},
+	/** @private */
+	_coderFuncs: {
 		byLabelName: {},
 		byDataType: {}
 	},
@@ -1189,6 +1704,38 @@ Kekule.IO.Jcamp.LdrValueParser = {
 		return result;
 	},
 	/**
+	 * Register a coder function for LDR, based on labelName or dataType.
+	 * @param {String} labelName
+	 * @param {Int} dataType
+	 * @param {Function} func
+	 */
+	registerCoder: function(labelName, dataType, func)
+	{
+		if (labelName)
+			JcampLdrValueParser._coderFuncs.byLabelName[JcampUtils.standardizeLdrLabelName(labelName)] = func;
+		else if (dataType)
+			JcampLdrValueParser._coderFuncs.byDataType[dataType] = func;
+	},
+	/**
+	 * Returns the suitable coder function for a LDR.
+	 * @param {String} ldrLabelName
+	 * @returns {Func}
+	 */
+	getCoderFunc: function(ldrLabelName)
+	{
+		var labelName = Jcamp.Utils.standardizeLdrLabelName(ldrLabelName);
+		var result = JcampLdrValueParser._coderFuncs.byLabelName[labelName];
+		if (!result)
+		{
+			var valueType = JcampLabelTypeInfos.getType(labelName);
+			result = JcampLdrValueParser._coderFuncs.byDataType[valueType];
+		}
+		if (!result)
+			result = JcampLdrValueParser._coderFuncs['_default'];
+		return result;
+	},
+
+	/**
 	 * Parse the LDR value, returns the suitable type.
 	 * @param {Hash} ldr
 	 * @param {Hash} options
@@ -1201,34 +1748,69 @@ Kekule.IO.Jcamp.LdrValueParser = {
 		return result;
 	},
 
+	/**
+	 * Encode jsValue to the LDR value lines.
+	 * @param {String} labelName
+	 * @param {Variant} jsValue
+	 * @param {Hash} options
+	 * @returns {Array} Array of strings.
+	 */
+	encodeValue: function(labelName, jsValue, options)
+	{
+		var func = JcampLdrValueParser.getCoderFunc(labelName);
+		var result = func(jsValue, options);
+		return Kekule.ArrayUtils.toArray(result);
+	},
+
+	/** @private */
 	stringParser: function(lines, options)
 	{
 		return lines.join('\n');
 	},
+	/** @private */
+	stringCoder: function(value, options)
+	{
+		return value.toString().split('\n');
+	},
+	/** @private */
 	affnParser: function(lines, options)  // parse to a simple number value
 	{
 		var text = JcampUtils.getFirstNonemptyLine(lines);
 		var result = parseFloat(text);
 		return (Kekule.NumUtils.isNormalNumber(result))? result: NaN;
 	},
+	/** @private */
+	affnCoder: function(value, options)
+	{
+		return (Kekule.NumUtils.isNormalNumber(value))? value.toString(): JcampConsts.VALUE_ABNORMAL_NUM;
+	},
+	/** @private */
 	asdfParser: function(lines, options)
 	{
 		var text = JcampUtils.getFirstNonemptyLine(lines);
 		var vs = JcampUtils.decodeAsdfLine(text);
 		return vs && vs[0];
 	},
+	/** @private */
+	asdfCoder: function(value, options)
+	{
+		Kekule.error('not implemented yet');
+	},
+	/** @private */
 	shortDateParser: function(lines, options)
 	{
 		var text = JcampUtils.getFirstNonemptyLine(lines);
 		var parts = text.split('/');
 		return {'year': parseInt(parts[0]) || 0, 'month': parseInt(parts[1]) || 0, 'day': parseInt(parts[2]) || 0};
 	},
+	/** @private */
 	shortTimeParser: function(lines, options)
 	{
 		var text = JcampUtils.getFirstNonemptyLine(lines);
 		var parts = text.split(':');
 		return {'hour': parseInt(parts[0]) || 0, 'minute': parseInt(parts[1]) || 0, 'second': parseInt(parts[2]) || 0};
 	},
+	/** @private */
 	longDateParser: function(lines, options)
 	{
 		var year = 0, month = 0, day = 0, hour = null, minute = null, second = null, millisecond = null, zone = null;
@@ -1264,6 +1846,25 @@ Kekule.IO.Jcamp.LdrValueParser = {
 		//console.log(year, month, day, hour, minute, second, millisecond);
 		return new Date(year, month - 1, day, hour, minute, second, millisecond);  // note month is 0-based
 	},
+	/** @private */
+	longDateCoder: function (value, options)
+	{
+		// value should be a Date
+		var year = value.getFullYear();
+		var month = value.getMonth() + 1;
+		var date = value.getDate();
+		var hour = value.getHours();
+		var minute = value.getMinutes();
+		var second = value.getSeconds();
+		var millisecond = value.getMilliseconds();
+		// YYYY/MM/DD [HH:MM:SS[.SSSS] [±UUUU]] , e.g. 1998/08/12 23:18:02.0000 -0500
+		var result = [year.toString().lpad(4, '0'), month.toString().lpad(2, '0'), date.toString().lpad(2, '0')].join('/') + ' '
+			+ [hour.toString().lpad(2, '0'), minute.toString().lpad(2, '0'), second.toString().lpad(2, '0')].join(':');
+		if (millisecond)
+			result += '.'	+ millisecond.toString().lpad(4, '0');
+		return result;
+	},
+	/** @private */
 	stringGroupParser: function(lines, options)
 	{
 		var v = lines.join(' ').trim();
@@ -1277,10 +1878,35 @@ Kekule.IO.Jcamp.LdrValueParser = {
 			if (s.startsWith(JcampConsts.VALUE_STR_EXPLICIT_QUOTE) && s.endsWith(JcampConsts.VALUE_STR_EXPLICIT_QUOTE))
 				result[i] = s.substr(JcampConsts.VALUE_STR_EXPLICIT_QUOTE.length, s.length - JcampConsts.VALUE_STR_EXPLICIT_QUOTE.length * 2);
 		}
-
 		return result;
 	},
-	simpleAffnGroupParser: function(lines)
+	/** @private */
+	stringGroupCoder: function(value, options)
+	{
+		// value should be an array
+		var vs = Kekule.ArrayUtils.toArray(value);
+		var isStringItem = false;
+		for (var i = 0, l = vs.length; i < l; ++i)
+		{
+			if (typeof(vs[i]) === 'string')
+			{
+				isStringItem = true;
+				break;
+			}
+		}
+		var strs = [];
+		var strCoder = Jcamp.LdrValueParserCoder.stringCoder;
+		for (var i = 0, l = vs.length; i < l; ++i)
+		{
+			var s = strCoder(vs[i], options);
+			if (isStringItem)
+				s = JcampConsts.VALUE_STR_EXPLICIT_QUOTE + s + JcampConsts.VALUE_STR_EXPLICIT_QUOTE;
+			strs.push(s)
+		}
+		return strs.join(JcampConsts.SIMPLE_VALUE_DELIMITER);
+	},
+	/** @private */
+	simpleAffnGroupParser: function(lines, options)
 	{
 		var v = lines.join(' ');
 		var result = v.split(JcampConsts.SIMPLE_VALUE_DELIMITER);
@@ -1290,7 +1916,15 @@ Kekule.IO.Jcamp.LdrValueParser = {
 		}
 		return result;
 	},
+	/** @private */
+	simpleAffnGroupCoder: function(value, options)
+	{
+		// value should be an array
+		var vs = Kekule.ArrayUtils.toArray(value);
+		return vs.join(JcampConsts.SIMPLE_VALUE_DELIMITER);
+	},
 
+	/** @private */
 	xyDataTableParser: function(lines, options)
 	{
 		var result = {format: lines[0], formatDetail: Jcamp.Utils.getDataTableFormatAndPlotDetails(lines[0])};
@@ -1305,6 +1939,15 @@ Kekule.IO.Jcamp.LdrValueParser = {
 		*/
 		return result;
 	},
+	/** @private */
+	xyDataTableCoder: function(numLines, options)
+	{
+		var result = [options.dataFormat];  // ['(X++(Y..Y))'];
+		result = result.concat(JcampUtils.encodeAsdfTableLines(numLines, options.asdfForm, options));
+		return result;
+	},
+
+	/** @private */
 	groupedDataTableParser: function(lines, options)
 	{
 		var result = {
@@ -1314,6 +1957,7 @@ Kekule.IO.Jcamp.LdrValueParser = {
 		};
 		return result;
 	},
+	/** @private */
 	ntuplesDataTableParser: function(lines, options)
 	{
 		var result;
@@ -1333,9 +1977,74 @@ Kekule.IO.Jcamp.LdrValueParser = {
 			result = JcampLdrValueParser.groupedDataTableParser(lines, options);
 		}
 		return result;
+	},
+
+	/** @private */
+	molecularFormulaParser: function(lines, options)
+	{
+		var formula;
+		var formulaText = lines[0].trim();
+		if (formulaText && Kekule.MolecularFormula)
+		{
+			// actually, the formula text can be used directly in Kekule.js, just need to replace the sub/sup prefixes
+			formulaText = formulaText.replace(new RegExp(Jcamp.Consts.MOL_FORMULA_SUP_PREFIX, 'g'), ' ');
+			formulaText = formulaText.replace(new RegExp(Jcamp.Consts.MOL_FORMULA_SUB_PREFIX, 'g'), '');
+			formula = Kekule.FormulaUtils.textToFormula(formulaText);
+		}
+		return formula || formulaText;
+	},
+	/** @private */
+	molecularFormulaCoder: function(value, options)
+	{
+		if (Kekule.MolecularFormula && value instanceof Kekule.MolecularFormula)  // value is formula
+		{
+			var sections = AU.clone(value.getSections());
+			// sort
+			var getSortIndexes = function(formulaSection)
+			{
+				var primary = 'ZZZZZ', secondary = 0;
+				var atom = formulaSection.obj;
+				if (atom)
+				{
+					if (atom.getSymbol)
+						primary = atom.getSymbol();
+					// C/H will be put to head of seq
+					if (primary === 'C')
+						primary = '0';
+					else if (primary === 'H')
+						primary = '1';
+					if (atom.getMassNumber)
+						secondary = atom.getMassNumber() || 0;
+				}
+				return [primary, secondary];
+			};
+			sections.sort(function(sec1, sec2){
+				var i1 = getSortIndexes(sec1);
+				var i2 = getSortIndexes(sec2);
+				return AU.compare(i1, i2);
+			});
+
+			var outputItems = [];
+			for (var i = 0, l = sections.length; i < l; ++i)
+			{
+				var sec = sections[i];
+				var atom = sec.obj;
+				var count = sec.count;
+				var symbol = atom.getLabel && atom.getLabel();
+				if (atom.getMassNumber && atom.getMassNumber())
+					symbol = Jcamp.Consts.MOL_FORMULA_SUP_PREFIX + symbol;
+				if (count > 1)
+					symbol += count;
+				outputItems.push(symbol);
+			}
+			var valueLine = outputItems.join(' ');
+			return [valueLine];
+		}
+		else   // value is simple string
+			return [value];
 	}
 }
-var JcampLdrValueParser = Kekule.IO.Jcamp.LdrValueParser;
+var JcampLdrValueParser = Kekule.IO.Jcamp.LdrValueParserCoder;
 JcampLdrValueParser._parserFuncs._default = JcampLdrValueParser.stringParser;
 JcampLdrValueParser.registerParser(null, JValueType.AFFN, JcampLdrValueParser.affnParser);
 JcampLdrValueParser.registerParser(null, JValueType.ASDF, JcampLdrValueParser.asdfParser);
@@ -1348,6 +2057,14 @@ JcampLdrValueParser.registerParser(null, JValueType.MULTILINE_AFFN_GROUP, JcampL
 JcampLdrValueParser.registerParser(null, JValueType.DATA_TABLE, JcampLdrValueParser.ntuplesDataTableParser);
 JcampLdrValueParser.registerParser(null, JValueType.STRING_GROUP, JcampLdrValueParser.stringGroupParser);
 JcampLdrValueParser.registerParser(null, JValueType.SIMPLE_AFFN_GROUP, JcampLdrValueParser.simpleAffnGroupParser);
+JcampLdrValueParser.registerParser('MOLFORM', null, JcampLdrValueParser.molecularFormulaParser);
+JcampLdrValueParser.registerCoder(null, JValueType.AFFN, JcampLdrValueParser.affnCoder);
+JcampLdrValueParser.registerCoder(null, JValueType.ASDF, JcampLdrValueParser.asdfCoder);
+JcampLdrValueParser.registerCoder(null, JValueType.STRING, JcampLdrValueParser.stringCoder);
+JcampLdrValueParser.registerCoder(null, JValueType.DATETIME, JcampLdrValueParser.longDateCoder);
+JcampLdrValueParser.registerCoder(null, JValueType.STRING_GROUP, JcampLdrValueParser.stringGroupCoder);
+JcampLdrValueParser.registerCoder(null, JValueType.SIMPLE_AFFN_GROUP, JcampLdrValueParser.simpleAffnGroupCoder);
+JcampLdrValueParser.registerCoder('MOLFORM', null, JcampLdrValueParser.molecularFormulaCoder);
 
 
 /**
@@ -1381,7 +2098,8 @@ Kekule.IO.Jcamp.BlockReaderManager = {
 	unregister: function(blockType, blockFormat, readerClass)
 	{
 		var index = jcampBlockReaderManager._findRegisteredItemIndex(blockType, blockFormat, readerClass);
-		jcampBlockReaderManager._readerClasses.splice(index, 1);
+		if (index >= 0)
+			jcampBlockReaderManager._readerClasses.splice(index, 1);
 	},
 	getReaderClass: function(blockType, blockFormat)
 	{
@@ -1389,7 +2107,49 @@ Kekule.IO.Jcamp.BlockReaderManager = {
 		return (index >= 0)? jcampBlockReaderManager._readerClasses[index].readerClass: null;
 	}
 };
+
+/**
+ * The manager to store and create suitable JCAMP block writer for different types of chem objects.
+ * @class
+ * @private
+ */
+Kekule.IO.Jcamp.BlockWriterManager = {
+	/** @private */
+	'_writerClasses': [],
+	/** @private */
+	_findRegisteredItemIndex: function(chemObjClass, writerClass)
+	{
+		var iu = Kekule.ObjUtils.isUnset;
+		var ws = jcampBlockWriterManager._writerClasses;
+		for (var i = ws.length - 1; i >= 0; --i)
+		{
+			var item = ws[i];
+			if ((iu(chemObjClass) || ClassEx.isOrIsDescendantOf(chemObjClass, item.objClass))
+				&& (iu(writerClass) || writerClass === item.writerClass))
+				return i;
+		}
+		return -1;
+	},
+	register: function(chemObjClass, writerClass)
+	{
+		if (jcampBlockWriterManager._findRegisteredItemIndex(chemObjClass, writerClass) < 0)
+			jcampBlockWriterManager._writerClasses.push({'objClass': chemObjClass, 'writerClass': writerClass});
+	},
+	unregister: function(chemObjClass, writerClass)
+	{
+		var index = jcampBlockWriterManager._findRegisteredItemIndex(chemObjClass, writerClass);
+		if (index >= 0)
+			jcampBlockWriterManager._writerClasses.splice(index, 1);
+	},
+	getWriterClass: function(chemObjOrClass)
+	{
+		var objClass = (DataType.isObjectExValue(chemObjOrClass))? chemObjOrClass.getClass(): chemObjOrClass;
+		var index = jcampBlockWriterManager._findRegisteredItemIndex(objClass, null);
+		return (index >= 0)? jcampBlockWriterManager._writerClasses[index].writerClass: null;
+	}
+};
 var jcampBlockReaderManager = Kekule.IO.Jcamp.BlockReaderManager;
+var jcampBlockWriterManager = Kekule.IO.Jcamp.BlockWriterManager;
 
 /**
  * Base reader for block of JCAMP document tree.
@@ -1416,8 +2176,24 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		// private, a hash object. The hash key is LDR label name, value is the function to store some predefined functions to handle LDRs.
 		// A false value means this LDR need not to be handled.
 		// ldrSetterMap['_default'] is treated as the default setter.
-		// Each functions has params (ldr, targetChemObj)
-		this.defineProp('ldrHandlerMap', {'dataType': DataType.HASH, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
+		// Each functions has params (ldr, block, targetChemObj, preferredInfoPropName)
+		this.defineProp('ldrHandlerMap', {'dataType': DataType.HASH, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+		// storing current block id
+		this.defineProp('blockId', {'dataType': DataType.STRING, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+
+		this.defineProp('currOptions', {'dataType': DataType.HASH, 'setter': false, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+		this.defineProp('parentReader', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('rootReader', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,
+			'getter': function()
+			{
+				var p = this.getParentReader();
+				if (p)
+					return p.getRootReader? p.getRootReader(): p;
+				else
+					return this;
+			}
+		});
 	},
 	/** @private */
 	_initLdrHandlers: function()
@@ -1430,13 +2206,17 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		*/
 		map['_default'] = this._defaultLdrHandler.bind(this);
 		//map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjProp.bind(this, 'title');  // TITLE
-		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjInfoProp.bind(this, 'Title');  // TITLE
-		map[JcampConsts.LABEL_DX_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, 'JcampDxVersion');  // JCAMP-DX
+		//map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreLdrToChemObjInfoProp.bind(this, JcampConsts.LABEL_BLOCK_BEGIN);  // TITLE
+		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreTitleLdr.bind(this);  // TITLE
+		map[JcampConsts.LABEL_DX_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, JcampConsts.LABEL_DX_VERSION);  // JCAMP-DX
+		map[JcampConsts.LABEL_CS_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, JcampConsts.LABEL_CS_VERSION);  // JCAMP-CS
+		map[JcampConsts.LABEL_BLOCK_ID] = this.doStoreBlockIdLdr.bind(this);   // BLOCK_ID
 		map[JcampConsts.LABEL_BLOCK_END] = this._ignoreLdrHandler;  // block end, need not to store value of this ldr
 		var doStoreDateTimeLdrBind = this.doStoreDateTimeLdr.bind(this);
 		map['DATE'] = doStoreDateTimeLdrBind;
 		map['TIME'] = doStoreDateTimeLdrBind;
 		map['LONGDATE'] = doStoreDateTimeLdrBind;
+		map[JcampConsts.LABEL_CROSS_REF] = this.doStoreCrossRefLdr.bind(this);
 		return map;
 	},
 	/** @private */
@@ -1453,7 +2233,44 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 	/** @private */
 	_getBlockMeta: function(block)
 	{
-		return JcampUtils._getBlockMeta(block);
+		return JcampBlockUtils.getBlockMeta(block);
+	},
+
+	/**
+	 * Add a map item of blockId-chemObject.
+	 * @param {String} blockId
+	 * @param {Kekule.ChemObject} chemObj
+	 */
+	setObjWithBlockId: function(blockId, chemObj)
+	{
+		var rootReader = this.getRootReader();
+		if (rootReader && rootReader.setObjWithBlockId)
+			rootReader.setObjWithBlockId(blockId, chemObj);
+	},
+	/**
+	 * Retrieve a chem object from block id in map.
+	 * @param {String} blockId
+	 * @returns {Kekule.ChemObject}
+	 */
+	getObjFromBlockId: function(blockId)
+	{
+		var rootReader = this.getRootReader();
+		if (rootReader && rootReader.getObjFromBlockId)
+			return rootReader.getObjFromBlockId(blockId);
+		else
+			return null;
+	},
+	/**
+	 * Add a new cross reference item that need to be handled later.
+	 * @param {String} targetBlockId
+	 * @param {Int} refType
+	 * @param {String} refTypeText
+	 */
+	addCrossRef: function(targetBlockId, refType, refTypeText)
+	{
+		var rootReader = this.getRootReader();
+		if (rootReader && rootReader.addCrossRefItem)
+			rootReader.addCrossRefItem(this, this.getBlockId(), targetBlockId, refType, refTypeText);
 	},
 
 	/**
@@ -1531,6 +2348,7 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		var category = params.labelCategory;
 		var saveMethod;
 
+		//console.log(ldrName, fname, category);
 		if (category === JLabelCategory.ANNOTATION)
 			saveMethod = chemObj.setAnnotation;
 		else if (category === JLabelCategory.PARAMTER)
@@ -1548,6 +2366,26 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		saveMethod.apply(chemObj, [fname, ldrValue]);
 	},
 
+	/** @private */
+	doStoreTitleLdr: function(ldr, block, chemObj, preferredInfoPropName)
+	{
+		chemObj.setInfoValue('title', Jcamp.LdrValueParserCoder.parseValue(ldr));
+	},
+	/** @private */
+	doStoreBlockIdLdr: function(ldr, block, chemObj, preferredInfoPropName)
+	{
+		this.setPropStoreFieldValue('blockId', Jcamp.LdrValueParserCoder.parseValue(ldr));
+	},
+	/** @private */
+	doStoreCrossRefLdr: function(ldr, block, chemObj, preferredInfoPropName)
+	{
+		var value = Jcamp.LdrValueParserCoder.parseValue(ldr);
+		var detail = Jcamp.Utils.getCrossReferenceDetail(value);
+		if (detail.blockId)  // ref to another block, and the block may be not read yet, we must store the reference and handle later
+		{
+			this.addCrossRef(detail.blockId, detail.refType, detail.refTypeText);
+		}
+	},
 	/** @private */
 	doStoreLdrToChemObjInfoProp: function(name, ldr, block, chemObj, preferredInfoPropName)
 	{
@@ -1577,7 +2415,7 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		else if (labelName === 'DATE')
 		{
 			infoFieldValue = new Date(ldrValue.year, ldrValue.month - 1, ldrValue.day);  // note month is 0-based
-			var timeLdr = JcampUtils._getBlockLdr(block, 'TIME');
+			var timeLdr = JcampBlockUtils.getBlockLdr(block, 'TIME');
 			if (timeLdr)
 			{
 				var timeLdrValue = JcampLdrValueParser.parseValue(timeLdr);
@@ -1632,6 +2470,20 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 			handler(ldr, block, chemObj, preferredInfoPropName);
 	},
 	/**
+	 * Build the cross reference relation between src/target object.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemObject} srcObj
+	 * @param {Kekule.ChemObject} targetObj
+	 * @param {Int} refType
+	 * @param {String} refTypeText
+	 * @private
+	 */
+	doBuildCrossRef: function(srcObj, targetObj, refType, refTypeText)
+	{
+		// do nothing here
+		//console.log('doBuildCrossRef', srcObj, targetObj, refType, refTypeText);
+	},
+	/**
 	 * Process a block in the analysis tree.
 	 * Decendants may override this method.
 	 * @param {Hash} block
@@ -1672,13 +2524,17 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 	 * @param {Object} block
 	 * @param {Hash} options
 	 * @returns {Kekule.ChemObject}
+	 * @private
 	 */
 	doReadBlock: function(block, options)
 	{
+		this.setPropStoreFieldValue('currOptions', options || {});
 		var result = this.doCreateChemObjForBlock(block);
 		if (result)
 		{
 			this.doSetChemObjFromBlock(block, result);
+			if (this.getBlockId())
+				this.setObjWithBlockId(this.getBlockId(), result);
 		}
 		return result;
 	},
@@ -1701,16 +2557,48 @@ Kekule.IO.Jcamp.DataBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.Jcamp.DataBlockReader'
 });
+
 /**
  * Reader for reading link block of JCAMP document tree.
  * @class
  * @augments Kekule.IO.Jcamp.BlockReader
  */
 Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
-/** @lends Kekule.IO.Jcamp.BlockReader# */
+/** @lends Kekule.IO.Jcamp.LinkBlockReader# */
 {
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.Jcamp.LinkBlockReader',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('childReaders', {'dataType': DataType.ARRAY, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+	},
+	/** @ignore */
+	doFinalize: function()
+	{
+		this._finalizeChildReaders();
+		this.tryApplySuper('doFinalize');
+	},
+	/** @private */
+	_finalizeChildReaders: function()
+	{
+		var childReaders = this.getChildReaders();
+		if (childReaders)
+		{
+			for (var i = 0, l = childReaders.length; i < l; ++i)
+			{
+				childReaders[i].finalize();
+			}
+		}
+		this.setPropStoreFieldValue('childReaders', []);
+	},
+	/** @ignore */
+	_initLdrHandlers: function()
+	{
+		var map = this.tryApplySuper('_initLdrHandlers');
+		map[JcampConsts.LABEL_DATA_TYPE] = this._ignoreLdrHandler;
+		map[JcampConsts.LABEL_BLOCK_COUNT] = this._ignoreLdrHandler;
+	},
 	/** @ignore */
 	doCreateChemObjForBlock: function(block)
 	{
@@ -1734,9 +2622,10 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 		}
 		else  // create obj list
 		{
-			result = this.tryApplySuper('doReadBlock', [block]);
+			result = this.tryApplySuper('doReadBlock', [block, options]);
 		}
 		// handle child blocks
+		this._finalizeChildReaders();  // free old child readers
 		var childObjs = [];
 		for (var i = 0, l = block.blocks.length; i < l; ++i)
 		{
@@ -1745,10 +2634,11 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 			var readerClass = jcampBlockReaderManager.getReaderClass(meta.blockType, meta.format);
 			if (readerClass)
 			{
-				var reader = new readerClass();
+				//var reader = new readerClass();
+				var reader = this._createChildReader(readerClass);
 				try
 				{
-					var childObj = reader.doReadData(childBlock, options);    // use doReadData instead of readData, since child readers do not need to store srcInfo
+					var childObj = reader.doReadData(childBlock, null, null, options);    // use doReadData instead of readData, since child readers do not need to store srcInfo
 					if (childObj)
 					{
 						/*
@@ -1762,7 +2652,8 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 				}
 				finally
 				{
-					reader.finalize();
+					//reader.finalize();
+					// do not finalize child reader here, since it may be used in handling cross references later
 				}
 			}
 		}
@@ -1779,8 +2670,606 @@ Kekule.IO.Jcamp.LinkBlockReader = Class.create(Kekule.IO.Jcamp.BlockReader,
 			return result;
 		}
 	},
+	/** @private */
+	_createChildReader: function(readerClass)
+	{
+		var result = new readerClass();
+		if (result)
+		{
+			result.setParentReader(this);
+			this.getChildReaders().push(result);
+		}
+		return result;
+	}
 });
 jcampBlockReaderManager.register(Jcamp.BlockType.LINK, '*', Kekule.IO.Jcamp.LinkBlockReader);  // register
 jcampBlockReaderManager.register(Jcamp.BlockType.DATA, '*', Kekule.IO.Jcamp.DataBlockReader);  // register
+
+/**
+ * Base writer to write chem data to JCAMP block.
+ * Concrete descendants should be implemented for different types of chem objects.
+ * @class
+ * @augments Kekule.IO.ChemDataWriter
+ */
+Kekule.IO.Jcamp.BlockWriter = Class.create(Kekule.IO.ChemDataWriter,
+/** @lends Kekule.IO.Jcamp.BlockWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.Jcamp.BlockWriter',
+	/** @constructs */
+	initialize: function(options)
+	{
+		this.setPropStoreFieldValue('ldrCreatorMap', {});
+		this.tryApplySuper('initialize', options);
+		this._initLdrCreators();
+	},
+	/** @private */
+	initProperties: function()
+	{
+		// Indicating whether a block ID ldr should be created
+		//this.defineProp('needBlockIdLdr', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PRIVATE});
+		// storing current block id
+		this.defineProp('blockId', {'dataType': DataType.STRING, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+		this.defineProp('blockDataType', {'dataType': DataType.STRING, 'serializable': false, 'scope': Class.PropertyScope.PRIVATE});
+		// private, a hash object. The hash key is jsName (usually cascaded property name), value is the function to create LDR.
+		// ldrHandlerMap['_default'] is treated as the default creator.
+		// Each functions has params (jsName, jsValue, chemObj, preferredJcampLabelName) returning a new LDR object or null.
+		// The former will be saved to block.
+		this.defineProp('ldrCreatorMap', {'dataType': DataType.HASH, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
+
+		this.defineProp('parentWriter', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
+		this.defineProp('rootWriter', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC,
+			'setter': null,
+			'getter': function()
+			{
+				var p = this.getParentWriter();
+				if (p)
+					return p.getRootWriter? p.getRootWriter(): p;
+				else
+					return this;
+			}
+		});
+	},
+
+	/**
+	 * Generate a unique block id and suitable data type for this chemObj.
+	 * @returns {String}
+	 * @private
+	 */
+	assignBlockIdAndDataType: function(chemObj)
+	{
+		var rootWriter = this.getRootWriter();
+		var id = rootWriter && rootWriter.generateUniqueBlockId();
+		if (id)
+		{
+			this.setBlockId(id);
+		}
+		var dataType = this.doGetDataTypeForBlock(chemObj)
+		if (dataType)
+			this.setBlockDataType(dataType);
+		if (chemObj)
+			this.setBlockInfoForObj(chemObj, {'id': id, 'dataType': dataType});
+		return id;
+	},
+	/**
+	 * Set a chemObj-block info map.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Hash} blockInfo
+	 * @private
+	 */
+	setBlockInfoForObj: function(chemObj, blockInfo)
+	{
+		var rootWriter = this.getRootWriter();
+		if (rootWriter)
+			rootWriter.setBlockInfoForObj(chemObj, blockInfo);
+	},
+	/**
+	 * Retrieve the block info associated with chem object.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @returns {Hash}
+	 * @private
+	 */
+	getBlockInfoFromObj: function(chemObj)
+	{
+		var rootWriter = this.getRootWriter();
+		return rootWriter && rootWriter.getBlockInfoFromObj(chemObj);
+	},
+
+	/** @private */
+	getLdrCreator: function(jsName)
+	{
+		var map = this.getLdrCreatorMap();
+		var result = map[jsName] || map['_default'];
+		//console.log('get ldr creator', jsName, map[jsName]);
+		return result;
+	},
+	/** @private */
+	_initLdrCreators: function()
+	{
+		var map = this.getLdrCreatorMap();
+		map['_default'] = this._defaultLdrCreator.bind(this);
+	},
+	/** @private */
+	_defaultLdrCreator: function(jsName, jsValue, chemObj, preferredJcampLabelName)
+	{
+		/*
+		var lines = Kekule.ObjUtils.notUnset(jsValue)? this._convToLdrValueLines(preferredJcampLabelName, jsValue): [];
+		return {'labelName': preferredJcampLabelName, 'valueLines': lines};
+		*/
+		return this.createLdr(jsName, jsValue, preferredJcampLabelName);
+	},
+	/** @private */
+	_ignoreLdrCreator: function(jcampLabelName, jsValue, chemObj, preferredJcampLabelName)
+	{
+		// bypass this ldr
+	},
+	/** @ignore */
+	doWriteData: function(obj, dataType, format, options)  // returns a JCAMP block object
+	{
+		var op = Object.extend({}, Kekule.globalOptions.IO.jcamp);
+		op = Object.extend(op, options || {});
+		return this.doWriteBlock(obj, op);
+	},
+	/** @private */
+	doWriteBlock: function(chemObj, options)
+	{
+		var result = JcampBlockUtils.createBlock();
+		if (result)
+		{
+			// block begin
+			var title = this.getTitleForBlock(chemObj);
+			this.saveToLdrInBlock(result, chemObj,'', title, JcampConsts.LABEL_BLOCK_BEGIN);
+			this.doSaveJcampVersionToBlock(chemObj, result, options);
+			var dataType = this.getDataTypeForBlock(chemObj);
+			if (dataType)
+				this.saveToLdrInBlock(result, chemObj, '', dataType, JcampConsts.LABEL_DATA_TYPE);
+			if (this.getBlockId())
+				this.doSaveBlockIdToBlock(chemObj, result, options);
+			this.doSaveChemObjInfoToBlock(chemObj, result, options);
+			this.doSaveChemObjToBlock(chemObj, result, options);
+			// block end
+			this.saveToLdrInBlock(result, chemObj,'', '', JcampConsts.LABEL_BLOCK_END);
+		}
+		return result;
+	},
+	/**
+	 * Returns the title that need to be write to block.
+	 * Descendants should override this method.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @returns {String}
+	 */
+	getTitleForBlock: function(chemObj)
+	{
+		return null;
+	},
+	/**
+	 * Returns the suitable data type string of block that need to be write to block.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @returns {String}
+	 * @private
+	 */
+	getDataTypeForBlock: function(chemObj)
+	{
+		return (this.getBlockDataType()) || this.doGetDataTypeForBlock(chemObj);
+	},
+	/**
+	 * Do concrete work of getDataTypeForBlock.
+	 * Descendants should override this method.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @returns {String}
+	 * @private
+	 */
+	doGetDataTypeForBlock: function(chemObj)
+	{
+		return null;
+	},
+	/**
+	 * Save the JCAMP-DX/CS version to block.
+	 * Descendants should override this method to do the concrete job.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Object} block
+	 * @param {Hash} options
+	 * @private
+	 */
+	doSaveJcampVersionToBlock: function(chemObj, block, options)
+	{
+		// do nothing here
+	},
+	/**
+	 * Create a blockId LDR to block.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Object} block
+	 * @param {Hash} options
+	 * @private
+	 */
+	doSaveBlockIdToBlock: function(chemObj, block, options)
+	{
+		var id = this.getBlockId();
+		if (id)
+		{
+			this.saveToLdrInBlock(block, chemObj, '', id, JcampConsts.LABEL_BLOCK_ID);
+		}
+	},
+	/**
+	 * Save the info values of chemObj to block.
+	 * Descendants should override this method to do the concrete job.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Object} block
+	 * @param {Hash} options
+	 * @private
+	 */
+	doSaveChemObjInfoToBlock: function(chemObj, block, options)
+	{
+		// infos
+		var keys = chemObj.getInfoKeys();
+		var ignoredInfoKeys = this.doGetIgnoredChemObjInfoKeys(chemObj, options);
+		for (var i = 0, l = keys.length; i < l; ++i)
+		{
+			var key = keys[i];
+			if (ignoredInfoKeys.indexOf(key) >= 0)
+				continue;
+			var jsValue = chemObj.getInfoValue(key);
+			if (Kekule.ObjUtils.notUnset(jsValue))
+			{
+				this.doSaveChemObjInfoItemToBlock(chemObj, key, 'info.' + key, jsValue, block, options);
+			}
+		}
+		// generate datetime if it does not exists
+		if (!Jcamp.BlockUtils.getBlockLdr(block, 'LONGDATE'))
+			this.saveToLdrInBlock(block, chemObj, '', new Date(), 'LONGDATE', false);
+	},
+	/** @private */
+	doSaveChemObjInfoItemToBlock: function(chemObj, infoKey, infoJsCascadeName, infoValue, block, options)
+	{
+		var ignoredLabels = this.doGetIgnoredChemObjInfoJcampLabelNames(chemObj, options);
+		// those labels are handled individually, do not save here
+		var jcampLabelName = Jcamp.Utils.kekuleLabelNameToJcamp(infoKey, null);
+		if (ignoredLabels.indexOf(jcampLabelName) < 0)
+		{
+			this.saveToLdrInBlock(block, chemObj, infoJsCascadeName, infoValue, jcampLabelName, false);  // do not overwrite existing labels
+		}
+	},
+	/** @private */
+	doGetIgnoredChemObjInfoKeys: function(chemObj, options)
+	{
+		return ['title', /* 'date' */];
+	},
+	/** @private */
+	doGetIgnoredChemObjInfoJcampLabelNames: function(chemObj, options)
+	{
+		return [Jcamp.Consts.LABEL_BLOCK_BEGIN, Jcamp.Consts.LABEL_BLOCK_END, Jcamp.Consts.LABEL_DX_VERSION, Jcamp.Consts.LABEL_CS_VERSION];
+	},
+	/**
+	 * Write chem object to a JCAMP block object.
+	 * Descendants should override this method to do the concrete job.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Object} block
+	 * @param {Hash} options
+	 * @returns {Object}
+	 * @private
+	 */
+	doSaveChemObjToBlock: function(chemObj, block, options)
+	{
+		// do nothing here
+	},
+	/*
+	 * Save some basic meta LDRs to block, including OWNER/ORIGIN, etc.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Object} block
+	 * @param {Hash} options
+	 * @private
+	 */
+	/*
+	doSaveBasicMetaToBlock: function(chemObj, block, options)
+	{
+
+	},
+	*/
+	/*
+	 * Returns a hash that containing the basic meta key/values to writing to JCAMP data.
+	 * Descendants may override this method.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Hash} options
+	 * @returns {Hash} The result should containing the following fields: {OWNER, ORIGIN}.
+	 * @private
+	 */
+	/*
+	getBasicMetaForJcamp: function(chemObj, options)
+	{
+		return {};
+	},
+	*/
+	/** @private */
+	createLdr: function(jsName, jsValue, preferredJcampLabelName)
+	{
+		var lines = Kekule.ObjUtils.notUnset(jsValue)? this._convToLdrValueLines(preferredJcampLabelName, jsValue): [];
+		return {'labelName': preferredJcampLabelName, 'valueLines': lines};
+	},
+	/** @private */
+	createLdrRaw: function(jcampLabelName, jcampValueLines)
+	{
+		return {'labelName': jcampLabelName, 'valueLines': AU.toArray(jcampValueLines)};
+	},
+	/**
+	 * Set a LDR with label and value.
+	 * The value is in normal JS type, it will automatically be converted to string by the type recognized by JCAMP label name.
+	 * If the label already exists in block, it will be overwritten when overwriteExisted param is true.
+	 * @param {Object} block
+	 * @param {Kekule.ChemObject} chemObj,
+	 * @param {String} jsName
+	 * @param {Variant} jsValue
+	 * @param {String} jcampLabelName
+	 * @param {Bool} overwriteExisted
+	 * @private
+	 */
+	saveToLdrInBlock: function(block, chemObj, jsName, jsValue, jcampLabelName, overwriteExistedLdr)
+	{
+		var handler = this.getLdrCreator(jsName);
+		var ldr = handler && handler(jsName, jsValue, block, jcampLabelName);
+		if (ldr)
+			this.setLdrInBlock(block, ldr, overwriteExistedLdr);
+	},
+	/**
+	 * Set a LDR in block.
+	 * If the label already exists in block, it will be overwritten when overwriteExisted param is true.
+	 * @param {Object} block
+	 * @param {Object} ldr
+	 * @param {Bool} overwriteExisted If true, the old value will be overwritten, else the LDR will be appended to the tail.
+	 * @private
+	 */
+	setLdrInBlock: function(block, ldr, overwriteExisted)
+	{
+		//var ldr = this._createLdr(labelName, value);
+		/*
+		var handler = this.getLdrHandler(labelName);
+		var ldr = handler && handler(labelName, value, block);
+		*/
+		if (!ldr)
+			return;
+		// check if this label already existed in block
+		var labelName = ldr.labelName;
+		var index = Jcamp.BlockUtils.getLabelIndex(labelName, block);
+		if (index >= 0 && overwriteExisted)   // replace the old one
+		{
+			var oldLdr = Jcamp.BlockUtils.getLdrAt(index, block);
+			oldLdr.valueLines = ldr.valueLines;
+		}
+		else  // create new one
+			Jcamp.BlockUtils.addLdrToBlock(block, ldr);
+	},
+	/**
+	 * Convert the complex typed value (e.g. Kekule.Scalar) to simple JS type, for saving into JCAMP.
+	 * @param {Variant} value
+	 * @returns {Variant}
+	 * @private
+	 */
+	_convJsValueToBasicType: function(value)
+	{
+		// TODO: now handling Scalar only
+		if (value instanceof Kekule.Scalar)
+		{
+			return value.getValue();
+		}
+		return value;
+	},
+	/** @private */
+	_convToLdrValueLines: function(labelName, value)
+	{
+		//var labelInfo = Jcamp.Utils.analysisLdrLabelName(labelName, true);
+		return JcampLdrValueParser.encodeValue(labelName, this._convJsValueToBasicType(value));
+	}
+});
+
+/**
+ * Base writer to write {@link Kekule.ChemObjList} or {@link Kekule.ChemSpace} data to JCAMP link block.
+ * @class
+ * @augments Kekule.IO.Jcamp.BlockWriter
+ */
+Kekule.IO.Jcamp.LinkBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
+/** @lends Kekule.IO.Jcamp.LinkBlockWriter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.IO.Jcamp.LinkBlockWriter',
+	/** @private */
+	initProperties: function()
+	{
+		// private, a object to map child object with its writer instances
+		this.defineProp('childObjWriterClassMap', {'dataType': DataType.OBJECT, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
+		this.defineProp('targetChildObjs', {'dataType': DataType.ARRAY, 'setter': false, 'scope': Class.PropertyScope.PRIVATE});
+	},
+	/** @ignore */
+	doWriteData: function(obj, dataType, format, options)  // returns a JCAMP block object
+	{
+		var mapDetail = this.doCreateChildObjWriterClassMap(obj);
+		if (mapDetail.children.length > 0)
+		{
+			this.setPropStoreFieldValue('childObjWriterClassMap', mapDetail.map);
+			this.setPropStoreFieldValue('targetChildObjs', mapDetail.children);
+			return this.tryApplySuper('doWriteData', [obj, dataType, format, options]);
+		}
+		else
+			return null;
+	},
+	/** @ignore */
+	getTitleForBlock: function(chemObj)
+	{
+		return chemObj.getInfoValue('title') || chemObj.getId();
+	},
+	/** @ignore */
+	doSaveJcampVersionToBlock: function(chemObj, block, options)
+	{
+		this.saveToLdrInBlock(block, chemObj, '', options.outputDxVersion, Jcamp.Consts.LABEL_DX_VERSION);
+	},
+	/** @ignore */
+	doGetDataTypeForBlock: function(chemObj)
+	{
+		return 'LINK';
+	},
+	/** @ignore */
+	doSaveChemObjToBlock: function(chemObj, block, options)
+	{
+		/*
+		// set the DATATYPE to link block
+		this.saveToLdrInBlock(block, chemObj, '', 'LINK', Jcamp.Consts.LABEL_DATA_TYPE);
+		*/
+		// then iterate the children
+		var childObjs = this.getTargetChildObjs();
+		//if (chemObj.getChildAt && chemObj.getChildCount)
+		if (childObjs.length)
+		{
+			//var spectrumObjs = [], otherObjs = [];
+			var writerMap = new Kekule.MapEx();
+			try
+			{
+				// iterate children, create a obj-writer map and assign the block id
+				//for (var i = 0, l = chemObj.getChildCount(); i < l; ++i)
+				for (var i = 0, l = childObjs.length; i < l; ++i)
+				{
+					//var child = chemObj.getChildAt(i);
+					var child = childObjs[i];
+					if (child)
+					{
+						var childWriterClass = this.getChildObjWriterClassMap().get(child);
+						if (childWriterClass)
+						{
+							var childWriter = this._createChildWriter(childWriterClass);
+							childWriter.assignBlockIdAndDataType(child);
+							writerMap.set(child, childWriter);
+							/*
+							if (child instanceof Kekule.Spectroscopy.Spectrum)
+								spectrumObjs.push(child);
+							else
+								otherObjs.push(child);
+							*/
+						}
+					}
+				}
+				//var targetObjs = otherObjs.concat(spectrumObjs);  // ensure spectrums be created last, for the cross references
+				var targetObjs = childObjs;
+				// do the concrete writing
+				for (var i = 0, l = targetObjs.length; i < l; ++i)
+				{
+					var child = targetObjs[i];
+					var childWriter = writerMap.get(child);
+					try
+					{
+						var childBlock = childWriter.writeData(child, null, null, options);
+						if (childBlock)
+						{
+							this.doAppendChildBlock(block, childBlock, options);
+						}
+					}
+					finally
+					{
+						childWriter.finalize();
+					}
+				}
+			}
+			finally
+			{
+				writerMap.finalize();
+			}
+			/*
+			for (var i = 0, l = chemObj.getChildCount(); i < l; ++i)
+			{
+				var child = chemObj.getChildAt(i);
+				if (child)
+				{
+					var childWriterClass = this.getChildObjWriterClassMap().get(child);
+					if (childWriterClass)
+					{
+						try
+						{
+							var childWriter = this._createChildWriter(childWriterClass);
+							var childBlock = childWriter.writeData(child, null, null, options);
+							if (childBlock)
+							{
+								this.doAppendChildBlock(block, childBlock, options);
+							}
+						}
+						finally
+						{
+							childWriter.finalize();
+						}
+					}
+				}
+			}
+			*/
+		}
+		// block count
+		this.saveToLdrInBlock(block, chemObj, '', block.blocks.length, Jcamp.Consts.LABEL_BLOCK_COUNT, true);
+	},
+	/** @private */
+	doCreateChildObjWriterClassMap: function(rootObj)
+	{
+		var self = this;
+		var result = {'map': new Kekule.MapEx(), 'children': null};
+		var spectrumObjs = [], otherObjs = [];
+		var iterateForChildWriter = function(parentObj)
+		{
+			if (!parentObj.getChildCount || !parentObj.getChildAt)
+				return;
+			else
+			{
+				for (var i = 0, l = parentObj.getChildCount(); i < l; ++i)
+				{
+					var child = parentObj.getChildAt(i);
+					if (child)
+					{
+						var childWriterClass = self.doGetChildWriterClass(child);
+						if (childWriterClass)
+						{
+							if (childWriterClass === self.getClass())   // child is actually a list, we need to iterate its children
+							{
+								iterateForChildWriter(child);
+							}
+							else
+							{
+								result.map.set(child, childWriterClass);
+								//result.children.push(child);parentObj
+								//++result.childCount;
+								if (child instanceof Kekule.Spectroscopy.Spectrum)
+									spectrumObjs.push(child);
+								else
+									otherObjs.push(child);
+							}
+						}
+					}
+				}
+			}
+		};
+
+		iterateForChildWriter(rootObj);
+		result.children = otherObjs.concat(spectrumObjs);   // ensure spectrum after molecule for cross references
+		return result;
+	},
+	/** @private */
+	doGetChildWriterClass: function(chemObj)
+	{
+		var wClass = Jcamp.BlockWriterManager.getWriterClass(chemObj);
+		return wClass || null;
+	},
+	/** @private */
+	_createChildWriter: function(childWriterClass)
+	{
+		var result = new childWriterClass();
+		result.setParentWriter(this);
+		return result;
+	},
+	/**
+	 * Append child block data to current block.
+	 * @param {Object} block
+	 * @param {Object} childBlock
+	 * @param {Hash} options
+	 */
+	doAppendChildBlock: function(block, childBlock, options)
+	{
+		if (childBlock)
+			block.blocks.push(childBlock);
+	}
+});
+
+Jcamp.BlockWriterManager.register(Kekule.ChemObjList, Kekule.IO.Jcamp.LinkBlockWriter);
+Jcamp.BlockWriterManager.register(Kekule.ChemSpace, Kekule.IO.Jcamp.LinkBlockWriter);
 
 })();
