@@ -297,7 +297,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		var chemObj;
 		try
 		{
-			if (e.success && data && fileName)
+			if (e.success && Kekule.ObjUtils.notUnset(data) && fileName)
 			{
 				//console.log('load', data);
 				/*
@@ -327,6 +327,8 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 	/** @ignore */
 	close: function(/*$super, */result)
 	{
+		var dataDetails = this.getDataDetails();
+		if (!dataDetails || (!dataDetails.data && !dataDetails.fileName))  // not closed by child file dialog
 		{  // feed dataDetails before closing
 			if (this.isPositiveResult(result))
 			{
