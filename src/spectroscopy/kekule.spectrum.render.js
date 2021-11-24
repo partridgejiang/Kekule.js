@@ -52,6 +52,7 @@ var AU = Kekule.ArrayUtils;
  * @property {Bool} displayDependentAxisScales Whether rendering the scales in dependent data axis.
  * @property {Bool} displayDependentAxisLabel Whether rendering the axis label of dependent data.
  * @property {Bool} displayDependentAxisUnit Whether rendering the unit of dependent data.
+ * @property {Bool} displaySpectrum Whether rendering the spectrum curve.
  *
  * @property {String} axisScaleLabelFontFamily Font family to render axis scale labels.
  * @property {Number} axisScaleLabelFontSize Font size to render axis scale labels.
@@ -123,6 +124,7 @@ Kekule.Render.SpectrumDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addBoolConfigProp('displayDependentAxisScales', true);
 		this.addBoolConfigProp('displayDependentAxisLabel', true);
 		this.addBoolConfigProp('displayDependentAxisUnit', true);
+		this.addBoolConfigProp('displaySpectrum', true);
 		// configs of elements
 		this.addStrConfigProp('axisScaleLabelFontFamily', 'Arial, Helvetica, sans-serif');
 		this.addFloatConfigProp('axisScaleLabelFontSize', 7);
@@ -242,6 +244,7 @@ function extendRenderOptionPropEditors()
 		appendDefinitionItem(result, 'displayDependentAxisScales', DataType.BOOL, SpectrumClass);
 		appendDefinitionItem(result, 'displayDependentAxisLabel', DataType.BOOL, SpectrumClass);
 		appendDefinitionItem(result, 'displayDependentAxisUnit', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'displaySpectrum', DataType.BOOL, SpectrumClass);
 
 		appendDefinitionItem(result, 'axisScaleLabelFontFamily', DataType.STRING, SpectrumClass, axisPrefixes);
 		appendDefinitionItem(result, 'axisScaleLabelFontSize', DataType.NUMBER, SpectrumClass, axisPrefixes);
@@ -846,12 +849,14 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				} else
 					clientContextBox = contextBox;
 
-				var transformMatrix = this.doCalcSprectrumTransformMatrix(chemObj, sections, varSymbols, visibleDataRange, clientContextBox, actualRenderOptions, axisDirectionAndAlignInfo);
-
-				// spectrum data
-				var spectrumDataElem = this.doDrawDataSections(chemObj, sections, varSymbols, context, objBox, clientContextBox, transformMatrix, visibleDataRange, actualRenderOptions);
-				if (spectrumDataElem)
-					this.addToDrawGroup(spectrumDataElem, result);
+				if (!(options && options.spectrum_displaySpectrum === false))
+				{
+					var transformMatrix = this.doCalcSprectrumTransformMatrix(chemObj, sections, varSymbols, visibleDataRange, clientContextBox, actualRenderOptions, axisDirectionAndAlignInfo);
+					// spectrum data
+					var spectrumDataElem = this.doDrawDataSections(chemObj, sections, varSymbols, context, objBox, clientContextBox, transformMatrix, visibleDataRange, actualRenderOptions);
+					if (spectrumDataElem)
+						this.addToDrawGroup(spectrumDataElem, result);
+				}
 
 				this.basicDrawObjectUpdated(context, chemObj, chemObj,
 					this.createRectBoundInfo(contextBoxCoord1, contextBoxCoord2), Kekule.Render.ObjectUpdateType.ADD);
