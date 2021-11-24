@@ -48,7 +48,8 @@ Kekule.globalOptions.add('IO.jcamp', {
 	dxDataAsdfTableOutputForm: Jcamp.AsdfForm.DIF_DUP,  // default output form of ASDF data table
 	useDxMinMaxValueAsDisplayRange: false,   // whether regard the MINX/Y-MAXX/Y as the display range of all spectrum in file
 	disablePeakAssignmentReading: false,
-	disablePeakAssignmentWriting: false
+	disablePeakAssignmentWriting: false,
+	autoHiddenSpectrumRefMolecule: true   // whether hide the ref molecule of spectrum automatically and display only the spectrum itself
 });
 
 /**
@@ -1058,6 +1059,9 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 					this._buildPeakAssignmentRefs(sections[i], targetObj);
 				}
 			}
+			var options = this.getCurrOptions();
+			if (options.autoHiddenSpectrumRefMolecule && targetObj.setVisible)
+				targetObj.setVisible(false);
 		}
 	},
 	/** @private */
