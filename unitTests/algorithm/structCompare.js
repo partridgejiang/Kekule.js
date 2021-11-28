@@ -11,6 +11,7 @@ describe('Test of structure comparison', function(){
 		'compTest3_1.kcj', 'compTest3_2.kcj',
 		'compTest4_1.mol', 'compTest4_2.mol',
 		'compTestFischer1_1.kcj', 'compTestFischer1_2.kcj',
+		'compTest0Radical_1.kcj', 'compTest0Radical_2.kcj',
 		'chainStereoCenterWithH01.mol', 'chainStereoCenterWithH02.mol',
 		'chainStereoCenterWithH01_01.mol',
 		'wedgeWithH01_1.mol', 'wedgeWithH01_2.mol',
@@ -71,6 +72,10 @@ describe('Test of structure comparison', function(){
 	);
 	testComparison('Comparison base on Fischer mol pair 1',
 		'compTestFischer1_1.kcj', 'compTestFischer1_2.kcj', null,
+		true
+	);
+	testComparison('Comparison base on abormal radical mol pair 1',
+		'compTest0Radical_1.kcj', 'compTest0Radical_2.kcj', null,
 		true
 	);
 	testComparison('Comparison on stereo centers with H atom -1',

@@ -1321,6 +1321,18 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 		}
 		return result;
 	},
+	/** @ignore*/
+	doCompareProperty: function(targetObj, propName, options)
+	{
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE && (propName === 'charge' || propName === 'radical'))
+		{
+			var v2 = (targetObj.getPropValue && targetObj.getPropValue(propName)) || 0;
+			var v1 = this.getPropValue(propName) || 0;
+			return v1 - v2;
+		}
+		else
+			return this.tryApplySuper('doCompareProperty', [targetObj, propName, options]);
+	},
 	/** @ignore */
 	doCompare: function(/*$super, */targetObj, options)
 	{
