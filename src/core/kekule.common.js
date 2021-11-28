@@ -3937,7 +3937,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 							var v2 = targetObj.getPropValue(propName);
 							//console.log('compare extra', this.getClassName(), propName, v1, v2);
 							result = this.doCompareOnValue(v1, v2, options);
-							if (!result)
+							if (result !== 0)
 								break;
 						}
 					}
