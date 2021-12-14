@@ -2128,6 +2128,12 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 				var info = this._transformInfo;
 				info.isTransforming = true;
 				info.lastCoord = {'x': screenX, 'y': screenY};
+				info.transformInitCoord = {'x': screenX, 'y': screenY};
+
+				if (this.getViewerRenderType() !== Kekule.Render.RendererType.R3D)
+				{
+					info.initBaseCoordOffset = viewer.getBaseCoordOffset() || {};
+				}
 
 				/*
 				 var minLength = Math.min(viewer.getOffsetWidth(), viewer.getOffsetHeight());
@@ -2146,6 +2152,9 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	_endInteractTransform: function()
 	{
 		this._transformInfo.isTransforming = false;
+		this._transformInfo.lastCoord = null;
+		this._transformInfo.transformInitCoord = null;
+		this._transformInfo.initBaseCoordOffset = null;
 		//this.getViewer().setTouchAction(null);
 		this._doInteractiveTransformEnd();
 	},
@@ -2451,8 +2460,10 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			try
 			{
 				var currCoord = {'x': currX, 'y': currY};
-				var delta = Kekule.CoordUtils.substract(currCoord, info.lastCoord);
-				var baseCoordOffset = viewer.getBaseCoordOffset() || {};
+				//var delta = Kekule.CoordUtils.substract(currCoord, info.lastCoord);
+				//var baseCoordOffset = viewer.getBaseCoordOffset() || {};
+				var delta = Kekule.CoordUtils.substract(currCoord, info.transformInitCoord);
+				var baseCoordOffset = info.initBaseCoordOffset;
 				baseCoordOffset = Kekule.CoordUtils.add(baseCoordOffset, delta);
 				viewer.setBaseCoordOffset(baseCoordOffset);
 				info.lastCoord = currCoord;
