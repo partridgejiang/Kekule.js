@@ -976,28 +976,34 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/**
 	 * Zoom in.
 	 */
+	/*
 	zoomIn: function(step, zoomCenterCoord)
 	{
 		var curr = this.getCurrZoom();
 		var ratio = Kekule.ZoomUtils.getNextZoomInRatio(curr, step || 1);
 		return this.zoomTo(ratio, null, zoomCenterCoord);
 	},
+	*/
 	/**
 	 * Zoom out.
 	 */
+	/*
 	zoomOut: function(step, zoomCenterCoord)
 	{
 		var curr = this.getCurrZoom();
 		var ratio = Kekule.ZoomUtils.getNextZoomOutRatio(curr, step || 1);
 		return this.zoomTo(ratio, null, zoomCenterCoord);
 	},
+	*/
 	/**
 	 * Reset to normal size.
 	 */
+	/*
 	resetZoom: function(zoomCenterCoord)
 	{
 		return this.zoomTo(this.getInitialZoom() || 1, null, zoomCenterCoord);
 	},
+	*/
 
 	/**
 	 * Change the size of client element.

@@ -2094,7 +2094,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		//info.lastRotateXYZ = {'x': 0, 'y': 0, 'z': 0};
 	},
 	/** @private */
-	zoomViewer: function(delta)
+	zoomViewer: function(delta, zoomCenterCoord)
 	{
 		var v = this.getViewer();
 		if (!v || !v.getChemObj())
@@ -2102,12 +2102,12 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		if (delta > 0)
 		{
 			if (v.zoomIn)
-				v.zoomIn(delta);
+				v.zoomIn(delta, zoomCenterCoord);
 		}
 		else if (delta < 0)
 		{
 			if (v.zoomOut)
-				v.zoomOut(-delta);
+				v.zoomOut(-delta, zoomCenterCoord);
 		}
 	},
 	/** @private */
@@ -2300,7 +2300,8 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			var delta = e.wheelDeltaY || e.wheelDelta;
 			if (delta)
 				delta /= 120;
-			this.zoomViewer(delta);
+			var centerCoord = e.getOffsetCoord();
+			this.zoomViewer(delta, centerCoord);
 			e.preventDefault();
 			return true;
 		}

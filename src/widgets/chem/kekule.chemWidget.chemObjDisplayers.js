@@ -1898,8 +1898,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 * Zoom to a specified ratio
 	 * @param {Float} value
 	 * @param {Bool} suspendRendering Set this to true if a immediate repaint is not needed.
+	 * @param {Hash} zoomCenterCoord The center coord for zooming. If not set, center of whole context will be used.
+	 *   Note currently in displayer, this coord is not used when zooming.
+	 *   Only in the editor descendants, these value will be take into consideration.
 	 */
-	zoomTo: function(value, suspendRendering)
+	zoomTo: function(value, suspendRendering, zoomCenterCoord)
 	{
 		this.getDrawOptions().zoom = value;
 		//this.drawOptionChanged();
@@ -1910,27 +1913,27 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	/**
 	 * Zoom in.
 	 */
-	zoomIn: function(step)
+	zoomIn: function(step, zoomCenterCoord)
 	{
 		var curr = this.getCurrZoom();
 		var ratio = ZU.getNextZoomInRatio(curr, step || 1);
-		return this.zoomTo(ratio);
+		return this.zoomTo(ratio, null, zoomCenterCoord);
 	},
 	/**
 	 * Zoom out.
 	 */
-	zoomOut: function(step)
+	zoomOut: function(step, zoomCenterCoord)
 	{
 		var curr = this.getCurrZoom();
 		var ratio = ZU.getNextZoomOutRatio(curr, step || 1);
-		return this.zoomTo(ratio);
+		return this.zoomTo(ratio, null, zoomCenterCoord);
 	},
 	/**
 	 * Reset to normal size.
 	 */
-	resetZoom: function()
+	resetZoom: function(zoomCenterCoord)
 	{
-		return this.zoomTo(this.getInitialZoom() || 1);
+		return this.zoomTo(this.getInitialZoom() || 1, null, zoomCenterCoord);
 	},
 
 	/**
