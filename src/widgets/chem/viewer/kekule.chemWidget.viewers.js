@@ -334,6 +334,19 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.updateUiComps();
 			}
 		});
+		this.defineProp('retainAspect', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				var op = this.getDrawOptions() || {};
+				return op.retainAspect;
+			},
+			'setter': function(value)
+			{
+				var op = this.getDrawOptions() || {};
+				op.retainAspect = !!value;
+				return this.setDrawOptions(op);
+			}
+		});
 
 		this.defineProp('enableRestraintRotation3D', {'dataType': DataType.BOOL});
 		this.defineProp('restraintRotation3DEdgeRatio', {'dataType': DataType.FLOAT});
