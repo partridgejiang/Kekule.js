@@ -506,7 +506,7 @@ Kekule.Render.ObjectUpdateType = {
  */
 /**
  * Invoked when whole chem object (molecule, reaction...) is drawn in context.
- *   event param of it has two fields: {context, obj}
+ *   event param of it has fields: {context, obj, renderOptions}
  * @name Kekule.Render.AbstractRenderer#draw
  * @event
  */
@@ -917,7 +917,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 			if (isRoot)
 				this.endDraw(context, baseCoord, ops);
 
-			this.invokeEvent('draw', {'context': context, 'obj': this.getChemObj()});
+			this.invokeEvent('draw', {'context': context, 'obj': this.getChemObj(), 'renderOptions': ops});
 		}
 		finally
 		{
