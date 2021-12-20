@@ -1952,6 +1952,33 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	},
 
 	/**
+	 * Returns the renderer that directly rendering childObj.
+	 * @param {Object} context
+	 * @param {Kekule.ChemObject} childObj
+	 * @returns {Kekule.Render.AbstractRenderer}
+	 */
+	getDirectRendererForChildObj: function(context, childObj)
+	{
+		if (this.isChemObjRenderedDirectlyBySelf(context, childObj))
+			return this;
+		var childRenderers = this.getChildRenderers();
+		for (var i = 0, l = childRenderers.length; i < l; ++i)
+		{
+			var r = childRenderers[i];
+			if (r.isChemObjRenderedBySelf(context, childObj))
+			{
+				if (r.isChemObjRenderedDirectlyBySelf(context, childObj))
+					return r;
+				else if (r.getDirectRendererForChildObj)
+					return r.getDirectRendererForChildObj(context, childObj);
+				else
+					return null
+			}
+		}
+		return null;
+	},
+
+	/**
 	 * Prepare child objects and renderers, a must have step before draw.
 	 * @private
 	 */
