@@ -194,6 +194,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		//this._errorReportElem = null;  // use internally
 		this._bgColorMap = {};  // use internally
 		this._contextTransformOpsMap = new Kekule.MapEx();
+		this._reactChemObjDrawBind = this._reactChemObjDraw.bind(this);
 		this.setPropStoreFieldValue('resetAfterLoad', true);
 		this.setPropStoreFieldValue('renderType', renderType || Kekule.Render.RendererType.R2D); // must set this value first
 		this.setPropStoreFieldValue('displayerConfigs', displayerConfigs || this.createDefaultConfigs());
@@ -217,6 +218,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			r.finalize();
 		this.setPropStoreFieldValue('boundInfoRecorder', null);
 		*/
+		this.clearSubViews();
 
 		this.setPropStoreFieldValue('chemObj', null);
 		this.getPainter().finalize();
@@ -588,8 +590,21 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			}
 		});
 		// private object to record all bound infos
-		this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'setter': null,
+		this.defineProp('boundInfoRecorder', {'dataType': 'Kekule.Render.BoundInfoRecorder', 'serializable': false, 'scope': Class.PropertyScope.PRIVATE, 'setter': null,
 			'getter': function() { var p = this.getRootRenderer(); return p && p.getBoundInfoRecorder(); }
+		});
+
+		// private, sub views for individual objects in displayer
+		this.defineProp('subViews', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null,
+			'getter': function(canCreate) {
+			  var result = this.getPropStoreFieldValue('subViews');
+			  if (!result && canCreate)
+			  {
+			  	result = [];
+			  	this.setPropStoreFieldValue('subViews', result);
+			  }
+			  return result;
+			}
 		});
 	},
 	/** @ignore */
@@ -1022,11 +1037,14 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		var old = this.getPropStoreFieldValue('painter');
 		if (old)
 		{
+			old.removeEventListener('draw', this._reactChemObjDrawBind);
 			old.finalize();
 		}
 		var drawBridge = this.getDrawBridge();
-		var result = drawBridge? (new Kekule.Render.ChemObjPainter(this.getRenderType(), chemObj, this.getDrawBridge())): null;
+		var result = drawBridge? (new Kekule.Render.ChemObjPainter(this.getRenderType(), chemObj || this.getChemObj(), this.getDrawBridge())): null;
 		this.setPropStoreFieldValue('painter', result);
+		if (result)
+			result.addEventListener('draw', this._reactChemObjDrawBind);
 		// create new bound info recorder
 		//this.createNewBoundInfoRecorder(result);
 		return result;
@@ -1037,7 +1055,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 */
 	isRenderable: function()
 	{
-		return !!(this.getPainter() && this.getDrawBridge() && this.getDrawContext());
+		return !!(/*this.getPainter() &&*/ this.getDrawBridge() && this.getDrawContext());
+		//return !!(this.getPropStoreFieldValue('painter') && this.getDrawBridge() && this.getDrawContext());
 	},
 	/* @private */
 	/*
@@ -1082,6 +1101,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 */
 	doLoad: function(chemObj)
 	{
+		this.clearSubViews();   // clear all old subviews when loading a new chem object
 		//console.log('doLoad', chemObj);
 		this.refitDrawContext(true);  // ensure the context size is correct, but not force repaint.
 		//this.hideExceptionReport();
@@ -1663,6 +1683,31 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	},
 
 	/**
+	 * Event listener of the draw event of painter.
+	 * @param {Hash} e
+	 * @private
+	 */
+	_reactChemObjDraw: function(e)
+	{
+		var obj = e.obj;
+		if (obj === this.getChemObj())
+		{
+			this.chemObjRendered(obj, e.renderOptions || {});
+		}
+	},
+	/**
+	 * Called after the drawn of chem object in displayer.
+	 * Desendants may override this method to retrieve addtional render params (e.g. renderOptions).
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Hash} renderOptions
+	 * @private
+	 */
+	chemObjRendered: function(chemObj, renderOptions)
+	{
+		// do nothing here
+	},
+
+	/**
 	 * Returns background color used for a special renderType.
 	 * @param {Int} renderType
 	 * @returns {String}
@@ -2004,6 +2049,395 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			this.repaint();
 		}, this);
 		return result;
+	},
+
+	//////////////////////// methods about bound maps ////////////////////////////
+	/** @private */
+	clearBoundMap: function()
+	{
+		this.getBoundInfoRecorder().clear(this.getDrawContext());
+	},
+	/**
+	 * Returns topmost bound item in z-index.
+	 * Descendants may override this method to implement more accurate algorithm.
+	 * @param {Array} boundItems
+	 * @param {Array} excludeObjs Objects in this array will not be returned.
+	 * @returns {Object}
+	 * @private
+	 */
+	findTopmostBoundInfo: function(boundItems, excludeObjs)
+	{
+		if (boundItems && boundItems.length)
+		{
+			var result = null;
+			var index = boundItems.length - 1;
+			result = boundItems[index];
+			while ((index >= 0) && (excludeObjs && (excludeObjs.indexOf(result.obj) >= 0)))
+			{
+				--index;
+				result = boundItems[index];
+			}
+			return result;
+		}
+		else
+			return null;
+	},
+
+	/**
+	 * Returns all bound map item at x/y.
+	 * Input coord is based on the screen coord system.
+	 * @returns {Array}
+	 * @private
+	 */
+	getBoundInfosAtCoord: function(screenCoord, filterFunc, boundInflation)
+	{
+		/*
+		if (!boundInflation)
+			throw 'boundInflation not set!';
+		*/
+		var boundRecorder = this.getBoundInfoRecorder();
+		var delta = boundInflation;
+		//var coord = this.getObjDrawBridge().transformScreenCoordToContext(this.getDrawContext(), screenCoord);
+		var coord = this.screenCoordToContext(screenCoord);
+		var refCoord = (this.getRenderType() === Kekule.Render.RendererType.R3D)? {'x': 0, 'y': 0}: null;
+		//console.log(coord, delta);
+		var matchedInfos = boundRecorder.getIntersectionInfos(this.getDrawContext(), coord, refCoord, delta, filterFunc);
+		return matchedInfos;
+	},
+
+	/**
+	 * returns the topmost bound map item at x/y.
+	 * Input coord is based on the screen coord system.
+	 * @param {Hash} screenCoord
+	 * @param {Array} excludeObjs Objects in this array will not be returned.
+	 * @returns {Object}
+	 */
+	getTopmostBoundInfoAtCoord: function(screenCoord, excludeObjs, boundInflation)
+	{
+		return this.findTopmostBoundInfo(this.getBoundInfosAtCoord(screenCoord, null, boundInflation), excludeObjs, boundInflation);
+	},
+
+	/**
+	 * Returns all basic drawn object at coord (with inflation) based on screen system.
+	 * @params {Hash} screenCoord
+	 * @param {Number} boundInflation
+	 * @param {Array} excludeObjs
+	 * @param {Array} filterObjClasses If this param is set, only obj match these types will be returned
+	 * @returns {Array}
+	 * @private
+	 */
+	getBasicObjectsAtCoord: function(screenCoord, boundInflation, excludeObjs, filterObjClasses)
+	{
+		var boundInfos = this.getBoundInfosAtCoord(screenCoord, null, boundInflation);
+		var result = [];
+		if (boundInfos)
+		{
+			if (excludeObjs)
+			{
+				boundInfos = AU.filter(boundInfos, function(boundInfo){
+					var obj = boundInfos[i].obj;
+					if (!obj)
+						return false;
+					if (obj)
+					{
+						if (excludeObjs && excludeObjs.indexOf(obj) >= 0)
+							return false;
+					}
+					return true;
+				});
+			}
+
+			for (var i = boundInfos.length - 1; i >= 0; --i)
+			{
+				var obj = boundInfos[i].obj;
+				if (obj)
+				{
+					if (excludeObjs && excludeObjs.indexOf(obj) >= 0)
+						continue;
+				}
+				result.push(obj);
+			}
+
+			if (result && filterObjClasses)  // filter
+			{
+				result = AU.filter(result, function(obj)
+				{
+					for (var i = 0, l = filterObjClasses.length; i < l; ++i)
+					{
+						if (obj instanceof filterObjClasses[i])
+							return true;
+					}
+					return false;
+				});
+			}
+		}
+		return result;
+	},
+	/**
+	 * Returns the topmost basic drawn object at coord based on screen system.
+	 * @params {Hash} screenCoord
+	 * @param {Number} boundInflation
+	 * @param {Array} filterObjClasses If this param is set, only obj match these types will be returned
+	 * @returns {Object}
+	 * @private
+	 */
+	getTopmostBasicObjectAtCoord: function(screenCoord, boundInflation, filterObjClasses)
+	{
+		var objs = this.getBasicObjectsAtCoord(screenCoord, boundInflation, null, filterObjClasses);
+
+		return objs && objs[0];
+	},
+
+	// Coord translate methods
+	/**
+	 * Translate coord to value of another coord system.
+	 * @param {Hash} coord
+	 * @param {Int} fromSys
+	 * @param {Int} toSys
+	 */
+	translateCoord: function(coord, fromSys, toSys)
+	{
+		if (!coord)
+			return null;
+		var S = Kekule.Render.CoordSystem;
+		if (fromSys === S.SCREEN)
+		{
+			if (toSys === S.SCREEN)
+				return coord;
+			else if (toSys === S.CONTEXT)
+				return this.getDrawBridge()? this.getDrawBridge().transformScreenCoordToContext(this.getDrawContext(), coord): coord;
+			else  // S.OBJ
+			{
+				var contextCoord = this.getDrawBridge()? this.getDrawBridge().transformScreenCoordToContext(this.getDrawContext(), coord): coord;
+				return this.getDrawContext()? this.getRootRenderer().transformCoordToObj(this.getDrawContext(), this.getChemObj(), contextCoord): coord;
+			}
+		}
+		else if (fromSys === S.CONTEXT)
+		{
+			if (toSys === S.SCREEN)
+				return this.getDrawBridge()? this.getDrawBridge().transformContextCoordToScreen(this.getDrawContext(), coord): coord;
+			else if (toSys === S.CONTEXT)
+				return coord;
+			else  // S.OBJ
+				return this.getDrawContext()? this.getRootRenderer().transformCoordToObj(this.getDrawContext(), this.getChemObj(), coord): coord;
+		}
+		else  // fromSys === S.OBJ
+		{
+			if (toSys === S.SCREEN)
+			{
+				var contextCoord = this.getRootRenderer().transformCoordToContext(this.getDrawContext(), this.getChemObj(), coord);
+				return this.getDrawBridge()? this.getDrawBridge().transformContextCoordToScreen(this.getDrawContext(), contextCoord): coord;
+			}
+			else if (toSys === S.CONTEXT)
+				return this.getDrawContext()? this.getRootRenderer().transformCoordToContext(this.getDrawContext(), this.getChemObj(), coord): coord;
+			else  // S.OBJ
+				return coord;
+		}
+	},
+	/**
+	 * Translate a distance value to a distance in another coord system.
+	 * @param {Hash} coord
+	 * @param {Int} fromSys
+	 * @param {Int} toSys
+	 */
+	translateDistance: function(distance, fromSys, toSys)
+	{
+		var coord0 = {'x': 0, 'y': 0, 'z': 0};
+		var coord1 = {'x': distance, 'y': 0, 'z': 0};
+		var transCoord0 = this.translateCoord(coord0, fromSys, toSys);
+		var transCoord1 = this.translateCoord(coord1, fromSys, toSys);
+		return Kekule.CoordUtils.getDistance(transCoord0, transCoord1);
+	},
+	/**
+	 * Turn obj coord to context one.
+	 * @param {Hash} objCoord
+	 * @returns {Hash}
+	 */
+	objCoordToContext: function(objCoord)
+	{
+		var S = Kekule.Render.CoordSystem;
+		return this.translateCoord(objCoord, S.CHEM, S.CONTEXT);
+	},
+	/**
+	 * Turn context coord to obj one.
+	 * @param {Hash} contextCoord
+	 * @returns {Hash}
+	 */
+	contextCoordToObj: function(contextCoord)
+	{
+		var S = Kekule.Render.CoordSystem;
+		return this.translateCoord(contextCoord, S.CONTEXT, S.CHEM);
+	},
+	/**
+	 * Turn obj coord to screen one.
+	 * @param {Hash} objCoord
+	 * @returns {Hash}
+	 */
+	objCoordToScreen: function(objCoord)
+	{
+		var S = Kekule.Render.CoordSystem;
+		return this.translateCoord(objCoord, S.CHEM, S.SCREEN);
+	},
+	/**
+	 * Turn screen coord to obj one.
+	 * @param {Hash} contextCoord
+	 * @returns {Hash}
+	 */
+	screenCoordToObj: function(screenCoord)
+	{
+		var S = Kekule.Render.CoordSystem;
+		return this.translateCoord(screenCoord, S.SCREEN, S.CHEM);
+	},
+
+	/**
+	 * Turn screen based coord to context one.
+	 * @param {Hash} screenCoord
+	 * @returns {Hash}
+	 */
+	screenCoordToContext: function(screenCoord)
+	{
+		var S = Kekule.Render.CoordSystem;
+		return this.translateCoord(screenCoord, S.SCREEN, S.CONTEXT);
+	},
+	/**
+	 * Turn context based coord to screen one.
+	 * @param {Hash} screenCoord
+	 * @returns {Hash}
+	 */
+	contextCoordToScreen: function(screenCoord)
+	{
+		var S = Kekule.Render.CoordSystem;
+		return this.translateCoord(screenCoord, S.CONTEXT, S.SCREEN);
+	},
+
+	/**
+	 * Turn box coords based on screen system to context one.
+	 * @param {Hash} screenCoord
+	 * @returns {Hash}
+	 */
+	screenBoxToContext: function(screenBox)
+	{
+		var coord1 = this.screenCoordToContext({'x': screenBox.x1, 'y': screenBox.y1});
+		var coord2 = this.screenCoordToContext({'x': screenBox.x2, 'y': screenBox.y2});
+		return {'x1': coord1.x, 'y1': coord1.y, 'x2': coord2.x, 'y2': coord2.y};
+	},
+
+	///////////////////////////////////////////////////////
+
+	////// methods about sub views  ///////////////////////
+
+	/**
+	 * Clear and finalize all sub views in displayer.
+	 */
+	clearSubViews: function()
+	{
+		var subviews = this.getSubViews();
+		if (subviews)
+		{
+			for (var i = 0, l = subviews.length; i < l; ++i)
+			{
+				subviews[i].finalize();
+			}
+		}
+		this.setPropStoreFieldValue('subViews', undefined);
+	},
+	/**
+	 * Get the sub view object for a targetObj.
+	 * @param {Kekule.ChemObject} targetObj
+	 * @param {CLass} subViewClass
+	 * @returns {Kekule.ChemWidget.ChemObjDisplayerSubView}
+	 */
+	getSubView: function(targetObj, subViewClass, canCreate)
+	{
+		var result;
+		var subviews = this.getSubViews();
+		if (subviews)
+		{
+			for (var i = 0, l = subviews.length; i < l; ++i)
+			{
+				var subview = subviews[i];
+				if (subview.getTarget() === targetObj && (subview instanceof subViewClass))
+				{
+					result = subview;
+					break;
+				}
+			}
+		}
+		if (!result && canCreate)  // not found, create new
+		{
+			var proto = ClassEx.getPrototype(subViewClass);
+			if (proto.appliableToTarget(targetObj))
+			{
+				result = new subViewClass(this, targetObj);
+				this.getSubViews(true).push(result);
+			}
+		}
+		return result;
+	},
+	/**
+	 * Get the sub view object for a targetObj. If such a sub view does not exisits, a new one will be created.
+	 * @param {Kekule.ChemObject} targetObj
+	 * @param {CLass} subViewClass
+	 * @returns {Kekule.ChemWidget.ChemObjDisplayerSubView}
+	 */
+	fetchSubView: function(targetObj, subViewClass)
+	{
+		return this.getSubView(targetObj, subViewClass, true);
+	}
+
+	///////////////////////////////////////////////////////
+});
+
+/**
+ * Base class for sub view classes for displayer.
+ * User should not use this class directly, the concrete descandants should be used instead.
+ * Sub view provide a way to extend the ability of its parent widget, focusing on one specified object inside {@link Kekule.ChemWidget.ChemObjDisplayer}.
+ * @class
+ * @augments ObjectEx
+ *
+ * @param {Kekule.ChemWidget.ChemObjDisplayer} displayer The parent displayer widget.
+ * @param {Kekule.ChemObject} target The target object inside displayer of this sub view.
+ *
+ * @property {Kekule.ChemWidget.ChemObjDisplayer} displayer The parent displayer widget.
+ * @property {Kekule.ChemObject} target The target object inside displayer of this sub view.
+ */
+Kekule.ChemWidget.ChemObjDisplayerSubView = Class.create(ObjectEx,
+/** @lends Kekule.ChemWidget.ChemObjDisplayerSubView# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ChemObjDisplayerSubView',
+	/** @constructs */
+	initialize: function(displayer, targetObj)
+	{
+		this.tryApplySuper('initialize');
+		this.setPropStoreFieldValue('parent', displayer);
+		this.setPropStoreFieldValue('target', targetObj);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('parent', {
+			'dataType': 'Kekule.ChemWidget.ChemObjDisplayer',
+			'serializable': false,
+			'setter': null
+		});
+		// the target object
+		this.defineProp('target', {
+			'dataType': 'Kekule.ChemObject',
+			'serializable': false,
+			'getter': function() { return this.getPropStoreFieldValue('target') || this.getParent().getChemObj(); }
+		});
+	},
+	/**
+	 * Returns whether this type of sub view class can be applied to a object.
+	 * Descendants should override this method.
+	 * @param {Kekule.ChemObject} obj
+	 * @returns {Bool}
+	 * @private
+	 */
+	appliableToTarget: function(obj)
+	{
+		return false;
 	}
 });
 
