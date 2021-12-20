@@ -1842,7 +1842,8 @@ Kekule.ChemWidget.GlyphPathArrowSettingPanel = Class.create(Kekule.Widget.Panel,
 
 		//this._continuousArrowSidesButtonGroup.setDisplayed(!!this.getShowContinousArrowSidesSetter());
 
-		return result.concat(styleGroup)/*.concat(continousArrowSideSetter)*/.concat(sizeGroup);
+		//return result.concat(styleGroup)/*.concat(continousArrowSideSetter)*/.concat(sizeGroup);
+		return result.concat(styleSectionElem).concat(sizeSectionElem);
 	},
 	/** @private */
 	doCreateSectionElem: function(doc, parentElem)
@@ -2448,7 +2449,8 @@ Kekule.ChemWidget.GlyphPathLineSettingPanel = Class.create(Kekule.Widget.Panel,
 		this._lineGapInput = sec2.widget;
 		this._updateLineGapInput();
 
-		return result.concat([sec1, sec2]);
+		//return result.concat([sec1, sec2]);
+		return result.concat([sec1.elem, sec2.elem]);
 	},
 	/** @private */
 	doCreateNumInputSection: function(doc, parentElem, caption)
