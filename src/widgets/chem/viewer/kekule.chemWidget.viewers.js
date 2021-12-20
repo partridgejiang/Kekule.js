@@ -2131,7 +2131,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		return (target === interactionElem) || Kekule.DomUtils.isDescendantOf(target, interactionElem);
 	},
 	/** @private */
-	_beginInteractTransformAtCoord: function(screenX, screenY, clientX, clientY)
+	_beginInteractTransformAtCoord: function(screenX, screenY, clientX, clientY, htmlEvent)
 	{
 		var viewer = this.getViewer();
 		if (viewer && viewer.getChemObj())
@@ -2338,7 +2338,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			if (e.getPointerType() !== XEvent.PointerType.TOUCH || this.getEnableTouchInteraction())
 			{
 				// start mouse drag rotation in 3D render mode
-				this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY(), e.getClientX(), e.getClientY());
+				this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY(), e.getClientX(), e.getClientY(), e);
 				//e.preventDefault();
 			}
 		}
