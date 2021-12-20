@@ -17,6 +17,10 @@
 (function(){
 "use strict";
 
+Kekule._registerAfterLoadSysProc(function(){
+
+// the following codes will be run after both render and spectroscpy module are loaded
+
 if (!Kekule.Render || !Kekule.Render.ChemObj2DRenderer)
 	return;
 
@@ -194,6 +198,24 @@ ClassEx.extendMethod(Kekule.Spectroscopy.Spectrum, 'doGetObjAnchorPosition',
 	{
 		return Kekule.ObjAnchorPosition.CENTER;
 	});
+ClassEx.extend(Kekule.Spectroscopy.Spectrum, {
+	'getPseudoRenderSubObject':	function(objName, doNotCreate)
+	{
+		var subObjs = this.__$subRenderObjs$__;
+		if (!subObjs)
+		{
+			subObjs = {};
+			this.__$subRenderObjs$__ = subObjs;
+		}
+		var result = subObjs[objName];
+		if (!result && !doNotCreate)
+		{
+			result = {};
+			subObjs[objName] = result;
+		}
+		return result;
+	}
+});
 
 // extend Kekule.Render.RenderOptionUtils.getOptionDefinitions for property editors for spectrum objects
 /** @ignore */
@@ -230,11 +252,14 @@ function extendRenderOptionPropEditors()
 		appendDefinitionItem(result, 'dataColor', DataType.STRING, [SpectrumClass, SpectrumDataSectionClass]);
 		appendDefinitionItem(result, 'dataStrokeWidthRatio', DataType.FLOAT, [SpectrumClass, SpectrumDataSectionClass]);
 		appendDefinitionItem(result, 'dataStrokeWidthMin', DataType.NUMBER, [SpectrumClass, SpectrumDataSectionClass]);
-		appendDefinitionItem(result, 'visibleIndependentDataRangeFrom', DataType.FLOAT, SpectrumClass);
-		appendDefinitionItem(result, 'visibleIndependentDataRangeTo', DataType.FLOAT, SpectrumClass);
-		appendDefinitionItem(result, 'visibleDependentDataRangeFrom', DataType.FLOAT, SpectrumClass);
-		appendDefinitionItem(result, 'visibleDependentDataRangeTo', DataType.FLOAT, SpectrumClass);
-		appendDefinitionItem(result, 'visibleIndependentDataRangeFrom', DataType.BOOL, SpectrumClass);
+		appendDefinitionItem(result, 'visibleIndependentDataRangeFrom_Continuous', DataType.FLOAT, SpectrumClass);
+		appendDefinitionItem(result, 'visibleIndependentDataRangeTo_Continuous', DataType.FLOAT, SpectrumClass);
+		appendDefinitionItem(result, 'visibleDependentDataRangeFrom_Continuous', DataType.FLOAT, SpectrumClass);
+		appendDefinitionItem(result, 'visibleDependentDataRangeTo_Continuous', DataType.FLOAT, SpectrumClass);
+		appendDefinitionItem(result, 'visibleIndependentDataRangeFrom_Peak', DataType.FLOAT, SpectrumClass);
+		appendDefinitionItem(result, 'visibleIndependentDataRangeTo_Peak', DataType.FLOAT, SpectrumClass);
+		appendDefinitionItem(result, 'visibleDependentDataRangeFrom_Peak', DataType.FLOAT, SpectrumClass);
+		appendDefinitionItem(result, 'visibleDependentDataRangeTo_Peak', DataType.FLOAT, SpectrumClass);
 
 		appendDefinitionItem(result, 'displayIndependentAxis', DataType.BOOL, SpectrumClass);
 		appendDefinitionItem(result, 'displayIndependentAxisScales', DataType.BOOL, SpectrumClass);
@@ -462,7 +487,9 @@ Kekule.Render.CoordAxisRender2DUtils = {
 
 		return {
 			'drawnElem': result,
-			'clientBox': clientBox
+			'clientBox': clientBox,
+			'abscissaRenderBox': abscissaRenderBox,
+			'ordinateRenderBox': ordinateRenderBox
 		};
 	},
 	/** @private */
@@ -786,7 +813,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	/** @ignore */
 	doDrawSelf: function(context, baseCoord, options)
 	{
-		//console.log('render options', options);
+		var addSubBounds = options._spectrum_render_enable_sub_bounds;  // a special flag, whether to save the bound of sub elems (axis, client...)
+		//console.log('render options in renderer', options);
 		this.tryApplySuper('doDrawSelf', [context, baseCoord, options]);
 		var chemObj = this.getChemObj();
 		if (!baseCoord)
@@ -821,7 +849,10 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			var varInfos = this.doGetDataVarInfos(sections);
 			if (varInfos)   // we can not render without proper variable information
 			{
-				var visibleDataRange = this._getDisplayRangeOfSections(chemObj, chemObj.getData(), sections, varInfos, actualRenderOptions);
+				// check the axis alignment and direction
+				var axisDirectionAndAlignInfo = this._getAxisDirectionAndAlignInfo(context, chemObj, varSymbols, varInfos.varUnitSymbols, actualRenderOptions);
+
+				var visibleDataRange = this._getDisplayRangeOfSections(chemObj, chemObj.getData(), sections, varInfos, axisDirectionAndAlignInfo, actualRenderOptions);
 				var varSymbols = varInfos.varSymbols;
 
 				if (Kekule.NumUtils.isFloatEqual(visibleDataRange[varSymbols.independant].min, visibleDataRange[varSymbols.independant].max)
@@ -831,9 +862,6 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 					return null;  // do not need to do concrete drawing
 				}
 
-				// check the axis alignment and direction
-				var axisDirectionAndAlignInfo = this._getAxisDirectionAndAlignInfo(context, chemObj, visibleDataRange, varSymbols, varInfos.varUnitSymbols, actualRenderOptions);
-
 				result = this.createDrawGroup(context);
 				var clientContextBox;
 
@@ -842,20 +870,55 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				var indicatorDrawParamsAndOptions = this._prepareAxisRenderParamsAndOptions(this.getActualTargetContext(context), chemObj, visibleDataRange, varSymbols, actualRenderOptions, axisDirectionAndAlignInfo);
 				var indicatorDrawResult = Kekule.Render.CoordAxisRender2DUtils.drawAxises(this.getDrawBridge(), this.getRichTextDrawer(), this.getActualTargetContext(context), contextBox,
 					indicatorDrawParamsAndOptions.drawParams, indicatorDrawParamsAndOptions.renderOptions);
+				// save the reversed axises information in cache
+				this.getRenderCache(context).spectrum_reversedAxises = actualRenderOptions.spectrum_reversedAxises;
 				//console.log(indicatorDrawResult);
-				if (indicatorDrawResult) {
+				if (indicatorDrawResult)
+				{
 					this.addToDrawGroup(indicatorDrawResult.drawnElem, result);
 					clientContextBox = indicatorDrawResult.clientBox;
-				} else
+					if (addSubBounds)
+					{
+						if (indicatorDrawResult.abscissaRenderBox)
+							this.basicDrawObjectUpdated(context, chemObj.getPseudoRenderSubObject('abscissaIndicator'), chemObj,
+								this.createRectBoundInfo(
+									{'x': indicatorDrawResult.abscissaRenderBox.x1, 'y': indicatorDrawResult.abscissaRenderBox.y1},
+									{'x': indicatorDrawResult.abscissaRenderBox.x2, 'y': indicatorDrawResult.abscissaRenderBox.y2}
+								), Kekule.Render.ObjectUpdateType.ADD);
+						if (indicatorDrawResult.ordinateRenderBox)
+							this.basicDrawObjectUpdated(context, chemObj.getPseudoRenderSubObject('ordinateIndicator'), chemObj,
+								this.createRectBoundInfo(
+									{'x': indicatorDrawResult.ordinateRenderBox.x1, 'y': indicatorDrawResult.ordinateRenderBox.y1},
+									{'x': indicatorDrawResult.ordinateRenderBox.x2, 'y': indicatorDrawResult.ordinateRenderBox.y2}
+								), Kekule.Render.ObjectUpdateType.ADD);
+					}
+				}
+				else
 					clientContextBox = contextBox;
 
 				if (!(options && options.spectrum_displaySpectrum === false))
 				{
-					var transformMatrix = this.doCalcSprectrumTransformMatrix(chemObj, sections, varSymbols, visibleDataRange, clientContextBox, actualRenderOptions, axisDirectionAndAlignInfo);
+					var transformMatrixes = this.doCalcSprectrumTransformMatrixes(chemObj, sections, varSymbols, visibleDataRange, clientContextBox, actualRenderOptions, axisDirectionAndAlignInfo);
+					var transformMatrix = transformMatrixes.dataTransformMatrix;
+					actualRenderOptions.spectrumDataTransformMatrix = transformMatrix;
+					// stores transform matrixes to cache
+					this.getRenderCache(context).spectrumDataTransformMatrix = transformMatrix;
+					this.getRenderCache(context).spectrumInvDataTransformMatrix = transformMatrixes.dataTransformInvMatrix;
+
 					// spectrum data
 					var spectrumDataElem = this.doDrawDataSections(chemObj, sections, varSymbols, context, objBox, clientContextBox, transformMatrix, visibleDataRange, actualRenderOptions);
 					if (spectrumDataElem)
 						this.addToDrawGroup(spectrumDataElem, result);
+
+					if (addSubBounds)
+					{
+						this.basicDrawObjectUpdated(context, chemObj.getPseudoRenderSubObject('data'), chemObj,
+							this.createRectBoundInfo(
+								{'x': clientContextBox.x1, 'y': clientContextBox.y1},
+								{'x': clientContextBox.x2, 'y': clientContextBox.y2}
+							),
+							Kekule.Render.ObjectUpdateType.ADD);
+					}
 				}
 
 				this.basicDrawObjectUpdated(context, chemObj, chemObj,
@@ -876,7 +939,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		return result;
 	},
 	/** @private */
-	_getAxisDirectionAndAlignInfo: function(context, spectrumObj, dataRanges, dataVarSymbol, dataVarUnitSymbols, actualRenderOptions)
+	_getAxisDirectionAndAlignInfo: function(context, spectrumObj, dataVarSymbol, dataVarUnitSymbols, actualRenderOptions)
 	{
 		var spectrumType = spectrumObj.getSpectrumType();
 		var independentInfo = Kekule.Render.Spectrum2DRenderUtils.getDefaultAxisDirectionAndAlignInfo(spectrumType, true, dataVarUnitSymbols.independant);
@@ -898,10 +961,12 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	{
 		var ops = renderOptions;
 		var reversedAxis = ops.spectrum_reversedAxises;
+
 		//var refLengthAbscissa = ops.contextRefLengthes.x;
 		//var refLengthOrdinate = ops.contextRefLengthes.y;
-		var refLengthIndependent = reversedAxis? ops.contextRefLengthes.y: ops.contextRefLengthes.x;
-		var refLengthDependent = reversedAxis? ops.contextRefLengthes.x: ops.contextRefLengthes.y;
+		//var refLengthIndependent = reversedAxis? ops.contextRefLengthes.y: ops.contextRefLengthes.x;
+		//var refLengthDependent = reversedAxis? ops.contextRefLengthes.x: ops.contextRefLengthes.y;
+		var refLengthBoth = ops.contextRefLengthes.xy;  // use same ref length for both axis for a similar draw style when restainAspect === false
 		var unitLength = ops.unitLength;
 		var oneOf = Kekule.oneOf;
 
@@ -919,6 +984,28 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var getAxisRenderOptionValue = function(options, fieldName, axisPrefix)
 		{
 			return oneOf(options['spectrum_' + axisPrefix + fieldName.upperFirst()], options['spectrum_' + fieldName]);
+		};
+		var getFontSizeOptionValue = function(options, fieldName, axisPrefix)
+		{
+			var fieldNameUpperFirst = fieldName.upperFirst();
+			var value = oneOf(options['spectrum_' + axisPrefix + fieldNameUpperFirst], options['spectrum_' + fieldName]);
+			var valueFixed = oneOf(options['spectrum_' + axisPrefix + fieldNameUpperFirst + 'Fixed'], options['spectrum_' + fieldName + 'Fixed']);
+			var valueMin = oneOf(options['spectrum_' + axisPrefix + fieldNameUpperFirst + 'Min'], options['spectrum_' + fieldName + 'Min']);
+			var valueMax = oneOf(options['spectrum_' + axisPrefix + fieldNameUpperFirst + 'Max'], options['spectrum_' + fieldName + 'Max']);
+			if (options.zoom && (valueMin || valueMax || valueFixed))  // usually, the font size will be actually draw by fontSize * zoom, but if there are fixed font settings, we should draw the font with fixed value
+			{
+				if (valueFixed)
+					value = valueFixed / options.zoom;
+				else
+				{
+					var actualFontSize = value * options.zoom;
+					if (valueMin && actualFontSize < valueMin)
+						value = valueMin / options.zoom;
+					else if (valueMax && actualFontSize > valueMax)
+						value = valueMax / options.zoom;
+				}
+			}
+			return value;
 		};
 		var getActualSpectrumLengthValue = function(options, fieldName, axisPrefix, refLength, unitLength)
 		{
@@ -978,7 +1065,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				rOptions.abscissa = independentAxisOps;
 
 			independentAxisOps['axis'] = createSubOptions(ops, {
-				'strokeWidth': getActualSpectrumLengthValue(ops, 'axisWidth', 'independent', refLengthIndependent, unitLength),
+				'strokeWidth': getActualSpectrumLengthValue(ops, 'axisWidth', 'independent', /*refLengthIndependent*/refLengthBoth, unitLength),  // use refLengthBoth to keep the two axis with same stroke width settings
 				'scaleMarkSize': 0,    // if scale mark need to be rendered, we will set it later
 				'color': oneOf(getAxisRenderOptionValue(ops, 'axisColor', 'independent'), ops['color'])
 			});
@@ -987,20 +1074,20 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			{
 				independentAxisOps['axisLabel'] = createSubOptions(ops, {
 					'fontFamily': getAxisRenderOptionValue(ops, 'axisLabelFontFamily', 'independent'),
-					'fontSize': getAxisRenderOptionValue(ops, 'axisLabelFontSize', 'independent') * unitLength,
+					'fontSize': getFontSizeOptionValue(ops, 'axisLabelFontSize', 'independent') * unitLength,
 					'color': getAxisRenderOptionValue(ops, 'axisLabelColor', 'independent'),
-					'padding': getActualSpectrumLengthValue(ops, 'axisLabelPadding', 'independent', refLengthIndependent, unitLength)
+					'padding': getActualSpectrumLengthValue(ops, 'axisLabelPadding', 'independent', /*refLengthIndependent*/refLengthBoth, unitLength)
 				});
 			}
 			if (ops['spectrum_displayIndependentAxisScales'])
 			{
 				independentAxisOps['scaleLabel'] = createSubOptions(ops, {
 					'fontFamily': getAxisRenderOptionValue(ops, 'axisScaleLabelFontFamily', 'independent'),
-					'fontSize': getAxisRenderOptionValue(ops, 'axisScaleLabelFontSize', 'independent') * unitLength,
+					'fontSize': getFontSizeOptionValue(ops, 'axisScaleLabelFontSize', 'independent') * unitLength,
 					'color': oneOf(getAxisRenderOptionValue(ops, 'axisScaleLabelColor', 'independent'), ops['color']),
-					'padding': getActualSpectrumLengthValue(ops, 'axisScaleLabelPadding', 'independent', refLengthIndependent, unitLength)
+					'padding': getActualSpectrumLengthValue(ops, 'axisScaleLabelPadding', 'independent', /*refLengthIndependent*/refLengthBoth, unitLength)
 				});
-				independentAxisOps['axis']['scaleMarkSize'] = getActualSpectrumLengthValue(ops, 'axisScaleMarkSize', 'independent', refLengthIndependent, unitLength);
+				independentAxisOps['axis']['scaleMarkSize'] = getActualSpectrumLengthValue(ops, 'axisScaleMarkSize', 'independent', /*refLengthIndependent*/refLengthBoth, unitLength);
 				independentAxisOps['axis']['unlabeledScaleSizeRatio'] = getAxisRenderOptionValue(ops, 'axisUnlabeledScaleSizeRatio', 'independent');
 			}
 
@@ -1038,7 +1125,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 				rOptions.ordinate = dependentAxisOps;
 
 			dependentAxisOps['axis'] = createSubOptions(ops, {
-				'strokeWidth': getActualSpectrumLengthValue(ops, 'axisWidth', 'dependent', refLengthDependent, unitLength),
+				'strokeWidth': getActualSpectrumLengthValue(ops, 'axisWidth', 'dependent', /*refLengthDependent*/refLengthBoth, unitLength),
 				//'scaleMarkSize': getActualSpectrumLengthValue(ops, 'axisScaleMarkSize', 'dependent', refLengthDependent, unitLength),
 				'scaleMarkSize': 0,    // if scale mark need to be rendered, we will set it later
 				'color': oneOf(getAxisRenderOptionValue(ops, 'axisColor', 'dependent'), ops['color'])
@@ -1048,20 +1135,20 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			{
 				dependentAxisOps['axisLabel'] = createSubOptions(ops, {
 					'fontFamily': getAxisRenderOptionValue(ops, 'axisLabelFontFamily', 'dependent'),
-					'fontSize': getAxisRenderOptionValue(ops, 'axisLabelFontSize', 'dependent') * unitLength,
+					'fontSize': getFontSizeOptionValue(ops, 'axisLabelFontSize', 'dependent') * unitLength,
 					'color': getAxisRenderOptionValue(ops, 'axisLabelColor', 'dependent'),
-					'padding': getActualSpectrumLengthValue(ops, 'axisLabelPadding', 'dependent', refLengthDependent, unitLength)
+					'padding': getActualSpectrumLengthValue(ops, 'axisLabelPadding', 'dependent', /*refLengthDependent*/refLengthBoth, unitLength)
 				});
 			}
 			if (ops['spectrum_displayDependentAxisScales'])
 			{
 				dependentAxisOps['scaleLabel'] = createSubOptions(ops, {
 					'fontFamily': getAxisRenderOptionValue(ops, 'axisScaleLabelFontFamily', 'dependent'),
-					'fontSize': getAxisRenderOptionValue(ops, 'axisScaleLabelFontSize', 'dependent') * unitLength,
+					'fontSize': getFontSizeOptionValue(ops, 'axisScaleLabelFontSize', 'dependent') * unitLength,
 					'color': oneOf(getAxisRenderOptionValue(ops, 'axisScaleLabelColor', 'dependent'), ops['color']),
-					'padding': getActualSpectrumLengthValue(ops, 'axisScaleLabelPadding', 'dependent', refLengthDependent, unitLength)
+					'padding': getActualSpectrumLengthValue(ops, 'axisScaleLabelPadding', 'dependent', /*refLengthDependent*/refLengthBoth, unitLength)
 				});
-				dependentAxisOps['axis']['scaleMarkSize'] = getActualSpectrumLengthValue(ops, 'axisScaleMarkSize', 'dependent', refLengthDependent, unitLength);
+				dependentAxisOps['axis']['scaleMarkSize'] = getActualSpectrumLengthValue(ops, 'axisScaleMarkSize', 'dependent', /*refLengthDependent*/refLengthBoth, unitLength);
 				dependentAxisOps['axis']['unlabeledScaleSizeRatio'] = getAxisRenderOptionValue(ops, 'axisUnlabeledScaleSizeRatio', 'dependent');
 			}
 
@@ -1138,7 +1225,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		return (varDef.getActualExternalUnit && varDef.getActualExternalUnit()) || varDef.getUnit();
 	},
 	/** @private */
-	doCalcSprectrumTransformMatrix: function(spectrum, targetDataSections, varSymbols, sectionDataRange, contextBox, renderOptions, axisDirectionAndAlignInfo)
+	doCalcSprectrumTransformMatrixes: function(spectrum, targetDataSections, varSymbols, sectionDataRange, contextBox, renderOptions, axisDirectionAndAlignInfo)
 	{
 		var dependantVarSymbol = varSymbols.dependant, independantVarSymbol = varSymbols.independant;
 		// retrieve data ranges of all sections and build the range box
@@ -1197,23 +1284,60 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		internalTransformMatrix = Kekule.MatrixUtils.multiply(CU.calcTransform2DMatrix(transOps2), internalTransformMatrix);
 
 		var dataTransformMatrix = internalTransformMatrix;
-		renderOptions.spectrumDataTransformMatrix = dataTransformMatrix;
 
-		return dataTransformMatrix;
+		// inv matrix
+		var invTransformMatrix = CU.calcInverseTransform2DMatrix(transOps2);
+		invTransformMatrix = Kekule.MatrixUtils.multiply(CU.calcInverseTransform2DMatrix(transOps1), invTransformMatrix);
+		renderOptions.spectrumDataTransformInvMatrix = invTransformMatrix;
+
+		// debug: test inv and transform matrix
+		/*
+		(function(){
+			var coords = [
+				{'x': 0, 'y': 0}, {'x': 2, 'y': 0}, {'x': 0, 'y': 2}, {'x': 2, 'y': 2}, {'x': -3, 'y': -3}
+			];
+			coords.forEach(coord => {
+				var transformedCoord = CU.transform2DByMatrix(coord, dataTransformMatrix);
+				var backCoord = CU.transform2DByMatrix(transformedCoord, invTransformMatrix);
+
+				if (!Kekule.NumUtils.isFloatEqual(backCoord.x, coord.x) || Kekule.NumUtils.isFloatEqual(backCoord.y, coord.y))
+					console.warn('inv matrix wrong', coord, backCoord);
+			});
+		})();
+		*/
+
+		return {
+			'dataTransformMatrix': dataTransformMatrix,
+			'dataTransformInvMatrix': invTransformMatrix
+		};
 	},
 
 	/** @private */
-	_getDisplayRangeOfSections: function(spectrum, spectrumData, sections, varInfos, renderOptions)
-	{
+	_getDisplayRangeOfSections: function(spectrum, spectrumData, sections, varInfos, axisDirectionAndAlignInfo, renderOptions) {
 		// adjust the dataRange with render options
-		var calcVisibleRange = function(dataRangeOfVar, varSymbol, isDependentVar, dataMode, renderOptions)
-		{
-			var renderOptionNameSuffix = (dataMode === Kekule.Spectroscopy.DataMode.PEAK)? '_Peak':
-				(dataMode === Kekule.Spectroscopy.DataMode.CONTINUOUS)? '_Continuous': '';
-			var varType = isDependentVar? 'dependent': 'independent';
+		var calcVisibleRange = function (dataRangeOfVar, varSymbol, isDependentVar, dataMode, renderOptions) {
+			var renderOptionNameSuffix = (dataMode === Kekule.Spectroscopy.DataMode.PEAK) ? '_Peak' :
+				(dataMode === Kekule.Spectroscopy.DataMode.CONTINUOUS) ? '_Continuous' : '';
+			var varType = isDependentVar ? 'dependent' : 'independent';
+			/*
+			var rangeFromNameBase = 'spectrum_visible' + varType.upperFirst() + 'DataRangeFrom';
+			var rangeToNameBase = 'spectrum_visible' + varType.upperFirst() + 'DataRangeTo';
+			var rangeFromNameSpecified = rangeFromNameBase + renderOptionNameSuffix;
+			var rangeToNameSpecified = rangeToNameBase + renderOptionNameSuffix;
+			*/
 			var visibleRange = {
 				'rangeFrom': renderOptions['spectrum_visible' + varType.upperFirst() + 'DataRangeFrom' + renderOptionNameSuffix] || 0,
-				'rangeTo': renderOptions['spectrum_visible' + varType.upperFirst() + 'DataRangeTo' + renderOptionNameSuffix] || 1,
+				'rangeTo': renderOptions['spectrum_visible' + varType.upperFirst() + 'DataRangeTo' + renderOptionNameSuffix] || 1
+				/*
+				'rangeFrom': Kekule.oneOf(
+					spectrumLocalRenderOptions[rangeFromNameSpecified], spectrumLocalRenderOptions[rangeFromNameBase],
+					renderOptions[rangeFromNameSpecified], renderOptions[rangeFromNameBase], 0
+				),
+				'rangeTo': Kekule.oneOf(
+					spectrumLocalRenderOptions[rangeToNameSpecified], spectrumLocalRenderOptions[rangeToNameBase],
+					renderOptions[rangeToNameSpecified], renderOptions[rangeToNameBase], 1
+				)
+ 			  */
 			};
 			var range = dataRangeOfVar;
 			if (visibleRange.rangeFrom !== 0 || visibleRange.rangeTo !== 1)  // need adjust
@@ -1225,6 +1349,25 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			else
 				return range;
 		}
+		var calcViewPortRange = function (dataRangeOfVar, varSymbol, isDependentVar, isReversedDirection, renderOptions)
+		{
+			var varType = isDependentVar ? 'dependent' : 'independent';
+			var viewPortRange = {
+				'rangeFrom': renderOptions['spectrum_viewport' + varType.upperFirst() + 'DataRangeFrom'] || 0,
+				'rangeTo': renderOptions['spectrum_viewport' + varType.upperFirst() + 'DataRangeTo'] || 1
+			};
+			var range = dataRangeOfVar;
+			if (viewPortRange.rangeFrom !== 0 || viewPortRange.rangeTo !== 1)  // need adjust
+			{
+				var oldFrom = isReversedDirection? range.max: range.min;
+				var oldTo = isReversedDirection? range.min: range.max;
+				var newFrom = (oldTo - oldFrom) * viewPortRange.rangeFrom + oldFrom;
+				var newTo = (oldTo - oldFrom) * (viewPortRange.rangeTo - 1) + oldTo;
+				return {'min': Math.min(newFrom, newTo), 'max': Math.max(newFrom, newTo)};
+			}
+			else
+				return range;
+		};
 
 		/*
 		var dataRange = spectrumData.getDisplayRangeOfSections(sections, null, {autoCalc: true});
@@ -1242,13 +1385,35 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var depVar = varInfos.varSymbols.dependant;
 		var result = {};
 		var visibleDataRange = {};
+		var spectrumMode = Kekule.Spectroscopy.DataMode.CONTINUOUS;
+		// sum the range of each sections
 		for (var i = 0, l = sections.length; i < l; ++i)
 		{
+			var section = sections[i];
+			var localRenderOptions = section.getRenderOptions() || {};
+			var sectionRange = spectrumData.getDisplayRangeOfSection(section, null, {autoCalc: true});
+			var sectionMode = section.getMode();
+			if (sectionMode === Kekule.Spectroscopy.DataMode.PEAK)
+				spectrumMode = sectionMode;
+			visibleDataRange[indepVar] = calcVisibleRange(sectionRange[indepVar], indepVar, false, sectionMode, localRenderOptions);
+			visibleDataRange[depVar] = calcVisibleRange(sectionRange[depVar], depVar, true, sectionMode, localRenderOptions);
+			result = Kekule.Spectroscopy.Utils.mergeDataRange(result, visibleDataRange);
+			/*
 			var sectionRange = spectrumData.getDisplayRangeOfSection(sections[i], null, {autoCalc: true});
 			visibleDataRange[indepVar] = calcVisibleRange(sectionRange[indepVar], indepVar, false, sections[i].getMode(), renderOptions);
 			visibleDataRange[depVar] = calcVisibleRange(sectionRange[depVar], depVar, true, sections[i].getMode(), renderOptions);
 			result = Kekule.Spectroscopy.Utils.mergeDataRange(result, visibleDataRange);
+			*/
 		}
+		// apply visible range of whole spectrum
+		result[indepVar] = calcVisibleRange(result[indepVar], indepVar, false, spectrumMode, renderOptions);
+		result[depVar] = calcVisibleRange(result[depVar], depVar, true, spectrumMode, renderOptions);
+
+		// now the result is the display range defined by visible(Indep/Dep)endentDataRange(From/To)
+		// we now consider the spectrum view port
+		result[indepVar] = calcViewPortRange(result[indepVar], indepVar, false, axisDirectionAndAlignInfo.independent.reversedDirection, renderOptions);
+		result[depVar] = calcViewPortRange(result[depVar], depVar, true, axisDirectionAndAlignInfo.dependent.reversedDirection, renderOptions);
+
 		return result;
 	},
 	/*
@@ -1884,8 +2049,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 /** @private */
 Kekule.Render.Spectrum2DRenderer.sectionDataDrawerMap = {};
 
-
 Kekule.Render.Renderer2DFactory.register(Kekule.Spectroscopy.Spectrum, Kekule.Render.Spectrum2DRenderer);
 
+});
 
 })();
