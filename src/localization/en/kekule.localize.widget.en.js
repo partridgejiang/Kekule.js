@@ -574,6 +574,9 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	// viewer
 	CAN_NOT_CREATE_EDITOR: 'Creating editor failed',
 
+	// spectrum viewer
+	CAN_NOT_LOAD_OBJ_OTHER_THAN_SPECTRUM: 'Can not load non-spectrum object',
+
 	// editor operations
 	CAN_NOT_SET_COORD_OF_CLASS: 'Can not set coordinate of instance of {0}.',
 	CAN_NOT_SET_DIMENSION_OF_CLASS: 'Can not set dimension of instance of {0}.',
