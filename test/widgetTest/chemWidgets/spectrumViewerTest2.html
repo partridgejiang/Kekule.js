@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Test of SpectrumViewer widget</title>
+	<script src="../../_libs/raphael-min.2.0.1.js"></script>
+	<script src="../../../src/kekule.js?locals=en,zh&language1=en_us&modules=chemWidget,spectroscopy&min=false"></script>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+	<style>
+			section
+			{
+					float: left;
+			}
+      #spectrumViewer
+      {
+          width: 600px;
+          height: 400px;
+					border: 1px solid #ccc;
+      }
+	</style>
+	<script>
+		Kekule.globalOptions.chemWidget.viewer.toolButtons.push(Kekule.ChemWidget.ComponentWidgetNames.config);
+
+		var viewer;
+		function getSpectrum()
+		{
+			return viewer.getChemObj();
+		}
+
+		Kekule.X.domReady(() => {
+			viewer = Kekule.Widget.getWidgetById('spectrumViewer');
+			Kekule.Widget.getWidgetById('objInspector').objects = viewer;
+		});
+	</script>
+</head>
+<body>
+  <section id="secDisplayer">
+  	<div id="spectrumViewer"
+				 data-widget="Kekule.ChemWidget.Viewer" data-chem-obj1="" data-autofit="true"
+				 data-toolbar-evoke-modes="[0]"
+				 data-predefined-setting="fullFunc" data-resizable="true"></div>
+	</section>
+	<section id="secInspector">
+		<div id="objInspector" data-widget="Kekule.Widget.ObjectInspector"></div>
+	</section>
+</body>
+</html>
