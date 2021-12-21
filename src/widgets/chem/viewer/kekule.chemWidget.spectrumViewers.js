@@ -38,7 +38,7 @@ var ZU = Kekule.ZoomUtils;
 
 Kekule.globalOptions.add('chemWidget.viewer', {
 	enableSpectrumMode: true,
-	enableLocalSpectrumMode: true
+	enableLocalSpectrumMode: false
 });
 
 /**
@@ -81,8 +81,16 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 	initPropValues: function()
 	{
 		this.tryApplySuper('initPropValues');
-		this.setEnableSpectrumMode(Kekule.globalOptions.chemWidget.viewer.enableSpectrumMode);
-		this.setEnableLocalSpectrumMode(Kekule.globalOptions.chemWidget.viewer.enableLocalSpectrumMode);
+		//this.setEnableSpectrumMode(Kekule.globalOptions.chemWidget.viewer.enableSpectrumMode);
+		//this.setEnableLocalSpectrumMode(Kekule.globalOptions.chemWidget.viewer.enableLocalSpectrumMode);
+	},
+	getActualEnableSpectrumMode: function()
+	{
+		return Kekule.oneOf(this.getEnableSpectrumMode(), Kekule.globalOptions.chemWidget.viewer.enableSpectrumMode);
+	},
+	getActualEnableLocalSpectrumMode: function()
+	{
+		return Kekule.oneOf(this.getEnableLocalSpectrumMode(), Kekule.globalOptions.chemWidget.viewer.enableLocalSpectrumMode);
 	}
 });
 
@@ -478,7 +486,7 @@ ClassEx.extendMethods(Kekule.ChemWidget.Viewer, {
 			return false;
 		else
 			return (this.getRenderType() === Kekule.Render.RendererType.R2D)
-				&& this.getDisplayerConfigs().getSpectrumViewConfigs().getEnableSpectrumMode()
+				&& this.getDisplayerConfigs().getSpectrumViewConfigs().getActualEnableSpectrumMode()
 				&& this._isDisplayingSingleSpectrum();
 	},
 	/**
@@ -491,7 +499,7 @@ ClassEx.extendMethods(Kekule.ChemWidget.Viewer, {
 			return false;
 		else
 			return (this.getRenderType() === Kekule.Render.RendererType.R2D)
-				&& this.getDisplayerConfigs().getSpectrumViewConfigs().getEnableLocalSpectrumMode();
+				&& this.getDisplayerConfigs().getSpectrumViewConfigs().getActualEnableLocalSpectrumMode();
 	},
 	/**
 	 * Check if the viewer is in spectrum or local spectrum mode.
