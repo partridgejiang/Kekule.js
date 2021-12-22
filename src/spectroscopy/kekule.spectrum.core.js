@@ -122,6 +122,26 @@ Kekule.Spectroscopy.Utils = {
 		//console.log(result, scaleBase);
 		return result;
 	},
+
+	/*
+	 * Calculate the standardized distance square between two data points.
+	 * The srcData/targetData/dataRanges should have the same dimension.
+	 * @param {Array} srcData
+	 * @param {Array} targetData
+	 * @param {Array} dataRangeValues Array of {min, max}.
+	 * @returns {Float}
+	 */
+	/*
+	calcStandardizedDistanceSqr: function(srcData, targetData, dataRangeValues)
+	{
+		var length = dataRanges.length;
+		for (var i = 0; i < length; ++i)
+		{
+
+		}
+	},
+	*/
+
 	/**
 	 * Generate a suitable label key for storing the spectrum info(meta/condition/parameter...) value.
 	 * @param {String} name The core name of key, e.g. observedFrequency.
@@ -943,9 +963,25 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		}
 		return result;
 	},
+	/**
+	 * Returns the local variable symbols of certain dependency.
+	 * @param {Int} dependency
+	 * @returns {Array}
+	 */
+	getLocalVarSymbolsOfDependency: function(dependency)
+	{
+		var varInfos = this.getLocalVarInfoOfDependency(dependency);
+		var result = [];
+		for (var i = 0, l = varInfos.length; i < l; ++i)
+		{
+			result.push(varInfos[i].varDef.getSymbol());
+		}
+		return result;
+	},
 
 	/**
 	 * Returns the from/to value of a continuous variable.
+	 * Note the return values of this function are all based on internal var unit.
 	 * @param {Variant} varNameOrIndexOrDef
 	 * @returns {Hash} Hash of {fromValue, toValue}
 	 */
@@ -1454,6 +1490,17 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		return result;
 	},
 	/** @private */
+	_convArrayToSymboledHash: function(arrayValue, symbols)
+	{
+		var result = {};
+		for (var i = 0, l = Math.min(symbols.length, arrayValue.length); i < l; ++i)
+		{
+			var value = arrayValue[i];
+			result[symbols[i]] = value;
+		}
+		return result;
+	},
+	/** @private */
 	_itemArrayToHash: function(arrayValue, options)
 	{
 		if (!arrayValue)
@@ -1818,25 +1865,139 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 
 	/**
 	 * Calculate values of dependant variable values from independent variable values.
-	 * @param {Hash} independentValues
+	 * @param {Variant} independentValues A hash value with symbol: number map, or an array of values, or a single number value.
 	 * @param {Hash} extraOptions
 	 * @returns {Hash}
 	 */
-	getDependentValues: function(independentValues, extraOptions)
+	calcValueFromIndependent: function(independentValues, extraOptions)
 	{
-		return this.doGetDependentValues(independantValues, extraOptions);
+		var indepHashValues = {};
+		if (typeof(independentValues) === 'number')  // a direct number value,
+			indepHashValues = this._convArrayToSymboledHash([independentValues], this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT));
+		else if (DataType.isArrayValue(independentValues))
+			indepHashValues = this._convArrayToSymboledHash(independentValues, this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT));
+		else
+			indepHashValues = independentValues;
+		return this.doCalcValueFromIndependent(indepHashValues, extraOptions);
 	},
 	/**
-	 * Do actual work of {@link Kekule.Spectroscopy.SpectrumData.getDependentValues}.
-	 * Descendants should override this method.
+	 * Do actual work of {@link Kekule.Spectroscopy.SpectrumData.calcValueFromIndependent}.
+	 * Descendants may override this method.
 	 * @param {Hash} independentValues
 	 * @param {Hash} extraOptions
 	 * @returns {Hash}
 	 * @private
 	 */
-	doGetDependentValues: function(independentValues, extraOptions)
+	doCalcValueFromIndependent: function(independentValues, extraOptions)
 	{
-		return {};
+		var mode = this.getMode();
+		return (mode === Kekule.Spectroscopy.DataMode.PEAK)?
+			this._doCalcValueFromIndependentInPeakMode(independentValues, extraOptions):
+			this._doCalcValueFromIndependentInContinousMode(independentValues, extraOptions);
+	},
+	/** @private */
+	_doCalcValueFromIndependentInPeakMode: function(independentValues, extraOptions)
+	{
+		// TODO: currently only handles data with one one independent var, but this approach can handle most of the spectrum cases
+		var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
+		if (indepVarSymbols.length > 1)
+			return null;
+		var indepVarSymbol = indepVarSymbols[0];
+		var indepDataRange = this.calcDataRange([indepVarSymbol])[indepVarSymbol];
+		var indepSearchValue = independentValues[indepVarSymbol];
+		if (indepSearchValue < indepDataRange.min || indepSearchValue > indepDataRange.max)
+			return null;
+
+		var allowedError = ((extraOptions && extraOptions.allowedErrorRate) || Kekule.globalOptions.spectrum.data.allowedComparisonErrorRate)
+			* (indepDataRange.max - indepDataRange.min);
+		var resultDetails = {'value': null, 'distance': indepDataRange.max - indepDataRange.min};
+		for (var i = 0, l = this.getDataCount(); i < l; ++i)
+		{
+			var value = this.getHashValueAt(i);
+			var indepDistance = Math.abs(value[indepVarSymbol] - indepSearchValue);
+			if (indepDistance <= allowedError)
+			{
+				if (indepDistance < resultDetails.distance)
+				{
+					resultDetails.value = value;
+					resultDetails.distance = indepDistance;
+				}
+			}
+		}
+		if (!resultDetails.value)  // use the default peak root value
+			resultDetails.value = this.getPeakRootValueOf(independentValues);
+
+		//delete resultDetails.value[indepVarSymbol];  // remove the indepedent var, only use the dependent ones
+		return resultDetails.value;
+	},
+	/** @private */
+	_doCalcValueFromIndependentInContinousMode: function(independentValues, extraOptions)
+	{
+		// TODO: currently only handles data with one one independent var, but this approach can handle most of the spectrum cases
+		var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
+		if (indepVarSymbols.length > 1)
+			return null;
+		var indepVarSymbol = indepVarSymbols[0];
+		var indepVarValue = independentValues[indepVarSymbol];
+		var totalDataRange = this.calcDataRange([indepVarSymbol])[indepVarSymbol];
+		if (indepVarValue < totalDataRange.min || indepVarValue > totalDataRange.max)
+			return null;
+
+		var dataIndexFloor, dataIndexCeil;
+		var useContinuousVarRange = true;
+		var varDef = this.getLocalVarDef(indepVarSymbol);
+		useContinuousVarRange = !varDef.hasDifferentExternalUnit();  // the value get from getContinuousVarRange function in based on internal unit
+		if (useContinuousVarRange)
+		{
+			var indepVarRange = this.getContinuousVarRange(indepVarSymbol);
+			useContinuousVarRange = !!indepVarRange;
+		}
+		if (useContinuousVarRange)
+		{
+			var dataIndex = (indepVarValue - indepVarRange.fromValue) / (indepVarRange.toValue - indepVarRange.fromValue) * this.getDataCount();
+			dataIndexFloor = Math.floor(dataIndex);
+			dataIndexCeil = Math.ceil(dataIndex);
+		}
+		else
+		{
+			//indepVarRange = this.calcDataRange([indepVarSymbols])[indepVarSymbol];
+			var indexes = this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepVarValue, 0, this.getDataCount());
+			dataIndexFloor = indexes[0];
+			dataIndexCeil = indexes[1];
+		}
+		if (dataIndexFloor === dataIndexCeil)
+			return this.getHashValueAt(dataIndexFloor);
+		else
+		{
+			var valueFloor = this.getHashValueAt(dataIndexFloor);
+			var valueCeil = this.getHashValueAt(dataIndexCeil);
+			var ratio = (indepVarValue - valueFloor[indepVarSymbol]) / (valueCeil[indepVarSymbol] - valueFloor[indepVarSymbol]);
+			var result = {};
+			var symbols =  Kekule.ObjUtils.getOwnedFieldNames(valueFloor);
+			for (var i = 0, l = symbols.length; i < l; ++i)
+			{
+				var symbol = symbols[i];
+				if (symbol === indepVarSymbol)
+					result[symbol] = indepVarValue;
+				else
+					result[symbol] = valueFloor[symbol] + (valueCeil[symbol] - valueFloor[symbol]) * ratio;
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_calcNeighborDataIndexesToIndependentValue: function(indepVarSymbol, indepValue, fromIndex, toIndex)
+	{
+		if (toIndex - fromIndex <= 2)
+			return [fromIndex, toIndex];
+		var halfIndex = Math.round((fromIndex + toIndex) / 2);
+		var halfValue = this.getHashValueAt(halfIndex)[indepVarSymbol];
+		if (halfValue === indepValue)
+			return [halfIndex, halfIndex];
+		else if (halfValue <= indepValue)
+			return this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, halfIndex, toIndex);
+		else
+			return this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, fromIndex, halfIndex);
 	},
 	/**
 	 * Returns an iterator to iterate all data in this object.
