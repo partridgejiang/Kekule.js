@@ -46,9 +46,12 @@ Kekule.globalOptions.add('chemWidget.viewer', {
  * @class
  * @augments Kekule.AbstractConfigs
  *
- * @property {Number} spectrumAxisLabelFontSizeMin The minimal font size to draw spectrum axis labels.
- * @property {Number} spectrumAxisLabelFontSizeMax The maximal font size to draw spectrum axis labels.
- * @property {Number} spectrumAxisLabelFontSizeFixed If this value is set, the spectrum axis labels will always be drawn in this size,
+ * @property {Bool} enableSpectrumMode Whether turning on the spectrum view mode when a single spectrum object is loaded in viewer.
+ * @property {Bool} enableLocalSpectrumMode Whether applying specified interactions to a spectrum inside chem space (with other types of objects) in viewer.
+ * //@property {Bool} enableSpectrumDataHint Whether displaying the hint with numberic data of spectrum value in current cursor position in viewer.
+ * @property {Number} spectrumAxisLabelFontSizeMin The minimal font size to draw spectrum axis labels in spectrum mode.
+ * @property {Number} spectrumAxisLabelFontSizeMax The maximal font size to draw spectrum axis labels in spectrum mode.
+ * @property {Number} spectrumAxisLabelFontSizeFixed If this value is set, the spectrum axis labels will always be drawn in this size in spectrum mode,
  *   regardless of the zoom settings.
  */
 Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.AbstractConfigs,
@@ -64,6 +67,8 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 		this.addNumConfigProp('spectrumAxisLabelFontSizeMin', 15);
 		this.addNumConfigProp('spectrumAxisLabelFontSizeMax', 35);
 		this.addNumConfigProp('spectrumAxisLabelFontSizeFixed', 15);
+
+		//this.addBoolConfigProp('enableSpectrumDataHint', true);
 
 		this.defineProp('spectrumZoomPrimaryModifierKeys', {'dataType': DataType.ARRAY});
 		this.defineProp('spectrumZoomSecondaryModifierKeys', {'dataType': DataType.ARRAY});
@@ -433,19 +438,127 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 	resetView: function()
 	{
 		this.resetViewportRange();
-	}
-
-	/*
-	///////// spectrum coord transform methods ////////////
-	contextCoordToSpectrum: function(coord)
-	{
-
 	},
-	screenCoordToSpectrum: function(coord)
-	{
 
+	///////// spectrum coord transform methods ////////////
+	/**
+	 * Translate a coord in fromCoordSys to coord values of spectrum internal data.
+	 * @param {Object} coord
+	 * @param {Int} fromCoordSys
+	 * @returns {Object} coord in spectrum data scope, {x, y}.
+	 */
+	translateCoordToSpectrum: function(coord, fromCoordSys)
+	{
+		var contextCoord = this.getViewer().translateCoord(coord, fromCoordSys, Kekule.Render.CoordSystem.CONTEXT);
+		var transMatrix = this._getSpectrumRenderCache().spectrumInvDataTransformMatrix;
+		var transformFunc = this.getViewer().getRenderType() === Kekule.Render.RendererType.R3D?
+			Kekule.CoordUtils.transform3DByMatrix: Kekule.CoordUtils.transform2DByMatrix;
+		return transMatrix? transformFunc(contextCoord, transMatrix): contextCoord;
+	},
+	/**
+	 * Translate a coord from spectrum internal data scope to toCoordSys.
+	 * @param {Object} coord {x, y}.
+	 * @param {Int} toCoordSys
+	 * @returns {Object} coord in toCoordSys.
+	 */
+	translateCoordFromSpectrum: function(coord, toCoordSys)
+	{
+		var transMatrix = this._getSpectrumRenderCache().spectrumDataTransformMatrix;
+		var transformFunc = this.getViewer().getRenderType() === Kekule.Render.RendererType.R3D?
+			Kekule.CoordUtils.transform3DByMatrix: Kekule.CoordUtils.transform2DByMatrix;
+		var contextCoord = transMatrix? transformFunc(coord, transMatrix): coord;
+		return this.getViewer().translateCoord(contextCoord, Kekule.Render.CoordSystem.CONTEXT, toCoordSys);
+	},
+
+	/**
+	 * Calculate out the actual spectrum data value from the independent variable values at current coord {x, y}.
+	 * @param {Object} coord
+	 * @param {Int} fromCoordSys
+	 * @param {Hash} options
+	 * @returns {Object}
+	 */
+	calcSpectrumDataAtCoord: function(coord, fromCoordSys, options)
+	{
+		var specCoord = this.translateCoordToSpectrum(coord, fromCoordSys);
+		var indepValue = this.getIsSpectrumWithReversedAxises()? specCoord.y: specCoord.x;
+		var spectrum = this.getSpectrum();
+		var sections = spectrum.getDisplayedDataSections() || [];
+		for (var i = 0, l = sections.length; i < l; ++i)
+		{
+			var section = sections[i];
+			var dataValue = section.calcValueFromIndependent(indepValue, options);
+			if (dataValue)
+				return dataValue;
+		}
+		return null;
+	},
+	/**
+	 * Calculate out the coord {x, y} of an actual spectrum data value.
+	 * @param {Hash} dataValue
+	 * @param {Int} toCoordSys
+	 * @param {Hash} options
+	 * @returns {Object}
+	 */
+	calcCoordAtSpectrumData: function(dataValue, toCoordSys, options)
+	{
+		var isReversedAxis = this.getIsSpectrumWithReversedAxises();
+		var spectrum = this.getSpectrum();
+		var section = (spectrum.getDisplayedDataSections() || [])[0];  // all displayed sections should has the same var settings
+		if (section)
+		{
+			var specCoord = this._spectrumSectionDataValueToSpectrumCoord(dataValue, section, isReversedAxis);
+			return specCoord && this.translateCoordFromSpectrum(specCoord, toCoordSys);
+		}
+		else
+			return null;
+	},
+	/**
+	 * Calculate out the coord {x, y} of the actual spectrum data at indepValues.
+	 * @param {Hash} indepValues
+	 * @param {Int} toCoordSys
+	 * @param {Hash} options
+	 * @returns {Object}
+	 */
+	calcCoordAtSpectrumDataFromIndependent: function(indepValues, toCoordSys, options)
+	{
+		var spectrum = this.getSpectrum();
+		var sections = spectrum.getDisplayedDataSections() || [];
+		var isReversedAxis = this.getIsSpectrumWithReversedAxises();
+		for (var i = 0, l = sections.length; i < l; ++i)
+		{
+			var section = sections[i];
+			var dataValue = section.calcValueFromIndependent(indepValue, options);
+			if (dataValue)
+			{
+				var specCoord = this._spectrumSectionDataValueToSpectrumCoord(dataValue, section, isReversedAxis);
+				return specCoord && this.translateCoordFromSpectrum(specCoord, toCoordSys);
+			}
+		}
+		return null;
+	},
+	/** @private */
+	_spectrumSectionDataValueToSpectrumCoord: function(dataValue, dataSection, isReversedAxies)
+	{
+		var indepVarSymbols = dataSection.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
+		var depVarSymbols = dataSection.getLocalVarSymbolsOfDependency(Kekule.VarDependency.DEPENDENT);
+		var retrieveFirstValueOfSymbols = function(dataValue, symbols)
+		{
+			for (var i = 0, l = symbols.length; i < l; ++i)
+			{
+				var v = dataValue[symbols[i]]
+				if (Kekule.ObjUtils.notUnset(v))
+					return v;
+			}
+			return null;
+		};
+		var indepValue = retrieveFirstValueOfSymbols(dataValue, indepVarSymbols);
+		var depValue = retrieveFirstValueOfSymbols(dataValue, depVarSymbols);
+		var result = {
+			'x': isReversedAxies? depValue: indepValue,
+			'y': isReversedAxies? indepValue: depValue
+		};
+		return result;
 	}
-	*/
 });
 
 // extend the Viewer widget
@@ -789,6 +902,37 @@ ClassEx.extendMethods(Kekule.ChemWidget.ViewerBasicInteractionController, {
 				sview.zoomViewportByDelta(delta, zoomCenterCoord, directions);
 		}
 	},
+
+	/** @private */
+	doTestMouseCursor: function($origin, coord, e)
+	{
+		var viewer = this.getViewer();
+		if (viewer.enableSpectrumInteraction())
+		{
+			var spectrum = this._getSpectrumObjAtScreenCoord(coord);
+			if (spectrum)
+			{
+				var sview = viewer.getSpectrumView(spectrum)
+				if (sview)
+				{
+					// TODO: debug
+					var hints = [];
+					hints.push('Screen coord at cursor: ' + JSON.stringify(coord));
+					var spectrumCoord = sview.translateCoordToSpectrum(coord, Kekule.Render.CoordSystem.SCREEN);
+					hints.push('Spectrum coord at cursor: ' + JSON.stringify(spectrumCoord));
+					var spectrumDataValue = sview.calcSpectrumDataAtCoord(coord, Kekule.Render.CoordSystem.SCREEN, {allowedErrorRate: 0.01});
+					if (spectrumDataValue)
+					{
+						hints.push('Spectrum data value: ' + JSON.stringify(spectrumDataValue));
+						var spectrumDataCoord = sview.calcCoordAtSpectrumData(spectrumDataValue, Kekule.Render.CoordSystem.SCREEN);
+						hints.push('Spectrum data screen coord: ' + JSON.stringify(spectrumDataCoord));
+					}
+					this.getViewer().setHint(hints.join('\n'));
+				}
+			}
+		}
+	},
+
 	/** @private */
 	react_dblclick: function($origin, e)
 	{
