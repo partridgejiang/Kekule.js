@@ -199,6 +199,10 @@ ClassEx.extendMethod(Kekule.Spectroscopy.Spectrum, 'doGetObjAnchorPosition',
 		return Kekule.ObjAnchorPosition.CENTER;
 	});
 ClassEx.extend(Kekule.Spectroscopy.Spectrum, {
+	'getDisplayedDataSections': function()
+	{
+		return [this.getActiveDataSection()];
+	},
 	'getPseudoRenderSubObject':	function(objName, doNotCreate)
 	{
 		var subObjs = this.__$subRenderObjs$__;
@@ -1184,7 +1188,8 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	/** @private */
 	doGetTargetDataSections: function(spectrum)
 	{
-		return [spectrum.getActiveDataSection()];  // TODO: currently handles active section only
+		//return [spectrum.getActiveDataSection()];  // TODO: currently handles active section only
+		return spectrum.getDisplayedDataSections();
 	},
 	/** @private */
 	doGetDataVarInfos: function(targetDataSections)
