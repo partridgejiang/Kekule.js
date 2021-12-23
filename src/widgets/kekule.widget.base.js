@@ -4004,7 +4004,7 @@ Kekule.Widget.BaseWidget = Class.create(ObjectEx,
 			if (controller)
 			{
 				if (eventCategory === 'hammer')
-					handled = controller.handerGestureEvent(e);
+					handled = controller.handleGestureEvent(e);
 				else
 					handled = controller.handleUiEvent(e);
 			}
