@@ -786,10 +786,10 @@ ClassEx.extendMethods(Kekule.ChemWidget.ViewerBasicInteractionController, {
 	},
 
 	/** @ignore */
-	_beginInteractTransformAtCoord: function($origin, screenX, screenY, clientX, clientY, htmlEvent)
+	_beginInteractTransformAtCoord: function($origin, screenX, screenY, clientX, clientY, htmlEvent, pointerId)
 	{
 		//this.tryApplySuper('_beginInteractTransformAtCoord', [screenX, screenY, clientX, clientY, htmlEvent]);
-		$origin(screenX, screenY, clientX, clientY, htmlEvent);
+		$origin(screenX, screenY, clientX, clientY, htmlEvent, pointerId);
 		//console.log('begin interaction');
 		var viewer = this.getViewer();
 		//if (viewer.isInSpectrumMode())
