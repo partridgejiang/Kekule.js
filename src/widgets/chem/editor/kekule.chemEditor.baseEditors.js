@@ -6472,6 +6472,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			'getter': function() { return this.getActivePointerType(); },
 			'setter': function(value) { this.setActivePointerType(value); }
 		});  // private, alias of property activePointerType
+		this.defineProp('activePointerId', {'dataType': DataType.INT, 'serializable': false});  // private, the pointer id currently activated in editpr
 
 		//this.defineProp('manipulateOperation', {'dataType': 'Kekule.MacroOperation', 'serializable': false});  // store operation of moving
 		//this.defineProp('activeOperation', {'dataType': 'Kekule.MacroOperation', 'serializable': false}); // store operation that should be add to history
@@ -7843,7 +7844,9 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 
 		var evokedByTouch = e && e.pointerType === 'touch'; // edge resize/rotate will be disabled in touch
 		if (e)
+		{
 			this.setManipulationPointerType(e && e.pointerType);
+		}
 
 		this.manipulateBegin();
 
@@ -7863,6 +7866,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		*/
 		var isTransform = (availManipulationTypes.indexOf(T.TRANSFORM) >= 0)
 				&& (explicitManipulationType === T.TRANSFORM);    // gesture transform
+		//console.log('check isTransform', isTransform, explicitManipulationType, availManipulationTypes);
 		if (!isTransform)
 		{
 			var isResize = !evokedByTouch && (availManipulationTypes.indexOf(T.RESIZE) >= 0) //&& this.getEnableResize()
@@ -7874,6 +7878,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		}
 		else // transform
 		{
+			//console.log('set transform types', availManipulationTypes);
 			this._availTransformTypes = availManipulationTypes;  // stores the available transform types
 		}
 
@@ -7995,16 +8000,19 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		var	e = this._manipulationStepBuffer.event;
 		var explicitTransformParams = this._manipulationStepBuffer.explicitTransformParams;
 
-		if (currCoord && e)
+		//console.log('step', this.getState(), this._manipulationStepBuffer.explicitTransformParams);
+
+		if (explicitTransformParams)  // has transform params explicitly in gesture transform
+		{
+			this.doExecManipulationStepWithExplicitTransformParams(explicitTransformParams, this._manipulationStepBuffer);
+		}
+		else if (currCoord && e)
 		{
 			//console.log('do actual manipulate');
 			this.doExecManipulationStep(currCoord, e, this._manipulationStepBuffer);
 			// empty buffer, indicating that the event has been handled
 		}
-		else if (explicitTransformParams)  // has transform params explicitly in gesture transform
-		{
-			this.doExecManipulationStepWithExplicitTransformParams(explicitTransformParams, this._manipulationStepBuffer);
-		}
+
 		this._manipulationStepBuffer.coord = null;
 		this._manipulationStepBuffer.event = null;
 		this._manipulationStepBuffer.explicitTransformParams = null;
@@ -8105,6 +8113,11 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 		{
 			return true;
 		}
+		if (Kekule.ObjUtils.notUnset(this.getActivePointerId()) && e.pointerId !== this.getActivePointerId())
+		{
+			//console.log('hhh', e.pointerId, this.getActivePointerId());
+			return true;
+		}
 
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
@@ -8167,6 +8180,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 	{
 		this.tryApplySuper('react_pointerdown', [e])  /* $super(e) */;
 		//console.log('pointerdown', e);
+		this.setActivePointerId(e.pointerId);
 		var S = Kekule.Editor.BasicManipulationIaController.State;
 		//var T = Kekule.Editor.BasicManipulationIaController.ManipulationType;
 		if (e.getButton() === Kekule.X.Event.MouseButton.LEFT)
@@ -8237,7 +8251,7 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			{
 				//var dis = Kekule.CoordUtils.getDistance(startCoord, endCoord);
 				//if (dis <= this.getEditorConfigs().getInteractionConfigs().getUnmovePointerDistanceThreshold())
-				if (Kekule.CoordUtils.isEqual(startCoord, endCoord))  // mouse down and up in same point, not manupulate, just select a object
+				if (startCoord && endCoord && Kekule.CoordUtils.isEqual(startCoord, endCoord))  // mouse down and up in same point, not manupulate, just select a object
 				{
 					if (this.getEnableSelect())
 						this.getEditor().selectOnCoord(startCoord, shifted || this.getEditor().getIsToggleSelectOn());
@@ -8332,13 +8346,22 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 				this._initialGestureTransformParams = {
 					'angle': (event.rotation * Math.PI / 180) || 0
 				};
+				//console.log('begin gesture manipulation', this.getState(), this.getManipulationType());
 				// start a brand new one
 				if (this.getState() !== Kekule.Editor.BasicManipulationIaController.State.MANIPULATING)
+				{
 					this.startManipulation(null, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+				}
 				else
 				{
 					if (this.getManipulationType() !== Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM)
-						this.setManipulationType(Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+					{
+						// the gesture event may be evoked after pointerdown event,
+						// and in pointerdown, a calling to startManipulation without transform may be already called.
+						// So here we force a new manipulation with transform on.
+						//this.setManipulationType(Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+						this.startManipulation(null, null, Kekule.Editor.BasicManipulationIaController.ManipulationType.TRANSFORM);
+					}
 				}
 			}
 			else
@@ -8409,6 +8432,8 @@ Kekule.Editor.BasicManipulationIaController = Class.create(Kekule.Editor.BaseEdi
 			{
 				rotateAngle = 0;
 			}
+
+			//console.log('here', resizeScales.scaleX, resizeScales.scaleY, rotateAngle, availTransformTypes);
 
 			this.updateManipulationStepBuffer(this._manipulationStepBuffer, {
 				'explicitTransformParams': {
