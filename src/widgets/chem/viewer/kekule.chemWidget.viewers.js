@@ -88,6 +88,7 @@ Kekule.globalOptions.add('chemWidget.viewer', {
 	'enableToolbar': false,
 	'enableDirectInteraction': true,
 	'enableTouchInteraction': false,
+	'enableGestureInteraction': false,
 	'showCaption': false,
 
 	'useNormalBackground': false,
@@ -211,6 +212,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	DEF_TOOLBAR_EVOKE_MODES: [/*EM.ALWAYS,*/ EM.EVOKEE_CLICK, EM.EVOKEE_MOUSE_ENTER, EM.EVOKEE_TOUCH],
 	/** @private */
 	DEF_TOOLBAR_REVOKE_MODES: [/*EM.ALWAYS,*/ /*EM.EVOKEE_CLICK,*/ EM.EVOKEE_MOUSE_LEAVE, EM.EVOKER_TIMEOUT],
+	/** @private */
+	OBSERVING_GESTURES: ['pinch', 'pinchstart', 'pinchmove', 'pinchend', 'pinchcancel', 'pinchin', 'pinchout'],
 	/** @construct */
 	initialize: function(/*$super, */parentOrElementOrDocument, chemObj, renderType, viewerConfigs)
 	{
@@ -273,6 +276,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.endUpdate();
 		}
 
+		var gOptions = Kekule.globalOptions.get('chemWidget.viewer') || {};
+		this.setEnableGesture(oneOf(gOptions.enableGestureInteraction, false));  // the hammer event reactor need to be installed after element is bind
 		this.addIaController('default', new Kekule.ChemWidget.ViewerBasicInteractionController(this), true);
 	},
 	/** @private */
@@ -606,6 +611,24 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			{
 				this.setPropStoreFieldValue('enableTouchInteraction', !!value);
 				this.setTouchAction(value? 'none': null);
+			}
+		});
+		this.defineProp('enableGesture', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				var bValue = !!value;
+				if (this.getEnableGesture() !== bValue)
+				{
+					this.setPropStoreFieldValue('enableGesture', bValue);
+					if (bValue)
+					{
+						this.startObservingGestureEvents(this.OBSERVING_GESTURES);
+					}
+					else
+					{
+						this.startObservingGestureEvents(this.OBSERVING_GESTURES);
+					}
+				}
 			}
 		});
 	},
@@ -2086,6 +2109,13 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		return result;
 	},
 	/** @private */
+	getEnableGestureManipulation: function()
+	{
+		var v = this.getViewer();
+		var result = !!(v && v.getEnableDirectInteraction() && v.getEnableTouchInteraction() && v.getEnableGesture() && v.getChemObjLoaded());
+		return result;
+	},
+	/** @private */
 	_initTransform: function()
 	{
 		var viewer = this.getViewer();
@@ -2131,15 +2161,17 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		return (target === interactionElem) || Kekule.DomUtils.isDescendantOf(target, interactionElem);
 	},
 	/** @private */
-	_beginInteractTransformAtCoord: function(screenX, screenY, clientX, clientY, htmlEvent)
+	_beginInteractTransformAtCoord: function(screenX, screenY, clientX, clientY, htmlEvent, pointerId)
 	{
 		var viewer = this.getViewer();
 		if (viewer && viewer.getChemObj())
 		{
 			//if (viewer.getRenderType() === Kekule.Render.RendererType.R3D)
 			{
+				//this._clearInteractionTransformInfo();
 				var info = this._transformInfo;
 				info.isTransforming = true;
+				info.interactingPointerId = pointerId;
 				info.lastCoord = {'x': screenX, 'y': screenY};
 				info.transformInitCoord = {'x': screenX, 'y': screenY};
 
@@ -2162,12 +2194,36 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		}
 	},
 	/** @private */
-	_endInteractTransform: function()
+	_beginGestureInteractTransform: function(e)
 	{
+		var viewer = this.getViewer();
+		if (viewer && viewer.getChemObj())
+		{
+			//this._clearInteractionTransformInfo();
+			// currently we only react to the zoom gesture
+			var info = this._transformInfo;
+			info.isGestureTransforming = true;
+			info.isTransforming = false;  // disable normal pointer move transform when doing gesture
+			info.initialGestureZoomLevel = viewer.getCurrZoom();
+
+			this._requestInteractiveTransform();
+		}
+	},
+	/** @private */
+	_clearInteractionTransformInfo: function()
+	{
+		this._transformInfo.interactingPointerId = null;
 		this._transformInfo.isTransforming = false;
 		this._transformInfo.lastCoord = null;
 		this._transformInfo.transformInitCoord = null;
 		this._transformInfo.initBaseCoordOffset = null;
+		this._transformInfo.isGestureTransforming = false;
+		this._transformInfo.initialGestureZoomLevel = null;
+	},
+	/** @private */
+	_endInteractTransform: function()
+	{
+		this._clearInteractionTransformInfo();
 		//this.getViewer().setTouchAction(null);
 		this._doInteractiveTransformEnd();
 	},
@@ -2231,8 +2287,10 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		return result;
 	},
 	/** @private */
-	_interactTransformAtCoord: function(screenX, screenY)
+	_interactTransformAtCoord: function(screenX, screenY, pointerId)
 	{
+		if (pointerId !== this._transformInfo.interactingPointerId)  // move with other pointer device other than the one invoking transform, ignore
+			return;
 		var lastCoord = this._transformInfo.lastCoord;
 		if (lastCoord)
 		{
@@ -2254,21 +2312,45 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		*/
 		this._transformInfo.interactScreenCoord = {x: screenX, y: screenY};
 
-		if (!this._interactiveTransformStepId)
-			this._interactiveTransformStepId = window.requestAnimationFrame(this._doInteractiveTransformStepBind);
+		if (!this._interactiveTransformStepId && Kekule.$jsRoot.requestAnimationFrame)
+			this._interactiveTransformStepId = Kekule.$jsRoot.requestAnimationFrame(this._doInteractiveTransformStepBind);
 	},
 	/** @private */
 	_doInteractiveTransformStep: function()
 	{
-		if (this._transformInfo && this._transformInfo.isTransforming)
+		if (this._transformInfo)
 		{
-			var screenCoord = this._transformInfo.interactScreenCoord;
-			if (this.getViewerRenderType() === Kekule.Render.RendererType.R3D)
-				this.rotateByXYDistance(screenCoord.x, screenCoord.y);
-			else
-				this.moveByXYDistance(screenCoord.x, screenCoord.y);
-
+			if (this._transformInfo.isTransforming)
+			{
+				var screenCoord = this._transformInfo.interactScreenCoord;
+				if (this.getViewerRenderType() === Kekule.Render.RendererType.R3D)
+					this.rotateByXYDistance(screenCoord.x, screenCoord.y);
+				else
+					this.moveByXYDistance(screenCoord.x, screenCoord.y);
+			}
+			else if (this._transformInfo.isGestureTransforming)
+			{
+				this._doGestureInteractTransformStep();
+			}
 			this._interactiveTransformStepId = window.requestAnimationFrame(this._doInteractiveTransformStepBind);
+		}
+	},
+	/** @private */
+	_doGestureInteractTransformStep: function()
+	{
+		var viewer = this.getViewer();
+		if (viewer && viewer.getChemObj())
+		{
+			var info = this._transformInfo;
+			if (info.isGestureTransforming && info.pinchScale)
+			{
+				var gestureScale = info.pinchScale;
+				if (gestureScale)
+				{
+					var newZoom = info.initialGestureZoomLevel * gestureScale;
+					viewer.zoomTo(newZoom);
+				}
+			}
 		}
 	},
 	/** @private */
@@ -2276,7 +2358,8 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	{
 		if (this._interactiveTransformStepId)
 		{
-			window.cancelAnimationFrame(this._interactiveTransformStepId);
+			if (Kekule.$jsRoot.cancelAnimationFrame)
+				Kekule.$jsRoot.cancelAnimationFrame(this._interactiveTransformStepId);
 			this._interactiveTransformStepId = null;
 		}
 	},
@@ -2293,6 +2376,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		else
 			return 0;
 	},
+
 	/** @private */
 	needReactEvent: function(e)
 	{
@@ -2338,7 +2422,8 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			if (e.getPointerType() !== XEvent.PointerType.TOUCH || this.getEnableTouchInteraction())
 			{
 				// start mouse drag rotation in 3D render mode
-				this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY(), e.getClientX(), e.getClientY(), e);
+				//console.log('pointer down', e.pointerId);
+				this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY(), e.getClientX(), e.getClientY(), e, e.pointerId);
 				//e.preventDefault();
 			}
 		}
@@ -2384,7 +2469,8 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	{
 		//console.log('pointer_leave!', e.getTarget(), e.getCurrentTarget());
 		//this._transformInfo.isTransforming = false;
-		this._endInteractTransform();
+		if (this._transformInfo.isTransforming)
+			this._endInteractTransform();
 	},
 
 	/** @private */
@@ -2407,7 +2493,8 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		if (e.getButton() === XEvent.MouseButton.LEFT)
 		{
 			//this._transformInfo.isTransforming = false;
-			this._endInteractTransform();
+			if (this._transformInfo.isTransforming)
+				this._endInteractTransform();
 			//e.preventDefault();
 		}
 	},
@@ -2432,7 +2519,8 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		*/
 		if (this._transformInfo.isTransforming)
 		{
-			this._interactTransformAtCoord(e.getScreenX(), e.getScreenY());
+			//console.log('pointer move', e.pointerId);
+			this._interactTransformAtCoord(e.getScreenX(), e.getScreenY(), e.pointerId);
 			try
 			{
 				e.preventDefault();
@@ -2621,6 +2709,39 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		if (info.isTransforming)
 			result = 'move';  //'grabbing';
 		return result;
+	},
+
+	/** @ignore */
+	react_pinchstart: function(e)
+	{
+		//console.log('pinch start');
+		if (this.getEnableGestureManipulation())
+			this._beginGestureInteractTransform(e);
+	},
+	/** @ignore */
+	react_pinchmove: function(e)
+	{
+		if (this.getEnableGestureManipulation())
+		{
+			var info = this._transformInfo;
+			if (info.isGestureTransforming)
+			{
+				//console.log('pinch move');
+				info.pinchScale = e.scale;
+			}
+		}
+	},
+	/** @ignore */
+	react_pinchend: function(e)
+	{
+		if (this.getEnableGestureManipulation() && this._transformInfo.isGestureTransforming)
+			this._endInteractTransform();
+	},
+	/** @ignore */
+	react_pinchcancel: function(e)
+	{
+		if (this.getEnableGestureManipulation() && this._transformInfo.isGestureTransforming)
+			this._endGestureInteractTransform();
 	}
 });
 
