@@ -179,7 +179,8 @@
     width: 6em;
 }
 
-.K-Chem-Displayer-DrawContext-Parent
+.K-Chem-Displayer-DrawContext-Parent,
+.K-Chem-Viewer-UiContext-Parent
 {
     display: block;
     /*

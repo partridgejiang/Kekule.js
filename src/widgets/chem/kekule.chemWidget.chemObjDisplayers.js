@@ -872,6 +872,16 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	},
 
 	/**
+	 * Returns the root element to hold the drawing context parents.
+	 * Descendants may override this method
+	 * @returns {HTMLElement}
+	 */
+	getClientElement: function()
+	{
+		return this.getElement();
+	},
+
+	/**
 	 * Returns parent element to create draw context inside.
 	 * Descendants can override this method.
 	 */
@@ -890,13 +900,12 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			result.style.width = '100%';
 			result.style.height = '100%';
 			// insert as first child
-			var root = this.getElement();
+			var root = this.getClientElement();
 			var currFirst = Kekule.DomUtils.getFirstChildElem(root);
 			if (currFirst)
 				root.insertBefore(result, currFirst);
 			else
 				root.appendChild(result);
-
 		}
 		return result;
 	},
@@ -978,6 +987,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 */
 	changeContextDimension: function(newDimension)
 	{
+		/*
 		if (this.getDrawBridge() && this.getDrawContext())
 		{
 			var width = newDimension.width;
@@ -988,10 +998,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				var overSamplingRatio = this._getContextOverSamplingRatio();
 				if (overSamplingRatio !== 1 && Kekule.BrowserFeature.cssTranform)  // oversampling enabled
 				{
-					/*
-					width *= overSamplingRatio;
-					height *= overSamplingRatio;
-					*/
 					var scale = 1 / overSamplingRatio;
 					elem.style.transform = 'scale(' + scale + ',' + scale + ')';
 					elem.style.transformOrigin = '0 0';
@@ -1005,7 +1011,48 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 					this.getDrawBridge().setContextParam(this.getDrawContext(), 'overSamplingRatio', null);
 				}
 			}
-			this._resizeContext(this.getDrawContext(), this.getDrawBridge(), width, height);
+			//this._resizeContext(this.getDrawContext(), this.getDrawBridge(), width, height);
+			this.doChangeContextDimension(width, height);
+			//this.getDrawBridge().setContextDimension(this.getDrawContext(), newDimension.width, newDimension.height);
+			return true;
+		}
+		else
+			return false;
+		*/
+		return this.doChangeContextDimension(this.getDrawContext(), this.getDrawBridge(), newDimension, true);
+	},
+	/** @private */
+	doChangeContextDimension: function(drawContext, drawBridge, newDimension, enableOverSampling)
+	{
+		//this._resizeContext(this.getDrawContext(), this.getDrawBridge(), width, height);
+		if (drawBridge && drawContext)
+		{
+			var width = newDimension.width;
+			var height = newDimension.height;
+			var elem = drawBridge.getContextElem(drawContext);
+			if (elem)  // use transform CSS property to do resampling
+			{
+				var overSamplingRatio = this._getContextOverSamplingRatio();
+				if (overSamplingRatio !== 1 && Kekule.BrowserFeature.cssTranform && enableOverSampling)  // oversampling enabled
+				{
+					/*
+					width *= overSamplingRatio;
+					height *= overSamplingRatio;
+					*/
+					var scale = 1 / overSamplingRatio;
+					elem.style.transform = 'scale(' + scale + ',' + scale + ')';
+					elem.style.transformOrigin = '0 0';
+					//this.setPropStoreFieldValue('actualOverSamplingRatio', overSamplingRatio);  // store the over sampling ratio for rendering
+					drawBridge.setContextParam(drawContext, 'overSamplingRatio', overSamplingRatio);
+				}
+				else
+				{
+					elem.style.transform = '';
+					//this.setPropStoreFieldValue('actualOverSamplingRatio', null);  // store the over sampling ratio for rendering
+					drawBridge.setContextParam(drawContext, 'overSamplingRatio', null);
+				}
+			}
+			this._resizeContext(drawContext, drawBridge, width, height);
 			//this.getDrawBridge().setContextDimension(this.getDrawContext(), newDimension.width, newDimension.height);
 			return true;
 		}

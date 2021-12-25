@@ -16,6 +16,7 @@
  * requires /widgets/kekule.widget.helpers.js
  * requires /widgets/chem/kekule.chemWidget.base.js
  * requires /widgets/chem/kekule.chemWidget.chemObjDisplayers.js
+ * requires /widgets/chem/uiMarker/kekule.chemWidget.uiMarkers.js
  * requires /widgets/operation/kekule.actions.js
  * requires /widgets/commonCtrls/kekule.widget.buttons.js
  * requires /widgets/commonCtrls/kekule.widget.containers.js
@@ -103,8 +104,10 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	VIEWER: 'K-Chem-Viewer',
 	VIEWER2D: 'K-Chem-Viewer2D',
 	VIEWER3D: 'K-Chem-Viewer3D',
+	VIEWER_CLIENT: 'K-Chem-Viewer-Client',
 	VIEWER_CAPTION: 'K-Chem-Viewer-Caption',
 	VIEWER_EMBEDDED_TOOLBAR: 'K-Chem-Viewer-Embedded-Toolbar',
+	VIEWER_UICONTEXT_PARENT: 'K-Chem-Viewer-UiContext-Parent',
 
 	VIEWER_MENU_BUTTON: 'K-Chem-Viewer-Menu-Button',
 
@@ -329,6 +332,93 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.defineProp('viewerConfigs', {'dataType': 'Kekule.ChemWidget.ChemObjDisplayerConfigs', 'serializable': false,
 			'getter': function() { return this.getDisplayerConfigs(); },
 			'setter': function(value) { return this.setDisplayerConfigs(value); }
+		});
+
+		//this.defineProp('enableUiContext', {'dataType': DataType.BOOL});
+		this.defineProp('uiDrawBridge', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				if (!this.getEnableUiContext())
+					return null;
+				var result = this.getPropStoreFieldValue('uiDrawBridge');
+				if (!result && !this.__$uiDrawBridgeInitialized$__)
+				{
+					this.__$uiDrawBridgeInitialized$__ = true;
+					result = this.createUiDrawBridge();
+					this.setPropStoreFieldValue('uiDrawBridge', result);
+				}
+				return result;
+			}
+		});
+		this.defineProp('uiContext', {'dataType': DataType.OBJECT, 'serializable': false,
+			'getter': function()
+			{
+				if (!this.getEnableUiContext())
+					return null;
+				var result = this.getPropStoreFieldValue('uiContext');
+				if (!result)
+				{
+					var bridge = this.getUiDrawBridge();
+					if (bridge)
+					{
+						var elem = this.getUiContextParentElem();
+						if (!elem)
+							return null;
+						else
+						{
+							var dim = Kekule.HtmlElementUtils.getElemScrollDimension(elem);
+							//var dim = Kekule.HtmlElementUtils.getElemClientDimension(elem);
+							result = bridge.createContext(elem, dim.width, dim.height);
+							this.setPropStoreFieldValue('uiContext', result);
+						}
+					}
+				}
+				return result;
+			}
+		});
+		this.defineProp('uiPainter', {'dataType': 'Kekule.Render.ChemObjPainter', 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('uiPainter');
+				if (!result)
+				{
+					// ui painter will always in 2D mode
+					var markers = this.getUiMarkers();
+					result = new Kekule.Render.ChemObjPainter(Kekule.Render.RendererType.R2D, markers, this.getUiDrawBridge());
+					result.setCanModifyTargetObj(true);
+					this.setPropStoreFieldValue('uiPainter', result);
+					return result;
+				}
+				return result;
+			}
+		});
+		this.defineProp('uiRenderer', {'dataType': 'Kekule.Render.AbstractRenderer', 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				var p = this.getUiPainter();
+				if (p)
+				{
+					var r = p.getRenderer();
+					if (!r)
+						p.prepareRenderer();
+					return p.getRenderer() || null;
+				}
+				else
+					return null;
+			}
+		});
+		// private ui marks properties
+		this.defineProp('uiMarkers', {'dataType': 'Kekule.ChemWidget.UiMarkerCollection', 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('uiMarkers');
+				if (!result)
+				{
+					result = new Kekule.ChemWidget.UiMarkerCollection();
+					this.setPropStoreFieldValue('uiMarkers', result);
+				}
+				return result;
+			}
 		});
 
 		this.defineProp('allowedMolDisplayTypes', {'dataType': DataType.ARRAY, 'scope': PS.PUBLIC,
@@ -728,6 +818,16 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return result;
 	},
 	/** @ignore */
+	doCreateSubElements: function(doc, docFragment)
+	{
+		// client element
+		var clientElem = doc.createElement('div');
+		clientElem.className = CCNS.VIEWER_CLIENT;
+		this._clientElement = clientElem;
+		docFragment.appendChild(clientElem);
+		return [clientElem];
+	},
+	/** @ignore */
 	doGetWidgetClassName: function(/*$super*/)
 	{
 		var result = this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.VIEWER;
@@ -748,6 +848,12 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		return (renderType === Kekule.Render.RendererType.R3D)?
 			CCNS.VIEWER3D: CCNS.VIEWER2D;
+	},
+
+	/** @ignore */
+	getClientElement: function()
+	{
+		return this._clientElement;
 	},
 
 	/** @ignore */
@@ -781,6 +887,18 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		// resize context, means client size changed, so toolbar should also be adjusted.
 		this.tryApplySuper('refitDrawContext', [doNotRepaint])  /* $super(doNotRepaint) */;
 		this.adjustToolbarPos();
+	},
+	/** @ignore */
+	changeContextDimension: function(newDimension)
+	{
+		if (this.getEnableUiContext())
+		{
+			if (this.getUiDrawBridge() && this.getUiContext())
+			{
+				this.doChangeContextDimension(this.getUiContext(), this.getUiDrawBridge(), newDimension, false);
+			}
+		}
+		return this.tryApplySuper('changeContextDimension', [newDimension]);
 	},
 
 	/** @ignore */
@@ -827,6 +945,59 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			else
 				Kekule.HtmlElementUtils.removeClass(elem, CNS.CORNER_ALL);
 		}
+	},
+
+	/**
+	 * Returns whether the UI marker context is enabled in viewer.
+	 * Descendants or extensions may override this method.
+	 * @returns {Bool}
+	 */
+	getEnableUiContext: function()
+	{
+		return false;
+	},
+	/**
+	 * Returns parent element to create UI context inside viewer.
+	 * @private
+	 */
+	getUiContextParentElem: function(disableAutoCreate)
+	{
+		if (!this.getEnableUiContext())
+			return null;
+		var result = this._uiContextParentElem;
+		if (!result && !disableAutoCreate)  // create new
+		{
+			result = this.getDocument().createElement('div'); // IMPORTANT: span may cause dimension calc problem of context
+			this._uiContextParentElem = result;
+			Kekule.HtmlElementUtils.addClass(result, CNS.DYN_CREATED);
+			Kekule.HtmlElementUtils.addClass(result, CCNS.VIEWER_UICONTEXT_PARENT);
+			// IMPORTANT: force to fullfill the parent, otherwise draw context dimension calculation may have problem
+			result.style.width = '100%';
+			result.style.height = '100%';
+			// insert after draw context parent elment
+			var drawContextParentElem = this.getDrawContextParentElem(true);
+			var root = drawContextParentElem? drawContextParentElem.parentNode: this.getElement();
+			var refSibling = drawContextParentElem && drawContextParentElem.nextSibling;
+			if (refSibling)
+				root.insertBefore(result, refSibling);
+			else
+				root.appendChild(result);
+		}
+		return result;
+	},
+	/** @private */
+	createUiDrawBridge: function()
+	{
+		// UI marker will always be in 2D
+		var result = Kekule.Render.DrawBridge2DMananger.getPreferredBridgeInstance();
+		if (!result)   // can not find suitable draw bridge
+		{
+			//Kekule.error(Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
+			var errorMsg = Kekule.Render.DrawBridge2DMananger.getUnavailableMessage() || Kekule.error(Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
+			if (errorMsg)
+				this.reportException(errorMsg, Kekule.ExceptionLevel.NOT_FATAL_ERROR);
+		}
+		return result;
 	},
 
 	/** @private */
@@ -885,7 +1056,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	getInteractionReceiverElem: function()
 	{
-		return this.getDrawContextParentElem();
+		//return this.getDrawContextParentElem();
+		return this.getClientElement();
 	},
 
 	/** @ignore */
@@ -962,6 +1134,210 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		elem.style.display = displayCaption? 'inherit': 'none';
 	},
 	*/
+
+	//////////////////// methods about UI markers ///////////////////////////////
+	/**
+	 * Notify that currently is modifing UI markers and the editor need not to repaint them.
+	 * @private
+	 */
+	beginUpdateUiMarkers: function()
+	{
+		--this._uiMarkerUpdateFlag;
+	},
+	/**
+	 * Call this method to indicate the UI marker update process is over and should be immediately updated.
+	 * @private
+	 */
+	endUpdateUiMarkers: function()
+	{
+		++this._uiMarkerUpdateFlag;
+		if (!this.isUpdatingUiMarkers())
+			this.repaintUiMarker();
+	},
+	/**
+	 * Check if the editor is under continuous UI marker update.
+	 * @returns {Bool}
+	 * @private
+	 */
+	isUpdatingUiMarkers: function()
+	{
+		return (this._uiMarkerUpdateFlag < 0);
+	},
+	/**
+	 * Called when transform has been made to objects and UI markers need to be modified according to it.
+	 * The UI markers will also be repainted.
+	 * @private
+	 */
+	recalcUiMarkers: function()
+	{
+		if (this.getUiDrawBridge())
+		{
+			this.beginUpdateUiMarkers();
+			try
+			{
+				// ???
+			}
+			finally
+			{
+				this.endUpdateUiMarkers();
+			}
+		}
+	},
+	/** @private */
+	repaintUiMarker: function()
+	{
+		if (this.isUpdatingUiMarkers())
+			return;
+		if (this.getUiDrawBridge() && this.getUiContext())
+		{
+			this.clearUiContext();
+			var drawParams = this.calcDrawParams();
+			this.getUiPainter().draw(this.getUiContext(), drawParams.baseCoord, drawParams.drawOptions);
+		}
+	},
+	/**
+	 * Create a new marker based on shapeInfo.
+	 * @private
+	 */
+	createShapeBasedMarker: function(/*markerPropName,*/ shapeInfo, drawStyles, updateRenderer)
+	{
+		var marker = new Kekule.ChemWidget.MetaShapeUiMarker();
+		if (shapeInfo)
+			marker.setShapeInfo(shapeInfo);
+		if (drawStyles)
+			marker.setDrawStyles(drawStyles);
+		//this.setPropStoreFieldValue(markerPropName, marker);
+		this.getUiMarkers().addMarker(marker);
+		if (updateRenderer)
+		{
+			//var updateType = Kekule.Render.ObjectUpdateType.ADD;
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, updateType);
+			this.repaintUiMarker();
+		}
+		return marker;
+	},
+	/**
+	 * Change the shape info of a meta shape based marker, or create a new marker based on shape info.
+	 * @private
+	 */
+	modifyShapeBasedMarker: function(marker, newShapeInfo, drawStyles, updateRenderer)
+	{
+		var updateType = Kekule.Render.ObjectUpdateType.MODIFY;
+		if (newShapeInfo)
+			marker.setShapeInfo(newShapeInfo);
+		if (drawStyles)
+			marker.setDrawStyles(drawStyles);
+		// notify change and update renderer
+		if (updateRenderer)
+		{
+			//this.getUiPainter().redraw();
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, updateType);
+			this.repaintUiMarker();
+		}
+	},
+	/**
+	 * Create a new marker based on shapeInfo.
+	 * @private
+	 */
+	createTextBasedMarker: function(coord, text, drawStyles, updateRenderer)
+	{
+		var marker = new Kekule.ChemWidget.TextUiMarker();
+		if (coord)
+			marker.setCoord(coord);
+		if (text)
+			marker.setText(text);
+		if (drawStyles)
+			marker.setDrawStyles(drawStyles);
+		//this.setPropStoreFieldValue(markerPropName, marker);
+		this.getUiMarkers().addMarker(marker);
+		if (updateRenderer)
+		{
+			//var updateType = Kekule.Render.ObjectUpdateType.ADD;
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, updateType);
+			this.repaintUiMarker();
+		}
+		return marker;
+	},
+	/**
+	 * Change the shape info of a meta shape based marker, or create a new marker based on shape info.
+	 * @private
+	 */
+	modifyTextBasedMarker: function(marker, newCoord, newText, drawStyles, updateRenderer)
+	{
+		var updateType = Kekule.Render.ObjectUpdateType.MODIFY;
+		if (newCoord)
+			marker.setCoord(newCoord);
+		if (newText)
+			marker.setText(newText);
+		if (drawStyles)
+			marker.setDrawStyles(drawStyles);
+		// notify change and update renderer
+		if (updateRenderer)
+		{
+			//this.getUiPainter().redraw();
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, updateType);
+			this.repaintUiMarker();
+		}
+	},
+	/**
+	 * Hide a UI marker.
+	 * @param marker
+	 */
+	hideUiMarker: function(marker, updateRenderer)
+	{
+		marker.setVisible(false);
+		// notify change and update renderer
+		if (updateRenderer)
+		{
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, Kekule.Render.ObjectUpdateType.MODIFY);
+			this.repaintUiMarker();
+		}
+	},
+	/**
+	 * Show an UI marker.
+	 * @param marker
+	 * @param updateRenderer
+	 */
+	showUiMarker: function(marker, updateRenderer)
+	{
+		marker.setVisible(true);
+		if (updateRenderer)
+		{
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, Kekule.Render.ObjectUpdateType.MODIFY);
+			this.repaintUiMarker();
+		}
+	},
+	/**
+	 * Remove a marker from collection.
+	 * @private
+	 */
+	removeUiMarker: function(marker)
+	{
+		if (marker)
+		{
+			this.getUiMarkers().removeMarker(marker);
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, Kekule.Render.ObjectUpdateType.REMOVE);
+			this.repaintUiMarker();
+		}
+	},
+	/**
+	 * Clear all UI markers.
+	 * @private
+	 */
+	clearUiMarkers: function()
+	{
+		this.getUiMarkers().clearMarkers();
+		//this.getUiRenderer().redraw(this.getUiContext());
+		//this.redraw();
+		this.repaintUiMarker();
+	},
+	/** @private */
+	clearUiContext: function()
+	{
+		if (this.getUiContext() && this.getUiDrawBridge())
+			this.getUiDrawBridge().clearContext(this.getUiContext());
+	},
+
 
 	/// Methods about popup editing ////////////////
 	/**
