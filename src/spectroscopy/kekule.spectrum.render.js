@@ -101,6 +101,8 @@ Kekule.Render.SpectrumDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addStrConfigProp('dataColor', '#000000');
 		this.addFloatConfigProp('dataStrokeWidthRatio', 0.025);
 		this.addFloatConfigProp('dataStrokeWidthMin', 1);
+		this.addFloatConfigProp('dataStrokeWidthMax', undefined);
+		this.addFloatConfigProp('dataStrokeWidthFixed', undefined);
 
 		// default data range
 		this.addFloatConfigProp('visibleIndependentDataRangeFrom', 0);
@@ -139,8 +141,12 @@ Kekule.Render.SpectrumDisplayConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addStrConfigProp('axisColor', '#000000');
 		this.addFloatConfigProp('axisWidthRatio', 0.025);
 		this.addFloatConfigProp('axisWidthMin', 1);
+		this.addFloatConfigProp('axisWidthMax', undefined);
+		this.addFloatConfigProp('axisWidthFixed', undefined);
 		this.addFloatConfigProp('axisScaleMarkSizeRatio', 0.1);
 		this.addFloatConfigProp('axisScaleMarkSizeMin', 3);
+		this.addFloatConfigProp('axisScaleMarkSizeMax', undefined);
+		this.addFloatConfigProp('axisScaleMarkSizeFixed', undefined);
 		this.addFloatConfigProp('axisUnlabeledScaleSizeRatio', 0.7);
 		this.addIntConfigProp('axisScaleMarkPreferredCount', 10);
 		this.addFloatConfigProp('axisLabelPaddingRatio', 0.02);
@@ -256,6 +262,8 @@ function extendRenderOptionPropEditors()
 		appendDefinitionItem(result, 'dataColor', DataType.STRING, [SpectrumClass, SpectrumDataSectionClass]);
 		appendDefinitionItem(result, 'dataStrokeWidthRatio', DataType.FLOAT, [SpectrumClass, SpectrumDataSectionClass]);
 		appendDefinitionItem(result, 'dataStrokeWidthMin', DataType.NUMBER, [SpectrumClass, SpectrumDataSectionClass]);
+		appendDefinitionItem(result, 'dataStrokeWidthMax', DataType.NUMBER, [SpectrumClass, SpectrumDataSectionClass]);
+		appendDefinitionItem(result, 'dataStrokeWidthFixed', DataType.NUMBER, [SpectrumClass, SpectrumDataSectionClass]);
 		appendDefinitionItem(result, 'visibleIndependentDataRangeFrom_Continuous', DataType.FLOAT, SpectrumClass);
 		appendDefinitionItem(result, 'visibleIndependentDataRangeTo_Continuous', DataType.FLOAT, SpectrumClass);
 		appendDefinitionItem(result, 'visibleDependentDataRangeFrom_Continuous', DataType.FLOAT, SpectrumClass);
@@ -284,8 +292,12 @@ function extendRenderOptionPropEditors()
 		appendDefinitionItem(result, 'axisColor', DataType.STRING, SpectrumClass, axisPrefixes);
 		appendDefinitionItem(result, 'axisWidthRatio', DataType.FLOAT, SpectrumClass, axisPrefixes);
 		appendDefinitionItem(result, 'axisWidthMin', DataType.NUMBER, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisWidthMax', DataType.NUMBER, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisWidthFixed', DataType.NUMBER, SpectrumClass, axisPrefixes);
 		appendDefinitionItem(result, 'axisScaleMarkSizeRatio', DataType.FLOAT, SpectrumClass, axisPrefixes);
 		appendDefinitionItem(result, 'axisScaleMarkSizeMin', DataType.NUMBER, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisScaleMarkSizeMax', DataType.NUMBER, SpectrumClass, axisPrefixes);
+		appendDefinitionItem(result, 'axisScaleMarkSizeFixed', DataType.NUMBER, SpectrumClass, axisPrefixes);
 		appendDefinitionItem(result, 'axisUnlabeledScaleSizeRatio', DataType.FLOAT, SpectrumClass, axisPrefixes);
 		appendDefinitionItem(result, 'axisScaleMarkPreferredCount', DataType.NUMBER, SpectrumClass, axisPrefixes);
 		appendDefinitionItem(result, 'axisLabelPaddingRatio', DataType.FLOAT, SpectrumClass, axisPrefixes);
@@ -1013,9 +1025,23 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		};
 		var getActualSpectrumLengthValue = function(options, fieldName, axisPrefix, refLength, unitLength)
 		{
-			var ratio = oneOf(options['spectrum_' + axisPrefix + fieldName.upperFirst() + 'Ratio'], options['spectrum_' + fieldName + 'Ratio']);
-			var min = oneOf(options['spectrum_' + axisPrefix + fieldName.upperFirst() + 'Min'], options['spectrum_' + fieldName + 'Min']);
-			return (min? Math.max(ratio * refLength, min): (ratio * refLength)) * unitLength;
+			var result;
+			var fixed = oneOf(options['spectrum_' + axisPrefix + fieldName.upperFirst() + 'Fixed'], options['spectrum_' + fieldName + 'Fixed']);
+			if (fixed)
+				result = fixed;
+			else
+			{
+				var ratio = oneOf(options['spectrum_' + axisPrefix + fieldName.upperFirst() + 'Ratio'], options['spectrum_' + fieldName + 'Ratio']);
+				var result = ratio * refLength;
+				var min = oneOf(options['spectrum_' + axisPrefix + fieldName.upperFirst() + 'Min'], options['spectrum_' + fieldName + 'Min']);
+				if (min)
+					result = Math.max(result, min);
+				var max = oneOf(options['spectrum_' + axisPrefix + fieldName.upperFirst() + 'Max'], options['spectrum_' + fieldName + 'Max']);
+				if (max)
+					result = Math.min(result, max);
+			}
+			return result * unitLength;
+			//return (min? Math.max(ratio * refLength, min): (ratio * refLength)) * unitLength;
 		};
 		var setDrawParam = function(params, fieldName, axisPrefix, value)
 		{
@@ -1530,9 +1556,23 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		var refLength = parentOptions.contextRefLengthes.xy;
 		var unitLength = oneOf(localOptions.unitLength, parentOptions.unitLength, 1);
 
-		var dataStrokeWidthRatio = oneOf(localOptions.spectrum_dataStrokeWidthRatio, parentOptions.spectrum_dataStrokeWidthRatio) || 0;
-		var dataStrokeWidthMin = oneOf(localOptions.spectrum_dataStrokeWidthMin, parentOptions.spectrum_dataStrokeWidthMin) || 0;
-		var strokeWidth = (Math.max(dataStrokeWidthRatio * refLength, dataStrokeWidthMin) || oneOf(localOptions.strokeWidth, parentOptions.strokeWidth, 1)) * unitLength;
+		var strokeWidth;
+		var dataStrokeWidthFixed = oneOf(localOptions.spectrum_dataStrokeWidthFixed, parentOptions.spectrum_dataStrokeWidthFixed) || 0;
+		if (dataStrokeWidthFixed)
+			strokeWidth = dataStrokeWidthFixed;
+		else
+		{
+			var dataStrokeWidthRatio = oneOf(localOptions.spectrum_dataStrokeWidthRatio, parentOptions.spectrum_dataStrokeWidthRatio) || 0;
+			strokeWidth = dataStrokeWidthRatio * refLength;
+			var dataStrokeWidthMin = oneOf(localOptions.spectrum_dataStrokeWidthMin, parentOptions.spectrum_dataStrokeWidthMin) || 0;
+			if (dataStrokeWidthMin)
+				strokeWidth = Math.max(strokeWidth, dataStrokeWidthMin);
+			var dataStrokeWidthMax = oneOf(localOptions.spectrum_dataStrokeWidthMax, parentOptions.spectrum_dataStrokeWidthMax) || 0;
+			if (dataStrokeWidthMax)
+				strokeWidth = Math.min(strokeWidth, dataStrokeWidthMax)
+		}
+		strokeWidth = (strokeWidth || oneOf(localOptions.strokeWidth, parentOptions.strokeWidth, 1)) * unitLength;
+		//var strokeWidth = (Math.max(dataStrokeWidthRatio * refLength, dataStrokeWidthMin) || oneOf(localOptions.strokeWidth, parentOptions.strokeWidth, 1)) * unitLength;
 		var result = Object.create(parentOptions);
 		var result = Object.extend(result, {
 			'strokeColor': oneOf(localOptions.spectrum_dataColor, localOptions.color, parentOptions.spectrum_dataColor, parentOptions.color),
