@@ -1946,6 +1946,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var dataIndexFloor, dataIndexCeil;
 		var useContinuousVarRange = true;
 		var varDef = this.getLocalVarDef(indepVarSymbol);
+		var dataCount = this.getDataCount();
 		useContinuousVarRange = !varDef.hasDifferentExternalUnit();  // the value get from getContinuousVarRange function in based on internal unit
 		if (useContinuousVarRange)
 		{
@@ -1954,14 +1955,14 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		}
 		if (useContinuousVarRange)
 		{
-			var dataIndex = (indepVarValue - indepVarRange.fromValue) / (indepVarRange.toValue - indepVarRange.fromValue) * this.getDataCount();
-			dataIndexFloor = Math.floor(dataIndex);
-			dataIndexCeil = Math.ceil(dataIndex);
+			var dataIndex = (indepVarValue - indepVarRange.fromValue) / (indepVarRange.toValue - indepVarRange.fromValue) * (dataCount - 1);
+			dataIndexFloor = Math.max(Math.floor(dataIndex), 0);
+			dataIndexCeil = Math.min(Math.ceil(dataIndex), dataCount - 1);
 		}
 		else
 		{
 			//indepVarRange = this.calcDataRange([indepVarSymbols])[indepVarSymbol];
-			var indexes = this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepVarValue, 0, this.getDataCount());
+			var indexes = this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepVarValue, 0, dataCount);
 			dataIndexFloor = indexes[0];
 			dataIndexCeil = indexes[1];
 		}
