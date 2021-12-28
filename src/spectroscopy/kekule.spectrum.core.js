@@ -1880,8 +1880,6 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		else
 			indepHashValues = independentValues;
 
-		// TODO: currently only handles data with one one independent var, but this approach can handle most of the spectrum cases
-		//var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
 		var indepVarSymbols = Kekule.ObjUtils.getOwnedFieldNames(indepHashValues);
 		var varDataRange = this.calcDataRange(indepVarSymbols);
 		var allowedErrorRate = extraOptions && extraOptions.allowedErrorRate;
@@ -2043,6 +2041,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			return this.getHashValueAt(dataIndexFloor);
 		else
 		{
+			/*
 			var valueFloor = this.getHashValueAt(dataIndexFloor);
 			var valueCeil = this.getHashValueAt(dataIndexCeil);
 			var ratio = (indepVarValue - valueFloor[indepVarSymbol]) / (valueCeil[indepVarSymbol] - valueFloor[indepVarSymbol]);
@@ -2056,6 +2055,10 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 				else
 					result[symbol] = valueFloor[symbol] + (valueCeil[symbol] - valueFloor[symbol]) * ratio;
 			}
+			*/
+			var valueFloor = this.getHashValueAt(dataIndexFloor);
+			var symbols =  Kekule.ObjUtils.getOwnedFieldNames(valueFloor);
+			return this._calcIntermediateDependentVarValuesBetween(symbols, indepVarSymbol, indepVarValue, dataIndexFloor, dataIndexCeil);
 		}
 		return result;
 	},
@@ -2073,6 +2076,84 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		else
 			return this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, fromIndex, halfIndex);
 	},
+	/** @private */
+	_calcIntermediateDependentVarValuesBetween: function(depVarSymbols, indepVarSymbol, indepVarValue, floorIndex, ceilIndex)
+	{
+		if (floorIndex === ceilIndex)
+		{
+			var value = this.getHashValueAt(floorIndex);
+			var result = {};
+			for (var i = 0, l = depVarSymbols.length; i < l; ++i)
+			{
+				result[depVarSymbols[i]] = value[depVarSymbols[i]];
+			}
+			return result;
+		}
+
+		var valueFloor = this.getHashValueAt(floorIndex);
+		var valueCeil = this.getHashValueAt(ceilIndex);
+
+		var floorIndepValue = valueFloor[indepVarSymbol];
+		var ceilIndepValue = valueCeil[indepVarSymbol];
+		if (!Kekule.NumUtils.isNormalNumber(floorIndepValue))
+		{
+			if (floorIndex > 0)
+				return this._calcIntermediateDependentVarValuesBetween(depVarSymbols, indepVarSymbol, indepVarValue, floorIndex - 1, ceilIndex);
+			else
+				return this._calcIntermediateDependentVarValuesBetween(depVarSymbols, indepVarSymbol, indepVarValue, ceilIndex, ceilIndex);
+		}
+		else if (!Kekule.NumUtils.isNormalNumber(ceilIndepValue))
+		{
+			if (ceilIndex < this.getDataCount() - 1)
+				return this._calcIntermediateDependentVarValuesBetween(depVarSymbols, indepVarSymbol, indepVarValue, floorIndex, ceilIndex + 1);
+			else
+				return this._calcIntermediateDependentVarValuesBetween(depVarSymbols, indepVarSymbol, indepVarValue, floorIndex, floorIndex);
+		}
+		else
+		{
+			var ratio = (indepVarValue - valueFloor[indepVarSymbol]) / (valueCeil[indepVarSymbol] - valueFloor[indepVarSymbol]);
+			var result = {};
+			for (var i = 0, l = depVarSymbols.length; i < l; ++i)
+			{
+				var symbol = depVarSymbols[i];
+				var floorDepValue = valueFloor[symbol];
+				var ceilDepValue = valueCeil[symbol];
+				var resultValue = false;
+				if (!Kekule.NumUtils.isNormalNumber(floorDepValue))
+				{
+					if (floorIndex > 0)
+						resultValue = this._calcIntermediateDependentVarValuesBetween([symbol], indepVarSymbol, indepVarValue, floorIndex - 1, ceilIndex);
+					else
+						resultValue = ceilDepValue[symbol];
+				}
+				else if (!Kekule.NumUtils.isNormalNumber(ceilDepValue))
+				{
+					if (ceilIndex < this.getDataCount() - 1)
+						resultValue = this._calcIntermediateDependentVarValuesBetween([symbol], indepVarSymbol, indepVarValue, floorIndex, ceilIndex + 1);
+					else
+						resultValue = floorDepValue[symbol];
+				}
+				else
+					resultValue = floorDepValue + (ceilDepValue - floorDepValue) * ratio;
+				result[symbol] = resultValue;
+			}
+			return result;
+		}
+
+
+		var symbols =  Kekule.ObjUtils.getOwnedFieldNames(valueFloor);
+		for (var i = 0, l = symbols.length; i < l; ++i)
+		{
+			var symbol = symbols[i];
+			if (symbol === indepVarSymbol)
+				result[symbol] = indepVarValue;
+			else
+				result[symbol] = valueFloor[symbol] + (valueCeil[symbol] - valueFloor[symbol]) * ratio;
+		}
+		//var valueFloor
+		var ratio = (indepVarValue - valueFloor[indepVarSymbol]) / (valueCeil[indepVarSymbol] - valueFloor[indepVarSymbol]);
+	},
+
 	/**
 	 * Returns an iterator to iterate all data in this object.
 	 * If iterator is not available, null should be returned.
