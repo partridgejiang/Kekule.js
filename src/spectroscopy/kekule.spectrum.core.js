@@ -1864,6 +1864,72 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	},
 
 	/**
+	 * Get the peak index from independent variable values.
+	 * If the independentValues not pointed to a peak, -1 will be returned.
+	 * @param {Variant} independentValues A hash value with symbol: number map, or an array of values, or a single number value.
+	 * @param {Hash} extraOptions
+	 * @returns {Int}
+	 */
+	findPeakIndexFromIndependent: function(independentValues, extraOptions)
+	{
+		var indepHashValues = {};
+		if (typeof(independentValues) === 'number')  // a direct number value,
+			indepHashValues = this._convArrayToSymboledHash([independentValues], this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT));
+		else if (DataType.isArrayValue(independentValues))
+			indepHashValues = this._convArrayToSymboledHash(independentValues, this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT));
+		else
+			indepHashValues = independentValues;
+
+		// TODO: currently only handles data with one one independent var, but this approach can handle most of the spectrum cases
+		//var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
+		var indepVarSymbols = Kekule.ObjUtils.getOwnedFieldNames(indepHashValues);
+		var varDataRange = this.calcDataRange(indepVarSymbols);
+		var allowedErrorRate = extraOptions && extraOptions.allowedErrorRate;
+		var allowedError = {};
+		for (var i = 0, l = indepVarSymbols.length; i < l; ++i)
+		{
+			var symbol = indepVarSymbols[i];
+			var indepSearchValue = indepHashValues[symbol];
+			if (indepSearchValue < varDataRange[symbol].min || indepSearchValue > varDataRange[symbol].max)
+				return -1;
+			else
+				allowedError[symbol] = allowedErrorRate && ((varDataRange[symbol].max - varDataRange[symbol].min) * allowedErrorRate);
+		}
+
+		var resultDetails = {'index': -1, 'distanceSqr': 0};
+		for (var i = 0, l = this.getDataCount(); i < l; ++i)
+		{
+			var value = this.getHashValueAt(i);
+			var distanceSqr;
+			var peakMatch = true;
+			for (var j = 0, k = indepVarSymbols.length; j < k; ++j)
+			{
+				var symbol = indepVarSymbols[j];
+				var indepSearchValue = indepHashValues[symbol];
+				var currValue = value[symbol];
+				var indepDistance = Math.abs(currValue - indepSearchValue);
+				if (indepDistance <= allowedError[symbol])
+				{
+					distanceSqr += Math.sqr(indepDistance / varDataRange[symbol]);
+				}
+				else // indep value not match to this peak
+				{
+					peakMatch = false;
+					break;
+				}
+			}
+			if (peakMatch)  // found the candicate peak, compare to the prev candicate one, chose with the min distance
+			{
+				if (resultDetails.index < 0 || resultDetails.distanceSqr > distanceSqr)
+				{
+					resultDetails.index = i;
+					resultDetails.distanceSqr = distanceSqr;
+				}
+			}
+		}
+		return resultDetails.index;
+	},
+	/**
 	 * Calculate values of dependant variable values from independent variable values.
 	 * @param {Variant} independentValues A hash value with symbol: number map, or an array of values, or a single number value.
 	 * @param {Hash} extraOptions
@@ -1898,6 +1964,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	/** @private */
 	_doCalcValueFromIndependentInPeakMode: function(independentValues, extraOptions)
 	{
+		/*
 		// TODO: currently only handles data with one one independent var, but this approach can handle most of the spectrum cases
 		var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
 		if (indepVarSymbols.length > 1)
@@ -1929,6 +1996,12 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 
 		//delete resultDetails.value[indepVarSymbol];  // remove the indepedent var, only use the dependent ones
 		return resultDetails.value;
+		*/
+		var peakIndex = this.findPeakIndexFromIndependent(independentValues, extraOptions);
+		if (peakIndex >= 0)  // found the peak
+			return this.getHashValueAt(peakIndex);
+		else  // use the default peak root value
+			return this.getPeakRootValueOf(independentValues);
 	},
 	/** @private */
 	_doCalcValueFromIndependentInContinousMode: function(independentValues, extraOptions)
