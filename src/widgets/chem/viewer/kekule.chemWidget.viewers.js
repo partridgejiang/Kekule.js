@@ -895,7 +895,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		{
 			if (this.getUiDrawBridge() && this.getUiContext())
 			{
-				this.doChangeContextDimension(this.getUiContext(), this.getUiDrawBridge(), newDimension, false);
+				this.doChangeContextDimension(this.getUiContext(), this.getUiDrawBridge(), newDimension, true);
 			}
 		}
 		return this.tryApplySuper('changeContextDimension', [newDimension]);
