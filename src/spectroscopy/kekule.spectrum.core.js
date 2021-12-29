@@ -490,6 +490,10 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	/** @private */
 	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumDataSection',
 	/** @private */
+	DATAITEM_SRC_FIELD_NAME: '_src',
+	/** @private */
+	DATAITEM_EXTRA_FIELD_NAME: '_extra',
+	/** @private */
 	initialize: function(name, parent, localVariables)
 	{
 		this.setPropStoreFieldValue('name', name);
@@ -657,6 +661,28 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		}
 		else
 			return false;  // use the default method
+	},
+	/** @private */
+	_setSysFieldOfDataItem: function(dataItem, fieldName, fieldValue)
+	{
+		try
+		{
+			if (Object.defineProperty)
+			{
+				Object.defineProperty(dataItem, fieldName, {
+					'value': fieldValue,
+					'configurable': true,
+					'writable': true,
+					'enumerable': false
+				});
+			}
+			else
+				dataItem[fieldName] = fieldValue;
+		}
+		catch(e)
+		{
+			dataItem[fieldName] = fieldValue;
+		}
 	},
 	/** @private */
 	_extractAllExtraInfoOfDataItems: function()
@@ -1473,20 +1499,35 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		{
 			result.push(hashValue[symbols[i]]);
 		}
+		var src = this._getDataValueSrc(hashValue);
+		if (src)
+		{
+			this._setSysFieldOfDataItem(result, this.DATAITEM_SRC_FIELD_NAME, src);
+		}
+
 		// then the extra fields
-		if (hashValue._extra)
-			result._extra = hashValue._extra;
+		var extra;
+		if (src && src[this.DATAITEM_EXTRA_FIELD_NAME])
+		{
+			//result._extra = hashValue._extra;
+			extra = src[this.DATAITEM_EXTRA_FIELD_NAME];
+		}
 		else
 		{
 			// then the remaining fields of hashValue, storing in _extra field of array item
-			var remainingFields = AU.exclude(Kekule.ObjUtils.getOwnedFieldNames(hashValue, false), symbols);
+			var remainingFields = AU.exclude(
+				Kekule.ObjUtils.getOwnedFieldNames(hashValue, false),
+				[this.DATAITEM_SRC_FIELD_NAME, this.DATAITEM_EXTRA_FIELD_NAME].concat(symbols));
 			if (remainingFields.length)
-				result._extra = {};
+				extra = {};
 			for (var i = 0, l = remainingFields.length; i < l; ++i)
 			{
-				result._extra[remainingFields[i]] = hashValue[remainingFields[i]];
+				extra[remainingFields[i]] = hashValue[remainingFields[i]];
 			}
 		}
+		if (extra)
+			//this.setExtraInfoOf(result, extra);
+			this._setSysFieldOfDataItem(src || result, this.DATAITEM_EXTRA_FIELD_NAME, extra);
 		return result;
 	},
 	/** @private */
@@ -1516,11 +1557,17 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 				value = arrayValue[i];
 			result[symbols[i]] = value;
 		}//
-		if (arrayValue._extra)
+		var src = this._getDataValueSrc(arrayValue);
+
+		if (src[this.DATAITEM_EXTRA_FIELD_NAME])
 		{
 			//result = Object.extend(result, arrayValue._extra);
-			result._extra = arrayValue._extra;
+			//result._extra = arrayValue._extra;
+			this._setSysFieldOfDataItem(result, this.DATAITEM_EXTRA_FIELD_NAME, arrayValue[this.DATAITEM_EXTRA_FIELD_NAME]);
 		}
+
+		this._setSysFieldOfDataItem(result, this.DATAITEM_SRC_FIELD_NAME, src || arrayValue);
+		//result._raw = arrayValue;
 		return result;
 	},
 	/** @private */
@@ -1636,6 +1683,18 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		this.setDataSorted(true);  // empty data are always sorted
 	},
 	/**
+	 * Returns the index of data item in this section. The item is can be a hash or an array.
+	 * If it is a hash, the hash fields must matches {@link Kekule.Spectroscopy.SpectrumData.independentVars} and {@link Kekule.Spectroscopy.SpectrumData.dependentVars}.
+	 * @param {Variant} item
+	 * @returns {Int}
+	 */
+	indexOfDataItem: function(item)
+	{
+		var dataItem = item[this.DATAITEM_SRC_FIELD_NAME] || item;
+		var items = this.getDataItems();
+		return items.indexOf(dataItem);
+	},
+	/**
 	 * Add new data item. The item is can be a hash or an array.
 	 * If it is a hash, the hash fields must matches {@link Kekule.Spectroscopy.SpectrumData.independentVars} and {@link Kekule.Spectroscopy.SpectrumData.dependentVars}.
 	 * If it is an array, the values in array will automatically mapped to independent and dependent vars.
@@ -1652,6 +1711,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		{
 			var items = this.getDataItems();
 			items.push(d);
+			if (d[this.DATAITEM_EXTRA_FIELD_NAME])
+				this._extraInfoAdded(d[this.DATAITEM_EXTRA_FIELD_NAME]);
 			this.notifyDataChange();
 			return d;
 		}
@@ -1683,10 +1744,11 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	getRawValueAt: function(index)
 	{
-		var rawValue = this.getDataItems()[index];
-		if (rawValue)
+		var srcValue = this.getDataItems()[index];
+		if (srcValue)
 		{
-			var result = AU.clone(rawValue);
+			var result = AU.clone(srcValue);
+			result[this.DATAITEM_SRC_FIELD_NAME] = srcValue;
 			var isContinousData = this.getMode() === Kekule.Spectroscopy.DataMode.CONTINUOUS;
 			//if (this.getMode() === Kekule.Spectroscopy.DataMode.CONTINUOUS)
 			{
@@ -1713,8 +1775,11 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 					result[i] = v;
 				}
 			}
-			if (rawValue._extra)  // copy the extra properties
-				result._extra = rawValue._extra;
+			if (srcValue[this.DATAITEM_EXTRA_FIELD_NAME])  // copy the extra properties
+			{
+				//result._extra = rawValue._extra;
+				this._setSysFieldOfDataItem(result, this.DATAITEM_EXTRA_FIELD_NAME, srcValue._extra);
+			}
 			return result;
 		}
 		else
@@ -1729,6 +1794,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 * Get the data value at index.
 	 * @param {Int} index
 	 * @returns {Hash} The hashed form of value.
+	 *   The hash value's ._raw field stores the original array form value.
+	 *   It may also containing a ._extra field storing the extra information of spectrum data.
 	 */
 	getValueAt: function(index, options)
 	{
@@ -1742,12 +1809,13 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	setRawValueAt: function(index, value)
 	{
 		var oldValue = this.getDataItems()[index];
-		if (oldValue && oldValue._extra)
-			this._extraInfoRemoved(oldValue._extra);
+		if (oldValue && oldValue[this.DATAITEM_EXTRA_FIELD_NAME])
+			this._extraInfoRemoved(oldValue[this.DATAITEM_EXTRA_FIELD_NAME]);
 		this.getDataItems()[index] = value;
-		if (value._extra)
+		if (value[this.DATAITEM_EXTRA_FIELD_NAME])
 		{
-			this._extraInfoAdded(value._extra);
+			this._setSysFieldOfDataItem(value, this.DATAITEM_EXTRA_FIELD_NAME, value[this.DATAITEM_EXTRA_FIELD_NAME]);  // redefine the value._extra field with special descriptors
+			this._extraInfoAdded(value[this.DATAITEM_EXTRA_FIELD_NAME]);
 		}
 		return this;
 	},
@@ -1773,6 +1841,38 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		this.setRawValueAt(index, d);
 		return this;
 	},
+
+	/** @private */
+	_getDataValueSrc: function(value)
+	{
+		if (!value)
+			return null;
+		else if (DataType.isArrayValue(value))
+			return value[this.DATAITEM_SRC_FIELD_NAME] || value;
+		else
+			return value[this.DATAITEM_SRC_FIELD_NAME];
+	},
+
+	/**
+	 * Create a new extra info object for value or index.
+	 * If no default object can be created, null will be returned.
+	 * Descendants may override this method.
+	 * @param {Variant} valueOrIndex
+	 * @returns {Object}
+	 */
+	createDefaultExtraInfoObjectFor: function(valueOrIndex)
+	{
+		var infoClass = (this.isPeakSection())? Kekule.Spectroscopy.SpectrumPeakDetails: null;
+		var result = infoClass? new infoClass(): null;
+		if (result && Kekule.ObjUtils.notUnset(valueOrIndex))
+		{
+			if (typeof(valueOrIndex) === 'number')  // index
+				this.setExtraInfoAt(valueOrIndex, result);
+			else if (valueOrIndex)
+				this.setExtraInfoOf(valueOrIndex, result);
+		}
+		return result;
+	},
 	/**
 	 * Get the extra information of a data value.
 	 * @param {Variant} value Data value in hash or array form.
@@ -1780,7 +1880,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	getExtraInfoOf: function(value)
 	{
-		return value._extra;
+		var src = this._getDataValueSrc(value) || value
+		return src[this.DATAITEM_EXTRA_FIELD_NAME] || value[this.DATAITEM_EXTRA_FIELD_NAME];
 	},
 	/**
 	 * Set the extra information of a data value.
@@ -1789,9 +1890,16 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	setExtraInfoOf: function(value, info)
 	{
-		if (value._extra)
-			this._extraInfoRemoved(value._extra);
-		value._extra = info;
+		var target = this._getDataValueSrc(value) || value;
+		/*
+		if (!DataType.isArrayValue(value))  // is hash value, get its _raw field first
+			src = value[this.DATAITEM_SRC_FIELD_NAME];
+		else
+			src = value;
+		*/
+		if (target[this.DATAITEM_EXTRA_FIELD_NAME])
+			this._extraInfoRemoved(target[this.DATAITEM_EXTRA_FIELD_NAME]);
+		this._setSysFieldOfDataItem(target, this.DATAITEM_EXTRA_FIELD_NAME, info);
 		this._extraInfoAdded(info);
 		return this;
 	},
@@ -1803,7 +1911,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	getExtraInfoAt: function(index)
 	{
 		var d = this.getDataItems()[index];
-		return d && d._extra;
+		return d && d[this.DATAITEM_EXTRA_FIELD_NAME];
 	},
 	/**
 	 * Set the extra information of data value at index.
@@ -1813,9 +1921,9 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	setExtraInfoAt: function(index, info)
 	{
 		var d = this.getDataItems()[index];
-		if (d._extra)
-			this._extraInfoRemoved(d._extra);
-		d._extra = info;
+		if (d[this.DATAITEM_EXTRA_FIELD_NAME])
+			this._extraInfoRemoved(d[this.DATAITEM_EXTRA_FIELD_NAME]);
+		this._setSysFieldOfDataItem(d, this.DATAITEM_EXTRA_FIELD_NAME, info);
 		this._extraInfoAdded(info);
 		return this;
 	},
@@ -1838,6 +1946,40 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		}
 	},
 
+	/*
+	 * Get the extra peak detail information (based on {@link Kekule.Spectroscopy.SpectrumPeakDetails}).
+	 * @param {Variant} value Data value in hash or array form.
+	 * @param {Bool} autoCreate If the peak is without extra info, whether automatically create an instance of {@link Kekule.Spectroscopy.SpectrumPeakDetails}.
+	 * @returns {Kekule.Spectroscopy.SpectrumPeakDetails}
+	 */
+	/*
+	getPeakDetailsOf: function(value, autoCreate)
+	{
+		var extra = this.getExtraInfoOf(value);
+		if (!extra && autoCreate)
+		{
+			extra = new Kekule.Spectroscopy.SpectrumPeakDetails();
+			this.setExtraInfoOf(value, extra);
+		}
+		return extra && ((extra instanceof Kekule.Spectroscopy.SpectrumPeakDetails)? extra: null);
+	},
+	*/
+	/*
+	 * Get the extra peak detail information (based on {@link Kekule.Spectroscopy.SpectrumPeakDetails}).
+	 * @param {Int} index
+	 * @param {Bool} autoCreate If the peak is without extra info, whether automatically create an instance of {@link Kekule.Spectroscopy.SpectrumPeakDetails}.
+	 * @returns {Kekule.Spectroscopy.SpectrumPeakDetails}
+	 */
+	/*
+	getPeakDetailsAt: function(index, autoCreate)
+	{
+		var value = this.getRawValueAt(index);
+		if (value)
+			return this.getPeakDetailsOf(value, autoCreate);
+		else
+			return null;
+	},
+	*/
 	/**
 	 * Returns the peak root value of data item value.
 	 * @param {Hash} value
@@ -1864,13 +2006,14 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	},
 
 	/**
-	 * Get the peak index from independent variable values.
-	 * If the independentValues not pointed to a peak, -1 will be returned.
+	 * Get the data item index from independent variable values.
+	 * If the independentValues not pointed to a data item, -1 will be returned.
+	 * This method is recommended to be used in peak mode spectrum data section.
 	 * @param {Variant} independentValues A hash value with symbol: number map, or an array of values, or a single number value.
 	 * @param {Hash} extraOptions
 	 * @returns {Int}
 	 */
-	findPeakIndexFromIndependent: function(independentValues, extraOptions)
+	getDataItemIndexFromIndependent: function(independentValues, extraOptions)
 	{
 		var indepHashValues = {};
 		if (typeof(independentValues) === 'number')  // a direct number value,
@@ -1926,6 +2069,19 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			}
 		}
 		return resultDetails.index;
+	},
+	/**
+	 * Returns the data hash value item from independent variable values.
+	 * If the independentValues not pointed to a data value item, null will be returned.
+	 * This method is recommended to be used in peak mode spectrum data section.
+	 * @param {Variant} independentValues A hash value with symbol: number map, or an array of values, or a single number value.
+	 * @param {Hash} extraOptions
+	 * @returns {Int}
+	 */
+	getDataValueFromIndependent: function(independentValues, extraOptions)
+	{
+		var index = this.getDataItemIndexFromIndependent(independentValues, extraOptions);
+		return (index >= 0)? this.getValueAt(index): null;
 	},
 	/**
 	 * Calculate values of dependant variable values from independent variable values.
@@ -1995,7 +2151,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		//delete resultDetails.value[indepVarSymbol];  // remove the indepedent var, only use the dependent ones
 		return resultDetails.value;
 		*/
-		var peakIndex = this.findPeakIndexFromIndependent(independentValues, extraOptions);
+		var peakIndex = this.getDataItemIndexFromIndependent(independentValues, extraOptions);
 		if (peakIndex >= 0)  // found the peak
 			return this.getHashValueAt(peakIndex);
 		else  // use the default peak root value
@@ -3071,30 +3227,6 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 	{
 		this.getActiveSection().setExtraInfoAt(index, info);
 		return this;
-	},
-
-	/**
-	 * Calculate values of dependant variable values from independent variable values.
-	 * @param {Hash} independentValues
-	 * @param {Hash} extraOptions
-	 * @returns {Hash}
-	 */
-	getDependentValues: function(independentValues, extraOptions)
-	{
-		return this.doGetDependentValues(independantValues, extraOptions);
-	},
-	/**
-	 * Do actual work of {@link Kekule.Spectroscopy.SpectrumData.getDependentValues}.
-	 * Descendants should override this method.
-	 * @param {Hash} independentValues
-	 * @param {Hash} extraOptions
-	 * @returns {Hash}
-	 * @private
-	 */
-	doGetDependentValues: function(independentValues, extraOptions)
-	{
-		// TODO: unfinished
-		return {};
 	},
 	/**
 	 * Returns an iterator to iterate all data in this object.

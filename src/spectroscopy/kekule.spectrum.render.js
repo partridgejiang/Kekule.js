@@ -205,11 +205,11 @@ ClassEx.extendMethod(Kekule.Spectroscopy.Spectrum, 'doGetObjAnchorPosition',
 		return Kekule.ObjAnchorPosition.CENTER;
 	});
 ClassEx.extend(Kekule.Spectroscopy.Spectrum, {
-	'getDisplayedDataSections': function()
+	getDisplayedDataSections: function()
 	{
 		return [this.getActiveDataSection()];
 	},
-	'getPseudoRenderSubObject':	function(objName, doNotCreate)
+	getPseudoRenderSubObject:	function(objName, doNotCreate)
 	{
 		var subObjs = this.__$subRenderObjs$__;
 		if (!subObjs)
@@ -224,7 +224,220 @@ ClassEx.extend(Kekule.Spectroscopy.Spectrum, {
 			subObjs[objName] = result;
 		}
 		return result;
+	},
+
+	getDataItemOverridenRenderOptions: function(dataItem)
+	{
+		for (var i = 0, l = this.getDataSectionCount(); i < l; ++i)
+		{
+			var sec = this.getDataSectionAt(i);
+			var index = sec.indexOfDataItem(dataItem);
+			if (index >= 0)
+				return sec.getDataItemOverridenRenderOptions(dataItem);
+		}
+		return null;
+	},
+	setDataItemRenderOptions: function(dataItem, options)
+	{
+		for (var i = 0, l = this.getDataSectionCount(); i < l; ++i)
+		{
+			var sec = this.getDataSectionAt(i);
+			var index = sec.indexOfDataItem(dataItem);
+			if (index >= 0)
+				sec.setDataItemRenderOptions(dataItem, options);
+		}
+	},
+	setDataItemOverrideRenderOptions: function(dataItem, options)
+	{
+		for (var i = 0, l = this.getDataSectionCount(); i < l; ++i)
+		{
+			var sec = this.getDataSectionAt(i);
+			var index = sec.indexOfDataItem(dataItem);
+			if (index >= 0)
+				sec.setDataItemOverrideRenderOptions(dataItem, options);
+		}
+	},
+	addDataItemOverrideRenderOptionItem: function(dataItem, optionItem)
+	{
+		for (var i = 0, l = this.getDataSectionCount(); i < l; ++i)
+		{
+			var sec = this.getDataSectionAt(i);
+			var index = sec.indexOfDataItem(dataItem);
+			if (index >= 0)
+			{
+				sec.addDataItemOverrideRenderOptionItem(dataItem, optionItem);
+				//console.log('add', dataItem, this.getDataItemOverridenRenderOptions(dataItem));
+			}
+		}
+	},
+	removeDataItemOverrideRenderOptionItem: function(dataItem, optionItem)
+	{
+		for (var i = 0, l = this.getDataSectionCount(); i < l; ++i)
+		{
+			var sec = this.getDataSectionAt(i);
+			var index = sec.indexOfDataItem(dataItem);
+			if (index >= 0)
+			{
+				sec.removeDataItemOverrideRenderOptionItem(dataItem, optionItem);
+				//console.log('remove', dataItem, this.getDataItemOverridenRenderOptions(dataItem));
+			}
+		}
 	}
+});
+
+ClassEx.extend(Kekule.Spectroscopy.SpectrumDataSection, {
+	_getDataItemSpecifiedRenderOptions: function(dataItem, propName)
+	{
+		var extra = this.getExtraInfoOf(dataItem);
+		if (!extra)  // try create new one
+		{
+			extra = this.createDefaultExtraInfoObjectFor(dataItem);
+		}
+		if (extra)
+		{
+			if ((extra instanceof ObjectEx) && (extra.hasProperty(propName)))
+			{
+				return extra.getPropValue(propName);
+			}
+			else
+			{
+				return extra[propName];
+			}
+		}
+	},
+	_setDataItemSpecifiedRenderOptions: function(dataItem, propName, options)
+	{
+		var extra = this.getExtraInfoOf(dataItem);
+		if (!extra)  // try create new one
+		{
+			extra = this.createDefaultExtraInfoObjectFor(dataItem);
+		}
+		if (extra)
+		{
+			if ((extra instanceof ObjectEx) && (extra.hasProperty(propName)))
+			{
+				extra.setPropValue(propName, options);
+			}
+			else
+			{
+				extra[propName] = options;
+			}
+		}
+	},
+
+	getDataItemRenderOptions: function(dataItem)
+	{
+		return this._getDataItemSpecifiedRenderOptions(dataItem, 'renderOptions');
+	},
+	setDataItemRenderOptions: function(dataItem, options)
+	{
+		return this._setDataItemSpecifiedRenderOptions(dataItem, 'renderOptions', options);
+	},
+
+	getDataItemOverrideRenderOptionItems: function(dataItem)
+	{
+		return this._getDataItemSpecifiedRenderOptions(dataItem, 'overrideRenderOptionItems');
+	},
+	setDataItemOverrideRenderOptionItems: function(dataItem, options)
+	{
+		return this._setDataItemSpecifiedRenderOptions(dataItem, 'overrideRenderOptionItems', options);
+	},
+	addDataItemOverrideRenderOptionItem: function(dataItem, optionItem)
+	{
+		var extra = this.getExtraInfoOf(dataItem);
+		if (!extra)  // try create new one
+		{
+			extra = this.createDefaultExtraInfoObjectFor(dataItem);
+		}
+		if (extra)
+		{
+			if (extra.addOverrideRenderOptionItem)
+			{
+				extra.addOverrideRenderOptionItem(optionItem);
+			}
+			else
+			{
+				var roItems = this.getDataItemOverrideRenderOptionItems();
+				if (!roItems)
+				{
+					roItems = [optionItem];
+					this.setDataItemOverrideRenderOptionItems(dataItem, roItems);
+				}
+				else
+				{
+					var oldIndex = roItems.indexOf(optionItem);
+					if (oldIndex >= 0)
+						roItems.splice(oldIndex, 1);
+					roItems.push(optionItem);
+				}
+			}
+		}
+	},
+	removeDataItemOverrideRenderOptionItem: function(dataItem, optionItem)
+	{
+		var extra = this.getExtraInfoOf(dataItem);
+		if (!extra)  // try create new one
+		{
+			return;
+		}
+		else
+		{
+			if (extra.removeOverrideRenderOptionItem)
+				extra.removeOverrideRenderOptionItem(optionItem);
+			else
+			{
+				var roItems = this.getDataItemOverrideRenderOptionItems();
+				if (roItems)
+				{
+					var oldIndex = roItems.indexOf(optionItem);
+					if (oldIndex >= 0)
+						roItems.splice(oldIndex, 1);
+				}
+			}
+		}
+	},
+
+	getDataItemOverridenRenderOptions: function(dataItem)
+	{
+		var extra = this.getExtraInfoOf(dataItem);
+		if (!extra)
+			return null;
+		else
+		{
+			if (extra.getOverriddenRenderOptions)  // extra is instance of ChemObject
+				return extra.getOverriddenRenderOptions();
+			else  // raw object?
+			{
+				var renderOptions = extra.renderOptions || {};
+				var result = Object.extend({}, renderOptions);
+				var overrideOptionItems = extra.overrideRenderOptionItems || [];
+				for (var i = 0, l = overrideOptionItems.length; i < l; ++i)
+				{
+					result = Object.extend(result, overrideOptionItems[i]);
+				}
+				return result;
+			}
+		}
+	}
+});
+
+ClassEx.extendMethod(Kekule.Spectroscopy.SpectrumDataSection, '_extractAllExtraInfoOfDataItems', function($origin){
+	// remove the overrideRenderOptions of extra infos, avoid serializing it
+	var oldResult = $origin() || [];
+	var result = [];
+	for (var i = 0, l = oldResult.length; i < l; ++i)
+	{
+		var info = oldResult[i];
+		if (info && !(info instanceof Kekule.ChemObject) && (DataType.isObjectValue(info)) && info.overrideRenderOptions)
+		{
+			var dupInfo = Object.create(info);
+			dupInfo.overrideRenderOptions = undefined;
+			result.push(dupInfo);
+		}
+		else
+			result.push(info);
+	}
+	return result;
 });
 
 // extend Kekule.Render.RenderOptionUtils.getOptionDefinitions for property editors for spectrum objects
@@ -1605,8 +1818,18 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 	/** @private */
 	_getSpectrumDataValueItemRenderOptions: function(spectrum, section, dataValue) // returns the renderOptions setting of a single data value
 	{
+		var result = section.getDataItemOverridenRenderOptions(dataValue);
+		/*
+		if (result)
+			console.log('data item render options', dataValue, result);
+		*/
+		return result;
+		/*
 		var extra = section.getExtraInfoOf(dataValue);
-		return extra && extra.renderOptions;
+		var renderOptions = extra && ((extra.getOverriddenRenderOptions && extra.getOverriddenRenderOptions()) || extra.renderOptions);
+		return renderOptions;
+		//return extra && extra.renderOptions;
+		*/
 	},
 
 	/** @private */
