@@ -1648,6 +1648,42 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	},
 
 	/**
+	 * Returns the order of an independent var in current sorted data array.
+	 * @param {String} varSymbol
+	 * @returns {Int} 1 for ascending order, -1 for descending order and 0 for unknown.
+	 */
+	getIndependentVarValueOrder: function(varSymbol)
+	{
+		var result = 0;
+		if (this.isDataSorted())
+		{
+			var self = this;
+			var _getValidVarValueEx = function(varSymbol, fromIndex, toIndex, delta)
+			{
+				var currIndex = fromIndex;
+				var info = {};
+				var passed = false;
+				do
+				{
+					info.value = self.getHashValueAt(currIndex)[varSymbol];
+					info.index = currIndex;
+					currIndex += delta;
+					passed = Kekule.NumUtils.isNormalNumber(info.value);
+				}
+				while (!passed && ((delta > 0 && currIndex <= maxIndex) || (delta < 0 && currIndex >= toIndex)));
+				return (passed)? info: null;
+			}
+			var maxIndex = this.getDataCount() - 1;
+			var infoFrom = _getValidVarValueEx(varSymbol, 0, maxIndex, 1);
+			var infoTo = _getValidVarValueEx(varSymbol, maxIndex, 0, -1)
+			if (infoFrom && infoTo && infoFrom.index < infoTo.index)
+				result = Math.sign(infoTo.value - infoFrom.value);
+		}
+		return result;
+	},
+
+
+	/**
 	 * Returns the count of data items.
 	 * @returns {Int}
 	 */
@@ -2162,6 +2198,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	{
 		// TODO: currently only handles data with one one independent var, but this approach can handle most of the spectrum cases
 		var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
+		var depVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.DEPENDENT);
 		if (indepVarSymbols.length > 1)
 			return null;
 		var indepVarSymbol = indepVarSymbols[0];
@@ -2170,7 +2207,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		if (indepVarValue < totalDataRange.min || indepVarValue > totalDataRange.max)
 			return null;
 
-		var dataIndexFloor, dataIndexCeil;
+		var dataIndexFloor = -1, dataIndexCeil = -1;
 		var useContinuousVarRange = true;
 		var varDef = this.getLocalVarDef(indepVarSymbol);
 		var dataCount = this.getDataCount();
@@ -2189,10 +2226,22 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		else
 		{
 			//indepVarRange = this.calcDataRange([indepVarSymbols])[indepVarSymbol];
-			var indexes = this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepVarValue, 0, dataCount);
-			dataIndexFloor = indexes[0];
-			dataIndexCeil = indexes[1];
+			var indepOrder = this.getIndependentVarValueOrder(indepVarSymbol);
+			if (indepOrder === 0)  // var values are not ordered, can not calculate
+			{
+				// do nothing, keep dataIndexFloor/dataIndexCeil < 0
+			}
+			else
+			{
+				var reversedOrder = indepOrder < 0;
+				var indexes = this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepVarValue, 0, dataCount - 1, reversedOrder);
+				dataIndexFloor = indexes[0];
+				dataIndexCeil = indexes[1];
+			}
 		}
+
+		if (dataIndexFloor < 0 || dataIndexCeil < 0)
+			return null;
 		if (dataIndexFloor === dataIndexCeil)
 			return this.getHashValueAt(dataIndexFloor);
 		else
@@ -2212,14 +2261,21 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 					result[symbol] = valueFloor[symbol] + (valueCeil[symbol] - valueFloor[symbol]) * ratio;
 			}
 			*/
-			var valueFloor = this.getHashValueAt(dataIndexFloor);
-			var symbols =  Kekule.ObjUtils.getOwnedFieldNames(valueFloor);
-			return this._calcIntermediateDependentVarValuesBetween(symbols, indepVarSymbol, indepVarValue, dataIndexFloor, dataIndexCeil);
+			//var valueFloor = this.getHashValueAt(dataIndexFloor);
+			//var depVarSymbols = Kekule.ObjUtils.getOwnedFieldNames(valueFloor);
+			//AU.remove(depVarSymbols, indepVarSymbol);
+
+			var depValues = this._calcIntermediateDependentVarValuesBetween(depVarSymbols, indepVarSymbol, indepVarValue, dataIndexFloor, dataIndexCeil);
+			var result = {};
+			result[indepVarSymbol] = indepVarValue;
+			result = Object.extend(result, depValues);  // ensure the independent value first
+			//console.log('calc', result, depVarSymbols, indepVarSymbol, indepVarValue, dataIndexFloor, dataIndexCeil);
+			return result;
 		}
 		return result;
 	},
 	/** @private */
-	_calcNeighborDataIndexesToIndependentValue: function(indepVarSymbol, indepValue, fromIndex, toIndex)
+	_calcNeighborDataIndexesToIndependentValue: function(indepVarSymbol, indepValue, fromIndex, toIndex, reversedOrder)
 	{
 		if (toIndex - fromIndex <= 2)
 			return [fromIndex, toIndex];
@@ -2228,9 +2284,13 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		if (halfValue === indepValue)
 			return [halfIndex, halfIndex];
 		else if (halfValue <= indepValue)
-			return this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, halfIndex, toIndex);
+			return !reversedOrder?
+				this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, halfIndex, toIndex, reversedOrder):
+				this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, fromIndex, halfIndex, reversedOrder);
 		else
-			return this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, fromIndex, halfIndex);
+			return !reversedOrder?
+				this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, fromIndex, halfIndex, reversedOrder):
+				this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, halfIndex, toIndex, reversedOrder);
 	},
 	/** @private */
 	_calcIntermediateDependentVarValuesBetween: function(depVarSymbols, indepVarSymbol, indepVarValue, floorIndex, ceilIndex)
