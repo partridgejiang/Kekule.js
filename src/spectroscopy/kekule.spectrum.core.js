@@ -480,6 +480,7 @@ Kekule.Spectroscopy.SpectrumVarDefinition = Class.create(Kekule.VarDefinition,
  * @property {Array} localVarInfos Stores the local variable information. Each item is a hash containing fields {'symbol', 'range'(optional)}.
  * @property {Array} varSymbols Array of variable symbols such as ['X', 'Y'].
  * @property {Int} mode Data mode of section, continuous or peak.
+ * @property {Date} modifiedTime Time that do the last modification to data.
  * @property {Hash} peakRoot
  * @property {String} name
  * @property {String} title
@@ -496,6 +497,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	/** @private */
 	initialize: function(name, parent, localVariables)
 	{
+		this.updateDataModifiedTime();
 		this.setPropStoreFieldValue('name', name);
 		this.setPropStoreFieldValue('localVarInfos', []);
 		this.setPropStoreFieldValue('dataItems', []);
@@ -583,6 +585,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			}
 		});
 		this.defineProp('defPeakRoot', {'dataType': DataType.Hash});
+		this.defineProp('modifiedTime', {'dataType': DataType.DATE, 'setter': null});
 		// private, stores the data items, each item is a hash, e.g. {x: 1, y: 10, w: 2}
 		this.defineProp('dataItems', {'dataType': DataType.ARRAY, 'setter': null, 'scope': PS.PRIVATE});
 	},
@@ -1706,8 +1709,14 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var items = this.getDataItems();
 		this.setDataSorted(false);
 		this.clearCache();
+		this.updateDataModifiedTime();
 		this.notifyPropSet('dataItems', items);
 		this.invokeEvent('dataChange', {'data': items})
+	},
+	/** @private */
+	updateDataModifiedTime: function()
+	{
+		this.setPropStoreFieldValue('modifiedTime', new Date());
 	},
 	/**
 	 * Clear all data items.
@@ -1853,6 +1862,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			this._setSysFieldOfDataItem(value, this.DATAITEM_EXTRA_FIELD_NAME, value[this.DATAITEM_EXTRA_FIELD_NAME]);  // redefine the value._extra field with special descriptors
 			this._extraInfoAdded(value[this.DATAITEM_EXTRA_FIELD_NAME]);
 		}
+		this.notifyDataChange();
 		return this;
 	},
 	/** @private */
@@ -1937,6 +1947,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			this._extraInfoRemoved(target[this.DATAITEM_EXTRA_FIELD_NAME]);
 		this._setSysFieldOfDataItem(target, this.DATAITEM_EXTRA_FIELD_NAME, info);
 		this._extraInfoAdded(info);
+		this.notifyDataChange();
 		return this;
 	},
 	/**
@@ -1961,6 +1972,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			this._extraInfoRemoved(d[this.DATAITEM_EXTRA_FIELD_NAME]);
 		this._setSysFieldOfDataItem(d, this.DATAITEM_EXTRA_FIELD_NAME, info);
 		this._extraInfoAdded(info);
+		this.notifyDataChange();
 		return this;
 	},
 	/** @private */
