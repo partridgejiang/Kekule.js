@@ -1989,167 +1989,247 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			return result;
 		};
 
-		//var timeStart = new Date();
+		var timeStart = new Date();
+
+		// dep/indep var unit
+		var varDefs = {
+			'independent': section.getLocalVarDef(dataVarSymbols.independant),
+			'dependent': section.getLocalVarDef(dataVarSymbols.dependant)
+		};
+		var varUnits = {
+			'independent': varDefs.independent.getActualExternalUnit(),
+			'dependent': varDefs.dependent.getActualExternalUnit()
+		};
 
 		// calculate resample rate
 		var resampleRate = Kekule.globalOptions.render.spectrum.continuousSpectrumResampleRatio || 1;
 		var contextXWidth = Math.abs(contextBox.x2 - contextBox.x1) * resampleRate;
 
 		var dataSampleMergeWidth = (visibleDataRange[dataVarSymbols.independant].max - visibleDataRange[dataVarSymbols.independant].min) / contextXWidth;
+
+		// when the indep/dep var unit and sample merge width is same to last, the cache may be used here
+		var dataSamplingCache = this._getContinuousSpectrumSectionSamplingCache(context, section);
+		var hasSamplingCache = !!dataSamplingCache;  // flag to check whether using the sampling cache
+		var usingSamplingCache = hasSamplingCache
+			&& dataSamplingCache.modifiedTime === section.getModifiedTime()
+			&& Kekule.NumUtils.isFloatEqual(dataSampleMergeWidth, dataSamplingCache.sampleMergeWidth)
+			&& (varUnits.independent === dataSamplingCache.indepUnit)
+			&& (varUnits.dependent === dataSamplingCache.depUnit);
+		//console.log('can use cache', usingSamplingCache, hasSamplingCache);
+		//usingSamplingCache = false;  // debug
+		if (!hasSamplingCache)  // create new cache data
+		{
+			dataSamplingCache = {};
+			this._setContinuousSpectrumSectionSamplingCache(context, section, dataSamplingCache);
+		}
+		if (!usingSamplingCache)  // cache not usable, we should update it here
+		{
+			dataSamplingCache.modifiedTime = section.getModifiedTime();
+			dataSamplingCache.sampleMergeWidth = dataSampleMergeWidth;
+			dataSamplingCache.indepUnit = varUnits.independent;
+			dataSamplingCache.depUnit = varUnits.dependent;
+			dataSamplingCache.items = [];
+		}
+
 		var getSampleMergeGroupIndex = function(dataValue)
 		{
 			return Math.floor((dataValue[dataVarSymbols.independant] - visibleDataRange[dataVarSymbols.independant].min) / dataSampleMergeWidth);
 		}
+		var pushToVarBuffer = function(dataValueIndex, dataValue, valueBuffer)
+		{
+			valueBuffer.push(dataValue);
+			if (valueBuffer.fromIndex == undefined)
+				valueBuffer.fromIndex = dataValueIndex;
+			valueBuffer.toIndex = dataValueIndex;
+			var indepValue = dataValue[dataVarSymbols.independant];
+			valueBuffer.indepValueSum = (valueBuffer.indepValueSum || 0) + indepValue;
+		}
 
-		var pathArgs = [];
+		// build typical value array
 		var lastSampleMergeIndex = null;
 		var valueBuffer = [];
-		//var totalValueBuffer = [];  // debug
-		var lastCoords;
-		var lastTypicalDataValues;
-		var contextBoxCornerCoords = [CU.create(contextBox.x1, contextBox.y1), CU.create(contextBox.x2, contextBox.y2)];
-		for (var i = 0, l = section.getDataCount(); i < l; ++i)
+		var dataValueCount = section.getDataCount();
+		var l = dataValueCount;
+		var i = 0;
+		var currCacheItemIndex = 0;
+		var typicalValuesForRendering = [];
+		while (i < dataValueCount)
 		{
-			var dataValue = section.getHashValueAt(i);
-			// check if dataValue inside visible data range
-			var dataValueIndep = dataValue[dataVarSymbols.independant];
-			if (dataValueIndep < visibleDataRange[dataVarSymbols.independant].min || dataValueIndep > visibleDataRange[dataVarSymbols.independant].max)
-				continue;
-
-			//totalValueBuffer.push(dataValue);
-
-			var mergeIndex = getSampleMergeGroupIndex(dataValue);
-			if (lastSampleMergeIndex === null)
-				lastSampleMergeIndex = mergeIndex;
-			//console.log('curr', mergeIndex, lastSampleMergeIndex, dataSampleMergeWidth);
-			if (i == l - 1 || mergeIndex !== lastSampleMergeIndex)  // mergeIndex different from last, need to handle the old buffer and create new one
+			var cacheItem = null;
+			var typicalValues = null;
+			if (usingSamplingCache)
 			{
-				if (i === l - 1)
-					valueBuffer.push(dataValue);
-				if (valueBuffer.length)
+				cacheItem = this._getSectionCachedSamplingData(dataSamplingCache.items, i, currCacheItemIndex);
+				if (cacheItem && cacheItem.item)
 				{
-					var typicalValues = this._getMergeSectionDataTypicalValues(valueBuffer, dataVarSymbols);
-					//console.log(typicalValues, mergeIndex, valueBuffer.length);
-
-					// clear buffer first, avoid the following continue breaks
-					valueBuffer = [];
-					lastSampleMergeIndex = mergeIndex;
-					if (i < l - 1)
-						valueBuffer.push(dataValue);
-
-					if (!typicalValues)  // no valid data in this merge section
+					if (cacheItem.item.typicalValues) // has valid cached data
 					{
-						continue;
+						currCacheItemIndex = cacheItem.cacheIndex + 1;  // move to next cache
+						i = cacheItem.dataValueToIndex;     // skip to the tail index of cache item
 					}
-
-					//var renderableTypicalValues = getRenderableTypicalValuePair(typicalValues);
-					var renderableTypicalValues = getRenderableTypicalValues(typicalValues);
-
-					//console.log(typicalValues, renderableTypicalValues, valueBuffer.length);
-
-					var currLineCoords = null, connectionToVisibleLineCoords = null, connectionToInvisibleLineCoords = null;
-					//console.log(mergeIndex, typicalValues[0], typicalValues[1], renderableTypicalValues);
-					if (!renderableTypicalValues)  // need not to draw line of this data
+					if (cacheItem.item.averageIndepValue < visibleDataRange[dataVarSymbols.independant].min || cacheItem.item.averageIndepValue > visibleDataRange[dataVarSymbols.independant].max)
 					{
-						// but may still need to draw the connection line to last visible line
-						if (lastCoords)
-						{
-							var dValue = typicalValues[0];
-							if (dValue)
-							{
-								var dCoord = this._calcSectionDataValueContextCoord(dValue, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxises);
-								connectionToInvisibleLineCoords = Kekule.GeometryUtils.clipLineSegmentByBox([lastCoords[lastCoords.length - 1], dCoord], contextBoxCornerCoords);
-							}
-						}
-						lastCoords = null;
+						// out of visible range, do nothing
 					}
 					else
 					{
-						var coords = calcDataValueContextCoords(renderableTypicalValues, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxises);
-						currLineCoords = coords;
-						//console.log(currLineCoords[0], currLineCoords[1]);
-						if (lastCoords)
-						{
-							connectionToVisibleLineCoords = [lastCoords[lastCoords.length - 1], coords[0]];
-						}
-						else if (lastTypicalDataValues)  // last data values are out of box, but the connection line to this one may need to be drawn
-						{
-							var lastDValue = lastTypicalDataValues[lastTypicalDataValues.length - 1];
-							var lastDCoord = this._calcSectionDataValueContextCoord(lastDValue, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxises);
-							connectionToInvisibleLineCoords = Kekule.GeometryUtils.clipLineSegmentByBox([lastDCoord, coords[0]], contextBoxCornerCoords);
-						}
-						lastCoords = currLineCoords;
-					}
-					lastTypicalDataValues = typicalValues;
-
-					// do the concrete path generation
-					if (currLineCoords && currLineCoords.length > 1)
-					{
-						pathArgs.push('M');
-						pathArgs.push([currLineCoords[0].x, currLineCoords[0].y]);
-						for (var j = 1, k = currLineCoords.length; j < k; ++j)
-						{
-							/*
-							var line = this.drawLine(context, currLineCoords[j - 1], currLineCoords[j], renderOptions);
-							this.addToDrawGroup(line, result);
-							*/
-							pathArgs.push('L');
-							pathArgs.push(currLineCoords[j].x, currLineCoords[j].y);
-						}
-					}
-					if (connectionToVisibleLineCoords)
-					{
-						/*
-						var connectionLineRenderOptions = Object.create(renderOptions);  // debug
-						connectionLineRenderOptions.strokeColor = 'red';
-						connectionLineRenderOptions.opacity = 0.3;
-						//console.log('draw connection line', lastCoords[1], coord1, renderableTypicalValues, typicalValues);
-						var connectionLine = this.drawLine(context, connectionToVisibleLineCoords[0], connectionToVisibleLineCoords[1], connectionLineRenderOptions);
-						this.addToDrawGroup(connectionLine, result);
-						*/
-						pathArgs.push('M');
-						pathArgs.push([connectionToVisibleLineCoords[0].x, connectionToVisibleLineCoords[0].y]);
-						pathArgs.push('L');
-						pathArgs.push([connectionToVisibleLineCoords[1].x, connectionToVisibleLineCoords[1].y]);
-					}
-					if (connectionToInvisibleLineCoords)
-					{
-						/*
-						var clippedConnectionLineRenderOptions = Object.create(renderOptions);  // debug
-						clippedConnectionLineRenderOptions.strokeColor = 'green';
-						clippedConnectionLineRenderOptions.opacity = 0.3;
-						var connectionLine = this.drawLine(context, connectionToInvisibleLineCoords[0], connectionToInvisibleLineCoords[1], clippedConnectionLineRenderOptions);
-						this.addToDrawGroup(connectionLine, result);
-						*/
-						pathArgs.push('M');
-						pathArgs.push([connectionToInvisibleLineCoords[0].x, connectionToInvisibleLineCoords[0].y]);
-						pathArgs.push('L');
-						pathArgs.push([connectionToInvisibleLineCoords[1].x, connectionToInvisibleLineCoords[1].y]);
+						typicalValues = cacheItem.item.typicalValues;
+						//console.log('got cached item', cacheItem.item.typicalValues);
 					}
 				}
 			}
-			else /*if (lastSampleMergeIndex === null || mergeIndex === lastSampleMergeIndex)*/  // in the same merge group, push to valueBuffer to handle later
+
+			if (!cacheItem)  // no cache, need to use src spectrum value
 			{
-				valueBuffer.push(dataValue);
+				var dataValue = section.getHashValueAt(i);
+				// check if dataValue inside visible data range
+				var dataValueIndep = dataValue[dataVarSymbols.independant];
+				if (dataValueIndep < visibleDataRange[dataVarSymbols.independant].min || dataValueIndep > visibleDataRange[dataVarSymbols.independant].max)
+				{
+					// out of visible range, do nothing
+				}
+				else
+				{
+					var mergeIndex = getSampleMergeGroupIndex(dataValue);
+					if (lastSampleMergeIndex === null)
+						lastSampleMergeIndex = mergeIndex;
+					if (i == l - 1 || mergeIndex !== lastSampleMergeIndex)  // mergeIndex different from last, need to handle the old buffer and create new one
+					{
+						if (i === l - 1)
+							pushToVarBuffer(i, dataValue, valueBuffer);
+						if (valueBuffer.length)
+						{
+							typicalValues = this._getMergeSectionDataTypicalValues(valueBuffer, dataVarSymbols);
+							// write to cache
+							if (typicalValues)
+							{
+								//console.log('write to cache', i, typicalValues);
+								this._addSectionSamplingDataCacheItem(dataSamplingCache.items, valueBuffer, typicalValues, dataVarSymbols);
+							}
+
+							valueBuffer = [];
+							lastSampleMergeIndex = mergeIndex;
+							if (i < l - 1)
+								pushToVarBuffer(i, dataValue, valueBuffer);
+						}
+					}
+					else
+						pushToVarBuffer(i, dataValue, valueBuffer);
+				}
+			}
+
+			if (typicalValues)  // has valid data in this merge section
+				typicalValuesForRendering.push(typicalValues);
+
+			++i; // inc loop var
+		}
+
+		//console.log('typical values for rendering', typicalValuesForRendering);
+
+		var timeEnd = new Date();
+		var calcDuration = timeEnd - timeStart;
+
+		// rendering those typical values
+		timeStart = new Date();
+		var contextBoxCornerCoords = [CU.create(contextBox.x1, contextBox.y1), CU.create(contextBox.x2, contextBox.y2)];
+		var lastCoords;
+		var lastTypicalDataValues;
+		var pathArgs = [];
+		for (var i = 0, l = typicalValuesForRendering.length; i < l; ++i)
+		{
+			var typicalValues = typicalValuesForRendering[i];
+			var renderTypicalValues = getRenderableTypicalValues(typicalValues);
+			var currLineCoords = null, connectionToVisibleLineCoords = null, connectionToInvisibleLineCoords = null;
+			if (!renderTypicalValues)  // need not to draw line of this data
+			{
+				// but may still need to draw the connection line to last visible line
+				if (lastCoords)
+				{
+					var dValue = typicalValues[0];
+					if (dValue)
+					{
+						var dCoord = this._calcSectionDataValueContextCoord(dValue, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxises);
+						connectionToInvisibleLineCoords = Kekule.GeometryUtils.clipLineSegmentByBox([lastCoords[lastCoords.length - 1], dCoord], contextBoxCornerCoords);
+					}
+				}
+				lastCoords = null;
+			}
+			else
+			{
+				var coords = calcDataValueContextCoords(renderTypicalValues, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxises);
+				currLineCoords = coords;
+				if (lastCoords)
+				{
+					connectionToVisibleLineCoords = [lastCoords[lastCoords.length - 1], coords[0]];
+				}
+				else if (lastTypicalDataValues)  // last data values are out of box, but the connection line to this one may need to be drawn
+				{
+					var lastDValue = lastTypicalDataValues[lastTypicalDataValues.length - 1];
+					var lastDCoord = this._calcSectionDataValueContextCoord(lastDValue, dataVarSymbols, dataTransferMatrix, options.spectrum_reversedAxises);
+					connectionToInvisibleLineCoords = Kekule.GeometryUtils.clipLineSegmentByBox([lastDCoord, coords[0]], contextBoxCornerCoords);
+				}
+				lastCoords = currLineCoords;
+			}
+			lastTypicalDataValues = typicalValues;
+
+			// do the concrete path generation
+			if (currLineCoords && currLineCoords.length > 1)
+			{
+				pathArgs.push('M');
+				pathArgs.push([currLineCoords[0].x, currLineCoords[0].y]);
+				for (var j = 1, k = currLineCoords.length; j < k; ++j)
+				{
+					/*
+					var line = this.drawLine(context, currLineCoords[j - 1], currLineCoords[j], renderOptions);
+					this.addToDrawGroup(line, result);
+					*/
+					pathArgs.push('L');
+					pathArgs.push(currLineCoords[j].x, currLineCoords[j].y);
+				}
+			}
+			if (connectionToVisibleLineCoords)
+			{
+				/*
+				var connectionLineRenderOptions = Object.create(renderOptions);  // debug
+				connectionLineRenderOptions.strokeColor = 'red';
+				connectionLineRenderOptions.opacity = 0.3;
+				//console.log('draw connection line', lastCoords[1], coord1, renderableTypicalValues, typicalValues);
+				var connectionLine = this.drawLine(context, connectionToVisibleLineCoords[0], connectionToVisibleLineCoords[1], connectionLineRenderOptions);
+				this.addToDrawGroup(connectionLine, result);
+				*/
+				pathArgs.push('M');
+				pathArgs.push([connectionToVisibleLineCoords[0].x, connectionToVisibleLineCoords[0].y]);
+				pathArgs.push('L');
+				pathArgs.push([connectionToVisibleLineCoords[1].x, connectionToVisibleLineCoords[1].y]);
+			}
+			if (connectionToInvisibleLineCoords)
+			{
+				/*
+				var clippedConnectionLineRenderOptions = Object.create(renderOptions);  // debug
+				clippedConnectionLineRenderOptions.strokeColor = 'green';
+				clippedConnectionLineRenderOptions.opacity = 0.3;
+				var connectionLine = this.drawLine(context, connectionToInvisibleLineCoords[0], connectionToInvisibleLineCoords[1], clippedConnectionLineRenderOptions);
+				this.addToDrawGroup(connectionLine, result);
+				*/
+				pathArgs.push('M');
+				pathArgs.push([connectionToInvisibleLineCoords[0].x, connectionToInvisibleLineCoords[0].y]);
+				pathArgs.push('L');
+				pathArgs.push([connectionToInvisibleLineCoords[1].x, connectionToInvisibleLineCoords[1].y]);
 			}
 		}
 
-		//console.log('total', totalValueBuffer.length, this._getMergeSectionDataTypicalValues(totalValueBuffer, dataVarSymbols));
-		//var timeEnd = new Date();
-		//var calcDuration = timeEnd - timeStart;
-
-		//timeStart = new Date();
 		if (pathArgs.length)
 		{
 			var path = Kekule.Render.DrawPathUtils.makePath.apply(this, pathArgs);
 			result = this.drawPath(context, path, renderOptions);
 		}
-		//timeEnd = new Date();
-		//var paintDuration = timeEnd - timeStart;
+		timeEnd = new Date();
+		var paintDuration = timeEnd - timeStart;
 		//console.log('Calc, paint', calcDuration, paintDuration, paintDuration / calcDuration);
 
 		return result;
 	},
+	
 	/* @private */
 	/*
 	_getMergeSectionDataMinMaxValues: function(values, dataVarSymbols)
@@ -2312,6 +2392,100 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 		}
 		else
 			return null;
+	},
+	/** @private */
+	_getContinuousSpectrumSectionSamplingCache: function(context, section)
+	{
+		var map = this.getRenderCache(context).continuousSpectrumSectionSamplingCacheMap;
+		if (!map)
+		{
+			return null
+		}
+		var result = map.get(section);
+		if (!result && allowCreate)
+		{
+			result = {};
+			map.set(section, result);
+		}
+		return result;
+	},
+	/** @private */
+	_setContinuousSpectrumSectionSamplingCache: function(context, section, cache)
+	{
+		var map = this.getRenderCache(context).continuousSpectrumSectionSamplingCacheMap;
+		if (!map)
+		{
+			map = new Kekule.MapEx();
+			this.getRenderCache(context).continuousSpectrumSectionSamplingCacheMap = map;
+		}
+		map.set(section, cache);
+		return cache;
+	},
+	/** @private */
+	_addSectionSamplingDataCacheItem: function(cachedItems, valueBuffer, typicalValues, dataVarSymbols)
+	{
+		if (!typicalValues)
+			typicalValues = this._getMergeSectionDataTypicalValues(valueBuffer, dataVarSymbols);
+		if (typicalValues)
+		{
+			var item = {
+				'fromIndex': valueBuffer.fromIndex,
+				'toIndex': valueBuffer.toIndex,
+				'averageIndepValue': valueBuffer.indepValueSum / (valueBuffer.toIndex - valueBuffer.fromIndex + 1),
+				'typicalValues': typicalValues
+			};
+			var firstItem = cachedItems[0];
+			if (!firstItem || firstItem.fromIndex > valueBuffer.toIndex)
+				cachedItems.unshift(item);
+			else
+			{
+				var lastItem = cachedItems[cachedItems.length - 1];
+				if (lastItem.toIndex < valueBuffer.fromIndex)
+					cachedItems.push(item);
+				else  // insert in middle
+				{
+					var insertIndex = -1;
+					for (var i = 1, l = cachedItems.length - 1; i < l; ++i)
+					{
+						var midItem = cachedItems[i];
+						if (midItem.toIndex < valueBuffer.fromIndex)
+						{
+							insertIndex = i;
+							break;
+						}
+					}
+					if (insertIndex >= 0)
+						cachedItems.splice(insertIndex, 0, item);
+				}
+			}
+		}
+	},
+	/** @private */
+	_getSectionCachedSamplingData: function(cachedItems, dataValueIndex, currCacheIndex)
+	{
+		var index = currCacheIndex || 0;
+		var cacheItemCount = cachedItems.length;
+		var cachedItem = cachedItems[index];
+		while (cachedItem && (index < cacheItemCount))
+		{
+			if (cachedItem.fromIndex <= dataValueIndex && cachedItem.toIndex >= dataValueIndex)
+			{
+				return {
+					'item': cachedItem,
+					'cacheIndex': index,
+					'dataValueFromIndex': cachedItem.fromIndex,
+					'dataValueToIndex': cachedItem.toIndex
+				}
+			}
+			else if (cachedItem.toIndex < dataValueIndex)
+			{
+				++index;
+				cachedItem = cachedItems[index];
+			}
+			else // can not found
+				return null;
+		}
+		return null;
 	}
 });
 /** @private */
