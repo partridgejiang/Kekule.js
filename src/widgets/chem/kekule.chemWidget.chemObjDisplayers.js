@@ -1216,7 +1216,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 * @param {String} fromUrlOrFileName From which file or url is this data loaded.
 	 * @param {String} formatId
 	 */
-	loadFromData: function(data, mimeType, fromUrlOrFileName, formatId)
+	loadFromData: function(data, mimeType, fromUrlOrFileName, formatId, objAfterLoadCallback)
 	{
 		try
 		{
@@ -1236,7 +1236,10 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				if (chemObj)
 				{
 					//this.setChemObj(chemObj);
-					this._tryAutoGenerateChemObjCoordsAndLoad(chemObj);
+					if (objAfterLoadCallback)
+						this._tryAutoGenerateChemObjCoords(chemObj, objAfterLoadCallback);
+					else
+						this._tryAutoGenerateChemObjCoordsAndLoad(chemObj);
 				}
 				else
 					Kekule.error(/*Kekule.ErrorMsg.LOAD_CHEMDATA_FAILED*/Kekule.$L('ErrorMsg.LOAD_CHEMDATA_FAILED'));
@@ -2329,10 +2332,11 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 					//self.doLoadToDisplayer(dialog.getChemObj(), dialog);
 					var dataDetails = dialog.getDataDetails() || {};
 					var displayer = self.getDisplayer();
-					displayer.loadFromData(dataDetails.data, dataDetails.mimeType, dataDetails.fileName, dataDetails.formatId);
+					//displayer.loadFromData(dataDetails.data, dataDetails.mimeType, dataDetails.fileName, dataDetails.formatId);
+					self.doLoadInDisplayer(displayer, dataDetails, dialog);
 				}
 			}, target, showType]);
-	}
+	},
 	/* @private */
 	/*
 	doLoadToDisplayer: function(chemObj, dialog)
@@ -2343,6 +2347,11 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 		});
 	}
 	*/
+	/** @private */
+	doLoadInDisplayer: function(displayer, dataDetails, dialog)
+	{
+		return displayer.loadFromData(dataDetails.data, dataDetails.mimeType, dataDetails.fileName, dataDetails.formatId);
+	}
 });
 
 /**

@@ -475,11 +475,49 @@ Kekule.Editor.ActionEditorLoadData = Class.create(Kekule.ChemWidget.ActionDispla
 		return result;
 	},
 	/** @ignore */
-	doLoadToDisplayer: function(/*$super, */chemObj, dialog)
+	doLoadInDisplayer: function(displayer, dataDetails, dialog)
+	{
+		var editor = displayer || this.getDisplayer();
+		var isAppending = dialog.getIsAppending();
+		//console.log('is appending', isAppending);
+		if (isAppending && !this._isEditorEmpty() && this._isEditorRootObjAppendable())
+		{
+			var rootObj = this._getEditorRootObj();
+			//var appendableObjs = this._getAppendableObjs(chemObj);
+			//Kekule.Editor.ActionOperUtils.addObjectsToChemSpaceEditor(editor, appendableObjs);
+			editor.loadFromData(dataDetails.data, dataDetails.mimeType, dataDetails.fileName, dataDetails.formatId, function(chemObj){
+				if (chemObj)
+				{
+					editor.beginUpdateObject();
+					try
+					{
+						rootObj.beginUpdate();
+						try
+						{
+							Kekule.Editor.ActionOperUtils.addObjectsToChemSpaceEditor(editor, [chemObj], {'autoSelect': true});
+						} finally
+						{
+							rootObj.endUpdate();
+						}
+					}
+					finally
+					{
+						editor.endUpdateObject();
+					}
+				}
+			});
+		}
+		else
+			//return this.tryApplySuper('doLoadToDisplayer', [chemObj, dialog]);
+			return this.tryApplySuper('doLoadInDisplayer', [displayer, dataDetails, dialog]);
+	}
+	/* @ignore */
+	/*
+	doLoadToDisplayer: function(chemObj, dialog)
 	{
 		var editor = this.getDisplayer();
 		var isAppending = dialog.getIsAppending();
-		//console.log('is appending', isAppending);
+		console.log('is appending', isAppending);
 		if (isAppending && !this._isEditorEmpty() && this._isEditorRootObjAppendable())
 		{
 			editor.beginUpdateObject();
@@ -492,12 +530,6 @@ Kekule.Editor.ActionEditorLoadData = Class.create(Kekule.ChemWidget.ActionDispla
 					//var appendableObjs = this._getAppendableObjs(chemObj);
 					//Kekule.Editor.ActionOperUtils.addObjectsToChemSpaceEditor(editor, appendableObjs);
 					Kekule.Editor.ActionOperUtils.addObjectsToChemSpaceEditor(editor, [chemObj], {'autoSelect': true});
-					/*
-					for (var i = 0, l = appendableObjs.length; i < l; ++i)
-					{
-						rootObj.appendChild(appendableObjs[i]);
-					}
-					*/
 				}
 				finally
 				{
@@ -510,8 +542,9 @@ Kekule.Editor.ActionEditorLoadData = Class.create(Kekule.ChemWidget.ActionDispla
 			}
 		}
 		else
-			return this.tryApplySuper('doLoadToDisplayer', [chemObj, dialog])  /* $super(chemObj, dialog) */;
+			return this.tryApplySuper('doLoadToDisplayer', [chemObj, dialog]);
 	}
+	*/
 });
 
 /**

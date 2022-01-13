@@ -1690,7 +1690,7 @@ Kekule.Editor.Composer = Class.create(Kekule.ChemWidget.AbstractWidget,
 	 * @param {String} formatId
 	 * @returns {Object} Loaded chem object.
 	 */
-	loadFromData: function(data, mimeType, fromUrlOrFileName, formatId)
+	loadFromData: function(data, mimeType, fromUrlOrFileName, formatId, objAfterLoadCallback)
 	{
 		return this.getEditor().loadFromData(data, mimeType, fromUrlOrFileName, formatId);
 	},
