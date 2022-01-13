@@ -39,10 +39,62 @@ Kekule.Spectroscopy.DataMode = {
 };
 
 /**
+ * Enumeration of peak position in spectrum data curve.
+ * @enum
+ */
+Kekule.Spectroscopy.DataPeakPosition = {
+	MAX: 0,
+	MIN: 1
+};
+
+/**
  * Some util methods about spectroscopy.
  * @class
  */
 Kekule.Spectroscopy.Utils = {
+	/**
+	 * Returns the preferred peak position of spectrum.
+	 * @param {Variant} spectrumOrDataSection
+	 * @returns {Int} Value from {@link Kekule.Spectroscopy.DataPeakPosition}.
+	 */
+	getSpectrumPeakPosition: function(spectrumOrDataSection)
+	{
+		var stype = (spectrumOrDataSection.getSpectrumType)? spectrumOrDataSection.getSpectrumType():
+			(spectrumOrDataSection.getParentSpectrum() && spectrumOrDataSection.getParentSpectrum().getSpectrumType());
+		return (stype === Kekule.Spectroscopy.SpectrumType.IR)?
+			Kekule.Spectroscopy.DataPeakPosition.MIN:
+			Kekule.Spectroscopy.DataPeakPosition.MAX;
+	},
+	/**
+	 * Expand range with new values.
+	 * @param {Hash} range
+	 * @param {Array} values
+	 */
+	expandDataRange: function(range, values)
+	{
+		var vs = AU.toArray(values);
+		var r = range || {};
+		for (var i = 0, ii = vs.length; i < ii; ++i)
+		{
+			var value = vs[i];
+			var fields = Kekule.ObjUtils.getOwnedFieldNames(value);
+			for (var j = 0, jj = fields.length; j < jj; ++j)
+			{
+				var fieldName = fields[j];
+				var fieldValue = value[fieldName];
+				if (!r[fieldName])
+					r[fieldName] = {'min': fieldValue, 'max': fieldValue};
+				else
+				{
+					if (fieldValue < r[fieldName].min)
+						r[fieldName].min = fieldValue;
+					else if (fieldValue > r[fieldName].max)
+						r[fieldName].max = fieldValue;
+				}
+			}
+		}
+		return r;
+	},
 	/**
 	 * Merge two data ranges.
 	 * Each item is a hash like {x: {min: minValue, max: maxValue}, y: {min: minValue, max: maxValue}}.
@@ -2054,6 +2106,17 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	},
 
 	/**
+	 * Get the data item indexes that locates around independent variable values.
+	 * This method is recommended to be used in peak mode spectrum data section.
+	 * @param {Variant} independentValues A hash value with symbol: number map, or an array of values, or a single number value.
+	 * @param {Hash} extraOptions
+	 * @returns {Array}
+	 */
+	getSurroundingDataItemIndexesFromIndependent: function(independentValues, extraOptions)
+	{
+		// TODO: unfinished
+	},
+	/**
 	 * Get the data item index from independent variable values.
 	 * If the independentValues not pointed to a data item, -1 will be returned.
 	 * This method is recommended to be used in peak mode spectrum data section.
@@ -2208,6 +2271,12 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	/** @private */
 	_doCalcValueFromIndependentInContinousMode: function(independentValues, extraOptions)
 	{
+		var resultEx = this._doCalcValueFromIndependentInContinousModeEx(independentValues, extraOptions);
+		return resultEx && resultEx.value;
+	},
+	/** @private */
+	_doCalcValueFromIndependentInContinousModeEx: function(independentValues, extraOptions)
+	{
 		// TODO: currently only handles data with one one independent var, but this approach can handle most of the spectrum cases
 		var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
 		var depVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.DEPENDENT);
@@ -2219,6 +2288,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		if (indepVarValue < totalDataRange.min || indepVarValue > totalDataRange.max)
 			return null;
 
+		var resultValue;
 		var dataIndexFloor = -1, dataIndexCeil = -1;
 		var useContinuousVarRange = true;
 		var varDef = this.getLocalVarDef(indepVarSymbol);
@@ -2255,7 +2325,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		if (dataIndexFloor < 0 || dataIndexCeil < 0)
 			return null;
 		if (dataIndexFloor === dataIndexCeil)
-			return this.getHashValueAt(dataIndexFloor);
+			//return this.getHashValueAt(dataIndexFloor);
+			resultValue = this.getHashValueAt(dataIndexFloor);
 		else
 		{
 			/*
@@ -2278,13 +2349,16 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			//AU.remove(depVarSymbols, indepVarSymbol);
 
 			var depValues = this._calcIntermediateDependentVarValuesBetween(depVarSymbols, indepVarSymbol, indepVarValue, dataIndexFloor, dataIndexCeil);
-			var result = {};
-			result[indepVarSymbol] = indepVarValue;
-			result = Object.extend(result, depValues);  // ensure the independent value first
+			resultValue = {};
+			resultValue[indepVarSymbol] = indepVarValue;
+			resultValue = Object.extend(resultValue, depValues);  // ensure the independent value first
 			//console.log('calc', result, depVarSymbols, indepVarSymbol, indepVarValue, dataIndexFloor, dataIndexCeil);
-			return result;
+			//return result;
 		}
-		return result;
+		return {
+			'value': resultValue,
+			'dataIndexes': [dataIndexFloor, dataIndexCeil]
+		};
 	},
 	/** @private */
 	_calcNeighborDataIndexesToIndependentValue: function(indepVarSymbol, indepValue, fromIndex, toIndex, reversedOrder)
@@ -2368,7 +2442,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			return result;
 		}
 
-
+		/*
 		var symbols =  Kekule.ObjUtils.getOwnedFieldNames(valueFloor);
 		for (var i = 0, l = symbols.length; i < l; ++i)
 		{
@@ -2380,6 +2454,167 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		}
 		//var valueFloor
 		var ratio = (indepVarValue - valueFloor[indepVarSymbol]) / (valueCeil[indepVarSymbol] - valueFloor[indepVarSymbol]);
+		*/
+	},
+
+	/**
+	 * Calculate value ranges of dependant variables from independent variable value ranges.
+	 * @param {Variant} independentRanges A hash value with {symbol: {min, max}} map, or an array of {min, max}.
+	 * @param {Hash} extraOptions
+	 * @returns {Hash} Including the following fields: {range, dataIndexes, dataValues}
+	 */
+	calcValueRangeFromIndependentRangeEx: function(independentRanges, extraOptions)
+	{
+		var indepHashRanges = {};
+		if (DataType.isArrayValue(independentRanges))
+			indepHashRanges = this._convArrayToSymboledHash(independentRanges, this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT));
+		else
+			indepHashRanges = independentRanges;
+		return this.doCalcValueRangeFromIndependentRangeEx(indepHashRanges, extraOptions);
+	},
+	/** @private */
+	doCalcValueRangeFromIndependentRangeEx: function(independentRanges, extraOptions)
+	{
+		var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
+		var depVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.DEPENDENT);
+		var totalDataRange = this.calcDataRange(indepVarSymbols);
+		var findNearest = extraOptions && extraOptions.findNearest;
+
+		var actualIndepRanges = {};
+		var centerIndepValue = {};
+		for (var i = 0, l = indepVarSymbols.length; i < l; ++i)
+		{
+			var indepVarSymbol = indepVarSymbols[i];
+			if (independentRanges[indepVarSymbol])
+			{
+				var indepVarRange = Object.extend({}, independentRanges[indepVarSymbol]);
+				var currTotalDataRange = totalDataRange[indepVarSymbol];
+
+				if (indepVarRange.min < currTotalDataRange.min)
+					indepVarRange.min = currTotalDataRange.min;
+				if (indepVarRange.max > currTotalDataRange.max)
+					indepVarRange.max = currTotalDataRange.max;
+				actualIndepRanges[indepVarSymbol] = indepVarRange;
+				centerIndepValue[indepVarSymbol] = (indepVarRange.min + indepVarRange.max) / 2;
+			}
+		}
+
+		var mode = this.getMode();
+		var result = (mode === Kekule.Spectroscopy.DataMode.PEAK)?
+			this._doCalcValueRangeFromIndependentRangeInPeakModeEx(actualIndepRanges, centerIndepValue, indepVarSymbols, depVarSymbols, extraOptions):
+			this._doCalcValueRangeFromIndependentRangeInContinousModeEx(actualIndepRanges, centerIndepValue, indepVarSymbols, depVarSymbols, extraOptions);
+		if (result && result.range)  // check if no legal range returned
+		{
+			if (Kekule.ObjUtils.getOwnedFieldNames(result.range) <= 0)
+				result.range = null;
+		}
+		return result;
+	},
+	/** @private */
+	_doCalcValueRangeFromIndependentRangeInPeakModeEx: function(independentRanges, centerIndepValue, indepVarSymbols, depVarSymbols, extraOptions)
+	{
+		var findNearest = !!centerIndepValue;  // if centerIndepValue is passed, we need to find the nearest value
+		var minDistanceSqr;
+		var result = {'dataIndexes': [], 'dataValues': [], 'range':{}};
+		for (var i = 0, l = this.getDataCount(); i < l; ++i)
+		{
+			var value = this.getHashValueAt(i);
+			var passed = true;
+			var distanceSqr = 0;
+			for (var j = 0, jj = indepVarSymbols.length; j < jj; ++j)
+			{
+				var indepSymbol = indepVarSymbols[j];
+				passed = (value[indepSymbol] >= independentRanges[indepSymbol].min)
+					&& (value[indepSymbol] <= independentRanges[indepSymbol].max);
+				if (!passed)
+					break;
+				else
+				{
+					if (findNearest)
+						distanceSqr += Math.sqr(value[indepSymbol] - centerIndepValue[indepSymbol]);
+				}
+			}
+			if (passed)
+			{
+				result.dataIndexes.push(i);
+				result.dataValues.push(value);
+				if (findNearest)
+				{
+					if (minDistanceSqr === undefined || distanceSqr < minDistanceSqr)
+					{
+						minDistanceSqr = distanceSqr;
+						result.nearest = {'dataIndex': i, 'dataValue': value};
+					}
+				}
+			}
+		}
+		result.range = Kekule.Spectroscopy.Utils.expandDataRange(result.range, result.dataValues);
+		return result;
+	},
+	/** @private */
+	_doCalcValueRangeFromIndependentRangeInContinousModeEx: function(independentRanges, centerIndepValue, indepVarSymbols, depVarSymbols, extraOptions)
+	{
+		// TODO: currently only handles data with one one independent var, but this approach can handle most of the spectrum cases
+		//var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
+		//var depVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.DEPENDENT);
+		if (indepVarSymbols.length > 1)
+			return null;
+		var indepVarSymbol = indepVarSymbols[0];
+		var indepVarRange = independentRanges[indepVarSymbol];
+		/*
+		var totalDataRange = this.calcDataRange([indepVarSymbol])[indepVarSymbol];
+		if (indepVarRange.min < totalDataRange.min)
+			indepVarRange.min = totalDataRange.min;
+		if (indepVarRange.max > totalDataRange.max)
+			indepVarRange.max = totalDataRange.max;
+		*/
+		var indepV1 = {}, indepV2 = {};
+		indepV1[indepVarSymbol] = indepVarRange.min;
+		indepV2[indepVarSymbol] = indepVarRange.max;
+		var valueEx1 = this._doCalcValueFromIndependentInContinousModeEx(indepV1, extraOptions);
+		var valueEx2 = this._doCalcValueFromIndependentInContinousModeEx(indepV2, extraOptions);
+		if (!valueEx1 || !valueEx2)
+			return null;
+
+		var isIndepValueReversed = (valueEx1.dataIndexes[0] > valueEx2.dataIndexes[0]);
+		var rangeDataIndexes = {}
+		if (isIndepValueReversed)
+		{
+			rangeDataIndexes.fromIndex = valueEx2.dataIndexes[1];
+			rangeDataIndexes.toIndex = valueEx1.dataIndexes[0];
+		}
+		else
+		{
+			rangeDataIndexes.fromIndex = valueEx1.dataIndexes[1];
+			rangeDataIndexes.toIndex = valueEx2.dataIndexes[0];
+		}
+
+		//var dataValues = [];
+
+		var result = {'range': {}, 'dataIndexes': [], 'dataValues': []};
+		for (var i = rangeDataIndexes.fromIndex; i <= rangeDataIndexes.toIndex; ++i)
+		{
+			var value = this.getHashValueAt(i)
+			result.dataValues.push(value);
+			result.dataIndexes.push(i);
+			result.range = Kekule.Spectroscopy.Utils.expandDataRange(result.range, value);
+		}
+		result.range = Kekule.Spectroscopy.Utils.expandDataRange(result.range, [valueEx1.value, valueEx2.value]);
+		// the leading and tailing values between data points
+		if (isIndepValueReversed)
+		{
+			result.dataValues.push(valueEx1.value);
+			result.dataValues.unshift(valueEx2.value);
+		}
+		else
+		{
+			result.dataValues.push(valueEx2.value);
+			result.dataValues.unshift(valueEx1.value);
+		}
+		result.dataIndexes.push(-1);
+		result.dataIndexes.unshift(-1);
+
+		return result;
 	},
 
 	/**
