@@ -192,6 +192,19 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 		else
 			return configValue;
 	},
+	setDataModeSpecifiedConfigValue: function(propName, value, dataMode)
+	{
+		var configValue = this.getPropValue(propName);
+		if (!configValue)
+		{
+			configValue = {};
+			this.setPropValue(propName, configValue);
+		}
+		if (Kekule.ObjUtils.notUnset(dataMode))
+			configValue[dataMode] = value;
+		else
+			configValue.default = value;
+	},
 	/** @private */
 	getDataModeSpecifiedBoolConfigValueOfModeList: function(propName, dataModes, opAnd)
 	{
