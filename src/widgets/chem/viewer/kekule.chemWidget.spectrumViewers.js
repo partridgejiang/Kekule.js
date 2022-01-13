@@ -34,6 +34,8 @@ Kekule._registerAfterLoadSysProc(function(){
 if (!Kekule.ChemWidget || !Kekule.Spectroscopy)
 	return;
 
+var AU = Kekule.ArrayUtils;
+var OU = Kekule.ObjUtils;
 var ZU = Kekule.ZoomUtils;
 
 Kekule.globalOptions.add('chemWidget.viewer', {
@@ -68,6 +70,32 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 		this.addNumConfigProp('spectrumAxisLabelFontSizeMax', 35);
 		this.addNumConfigProp('spectrumAxisLabelFontSizeFixed', 15);
 
+		// configs about spectrum data UI marker
+		this.addHashConfigProp('enableSpectrumDataHotTrackOnMode', undefined);
+		this.addHashConfigProp('enableSpectrumDataSelectOnMode', undefined);
+		this.addHashConfigProp('spectrumDataHotTrackUiMarkersOnMode', undefined);
+		this.addHashConfigProp('spectrumDataSelectUiMarkersOnMode', undefined);
+
+		//this.addBoolConfigProp('enableSpectrumDataPointMarker', true);
+		//this.addBoolConfigProp('enableSpectrumDataPointDetailMarker', true);
+		this.addHashConfigProp('spectrumHotTrackDataPointMarkerDrawStyles', undefined);
+		this.addHashConfigProp('spectrumSelectDataPointMarkerDrawStyles', undefined);
+		this.addHashConfigProp('spectrumHotTrackDataPointDetailMarkerDrawStyles', undefined);
+		this.addHashConfigProp('spectrumSelectDataPointDetailMarkerDrawStyles', undefined);
+		this.addIntConfigProp('spectrumDataPointMarkerSize', 15);
+		this.addIntConfigProp('spectrumDataPointMarkerWidth', 2);
+		this.addIntConfigProp('spectrumDataPointDetailMarkerValuePrecision', 8);
+		this.addIntConfigProp('spectrumDataPointDetailMarkerPadding', 5);
+
+		//this.addBoolConfigProp('enableSpectrumPeakHotTrack', true);
+		//this.addBoolConfigProp('enableSpectrumPeakSelect', true);
+		this.addHashConfigProp('spectrumPeakHotTrackStyles', undefined);
+		this.addHashConfigProp('spectrumPeakSelectStyles', undefined);
+		//this.addBoolConfigProp('hideSpectrumDataPointMarkerOnHotTrackedPeak', true);
+
+		this.addNumConfigProp('spectrumDataPointSelectInflation', 1.5);
+
+
 		//this.addBoolConfigProp('enableSpectrumDataHint', true);
 
 		this.defineProp('spectrumZoomPrimaryModifierKeys', {'dataType': DataType.ARRAY});
@@ -78,6 +106,59 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 	initPropDefValues: function()
 	{
 		this.tryApplySuper('initPropDefValues');
+
+		var DM = Kekule.Spectroscopy.DataMode;
+		var value = {'default': true};
+		value[DM.CONTINUOUS] = true;
+		value[DM.PEAK] = true;
+		this.setEnableSpectrumDataHotTrackOnMode(value);
+		var value = {'default': false};
+		value[DM.CONTINUOUS] = false;
+		value[DM.PEAK] = true;
+		this.setEnableSpectrumDataSelectOnMode(value);
+		var value = {};
+		value[DM.CONTINUOUS] = [SVM.DATA_POINT, SVM.DATA_DETAIL];
+		value[DM.PEAK] = [SVM.PEAK, SVM.DATA_DETAIL];
+		this.setSpectrumDataHotTrackUiMarkersOnMode(value);
+		var value = {};
+		value[DM.CONTINUOUS] = [SVM.DATA_POINT/*, SVM.DATA_DETAIL*/];
+		value[DM.PEAK] = [SVM.PEAK/*, SVM.DATA_DETAIL*/];
+		this.setSpectrumDataSelectUiMarkersOnMode(value);
+
+		this.setSpectrumHotTrackDataPointMarkerDrawStyles({
+			'color': '#c21717',
+			'strokeWidth': 1,
+			'opacity': 1
+		});
+		this.setSpectrumSelectDataPointMarkerDrawStyles({
+			'color': '#1919b4',
+			'strokeWidth': 1,
+			'opacity': 1
+		});
+		this.setSpectrumHotTrackDataPointDetailMarkerDrawStyles({
+			'fontFamily': 'Arial, Helvetica, sans-serif',
+			'fontSize': 15,
+			'color': '#c21717',
+			'strokeWidth': 2,
+			'opacity': 1
+		});
+		this.setSpectrumSelectDataPointDetailMarkerDrawStyles({
+			'fontFamily': 'Arial, Helvetica, sans-serif',
+			'fontSize': 15,
+			'color': '#1919b4',
+			'strokeWidth': 2,
+			'opacity': 1
+		});
+
+		this.setSpectrumPeakHotTrackStyles({
+			'color': '#c21717'
+		});
+		this.setSpectrumPeakSelectStyles({
+			//'color': '#f50f0f'
+			'color': '#1919b4',
+			'spectrum_dataStrokeWidthRatio': 0.05
+		});
+
 		this.setSpectrumZoomPrimaryModifierKeys([]);
 		this.setSpectrumZoomSecondaryModifierKeys(['shift']);
 		this.setSpectrumZoomBothModifierKeys(['alt']);
@@ -96,6 +177,40 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 	getActualEnableLocalSpectrumMode: function()
 	{
 		return Kekule.oneOf(this.getEnableLocalSpectrumMode(), Kekule.globalOptions.chemWidget.viewer.enableLocalSpectrumMode);
+	},
+
+	getDataModeSpecifiedConfigValue: function(propName, dataMode)
+	{
+		var configValue = this.getPropValue(propName);
+		if (DataType.isObjectValue(configValue))
+		{
+			var result = configValue[dataMode];
+			if (result === undefined)
+				result = configValue.default;
+			return result;
+		}
+		else
+			return configValue;
+	},
+	/** @private */
+	getDataModeSpecifiedBoolConfigValueOfModeList: function(propName, dataModes, opAnd)
+	{
+		var modes = AU.toArray(dataModes);
+		var result = this.getDataModeSpecifiedConfigValue(propName, modes[0]);
+		if (!result && opAnd)
+			return result;
+		for (var i = 0, l = modes.length; i < l; ++i)
+		{
+			if (opAnd)
+			{
+				result = result && this.getDataModeSpecifiedConfigValue(propName, modes[i]);
+				if (!result)
+					return result;
+			}
+			else
+				result = result || this.getDataModeSpecifiedConfigValue(propName, modes[i]);
+		}
+		return result;
 	}
 });
 
@@ -162,15 +277,60 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 			//'getter': function() { return this.getViewer().getSpectrumViewportRanges(); },
 			//'setter': function(value) { this.getViewer().setSpectrumViewportRanges(value); }
 		});
+		// private, the hot tracked and selected spectrum peak
+		this.defineProp('hotTrackedDataItem', {
+			'dataType': DataType.OBJECT,
+			'serializable': false,
+			'getter': function()
+			{
+				var itemEx = this.getHotTrackedDataItemEx();
+				return itemEx && itemEx.dataItem;
+			},
+			'setter': function(value)
+			{
+				var section = value && this._findSectionOfDataItem(value, true);
+				var itemEx = section? {'section': section, 'dataValue': value}: null;
+				this.changeHotTrackedDataItem(itemEx, true);
+			}
+		});
+		this.defineProp('hotTrackedDataItemEx', {
+			'dataType': DataType.OBJECT,
+			'serializable': false,
+			'setter': function(value)
+			{
+				this.changeHotTrackedDataItem(value, true);
+			}
+		});
+		this.defineProp('selectedDataItem', {
+			'dataType': DataType.OBJECT,
+			'serializable': false,
+			'getter': function(value)
+			{
+				var itemEx = this.getSelectedDataItemEx();
+				return itemEx && itemEx.dataItem;
+			},
+			'setter': function(value)
+			{
+				var section = value && this._findSectionOfDataItem(value, true);
+				var itemEx = section? {'section': section, 'dataValue': value}: null;
+				this.changeSelectedDataItem(itemEx, true);
+			}
+		});
+		this.defineProp('selectedDataItemEx', {
+			'dataType': DataType.OBJECT,
+			'serializable': false,
+			'setter': function(value)
+			{
+				this.changeSelectedDataItem(value, true);
+			}
+		});
 		// whether the spectrum is displayed with reversed axises position in spectrum view
 		this.defineProp('isSpectrumWithReversedAxises', {
 			'dataType': DataType.BOOL,
 			'serializable': false,
-			//'getter': function() { return this.getViewer().getIsSpectrumViewWithReversedAxises(); },
 			'setter': null,
 			'getter': function()
 			{
-				var spectrum = this.getSpectrum();
 				var renderCache = this._getSpectrumRenderCache();
 				return !!(renderCache && renderCache.spectrum_reversedAxises);
 			}
@@ -203,6 +363,22 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 		var renderer = this._getSpectrumRenderer();
 		var context = this.getViewer().getDrawContext();
 		return renderer && renderer.getRenderCache(context);
+	},
+
+	/**
+	 * Returns all the data modes of displayed data section of spectrum.
+	 * @returns {Array}
+	 */
+	getDisplayedDataModes: function()
+	{
+		var spectrum = this.getSpectrum();
+		var sections = (spectrum && spectrum.getDisplayedDataSections() || []);
+		var result = [];
+		for (var i = 0, l = sections.length; i < l; ++i)
+		{
+			result.push(sections[i].getMode());
+		}
+		return result;
 	},
 
 	/**
@@ -432,12 +608,409 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 		}
 	},
 
+	/** @private */
+	_getHotTrackedDataItemRenderStyles: function()
+	{
+		var viewer = this.getViewer();
+		return viewer && viewer.getDisplayerConfigs().getSpectrumViewConfigs().getSpectrumPeakHotTrackStyles();
+	},
+	/** @private */
+	_getSelectedDataItemRenderStyles: function()
+	{
+		var viewer = this.getViewer();
+		return viewer && viewer.getDisplayerConfigs().getSpectrumViewConfigs().getSpectrumPeakSelectStyles();
+	},
+
+	/** @private */
+	_findSectionOfDataItem: function(dataItem, displayedSectionOnly)
+	{
+		var spectrum = this.getSpectrum();
+		var sections = displayedSectionOnly? spectrum.getDisplayedDataSections(): spectrum.getDataSections();
+		for (var i = 0, l = sections.length; i < l; ++i)
+		{
+			var section = sections[i];
+			if (section.indexOfDataItem(dataItem) >= 0)
+				return section;
+		}
+		return null;
+	},
+	/**
+	 * Called when the hot tracked peak item is changed.
+	 * @private
+	 */
+	_hotTrackedDataItemChanged: function(oldItemEx, newItemEx)
+	{
+		this._hotTrackedOrSelectDataItemChanged(oldItemEx, newItemEx, false);
+	},
+	/**
+	 * Called when the selected peak item is changed.
+	 * @private
+	 */
+	_selectedDataItemChanged: function(oldItemEx, newItemEx)
+	{
+		this._hotTrackedOrSelectDataItemChanged(oldItemEx, newItemEx, true);
+		/*
+		var spectrum = this.getSpectrum();
+		if (oldItemEx)
+		{
+			if (this._selectedDataItemRenderStyles)
+				spectrum.removeDataItemOverrideRenderOptionItem(oldItemEx.dataValue, this._selectedDataItemRenderStyles);
+		}
+		if (newItemEx)
+		{
+			var renderStyles = this._getSelectedDataItemRenderStyles();
+			if (renderStyles)
+			{
+				spectrum.addDataItemOverrideRenderOptionItem(newItemEx.dataValue, renderStyles);
+				this._selectedDataItemRenderStyles = renderStyles;
+			}
+		}
+		*/
+	},
+	/** @private */
+	_hotTrackedOrSelectDataItemChanged: function(oldItemEx, newItemEx, isSelect)
+	{
+		var viewer = this.getViewer();
+		var spectrum = this.getSpectrum();
+		var configs = this.getViewer().getDisplayerConfigs().getSpectrumViewConfigs();
+		var dataItemRenderStylesField = isSelect? '_selectDataItemRenderStyles': '_hotTrackedDataItemRenderStyles';
+		if (newItemEx)  // empty hot tracked or select item in other sub views
+		{
+			this._removeHotTrackedOrSelectedDataItemInSiblingSpectrumViews(isSelect);
+		}
+		if (oldItemEx)
+		{
+			if (this[dataItemRenderStylesField])
+			{
+				spectrum.removeDataItemOverrideRenderOptionItem(oldItemEx.dataValue, this[dataItemRenderStylesField]);
+			}
+		}
+		var uiMarkerElements = (newItemEx && newItemEx.dataValue)?
+			(isSelect? this._getSpectrumDataSelectElements(configs, newItemEx.section): this._getSpectrumDataHotTrackElements(configs, newItemEx.section)):
+			[];
+		var dataPointMarkerVisible = uiMarkerElements.indexOf(SVM.DATA_POINT) >= 0;
+		var dataDetailMarkerVisible = uiMarkerElements.indexOf(SVM.DATA_DETAIL) >= 0;
+		var detailMarker = viewer.getSpectrumUiMarker(isSelect? 'selectDataDetail': 'hotTrackDataDetail', !!dataDetailMarkerVisible);
+		var pointMarker = viewer.getSpectrumUiMarker(isSelect? 'selectDataPoint': 'hotTrackDataPoint', !!dataPointMarkerVisible);
+
+		//console.log('hot track', newItemEx, hotTrackElements);
+
+		if (newItemEx && uiMarkerElements.length)  // do need to display some hot track elements
+		{
+			var dataValue = newItemEx.dataValue;
+			var dataSection = newItemEx.section;
+
+			//if (hotTrackElements.length)  // do need to display some hot track elements
+			{
+				if (dataSection.isPeakSection() && (uiMarkerElements.indexOf(SVM.PEAK) >= 0))  // hot track peak
+				{
+					var renderStyles = isSelect? this._getSelectedDataItemRenderStyles(): this._getHotTrackedDataItemRenderStyles();
+					if (renderStyles)
+					{
+						spectrum.addDataItemOverrideRenderOptionItem(newItemEx.dataValue, renderStyles);
+						this[dataItemRenderStylesField] = renderStyles;
+					}
+				}
+
+				if (dataPointMarkerVisible || dataDetailMarkerVisible)
+				{
+					var clientBox = this.getClientScreenBox();
+					var baseContextCoord = this.calcCoordAtSpectrumData(dataValue, Kekule.Render.CoordSystem.CONTEXT);
+					var detailText = null;
+
+					if (dataDetailMarkerVisible)  // data detail
+						detailText = this._formatSpectrumDataValueString(dataValue, configs.getSpectrumDataPointDetailMarkerValuePrecision());
+					//console.log('update', dataValue, detailText);
+					//this._updateSpectrumCurrDataPointMarker(baseContextCoord, detailText, dataPointMarkerVisible, dataDetailMarkerVisible, clientBox);
+				}
+				var detailStyles = isSelect? configs.getSpectrumSelectDataPointDetailMarkerDrawStyles(): configs.getSpectrumHotTrackDataPointDetailMarkerDrawStyles();
+				var pointStyles = isSelect? configs.getSpectrumSelectDataPointMarkerDrawStyles(): configs.getSpectrumHotTrackDataPointMarkerDrawStyles();
+				this._updateDataDetailMarker(detailMarker, baseContextCoord, {'text': detailText}, dataDetailMarkerVisible, detailStyles, clientBox, false);
+				this._updateDataPointMarker(pointMarker, baseContextCoord, null, dataPointMarkerVisible, pointStyles, clientBox, false);
+			}
+		}
+		else
+		{
+			if (detailMarker)
+				viewer.hideUiMarker(detailMarker, false);
+			if (pointMarker)
+				viewer.hideUiMarker(pointMarker, false);
+		}
+		viewer.repaintUiMarker();
+	},
+	/** @private */
+	_removeHotTrackedOrSelectedDataItemInSiblingSpectrumViews(isSelect)
+	{
+		var viewer = this.getViewer();
+		var self = this;
+		viewer.iterateSubViews(function(subView){
+			if (subView !== self && subView instanceof Kekule.ChemWidget.Viewer.SpectrumSubView)
+			{
+				if (isSelect)
+					subView.changeSelectedDataItem(null, false);
+				else
+					subView.changeHotTrackedDataItem(null, false);
+			}
+		});
+	},
+
+	/** @private */
+	changeHotTrackedDataItem: function(newItemEx, doRepaint)
+	{
+		var old = this.getHotTrackedDataItemEx();
+		if (old !== newItemEx)
+		{
+			this.setPropStoreFieldValue('hotTrackedDataItemEx', newItemEx);
+			this._hotTrackedDataItemChanged(old, newItemEx);
+			if (doRepaint)
+				this.getViewer().requestRepaint();
+		}
+	},
+	/** @private */
+	changeSelectedDataItem: function(newItemEx, doRepaint)
+	{
+		var old = this.getSelectedDataItemEx();
+		if (old !== newItemEx)
+		{
+			this.setPropStoreFieldValue('selectedDataItemEx', newItemEx);
+			this._selectedDataItemChanged(old, newItemEx);
+			if (doRepaint)
+				this.getViewer().requestRepaint();
+		}
+	},
+
+	// methods about UI markers /////////
+	/** @private */
+	_getSpectrumDataHotTrackElements: function(spectrumViewConfigs, dataSection)
+	{
+		var configs = spectrumViewConfigs;
+		var dataMode = dataSection.getMode();
+		var needHotTrack = configs.getDataModeSpecifiedConfigValue('enableSpectrumDataHotTrackOnMode', dataMode);
+
+		var activeMarkers = !needHotTrack? []: configs.getDataModeSpecifiedConfigValue('spectrumDataHotTrackUiMarkersOnMode', dataMode);
+		return activeMarkers;
+	},
+	/** @private */
+	_getSpectrumDataSelectElements: function(spectrumViewConfigs, dataSection)
+	{
+		var configs = spectrumViewConfigs;
+		var dataMode = dataSection.getMode();
+		var needSelect = configs.getDataModeSpecifiedConfigValue('enableSpectrumDataSelectOnMode', dataMode);
+
+		var activeMarkers = !needSelect? []: configs.getDataModeSpecifiedConfigValue('spectrumDataSelectUiMarkersOnMode', dataMode);
+		return activeMarkers;
+	},
+	/** @private */
+	_formatSpectrumDataValueString: function(spectrumDataValue, precision)
+	{
+		var dataVarSymbols = Kekule.ObjUtils.getOwnedFieldNames(spectrumDataValue);
+		var detailTextParts = [];
+		for (var i = 0, l = dataVarSymbols.length; i < l; ++i)
+		{
+			if (Kekule.NumUtils.isNormalNumber(spectrumDataValue[dataVarSymbols[i]]))
+				detailTextParts.push(dataVarSymbols[i] + ': ' + spectrumDataValue[dataVarSymbols[i]].toPrecision(precision));
+		}
+		return detailTextParts.join(', ');
+	},
+
+	/** @private */
+	_updateDataPointMarker: function(marker, contextCoord, params, visible, styles, spectrumClientBox, doRepaint)
+	{
+		if (!marker)
+			return;
+		var viewer = this.getViewer();
+		var pVisible = visible && contextCoord;
+		if (pVisible)
+		{
+			var isInideBox = Kekule.CoordUtils.isInsideBox(contextCoord, spectrumClientBox);
+			pVisible = !!isInideBox;
+		}
+		if (!pVisible)
+		{
+			viewer.hideUiMarker(marker, doRepaint);
+		}
+		else // if (pVisible)
+		{
+			//if (pVisible)
+			{
+				var configs = viewer.getDisplayerConfigs().getSpectrumViewConfigs();
+				var unitLength = viewer.getRenderConfigs().getLengthConfigs().getUnitLength() || 1;
+
+				// TODO: currently the shape is fixed to a cross
+				var shapeInfo;
+				var lineWidth = (configs.getSpectrumDataPointMarkerWidth() || 1) * unitLength;
+				var c = contextCoord;
+				if (configs.getSpectrumDataPointMarkerSize())
+				{
+					var halfSize = (configs.getSpectrumDataPointMarkerSize() / 2) * unitLength;
+					shapeInfo = [
+						Kekule.Render.MetaShapeUtils.createShapeInfo(
+							Kekule.Render.MetaShapeType.LINE,
+							[{'x': c.x - halfSize, 'y': c.y}, {'x': c.x + halfSize, 'y': c.y}], {'width': lineWidth}
+						),
+						Kekule.Render.MetaShapeUtils.createShapeInfo(
+							Kekule.Render.MetaShapeType.LINE,
+							[{'x': c.x, 'y': c.y - halfSize}, {'x': c.x, 'y': c.y + halfSize}], {'width': lineWidth}
+						)
+					];
+				}
+				else if (spectrumClientBox)  // a cross all over spectrum client area
+				{
+					shapeInfo = [
+						Kekule.Render.MetaShapeUtils.createShapeInfo(
+							Kekule.Render.MetaShapeType.LINE,
+							[{'x': spectrumClientBox.x1, 'y': c.y}, {'x': spectrumClientBox.x2, 'y': c.y}], {'width': lineWidth}
+						),
+						Kekule.Render.MetaShapeUtils.createShapeInfo(
+							Kekule.Render.MetaShapeType.LINE,
+							[{'x': c.x, 'y': spectrumClientBox.y1}, {'x': c.x, 'y': spectrumClientBox.y2}], {'width': lineWidth}
+						)
+					];
+				}
+
+				var pointDrawStyles = Object.create(/*configs.getSpectrumDataPointMarkerDrawStyles()*/styles);
+				pointDrawStyles.strokeWidth *= unitLength;
+
+				viewer.modifyShapeBasedMarker(marker, shapeInfo, pointDrawStyles, false);
+				viewer.showUiMarker(marker, doRepaint);
+			}
+		}
+	},
+	/** @private */
+	_updateDataDetailMarker: function(marker, contextCoord, params, visible, styles, spectrumClientBox, doRepaint)
+	{
+		if (!marker)
+			return;
+		var viewer = this.getViewer();
+		var text = params.text;
+		var pVisible = visible && contextCoord && text;
+		if (pVisible)
+		{
+			var isInideBox = Kekule.CoordUtils.isInsideBox(contextCoord, spectrumClientBox);
+			pVisible = !!isInideBox;
+		}
+		if (!pVisible)
+		{
+			viewer.hideUiMarker(marker, doRepaint);
+		}
+		else
+		{
+			var configs = viewer.getDisplayerConfigs().getSpectrumViewConfigs();
+			var unitLength = viewer.getRenderConfigs().getLengthConfigs().getUnitLength() || 1;
+
+			var detailDrawStyles = Object.create(/*configs.getSpectrumDataPointDetailMarkerDrawStyles()*/styles);
+			detailDrawStyles.fontSize *= unitLength;
+
+			if (text)
+			{
+				// determinate the position of detail text
+				var drawBridge = viewer.getDrawBridge();
+				var textBox = drawBridge.measureText(viewer.getDrawContext(), text, detailDrawStyles);
+				var textPadding = (configs.getSpectrumDataPointDetailMarkerPadding() || 0) * unitLength;
+				var spaceings = {
+					'x1': contextCoord.x - spectrumClientBox.x1,
+					'x2': spectrumClientBox.x2 - contextCoord.x,
+					'y1': contextCoord.y - spectrumClientBox.y1,
+					'y2': spectrumClientBox.y2 - contextCoord.y
+				}
+				var textBoxXAlignment, textBoxYAlignment;
+				var textCoord = {};
+				if (spaceings.x2 - textPadding >= textBox.width)
+				{
+					textCoord.x = contextCoord.x + textPadding;
+					textBoxXAlignment = Kekule.Render.BoxXAlignment.LEFT;
+				}
+				else if (spaceings.x1 - textPadding >= textBox.width)
+				{
+					textCoord.x = contextCoord.x - textPadding;
+					textBoxXAlignment = Kekule.Render.BoxXAlignment.RIGHT;
+				}
+				else if (spaceings.x2 >= spaceings.x1)
+				{
+					textCoord.x = spectrumClientBox.x2 - textBox.width;
+					textBoxXAlignment = Kekule.Render.BoxXAlignment.LEFT;
+				}
+				else
+				{
+					textCoord.x = spectrumClientBox.x1 + textBox.width;
+					textBoxXAlignment = Kekule.Render.BoxXAlignment.RIGHT;
+				}
+
+				if (spaceings.y1 - textPadding >= textBox.height)
+				{
+					textCoord.y = contextCoord.y - textPadding;
+					textBoxYAlignment = Kekule.Render.BoxYAlignment.BOTTOM;
+				}
+				else if (spaceings.y2 - textPadding >= textBox.height)
+				{
+					textCoord.y = contextCoord.y + textPadding;
+					textBoxYAlignment = Kekule.Render.BoxYAlignment.TOP;
+				}
+				else if (spaceings.y1 >= spaceings.y2)
+				{
+					textCoord.y = spectrumClientBox.y1 + textBox.height;
+					textBoxYAlignment = Kekule.Render.BoxYAlignment.BOTTOM;
+				}
+				else
+				{
+					textCoord.y = spectrumClientBox.y2 - textBox.height;
+					textBoxYAlignment = Kekule.Render.BoxYAlignment.TOP;
+				}
+
+
+				detailDrawStyles.textBoxXAlignment = textBoxXAlignment;
+				detailDrawStyles.textBoxYAlignment = textBoxYAlignment;
+			}
+
+			//console.log(textCoord, textBoxXAlignment, textBoxYAlignment);
+
+			viewer.modifyTextBasedMarker(marker, textCoord, text, detailDrawStyles, false);
+			viewer.showUiMarker(marker, doRepaint);
+		}
+	},
+
+	/////////////////////////////////////
+
 	/**
 	 * Reset the spectrum view settings.
 	 */
 	resetView: function()
 	{
+		this.changeHotTrackedDataItem(null, false);
+		this.changeSelectedDataItem(null, false);
 		this.resetViewportRange();
+	},
+
+	/** @private */
+	getSpectrumDataValueInfoFromIndependent: function(independentValues, candicateSections, extraOptions)
+	{
+		var spectrum = this.getSpectrum();
+		var sections = candicateSections || spectrum.getDisplayedDataSections() || [];
+		for (var i = 0, l = sections.length; i < l; ++i)
+		{
+			var sec = sections[i];
+			var v = sec.getDataValueFromIndependent(independentValues, extraOptions);
+			if (Kekule.ObjUtils.notUnset(v))
+				return {'value': v, 'section': sec};
+		}
+		return null;
+	},
+	/**
+	 * Calculate values of dependant variable values from independent variable values.
+	 * @param {Variant} independentValues A hash value with symbol: number map, or an array of values, or a single number value.
+	 * @param {Hash} extraOptions
+	 * @returns {Hash}
+	 */
+	calcValueFromIndependent: function(independentValues, extraOptions)
+	{
+		var indepHashValues = {};
+		if (typeof(independentValues) === 'number')  // a direct number value,
+			indepHashValues = this._convArrayToSymboledHash([independentValues], this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT));
+		else if (DataType.isArrayValue(independentValues))
+			indepHashValues = this._convArrayToSymboledHash(independentValues, this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT));
+		else
+			indepHashValues = independentValues;
+		return this.doCalcValueFromIndependent(indepHashValues, extraOptions);
 	},
 
 	///////// spectrum coord transform methods ////////////
@@ -471,6 +1044,28 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 	},
 
 	/**
+	 * Returns the data item info at current coord {x, y}.
+	 * @param {Object} coord
+	 * @param {Int} fromCoordSys
+	 * @param {Hash} options
+	 * @returns {Object} Including fields {dataValue, dataSection}
+	 */
+	getSpectrumDataValueItemInfoAtCoord: function(coord, fromCoordSys, options)
+	{
+		var specCoord = this.translateCoordToSpectrum(coord, fromCoordSys);
+		var indepValue = this.getIsSpectrumWithReversedAxises()? specCoord.y: specCoord.x;
+		var spectrum = this.getSpectrum();
+		var sections = spectrum.getDisplayedDataSections() || [];
+		for (var i = 0, l = sections.length; i < l; ++i)
+		{
+			var section = sections[i];
+			var dataValue = section.getDataValueFromIndependent(indepValue, options);
+			if (dataValue)
+				return {'dataValue': dataValue, 'dataSection': section};
+		}
+		return null;
+	},
+	/**
 	 * Calculate out the actual spectrum data value from the independent variable values at current coord {x, y}.
 	 * @param {Object} coord
 	 * @param {Int} fromCoordSys
@@ -491,6 +1086,92 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 				return dataValue;
 		}
 		return null;
+	},
+	/**
+	 * Calculate out the actual spectrum data range from the independent variable value range between coords.
+	 * @param {Array} coords
+	 * @param {Int} fromCoordSys
+	 * @param {Hash} options
+	 * @returns {Object}
+	 */
+	calcSpectrumDataRangeInCoordRange: function(coords, fromCoordSys, options)
+	{
+		var isReversedAxises = this.getIsSpectrumWithReversedAxises();
+		var fromCoordIndepField = isReversedAxises? 'y': 'x';
+		var fromCoordRange = Kekule.Spectroscopy.Utils.expandDataRange({}, coords);
+		var specCoords = [
+			this.translateCoordToSpectrum({'x': fromCoordRange.x.min, 'y': fromCoordRange.y.min}, fromCoordSys),
+			this.translateCoordToSpectrum({'x': fromCoordRange.x.max, 'y': fromCoordRange.y.max}, fromCoordSys)
+		];
+		var indepValues = [specCoords[0][fromCoordIndepField], specCoords[1][fromCoordIndepField]];
+		var indepValueRange = {'min': Math.min(indepValues[0], indepValues[1]), 'max': Math.max(indepValues[0], indepValues[1])};
+
+		var spectrum = this.getSpectrum();
+		var sections = spectrum.getDisplayedDataSections() || [];
+		for (var i = 0, l = sections.length; i < l; ++i)
+		{
+			var section = sections[i];
+			var dataValueRangeEx = section.calcValueRangeFromIndependentRangeEx([indepValueRange], options);
+			if (dataValueRangeEx && dataValueRangeEx.range)
+			{
+				dataValueRangeEx.dataSection = section;  // add additional section info
+				return dataValueRangeEx;
+			}
+		}
+		return null;
+	},
+	/**
+	 * Calculate out the primary data value from the independent variable value range between coords.
+	 * @param {Array} coords
+	 * @param {Int} fromCoordSys
+	 * @param {Hash} options
+	 * @returns {Hash} {dataSection, dataValue}
+	 */
+	calcSpectrumPrimaryDataValueInCoordRangeEx: function(coords, fromCoordSys, options)
+	{
+		var op = Object.create(options || null);
+		op.findNearest = true;
+		var rangeEx = this.calcSpectrumDataRangeInCoordRange(coords, fromCoordSys, options);
+		if (!rangeEx)
+			return null;
+
+		var dataSection = rangeEx.dataSection;
+		var dataValue;
+		if (dataSection.isPeakSection() && rangeEx.nearest)
+			dataValue = rangeEx.nearest.dataValue;
+		else
+		{
+			var depVarSymbol = dataSection.getLocalVarSymbolsOfDependency(Kekule.VarDependency.DEPENDENT)[0];
+			if (depVarSymbol)
+			{
+				var spectrum = this.getSpectrum();
+				var peakPosition = Kekule.Spectroscopy.Utils.getSpectrumPeakPosition(spectrum);
+				var dataValues = rangeEx.dataValues;
+				var matchedValue = dataValues[0];
+				for (var i = 1, l = dataValues.length; i < l; ++i)
+				{
+					var v = dataValues[i];
+					if ((peakPosition === Kekule.Spectroscopy.DataPeakPosition.MIN && v[depVarSymbol] < matchedValue[depVarSymbol])
+						|| (v[depVarSymbol] > matchedValue[depVarSymbol]))
+						matchedValue = v;
+				}
+				dataValue = matchedValue;
+			}
+			else
+				dataValue = dataValues[Math.round((dataValues.length - 1) / 2) + 1];
+		}
+		return {'dataValue': dataValue, 'dataSection': dataSection};
+	},
+	/**
+	 * Calculate out the primary data value from the independent variable value range between coords.
+	 * @param {Array} coords
+	 * @param {Int} fromCoordSys
+	 * @param {Hash} options
+	 * @returns {Object} The data value.
+	 */
+	calcSpectrumPrimaryDataValueInCoordRange: function(coords, fromCoordSys, options)
+	{
+		return this.calcSpectrumPrimaryDataValueInCoordRangeEx(coords, fromCoordSys, options).dataValue;
 	},
 	/**
 	 * Calculate out the coord {x, y} of an actual spectrum data value.
@@ -561,10 +1242,73 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 	}
 });
 
+ClassEx.defineProp(Kekule.ChemWidget.Viewer, 'spectrumUiMarkers', {
+	'dataType': DataType.HASH,
+	'serializable': false,
+	'setter': null,
+	'getter': function()
+	{
+		var result = this.getPropStoreFieldValue('spectrumUiMarkers');
+		if (!result)
+		{
+			result = {};
+			this.setPropStoreFieldValue('spectrumUiMarkers', result);
+		}
+		return result;
+	}
+});
+
+ClassEx.extend(Kekule.ChemWidget.Viewer, {
+	/** @private */
+	createShapeBasedSpectrumUiMarker: function(markerName)
+	{
+		var result = this.createShapeBasedMarker(null, null, false);
+		this.getSpectrumUiMarkers()[markerName] = result;
+		return result;
+	},
+	/** @private */
+	createTextBasedSpectrumUiMarker: function(markerName)
+	{
+		var result = this.createTextBasedMarker(null, null, null, false);
+		this.getSpectrumUiMarkers()[markerName] = result;
+		return result;
+	},
+	/** @private */
+	_finalizeSpectrumUiMarkers: function()
+	{
+		var markers = this.getSpectrumUiMarkers();
+		var keys = Kekule.ObjUtils.getOwnedFieldNames(markers);
+		for (var i = 0, l = keys.length; i < l; ++i)
+		{
+			markers[keys[i]].finalize();
+		}
+		this.setPropStoreFieldValue('spectrumUiMarkers', undefined);
+	},
+	/** @private */
+	getSpectrumUiMarker: function(markerName, autoCreate)
+	{
+		var result = this.getSpectrumUiMarkers()[markerName];
+		if (!result && autoCreate)
+		{
+			// create new one automatically
+			var textBased = markerName.indexOf('DataDetail') >= 0;
+			result = textBased? this.createTextBasedSpectrumUiMarker(markerName): this.createShapeBasedSpectrumUiMarker(markerName);
+			this.getSpectrumUiMarkers()[markerName] = result;
+		}
+		return result;
+	}
+});
+
 // extend the Viewer widget
 ClassEx.extendMethods(Kekule.ChemWidget.Viewer, {
+	/** @ignore */
+	doFinalize: function($origin)
+	{
+		this._finalizeSpectrumUiMarkers();
+		$origin();
+	},
 	/** @private */
-	_createSpectrumView: function()
+	_createSpectrumView: function($origin)
 	{
 		return this.fetchSubView(this.getChemObj(), Kekule.ChemWidget.Viewer.SpectrumSubView);
 		//return new Kekule.ChemWidget.Viewer.SpectrumView(this);
@@ -621,6 +1365,11 @@ ClassEx.extendMethods(Kekule.ChemWidget.Viewer, {
 	enableSpectrumInteraction: function($origin)
 	{
 		return this.isInSpectrumMode() || this.enableLocalSpectrumMode();
+	},
+	/** @ignore */
+	getEnableUiContext: function($origin)
+	{
+		return true;
 	},
 	/** @ignore */
 	allowAutoSize: function($origin)
@@ -774,15 +1523,134 @@ ClassEx.extendMethods(Kekule.ChemWidget.Viewer, {
 	}
 });
 
-// Extend the ViewerBasicInteractionController to enable the move/zoom interactions of spectrum in viewer
-ClassEx.extendMethods(Kekule.ChemWidget.ViewerBasicInteractionController, {
+/** @private */
+Kekule.ChemWidget.Viewer.SpectrumSubView.UiMarker = {
+	DATA_POINT: 1,
+	DATA_DETAIL: 2,
+	PEAK:	4
+};
+var SVM = Kekule.ChemWidget.Viewer.SpectrumSubView.UiMarker;
+
+ClassEx.defineProp(Kekule.ChemWidget.ViewerBasicInteractionController, 'spectrumUiMarkers', {
+	'dataType': DataType.HASH,
+	'serializable': false,
+	'setter': null,
+	'getter': function()
+	{
+		return this.getViewer().getSpectrumUiMarkers();
+	}
+});
+
+/*
+ClassEx.defineProp(Kekule.ChemWidget.ViewerBasicInteractionController, 'spectrumCurrDataPointMarker', {
+	'dataType': 'Kekule.ChemWidget.AbstractUIMarker',
+	'serializable': false,
+	'getter': function()
+	{
+		var result = this.getPropStoreFieldValue('spectrumCurrDataPointMarker');
+		if (!result)
+		{
+			result = this.createSpectrumCurrDataPointMarker();
+			this.setPropStoreFieldValue('spectrumCurrDataPointMarker', result);
+		}
+		return result;
+	}
+});
+ClassEx.defineProp(Kekule.ChemWidget.ViewerBasicInteractionController, 'spectrumCurrDataPointDetailMarker', {
+	'dataType': 'Kekule.ChemWidget.AbstractUIMarker',
+	'serializable': false,
+	'getter': function()
+	{
+		var result = this.getPropStoreFieldValue('spectrumCurrDataPointDetailMarker');
+		if (!result)
+		{
+			result = this.createSpectrumCurrDataPointDetailMarker();
+			this.setPropStoreFieldValue('spectrumCurrDataPointDetailMarker', result);
+		}
+		return result;
+	}
+});
+*/
+
+ClassEx.extend(Kekule.ChemWidget.ViewerBasicInteractionController, {
 	/** @private */
-	_getSpectrumObjAtScreenCoord: function($origin, coord)
+	getSpectrumUiMarker: function(markerName, autoCreate)
+	{
+		return this.getViewer().getSpectrumUiMarker(markerName, autoCreate);
+	},
+
+	/** @private */
+	_setSpectrumUiMarkersVisible: function(visible, updateRenderer)
+	{
+		var viewer = this.getViewer();
+		var pointMarker = this.getSpectrumUiMarker('hotTrackDataPoint', visible); //this.getSpectrumCurrDataPointMarker();
+		var detailMarker = this.getSpectrumUiMarker('hotTrackDataDetail', visible);  //this.getSpectrumCurrDataPointDetailMarker();
+		if (visible)
+		{
+			if (pointMarker)
+				viewer.showUiMarker(pointMarker, false);
+			if (detailMarker)
+				viewer.showUiMarker(detailMarker, false);
+		}
+		else
+		{
+			if (pointMarker)
+				viewer.hideUiMarker(pointMarker, false);
+			if (detailMarker)
+				viewer.hideUiMarker(detailMarker, false);
+		}
+		if (updateRenderer)
+			viewer.repaintUiMarker();
+	},
+	/** @private */
+	hideSpectrumUiMarkers: function(updateRenderer)
+	{
+		this._setSpectrumUiMarkersVisible(false, updateRenderer);
+	},
+	/** @private */
+	showSpectrumUiMarkers: function(updateRenderer)
+	{
+		this._setSpectrumUiMarkersVisible(true, updateRenderer);
+	},
+
+	/** @private */
+	_getSpectrumObjAtScreenCoord: function(coord)
 	{
 		//var coord = this.
 		var viewer = this.getViewer();
 		var boundObj = viewer.getTopmostBasicObjectAtCoord(coord);
 		return (boundObj instanceof Kekule.Spectroscopy.Spectrum)? boundObj: null;
+	},
+	/** @private */
+	getActiveSpectrumViewAtScreenCoord: function(screenCoord)
+	{
+		var result;
+		var viewer = this.getViewer();
+		if (viewer.enableSpectrumInteraction())
+		{
+			var currSpectrum = this._getSpectrumObjAtScreenCoord(screenCoord);
+			if (currSpectrum)
+			{
+				result = viewer.getSpectrumView(currSpectrum);
+			}
+		}
+		return result;
+	},
+
+	/** @private */
+	isTransformingSpectrum: function()
+	{
+		return !!this._transformInfo.currSpectrum;
+	}
+});
+
+// Extend the ViewerBasicInteractionController to enable the move/zoom interactions of spectrum in viewer
+ClassEx.extendMethods(Kekule.ChemWidget.ViewerBasicInteractionController, {
+	/** @ignore */
+	doFinalize: function($origin)
+	{
+		this._finalizeSpectrumUiMarkers();
+		$origin();
 	},
 
 	/** @ignore */
@@ -790,6 +1658,7 @@ ClassEx.extendMethods(Kekule.ChemWidget.ViewerBasicInteractionController, {
 	{
 		//this.tryApplySuper('_beginInteractTransformAtCoord', [screenX, screenY, clientX, clientY, htmlEvent]);
 		$origin(screenX, screenY, clientX, clientY, htmlEvent, pointerId);
+		/*
 		//console.log('begin interaction');
 		var viewer = this.getViewer();
 		//if (viewer.isInSpectrumMode())
@@ -805,6 +1674,7 @@ ClassEx.extendMethods(Kekule.ChemWidget.ViewerBasicInteractionController, {
 					this._transformInfo.currSpectrum = currSpectrum;
 					this._transformInfo.initSpectrumViewportRanges = sview.fetchViewportRanges();
 					//this._transformInfo.initSpectrumViewportRanges = viewer.getSpectrumView().fetchViewportRanges();
+					this._updateSpectrumCurrDataPointMarker(null, null, false);
 				}
 				else
 				{
@@ -812,6 +1682,21 @@ ClassEx.extendMethods(Kekule.ChemWidget.ViewerBasicInteractionController, {
 					this._transformInfo.initSpectrumViewportRanges = undefined;
 				}
 			}
+		}
+		*/
+		var sview = this.getActiveSpectrumViewAtScreenCoord(this._getEventMouseCoord(htmlEvent));
+		if (sview)
+		{
+			var currSpectrum = sview.getSpectrum();
+			this._transformInfo.currSpectrum = currSpectrum;
+			this._transformInfo.initSpectrumViewportRanges = sview.fetchViewportRanges();
+			//this._transformInfo.initSpectrumViewportRanges = viewer.getSpectrumView().fetchViewportRanges();
+			this.hideSpectrumUiMarkers(true);
+		}
+		else
+		{
+			this._transformInfo.currSpectrum = undefined;
+			this._transformInfo.initSpectrumViewportRanges = undefined;
 		}
 	},
 	/** @ignore */
@@ -904,97 +1789,186 @@ ClassEx.extendMethods(Kekule.ChemWidget.ViewerBasicInteractionController, {
 	},
 
 	/** @private */
-	doTestMouseCursor: function($origin, coord, e)
+	_mayNeedSpectrumDataHotTrack: function($origin, spectrumView, spectrumViewConfigs)
+	{
+		var spectrum = spectrumView.getSpectrum();
+		var displayedDataModes = spectrumView.getDisplayedDataModes();
+		var configs = spectrumViewConfigs;
+		return configs && configs.getDataModeSpecifiedBoolConfigValueOfModeList('enableSpectrumDataHotTrackOnMode', displayedDataModes);
+		/*
+		return configs && (configs.getEnableSpectrumDataPointMarker() || configs.getEnableSpectrumDataPointDetailMarker()
+			|| configs.getEnableSpectrumPeakHotTrack());
+		*/
+	},
+
+	/** @private */
+	_getSpectrumDataSelectCoordInflationRange: function($origin, screenCoord, spectrumViewConfigs)
+	{
+		var selectInflation = spectrumViewConfigs.getSpectrumDataPointSelectInflation();
+		var coordDelta = {x: selectInflation, y: selectInflation};
+		var screenCoords = [
+			Kekule.CoordUtils.substract(screenCoord, coordDelta),
+			Kekule.CoordUtils.add(screenCoord, coordDelta),
+		];
+		return screenCoords;
+	},
+
+	/** @private */
+	doTrySelectSpectrumData: function($origin, screenCoord)
 	{
 		var viewer = this.getViewer();
-		if (viewer.enableSpectrumInteraction())
 		{
-			var spectrum = this._getSpectrumObjAtScreenCoord(coord);
-			if (spectrum)
+			var sview = this.getActiveSpectrumViewAtScreenCoord(screenCoord);
+			if (sview)
 			{
-				var sview = viewer.getSpectrumView(spectrum)
-				if (sview)
+				var selectDataItemEx = null;
+				var configs = viewer.getDisplayerConfigs().getSpectrumViewConfigs();
+				if (configs.getDataModeSpecifiedBoolConfigValueOfModeList('enableSpectrumDataSelectOnMode', sview.getDisplayedDataModes()))
 				{
-					// TODO: debug
-					var hints = [];
-					hints.push('Screen coord at cursor: ' + JSON.stringify(coord));
-					var spectrumCoord = sview.translateCoordToSpectrum(coord, Kekule.Render.CoordSystem.SCREEN);
-					hints.push('Spectrum coord at cursor: ' + JSON.stringify(spectrumCoord));
-					var spectrumDataValue = sview.calcSpectrumDataAtCoord(coord, Kekule.Render.CoordSystem.SCREEN, {allowedErrorRate: 0.01});
-					if (spectrumDataValue)
+					//var peakDataValue = null;
+					var clientBox = sview.getClientScreenBox();
+					if (Kekule.CoordUtils.isInsideBox(screenCoord, clientBox))
 					{
-						hints.push('Spectrum data value: ' + JSON.stringify(spectrumDataValue));
-						var spectrumDataCoord = sview.calcCoordAtSpectrumData(spectrumDataValue, Kekule.Render.CoordSystem.SCREEN);
-						hints.push('Spectrum data screen coord: ' + JSON.stringify(spectrumDataCoord));
+						var screenCoords = this._getSpectrumDataSelectCoordInflationRange(screenCoord, configs);
+						var spectrumDataValueResult = sview.calcSpectrumPrimaryDataValueInCoordRangeEx(screenCoords, Kekule.Render.CoordSystem.SCREEN);
+						if (spectrumDataValueResult)  // do has the primary value need to be selected
+						{
+							var dataSection = spectrumDataValueResult.dataSection;
+							var dataValue = spectrumDataValueResult.dataValue;
+
+							/*
+							if (dataValue && dataSection.isPeakSection() && configs.getDataModeSpecifiedConfigValue('enableSpectrumDataSelectOnMode', dataSection.getMode()))  // select peak
+								peakDataValue = dataValue;
+							*/
+
+							selectDataItemEx = {'section': dataSection, 'dataValue': dataValue};
+						}
 					}
-					this.getViewer().setHint(hints.join('\n'));
 				}
+				sview.setSelectedDataItemEx(selectDataItemEx);
 			}
 		}
 	},
+	/** @private */
+	doTryHotTrackSpectrumData: function($origin, screenCoord)
+	{
+		var viewer = this.getViewer();
+		var configs = viewer.getDisplayerConfigs().getSpectrumViewConfigs();
+		var sview = this.getActiveSpectrumViewAtScreenCoord(screenCoord);
+		if (sview)
+		{
+			//var spectrum = sview.getSpectrum();
+			//var hotTrackElements = 0;
+			var hotTrackDataItemEx = null;
+			if (this._mayNeedSpectrumDataHotTrack(sview, configs))
+			{
+				// check if pointer moves over spectrum client box and need to displaying the data point marker
+				var clientBox = sview.getClientScreenBox();
+				if (Kekule.CoordUtils.isInsideBox(screenCoord, clientBox))
+				{
+					/*
+					var selectInflation = configs.getSpectrumDataPointSelectInflation();
+					var coordDelta = {x: selectInflation, y: selectInflation};
+					var screenCoords = [
+						Kekule.CoordUtils.substract(screenCoord, coordDelta),
+						Kekule.CoordUtils.add(screenCoord, coordDelta),
+					];
+					*/
+					var screenCoords = this._getSpectrumDataSelectCoordInflationRange(screenCoord, configs);
+					var spectrumDataValueResult = sview.calcSpectrumPrimaryDataValueInCoordRangeEx(screenCoords, Kekule.Render.CoordSystem.SCREEN);
+					if (spectrumDataValueResult)  // do has the primary value need to be hot tracked first
+					{
+						var dataSection = spectrumDataValueResult.dataSection;
+						var dataValue = spectrumDataValueResult.dataValue;
 
+						hotTrackDataItemEx = {'section': dataSection, 'dataValue': dataValue};
+					}
+				}
+			}
+			sview.setHotTrackedDataItemEx(hotTrackDataItemEx);
+		}
+	},
+
+	/** @private */
+	react_click: function($origin, e)
+	{
+		if (this.needReactEvent(e) && !this.isTransformingSpectrum())
+		{
+			var screenCoord = this._getEventMouseCoord(e);
+			this.doTrySelectSpectrumData(screenCoord);
+		}
+		// return $origin(e);  // there is no click even handler in base class, so we can not call $origin here
+	},
 	/** @private */
 	react_dblclick: function($origin, e)
 	{
 		if (this.needReactEvent(e))
 		{
 			var spectrumReset = false;
-			var viewer = this.getViewer();
-			viewer.beginUpdate();
-			try
+			var sview = this.getActiveSpectrumViewAtScreenCoord(this._getEventMouseCoord(e));
+			if (sview)
 			{
-				if (viewer.enableSpectrumInteraction())
+				var viewer = this.getViewer();
+				viewer.beginUpdate();
+				try
 				{
-					var spectrum = this._getSpectrumObjAtScreenCoord(this._getEventMouseCoord(e));
-					if (spectrum)
+					if (sview)
 					{
-						var sview = viewer.getSpectrumView(spectrum)
-						if (sview)
-						{
-							sview.resetView();
-							spectrumReset = true;
-						}
+						sview.resetView();
+						spectrumReset = true;
 					}
 				}
-				if (!spectrumReset)
-					$origin(e);
+				finally
+				{
+					viewer.endUpdate();
+				}
 			}
-			finally
-			{
-				viewer.endUpdate();
-			}
+			else
+				$origin(e);
 		}
+	},
+	/** @private */
+	react_pointermove: function($origin, e)
+	{
+		if (this.needReactEvent(e) && !this.isTransformingSpectrum())
+		{
+			var screenCoord = this._getEventMouseCoord(e);
+			this.doTryHotTrackSpectrumData(screenCoord);
+		}
+		return $origin(e);
+	},
+	/** @private */
+	react_pointerleave: function($origin, e)
+	{
+		this.hideSpectrumUiMarkers(true);
+		return $origin(e);
 	},
 	/** @private */
 	react_mousewheel: function($origin, e)
 	{
-		var viewer = this.getViewer();
-
-		//if (viewer.isInSpectrumMode())
-		if (viewer.enableSpectrumInteraction())
+		if (this.needReactEvent(e))
 		{
-			if (this.needReactEvent(e))
+			var sview = this.getActiveSpectrumViewAtScreenCoord(this._getEventMouseCoord(e));
+			if (sview)
 			{
-				var spectrum = this._getSpectrumObjAtScreenCoord(this._getEventMouseCoord(e));
-				//console.log('on spectrum', spectrum, this._getEventMouseCoord(e, viewer.getDrawContextParentElem()));
-				var sview = viewer.getSpectrumView(spectrum)
-				if (sview)
-				{
-					var configs = viewer.getDisplayerConfigs().getSpectrumViewConfigs();
-					var delta = e.wheelDeltaY || e.wheelDelta;
-					if (delta)
-						delta /= 120;
-					var centerCoord = e.getOffsetCoord();
+				var viewer = this.getViewer();
+				var spectrum = sview.getSpectrum();
+				//this._updateSpectrumCurrDataPointMarker(null, null, false);
+				this.hideSpectrumUiMarkers(true);
 
-					var directions = Kekule.ChemWidget.SpectrumViewUtils.getZoomDirectionsFromEvent(e, configs);
-					this.doZoomSpectrumViewer(spectrum, delta, centerCoord, directions);
-					e.preventDefault();
-					return true;
-				}
+				var configs = viewer.getDisplayerConfigs().getSpectrumViewConfigs();
+				var delta = e.wheelDeltaY || e.wheelDelta;
+				if (delta)
+					delta /= 120;
+				//var centerCoord = e.getOffsetCoord();
+				var centerCoord = this._getEventMouseCoord(e);
+
+				var directions = Kekule.ChemWidget.SpectrumViewUtils.getZoomDirectionsFromEvent(e, configs);
+				this.doZoomSpectrumViewer(spectrum, delta, centerCoord, directions);
+				e.preventDefault();
+				return true;
 			}
 		}
-		//else
-		//return this.tryApplySuper('react_mousewheel', [e]);
 		return $origin(e);
 	}
 });
