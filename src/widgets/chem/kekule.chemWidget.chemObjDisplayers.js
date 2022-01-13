@@ -2389,6 +2389,22 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		this.setPropStoreFieldValue('subViews', undefined);
 	},
 	/**
+	 * Iterate function on all sub views of displayer.
+	 * @param {Function} func Has params (subView, index).
+	 */
+	iterateSubViews: function(func)
+	{
+		var subviews = this.getSubViews();
+		if (subviews)
+		{
+			for (var i = 0, l = subviews.length; i < l; ++i)
+			{
+				func(subviews[i], i);
+			}
+		}
+		return this;
+	},
+	/**
 	 * Get the sub view object for a targetObj.
 	 * @param {Kekule.ChemObject} targetObj
 	 * @param {CLass} subViewClass
@@ -2422,7 +2438,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		return result;
 	},
 	/**
-	 * Get the sub view object for a targetObj. If such a sub view does not exisits, a new one will be created.
+	 * Get the sub view object for a targetObj. If such a sub view does not exist, a new one will be created.
 	 * @param {Kekule.ChemObject} targetObj
 	 * @param {CLass} subViewClass
 	 * @returns {Kekule.ChemWidget.ChemObjDisplayerSubView}
