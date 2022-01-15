@@ -927,6 +927,16 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.autoDetectCaption();
 	},
 
+	/** @ignore */
+	_repaintCore: function(overrideOptions)
+	{
+		if (this.getElement())
+		{
+			this.repaintUiMarker();
+		}
+		return this.tryApplySuper('_repaintCore', [overrideOptions]);
+	},
+
 	/** @private */
 	doSetUseCornerDecoration: function(/*$super, */value)
 	{
@@ -2937,13 +2947,20 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			try
 			{
 				var currCoord = {'x': currX, 'y': currY};
-				//var delta = Kekule.CoordUtils.substract(currCoord, info.lastCoord);
-				//var baseCoordOffset = viewer.getBaseCoordOffset() || {};
-				var delta = Kekule.CoordUtils.substract(currCoord, info.transformInitCoord);
-				var baseCoordOffset = info.initBaseCoordOffset;
-				baseCoordOffset = Kekule.CoordUtils.add(baseCoordOffset, delta);
-				viewer.setBaseCoordOffset(baseCoordOffset);
-				info.lastCoord = currCoord;
+				if (Kekule.CoordUtils.isEqual(currCoord, info.lastCoord))  // coord has no change bypass
+				{
+					// do nothing
+				}
+				else
+				{
+					//var delta = Kekule.CoordUtils.substract(currCoord, info.lastCoord);
+					//var baseCoordOffset = viewer.getBaseCoordOffset() || {};
+					var delta = Kekule.CoordUtils.substract(currCoord, info.transformInitCoord);
+					var baseCoordOffset = info.initBaseCoordOffset;
+					baseCoordOffset = Kekule.CoordUtils.add(baseCoordOffset, delta);
+					viewer.setBaseCoordOffset(baseCoordOffset);
+					info.lastCoord = currCoord;
+				}
 			}
 			finally
 			{
@@ -2964,40 +2981,47 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			try
 			{
 				var currCoord = {'x': currX, 'y': currY};
-				var delta = Kekule.CoordUtils.substract(currCoord, info.lastCoord);
-				delta.y = -delta.y;
-
-				var dis, rotateAngle, axisVector;
-				if (this._restraintCoord)  // restraint rotation on one axis
+				if (Kekule.CoordUtils.isEqual(currCoord, lastCoord))  // coord has no change bypass
 				{
-					var rc = this._restraintCoord;
+					// do nothing
+				}
+				else
+				{
+					var delta = Kekule.CoordUtils.substract(currCoord, info.lastCoord);
+					delta.y = -delta.y;
 
-					if (rc === 'x')
+					var dis, rotateAngle, axisVector;
+					if (this._restraintCoord)  // restraint rotation on one axis
 					{
-						dis = delta.y;
-						axisVector = {'x': 1, 'y': 0, 'z': 0};
-					}
-					else
-					{
-						dis = delta.x;
-						if (rc === 'y')
-							axisVector = {'x': 0, 'y': -1, 'z': 0};
+						var rc = this._restraintCoord;
+
+						if (rc === 'x')
+						{
+							dis = delta.y;
+							axisVector = {'x': 1, 'y': 0, 'z': 0};
+						}
 						else
-							axisVector = {'x': 0, 'y': 0, 'z': 1};
+						{
+							dis = delta.x;
+							if (rc === 'y')
+								axisVector = {'x': 0, 'y': -1, 'z': 0};
+							else
+								axisVector = {'x': 0, 'y': 0, 'z': 1};
+						}
+						rotateAngle = -dis * info.angleRatio;
 					}
-					rotateAngle = -dis * info.angleRatio;
-				}
-				else  // normal rotation
-				{
-					dis = Kekule.CoordUtils.getDistance({'x': 0, 'y': 0}, delta);
-					rotateAngle = dis * info.angleRatio;
-					axisVector = {'x': -delta.y, 'y': delta.x, 'z': 0};
-				}
+					else  // normal rotation
+					{
+						dis = Kekule.CoordUtils.getDistance({'x': 0, 'y': 0}, delta);
+						rotateAngle = dis * info.angleRatio;
+						axisVector = {'x': -delta.y, 'y': delta.x, 'z': 0};
+					}
 
-				viewer.rotate3DByAxis(rotateAngle, axisVector);
+					viewer.rotate3DByAxis(rotateAngle, axisVector);
 
-				info.lastCoord = currCoord;
-				info.calculating = false;
+					info.lastCoord = currCoord;
+					info.calculating = false;
+				}
 			}
 			catch(e) {}   // fix IE finally bug
 			finally
