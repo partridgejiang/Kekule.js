@@ -249,6 +249,18 @@ ClassEx.extendMethods(Kekule.ChemWidget.ChemObjDisplayerConfigs, {
  * @class
  * @augments Kekule.ChemWidget.ChemObjDisplayerSubView
  */
+/**
+ * Invoked when the pointer is hot tracking on a spectrum data item.
+ *   event param of it has fields: {spectrum: {@link Kekule.Spectroscopy.Spectrum}, dataItem: {dataSection, dataValue}}.
+ * @name Kekule.ChemWidget.Viewer.SpectrumSubView#hotTrackOnSpectrumData
+ * @event
+ */
+/**
+ * Invoked when the spectrum data item(s) is selected in view.
+ *   event param of it has fields: {spectrum: {@link Kekule.Spectroscopy.Spectrum}, dataItems: array of {dataSection, dataValue}}.
+ * @name Kekule.ChemWidget.Viewer.SpectrumSubView#spectrumDataSelectionChange
+ * @event
+ */
 Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemObjDisplayerSubView,
 /** @lends Kekule.ChemWidget.Viewer.SpectrumSubView# */
 {
@@ -825,6 +837,15 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 	_hotTrackedDataItemChanged: function(oldItemEx, newItemEx)
 	{
 		this._hotTrackedOrSelectDataItemsChanged(oldItemEx && [oldItemEx], newItemEx && [newItemEx], false);
+		this.invokeEvent('hotTrackOnSpectrumData', {
+			'spectrum': this.getSpectrum(),
+			'dataItem': newItemEx,
+			'prevDataItem': oldItemEx,
+			'dataValue': newItemEx && newItemEx.dataValue,
+			'prevDataValue': oldItemEx && oldItemEx.dataValue,
+			'dataSection': newItemEx && newItemEx.section,
+			'prevDataSection': oldItemEx && oldItemEx.section
+		});
 	},
 	/**
 	 * Called when the selected peak item is changed.
@@ -833,6 +854,11 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 	_selectedDataItemsChanged: function(oldItemsEx, newItemsEx)
 	{
 		this._hotTrackedOrSelectDataItemsChanged(oldItemsEx, newItemsEx, true);
+		this.invokeEvent('spectrumDataSelectionChange', {
+			'spectrum': this.getSpectrum(),
+			'dataItems': newItemsEx,
+			'prevDataItems': oldItemsEx
+		});
 		/*
 		var spectrum = this.getSpectrum();
 		if (oldItemEx)
