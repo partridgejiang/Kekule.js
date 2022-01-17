@@ -2494,6 +2494,17 @@ Kekule.ChemWidget.ChemObjDisplayerSubView = Class.create(ObjectEx,
 			'getter': function() { return this.getPropStoreFieldValue('target') || this.getParent().getChemObj(); }
 		});
 	},
+	/** @ignore */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+		this.setBubbleEvent(true);
+	},
+	/** @ignore */
+	getHigherLevelObj: function()
+	{
+		return this.getParent();
+	},
 	/**
 	 * Returns whether this type of sub view class can be applied to a object.
 	 * Descendants should override this method.
