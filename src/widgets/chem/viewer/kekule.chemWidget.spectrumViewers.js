@@ -251,7 +251,7 @@ ClassEx.extendMethods(Kekule.ChemWidget.ChemObjDisplayerConfigs, {
  */
 /**
  * Invoked when the pointer is hot tracking on a spectrum data item.
- *   event param of it has fields: {spectrum: {@link Kekule.Spectroscopy.Spectrum}, dataItem: {dataSection, dataValue}}.
+ *   event param of it has fields: {spectrum: {@link Kekule.Spectroscopy.Spectrum}, dataItems: array of {dataSection, dataValue}}.
  * @name Kekule.ChemWidget.Viewer.SpectrumSubView#hotTrackOnSpectrumData
  * @event
  */
@@ -324,9 +324,27 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 		this.defineProp('hotTrackedDataItemEx', {
 			'dataType': DataType.OBJECT,
 			'serializable': false,
+			'getter': function()
+			{
+				var itemsEx = this.getHotTrackedDataItemsEx();
+				return itemsEx && itemsEx[0];
+			},
 			'setter': function(value)
 			{
-				this.changeHotTrackedDataItem(value, true);
+				var itemsEx = this._fetchDataItemsEx(value);
+				this.changeHotTrackedDataItems(itemsEx, true);
+			}
+		});
+		this.defineProp('hotTrackedDataItemsEx', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'getter': function()
+			{
+				return this.getPropStoreFieldValue('hotTrackedDataItemsEx') || [];
+			},
+			'setter': function(value)
+			{
+				this.changeHotTrackedDataItems(value, true);
 			}
 		});
 		this.defineProp('selectedDataItem', {
@@ -834,17 +852,13 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 	 * Called when the hot tracked peak item is changed.
 	 * @private
 	 */
-	_hotTrackedDataItemChanged: function(oldItemEx, newItemEx)
+	_hotTrackedDataItemsChanged: function(oldItemsEx, newItemsEx)
 	{
-		this._hotTrackedOrSelectDataItemsChanged(oldItemEx && [oldItemEx], newItemEx && [newItemEx], false);
+		this._hotTrackedOrSelectDataItemsChanged(oldItemsEx, newItemsEx, false);
 		this.invokeEvent('hotTrackOnSpectrumData', {
 			'spectrum': this.getSpectrum(),
-			'dataItem': newItemEx,
-			'prevDataItem': oldItemEx,
-			'dataValue': newItemEx && newItemEx.dataValue,
-			'prevDataValue': oldItemEx && oldItemEx.dataValue,
-			'dataSection': newItemEx && newItemEx.section,
-			'prevDataSection': oldItemEx && oldItemEx.section
+			'dataItems': newItemsEx,
+			'prevDataItems': oldItemsEx
 		});
 	},
 	/**
@@ -916,7 +930,7 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 				if (isSelect)
 					subView.changeSelectedDataItems(null, false);
 				else
-					subView.changeHotTrackedDataItem(null, false);
+					subView.changeHotTrackedDataItems(null, false);
 			}
 		});
 	},
@@ -997,14 +1011,19 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 	{
 		this.getViewer()._hideAllSpectrumUiMarkers(false);  // hide all first, then update
 		// hot tracked
-		var hotTrackedDataItemEx = this.getHotTrackedDataItemEx();
-		if (hotTrackedDataItemEx)
+		var hotTrackedDataItemsEx = this.getHotTrackedDataItemsEx();
+		if (hotTrackedDataItemsEx)
 		{
-			this._updateHotTrackOrSelectUiMarkerToDataItem(hotTrackedDataItemEx, false);
+			console.log('hot', hotTrackedDataItemsEx);
+			for (var i = 0, l = hotTrackedDataItemsEx.length; i < l; ++i)
+			{
+				var hotTrackedDataItemEx = hotTrackedDataItemsEx[i];
+				this._updateHotTrackOrSelectUiMarkerToDataItem(hotTrackedDataItemEx, false, i);
+			}
 		}
 		else if (!updateVisibleOnly)
 		{
-			this._updateHotTrackOrSelectUiMarkerToDataItem(null, false);
+			this._updateHotTrackOrSelectUiMarkerToDataItem(null, false, 0);
 		}
 		// selected
 		var selectedDataItemsEx = this.getSelectedDataItemsEx();
@@ -1023,13 +1042,13 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 	},
 
 	/** @private */
-	changeHotTrackedDataItem: function(newItemEx, doRepaint)
+	changeHotTrackedDataItems: function(newItemsEx, doRepaint)
 	{
-		var old = this.getHotTrackedDataItemEx();
-		if (old !== newItemEx)
+		var old = this.getHotTrackedDataItemsEx();
+		if (old !== newItemsEx)
 		{
-			this.setPropStoreFieldValue('hotTrackedDataItemEx', newItemEx);
-			this._hotTrackedDataItemChanged(old, newItemEx);
+			this.setPropStoreFieldValue('hotTrackedDataItemsEx', newItemsEx);
+			this._hotTrackedDataItemsChanged(old, newItemsEx);
 			if (doRepaint)
 				this.getViewer().requestRepaint();
 		}
@@ -1244,7 +1263,7 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 	 */
 	resetView: function()
 	{
-		this.changeHotTrackedDataItem(null, false);
+		this.changeHotTrackedDataItems(null, false);
 		this.changeSelectedDataItems(null, false);
 		this.resetViewportRange();
 	},
@@ -2217,10 +2236,23 @@ ClassEx.extendMethods(Kekule.ChemWidget.ViewerBasicInteractionController, {
 						var dataValue = spectrumDataValueResult.dataValue;
 
 						hotTrackDataItemEx = {'section': dataSection, 'dataValue': dataValue};
+						// debug
+						/*
+						var hotTrackDataItemEx2 = {'section': dataSection, 'dataValue': Object.extend({}, dataValue)};
+						for (var key in hotTrackDataItemEx2.dataValue)
+						{
+							hotTrackDataItemEx2.dataValue[key] *= 1.2;
+						}
+						*/
 					}
 				}
 			}
-			sview.setHotTrackedDataItemEx(hotTrackDataItemEx);
+			/*
+			if (hotTrackDataItemEx2)
+				sview.setHotTrackedDataItemsEx([hotTrackDataItemEx, hotTrackDataItemEx2]);
+			else
+			*/
+			sview.setHotTrackedDataItemsEx(hotTrackDataItemEx && [hotTrackDataItemEx]);
 		}
 	},
 
