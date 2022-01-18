@@ -44,17 +44,49 @@ Kekule.globalOptions.add('chemWidget.viewer', {
 });
 
 /**
- * Config class of spectrum view for {@link Kekule.ChemWidget.ChemObjDisplayer}.
+ * Config class of spectrum sub view ({@link Kekule.ChemWidget.Viewer.SpectrumSubView}).
  * @class
  * @augments Kekule.AbstractConfigs
  *
  * @property {Bool} enableSpectrumView Whether turning on the spectrum view mode when a single spectrum object is loaded in viewer.
  * @property {Bool} enableLocalSpectrumView Whether applying specified interactions to a spectrum inside chem space (with other types of objects) in viewer.
- * //@property {Bool} enableSpectrumDataHint Whether displaying the hint with numberic data of spectrum value in current cursor position in viewer.
  * @property {Number} spectrumAxisLabelFontSizeMin The minimal font size to draw spectrum axis labels in spectrum mode.
  * @property {Number} spectrumAxisLabelFontSizeMax The maximal font size to draw spectrum axis labels in spectrum mode.
- * @property {Number} spectrumAxisLabelFontSizeFixed If this value is set, the spectrum axis labels will always be drawn in this size in spectrum mode,
- *   regardless of the zoom settings.
+ * @property {Number} spectrumAxisLabelFontSizeFixed If this value is set, the spectrum axis labels will always be drawn in this size in spectrum mode, regardless of the zoom settings.
+ * @property {Hash} enableSpectrumDataHotTrackOnMode Whether spectrum data hot track is enabled in certain mode.
+ *   This property is a hash object while the key is the value of data mode.
+ *   A 'default' key/value can be used here to provide the default setting of this property.
+ * @property {Hash} enableSpectrumDataSelectOnMode Whether spectrum data select is enabled in certain mode.
+ *   This property is a hash object while the key is the value of data mode.
+ *   A 'default' key/value can be used here to provide the default setting of this property.
+ * @property {Hash} enableSpectrumDataMultiSelectOnMode Whether spectrum data multi-select is enabled in certain mode.
+ *   This property is a hash object while the key is the value of data mode.
+ *   A 'default' key/value can be used here to provide the default setting of this property.
+ * @property {Hash} spectrumDataHotTrackUiMarkersOnMode Whether spectrum data multi-select is enabled in certain mode.
+ *   This property is a hash object while the key is the value of data mode.
+ *   A 'default' key/value can be used here to provide the default setting of this property.
+ * @property {Hash} spectrumDataHotTrackUiMarkersOnMode The displayed UI markers when hot tracking spectrum data.
+ *   This property is a hash object while the key is the value of data mode.
+ *   The hash value is an array of {@link Kekule.ChemWidget.Viewer.SpectrumSubView.UiMarker}.
+ *   A 'default' key/value can be used here to provide the default setting of this property.
+ * @property {Hash} spectrumDataSelectUiMarkersOnMode The displayed UI markers when selecting spectrum data.
+ *   This property is a hash object while the key is the value of data mode.
+ *   The hash value is an array of {@link Kekule.ChemWidget.Viewer.SpectrumSubView.UiMarker}.
+ *   A 'default' key/value can be used here to provide the default setting of this property.
+ * @property {Hash} spectrumHotTrackDataPointMarkerDrawStyles Render styles of hot track data point marker in spectrum.
+ * @property {Hash} spectrumSelectDataPointMarkerDrawStyles Render styles of data point selection marker in spectrum.
+ * @property {Hash} spectrumHotTrackDataPointDetailMarkerDrawStyles Render styles of hot track data detail marker in spectrum.
+ * @property {Hash} spectrumSelectDataPointDetailMarkerDrawStyles Render styles of data detail selection marker in spectrum.
+ * @property {Int} spectrumDataPointMarkerSize Size of data point UI marker.
+ * @property {Int} spectrumDataPointDetailMarkerPadding Padding of data point detail marker to data point marker.
+ * @property {Hash} spectrumPeakHotTrackStyles Render styles of hot tracked spectrum peak.
+ * @property {Hash} spectrumPeakSelectStyles Render styles of selected spectrum peak.
+ *
+ * @property {Number} spectrumDataPointSelectInflation
+ *
+ * @property {Array} spectrumZoomPrimaryModifierKeys Modifier keys (Shift/Ctrl/Alt) used when zooming on the primary axis of spectrum with mouse wheel.
+ * @property {Array} spectrumZoomSecondaryModifierKeys Modifier keys (Shift/Ctrl/Alt) used when zooming on the secondary axis of spectrum with mouse wheel.
+ * @property {Array} spectrumZoomBothModifierKeys Modifier keys (Shift/Ctrl/Alt) used when zooming on both axises of spectrum with mouse wheel.
  */
 Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.AbstractConfigs,
 /** @lends Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs# */
@@ -248,6 +280,12 @@ ClassEx.extendMethods(Kekule.ChemWidget.ChemObjDisplayerConfigs, {
  * A facade sub view class to wrap all methods about spectrum for {@link Kekule.ChemWidget.Viewer}.
  * @class
  * @augments Kekule.ChemWidget.ChemObjDisplayerSubView
+ *
+ * @property {Kekule.ChemWidget.Viewer} viewer Parent viewer object. Readonly.
+ * @property {Kekule.Spectroscopy.Spectrum} spectrum Target spectrum of sub view.
+ * @property {Hash} viewportRanges The viewport range of spectrum in this sub view.
+ * @property {Array} hotTrackedDataItemsEx Array of hot track data items. Each item is a hash {dataSection, dataValue}.
+ * @property {Array} selectedDataItemEx Array of selected data items. Each item is a hash {dataSection, dataValue}.
  */
 /**
  * Invoked when the pointer is hot tracking on a spectrum data item.
@@ -283,7 +321,8 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.ChemOb
 		this.defineProp('spectrum', {
 			'dataType': 'Kekule.Spectroscopy.Spectrum',
 			'serializable': false,
-			'getter': function() { return this.getTarget(); }
+			'getter': function() { return this.getTarget(); },
+			'setter': function(value) { this.setTarget(value); }
 		});
 		// the viewport range of spectrum view
 		this.defineProp('viewportRanges', {
