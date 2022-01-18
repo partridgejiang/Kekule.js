@@ -1,6 +1,6 @@
 /**
  * @fileoverview
- * Related types and classes of spectrum viewer.
+ * Related types and classes of spectrum sub view for ChemObjDisplayer.
  * @author Partridge Jiang
  */
 
@@ -39,8 +39,8 @@ var OU = Kekule.ObjUtils;
 var ZU = Kekule.ZoomUtils;
 
 Kekule.globalOptions.add('chemWidget.viewer', {
-	enableSpectrumMode: true,
-	enableLocalSpectrumMode: false
+	enableSpectrumView: true,
+	enableLocalSpectrumView: false
 });
 
 /**
@@ -48,8 +48,8 @@ Kekule.globalOptions.add('chemWidget.viewer', {
  * @class
  * @augments Kekule.AbstractConfigs
  *
- * @property {Bool} enableSpectrumMode Whether turning on the spectrum view mode when a single spectrum object is loaded in viewer.
- * @property {Bool} enableLocalSpectrumMode Whether applying specified interactions to a spectrum inside chem space (with other types of objects) in viewer.
+ * @property {Bool} enableSpectrumView Whether turning on the spectrum view mode when a single spectrum object is loaded in viewer.
+ * @property {Bool} enableLocalSpectrumView Whether applying specified interactions to a spectrum inside chem space (with other types of objects) in viewer.
  * //@property {Bool} enableSpectrumDataHint Whether displaying the hint with numberic data of spectrum value in current cursor position in viewer.
  * @property {Number} spectrumAxisLabelFontSizeMin The minimal font size to draw spectrum axis labels in spectrum mode.
  * @property {Number} spectrumAxisLabelFontSizeMax The maximal font size to draw spectrum axis labels in spectrum mode.
@@ -64,8 +64,8 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 	/** @private */
 	initProperties: function()
 	{
-		this.addBoolConfigProp('enableSpectrumMode', undefined);
-		this.addBoolConfigProp('enableLocalSpectrumMode', undefined);
+		this.addBoolConfigProp('enableSpectrumView', undefined);
+		this.addBoolConfigProp('enableLocalSpectrumView', undefined);
 		this.addNumConfigProp('spectrumAxisLabelFontSizeMin', 15);
 		this.addNumConfigProp('spectrumAxisLabelFontSizeMax', 35);
 		this.addNumConfigProp('spectrumAxisLabelFontSizeFixed', 15);
@@ -170,16 +170,16 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 	initPropValues: function()
 	{
 		this.tryApplySuper('initPropValues');
-		//this.setEnableSpectrumMode(Kekule.globalOptions.chemWidget.viewer.enableSpectrumMode);
-		//this.setEnableLocalSpectrumMode(Kekule.globalOptions.chemWidget.viewer.enableLocalSpectrumMode);
+		//this.setEnableSpectrumView(Kekule.globalOptions.chemWidget.viewer.enableSpectrumView);
+		//this.setEnableLocalSpectrumView(Kekule.globalOptions.chemWidget.viewer.isLocalSpectrumViewEnabled);
 	},
-	getActualEnableSpectrumMode: function()
+	getActualEnableSpectrumView: function()
 	{
-		return Kekule.oneOf(this.getEnableSpectrumMode(), Kekule.globalOptions.chemWidget.viewer.enableSpectrumMode);
+		return Kekule.oneOf(this.getEnableSpectrumView(), Kekule.globalOptions.chemWidget.viewer.enableSpectrumView);
 	},
-	getActualEnableLocalSpectrumMode: function()
+	getActualEnableLocalSpectrumView: function()
 	{
-		return Kekule.oneOf(this.getEnableLocalSpectrumMode(), Kekule.globalOptions.chemWidget.viewer.enableLocalSpectrumMode);
+		return Kekule.oneOf(this.getEnableLocalSpectrumView(), Kekule.globalOptions.chemWidget.viewer.isLocalSpectrumViewEnabled);
 	},
 
 	getDataModeSpecifiedConfigValue: function(propName, dataMode)
@@ -1677,20 +1677,20 @@ ClassEx.extendMethods(Kekule.ChemWidget.Viewer, {
 			return false;
 		else
 			return (this.getRenderType() === Kekule.Render.RendererType.R2D)
-				&& this.getDisplayerConfigs().getSpectrumViewConfigs().getActualEnableSpectrumMode()
+				&& this.getDisplayerConfigs().getSpectrumViewConfigs().getActualEnableSpectrumView()
 				&& this._isDisplayingSingleSpectrum();
 	},
 	/**
 	 * Check if local spectrum mode is enabled in this viewer.
 	 * @returns {Bool}
 	 */
-	enableLocalSpectrumMode: function($origin)
+	isLocalSpectrumViewEnabled: function($origin)
 	{
 		if (!Kekule.Spectroscopy || !Kekule.Spectroscopy.Spectrum)
 			return false;
 		else
 			return (this.getRenderType() === Kekule.Render.RendererType.R2D)
-				&& this.getDisplayerConfigs().getSpectrumViewConfigs().getActualEnableLocalSpectrumMode();
+				&& this.getDisplayerConfigs().getSpectrumViewConfigs().getActualEnableLocalSpectrumView();
 	},
 	/**
 	 * Check if the viewer is in spectrum or local spectrum mode.
@@ -1698,7 +1698,7 @@ ClassEx.extendMethods(Kekule.ChemWidget.Viewer, {
 	 */
 	enableSpectrumInteraction: function($origin)
 	{
-		return this.isInSpectrumMode() || this.enableLocalSpectrumMode();
+		return this.isInSpectrumMode() || this.isLocalSpectrumViewEnabled();
 	},
 	/** @ignore */
 	getEnableUiContext: function($origin)
@@ -1769,8 +1769,8 @@ ClassEx.extendMethods(Kekule.ChemWidget.Viewer, {
 	_repaintCore: function($origin, overrideOptions)
 	{
 		var isInSpectrumMode = this.isInSpectrumMode();
-		var enableLocalSpectrumMode = this.enableLocalSpectrumMode();
-		if (isInSpectrumMode || enableLocalSpectrumMode)
+		var enableLocalSpectrumView = this.isLocalSpectrumViewEnabled();
+		if (isInSpectrumMode || enableLocalSpectrumView)
 		{
 			var ops = Object.create(overrideOptions || {});
 			ops._spectrum_render_enable_sub_bounds = true;
