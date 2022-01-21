@@ -23,7 +23,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2021011700;
+$plugin->version   = 2022012100;
 $plugin->requires  = 2012062500;
 $plugin->component = 'local_kekulejs';
 $plugin->maturity  = MATURITY_STABLE;

@@ -15,10 +15,7 @@ class block_kekuleinjector extends block_base
         $this->title = get_string('kekuleinjector', 'block_kekuleinjector');
 
         // load essential files
-        kekulejs_utils::includeKekuleCssFiles();
-        kekulejs_utils::includeAdapterCssFiles();
-        kekulejs_utils::includeKekuleJsFiles();
-        kekulejs_utils::includeAdapterJsFiles();
+        kekulejs_utils::includeAllKekulejsFiles();
     }
     public function getContent()
     {
