@@ -21,5 +21,5 @@ $string['filtername'] = 'Kekule.js Loader';
 $string['captionWhitelistPatterns'] = 'White List Patterns';
 $string['descWhitelistPatterns'] = 'Load (and only load) Kekule.js only in these white list web pages, one URL pattern per line.';
 $string['captionBlacklistPatterns'] = 'Black List Patterns';
-$string['descBlacklistPatterns'] = 'Load Kekule.js in all web pages except these ones in the black list.';
+$string['descBlacklistPatterns'] = 'Load Kekule.js in all web pages except these ones in the black list, one URL pattern per line.';
 

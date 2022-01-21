@@ -13,7 +13,7 @@ class filter_kekuleloader extends moodle_text_filter {
     public function setup($page, $context) {
 
 	    $url = $page->url;
-    	$needApply = false;
+    	$needApply = true;
     	// check if page url matches pattern and need to insert js
 
 	    $sBlacklistPatterns = get_config('filter_kekuleloader', 'blacklistpatterns');
