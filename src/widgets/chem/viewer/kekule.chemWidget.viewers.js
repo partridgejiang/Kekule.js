@@ -126,6 +126,17 @@ var CNS = Kekule.Widget.HtmlClassNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
 
 /**
+ * Enumeration of some common used UI markers groups.
+ * @enum
+ */
+Kekule.ChemWidget.ViewerUiMarkerGroup = {
+	/** Ui markers for hot tracking objects. */
+	HOTTRACK: 'hotTrack',
+	/** Ui markers for selecting objects. */
+	SELECT: 'select'
+};
+
+/**
  * An universal viewer widget for chem objects (especially molecules).
  * @class
  * @augments Kekule.ChemWidget.ChemObjDisplayer
@@ -286,6 +297,9 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	doFinalize: function(/*$super*/)
 	{
+		var markers = this.getUiMarkers();
+		if (markers)
+			markers.finalize();
 		//this.getPainter().finalize();
 		var toolBar = this.getToolbar();
 		this.tryApplySuper('doFinalize')  /* $super() */;
@@ -920,6 +934,17 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.updateUiComps();
 	},
 
+	/** @ignore */
+	doLoad: function(chemObj)
+	{
+		// clear UI markers when loading a new object
+		/*
+		this.setVisibleOfUiMarkerGroup(Kekule.ChemWidget.ViewerUiMarkerGroup.SELECT, false, false);
+		this.setVisibleOfUiMarkerGroup(Kekule.ChemWidget.ViewerUiMarkerGroup.HOTTRACK, false, false);
+		*/
+		this.clearUiMarkers();
+		this.tryApplySuper('doLoad', [chemObj]);
+	},
 	/** @private */
 	doLoadEnd: function(chemObj)
 	{
@@ -930,11 +955,14 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @ignore */
 	_repaintCore: function(overrideOptions)
 	{
-		if (this.getElement())
-		{
-			this.repaintUiMarker();
-		}
-		return this.tryApplySuper('_repaintCore', [overrideOptions]);
+		this.tryApplySuper('_repaintCore', [overrideOptions]);
+	},
+	/** @ignore */
+	chemObjRendered: function(chemObj, renderOptions)
+	{
+		var result = this.tryApplySuper('chemObjRendered', [chemObj, renderOptions]);
+		this.updateUiMarkers(true);
+		return result;
 	},
 
 	/** @private */
@@ -1206,16 +1234,33 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 	},
 	/**
+	 * Update the properties of existed UI markers according the current chem object state.
+	 * @private
+	 */
+	updateUiMarkers: function(doRepaint)
+	{
+		this.doUpdateUiMarkers();
+		if (doRepaint)
+			this.repaintUiMarker();
+	},
+	/** @private */
+	doUpdateUiMarkers: function()
+	{
+		// do nothing here
+	},
+	/**
 	 * Create a new marker based on shapeInfo.
 	 * @private
 	 */
-	createShapeBasedMarker: function(/*markerPropName,*/ shapeInfo, drawStyles, updateRenderer)
+	createShapeBasedMarker: function(/*markerPropName,*/ shapeInfo, drawStyles, extraPropValues, updateRenderer)
 	{
 		var marker = new Kekule.ChemWidget.MetaShapeUiMarker();
 		if (shapeInfo)
 			marker.setShapeInfo(shapeInfo);
 		if (drawStyles)
 			marker.setDrawStyles(drawStyles);
+		if (extraPropValues)
+			marker.setPropValues(extraPropValues);
 		//this.setPropStoreFieldValue(markerPropName, marker);
 		this.getUiMarkers().addMarker(marker);
 		if (updateRenderer)
@@ -1249,7 +1294,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * Create a new marker based on shapeInfo.
 	 * @private
 	 */
-	createTextBasedMarker: function(coord, text, drawStyles, updateRenderer)
+	createTextBasedMarker: function(coord, text, drawStyles, extraPropValues, updateRenderer)
 	{
 		var marker = new Kekule.ChemWidget.TextUiMarker();
 		if (coord)
@@ -1258,6 +1303,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			marker.setText(text);
 		if (drawStyles)
 			marker.setDrawStyles(drawStyles);
+		if (extraPropValues)
+			marker.setPropValues(extraPropValues);
 		//this.setPropStoreFieldValue(markerPropName, marker);
 		this.getUiMarkers().addMarker(marker);
 		if (updateRenderer)
@@ -1290,8 +1337,57 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 	},
 	/**
+	 * Returns the UI markers in a specified group.
+	 * @param {String} group
+	 * @returns {Array} Array of {Kekule.ChemWidget.AbstractMarker}.
+	 */
+	getUiMarkersOfGroup: function(group)
+	{
+		return this.getUiMarkers().getMarkersOfGroup(group);
+	},
+	/**
+	 * Change UI markers with a new set of property values.
+	 * @param {Array} markers
+	 * @param {Hash} propValues
+	 */
+	modifyUiMarkers: function(markers, propValues)
+	{
+		var ms = (markers instanceof Kekule.ChemWidget.UiMarkerCollection)? markers.getMarkers(): AU.toArray(markers);
+		for (var i = 0, l = ms.length; i < l; ++i)
+		{
+			ms[i].setPropValues(propValues);
+		}
+	},
+	/**
+	 * Set the visible property a series of UI markers.
+	 * @param {Array} markers
+	 * @param {Bool} visible
+	 * @param {Bool} updateRenderer
+	 */
+	setVisibleOfUiMarkers: function(markers, visible, updateRenderer)
+	{
+		this.modifyUiMarkers(markers, {'visible': visible});
+		if (updateRenderer)
+		{
+			this.repaintUiMarker();
+		}
+		return this;
+	},
+	/**
+	 * Set the visible properties of a group of UI markers.
+	 * @param {String} markerGroup
+	 * @param {Bool} visible
+	 * @param {Bool} updateRenderer
+	 */
+	setVisibleOfUiMarkerGroup: function(markerGroup, visible, updateRenderer)
+	{
+		var markers = this.getUiMarkersOfGroup(markerGroup);
+		return this.setVisibleOfUiMarkers(markers, visible, updateRenderer);
+	},
+	/**
 	 * Hide a UI marker.
-	 * @param marker
+	 * @param {Kekule.ChemWidget.AbstractMarker} marker
+	 * @param {Bool} updateRenderer
 	 */
 	hideUiMarker: function(marker, updateRenderer)
 	{
@@ -1305,8 +1401,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 	/**
 	 * Show an UI marker.
-	 * @param marker
-	 * @param updateRenderer
+	 * @param {Kekule.ChemWidget.AbstractMarker} marker
+	 * @param {Bool} updateRenderer
 	 */
 	showUiMarker: function(marker, updateRenderer)
 	{
