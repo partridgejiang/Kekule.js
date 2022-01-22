@@ -14,20 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Strings for component 'local_kekule', language 'en', branch 'MOODLE_20_STABLE'
- *
- * @package    qtype
- * @subpackage YOURQTYPENAME
- * @copyright  THEYEAR YOURNAME (YOURCONTACTINFO)
+defined('MOODLE_INTERNAL') || die();
 
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-$string['pluginname'] = 'Kekule.js';
-
-
-// string used in settings
-$string['captionKekuleDir'] = 'Kekule.js plugin directory';
-$string['descKekuleDir'] = 'Root directory that contains Kekule.js plugin';
-$string['captionEnable3DViewer'] = 'Enable 3D View functions of Kekule.js';
-$string['descEnable3DViewer'] = 'If enabled, additional Three.js files will be loaded to page';
+$plugin->version   = 2022012100;        // The current plugin version (Date: YYYYMMDDXX)
+$plugin->requires  = 2020110300;        // Requires this Moodle version
+$plugin->component = 'filter_kekuleloader'; // Full name of the plugin (used for diagnostics)

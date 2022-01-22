@@ -37,6 +37,9 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext('mod_kekule/kekule_dir',
         get_string('captionKekuleDir', 'local_kekulejs'), get_string('descKekuleDir', 'local_kekulejs'),
         kekulejs_configs::DEF_KEKULE_DIR, PARAM_TEXT));
+	$settings->add(new admin_setting_configcheckbox('local_kekulejs/enable3dviewer',
+		get_string('captionEnable3DViewer', 'local_kekulejs'), get_string('descEnable3DViewer', 'local_kekulejs'),
+		kekulejs_configs::DEF_ENABLE_3D_VIEWER));
 
     $ADMIN->add('localplugins', $settings);
 }

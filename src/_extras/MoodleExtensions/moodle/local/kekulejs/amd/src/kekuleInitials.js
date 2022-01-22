@@ -1,4 +1,4 @@
-define(/*'local_kekulejs/kekuleInitials',*/ ['kekule'], function(){
+define(/*'local_kekulejs/kekuleInitials',*/ ['three', 'kekule'], function(){
 
 	function init()
 	{
