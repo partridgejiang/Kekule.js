@@ -2319,7 +2319,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var enableTrackNearest = this.getEditorConfigs().getInteractionConfigs().getEnableTrackOnNearest();
 		if (!enableTrackNearest)
 			//return this.findTopmostBoundInfo(this.getBoundInfosAtCoord(screenCoord, null, boundInflation), excludeObjs, boundInflation);
-			return this.tryApplySuper(screenCoord, excludeObjs, boundInflation);
+			return this.tryApplySuper('getTopmostBoundInfoAtCoord', [screenCoord, excludeObjs, boundInflation]);
 		// else, track on nearest
 		// new approach, find nearest boundInfo at coord
 		var SU = Kekule.Render.MetaShapeUtils;
