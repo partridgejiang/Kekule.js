@@ -3206,7 +3206,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		var restraintRotateEdgeSize = this._getRestraintRotate3DEdgeSize();
 		if (restraintRotateEdgeSize > 0)
 		{
-			var elem = viewer.getInteractionReceiverElem();
+			var elem = viewer.getDrawContextParentElem(true);
 			//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem, false);
 			var rect = Kekule.HtmlElementUtils.getElemPageRect(elem, true);
 			var x1 = clientX - rect.left;
@@ -3594,7 +3594,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			try
 			{
 				var currCoord = {'x': currX, 'y': currY};
-				if (Kekule.CoordUtils.isEqual(currCoord, info.lastCoord))  // coord has no change bypass
+				if (info.lastCoord && Kekule.CoordUtils.isEqual(currCoord, info.lastCoord))  // coord has no change bypass
 				{
 					// do nothing
 				}
@@ -3628,7 +3628,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			try
 			{
 				var currCoord = {'x': currX, 'y': currY};
-				if (Kekule.CoordUtils.isEqual(currCoord, lastCoord))  // coord has no change bypass
+				if (info.lastCoord && Kekule.CoordUtils.isEqual(currCoord, info.lastCoord))  // coord has no change bypass
 				{
 					// do nothing
 				}
