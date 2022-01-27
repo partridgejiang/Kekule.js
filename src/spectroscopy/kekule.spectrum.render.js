@@ -220,10 +220,14 @@ ClassEx.extend(Kekule.Spectroscopy.Spectrum, {
 		var result = subObjs[objName];
 		if (!result && !doNotCreate)
 		{
-			result = {};
+			result = {'parent': this};
 			subObjs[objName] = result;
 		}
 		return result;
+	},
+	isChildPseudoRenderSubObject: function(obj)
+	{
+		return this.__$subRenderObjs$__ && (this.__$subRenderObjs$__.indexOf(obj) >= 0);
 	},
 
 	getDataItemOverridenRenderOptions: function(dataItem)
@@ -2229,7 +2233,7 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 
 		return result;
 	},
-	
+
 	/* @private */
 	/*
 	_getMergeSectionDataMinMaxValues: function(values, dataVarSymbols)
