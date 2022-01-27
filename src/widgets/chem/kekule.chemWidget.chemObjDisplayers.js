@@ -27,6 +27,7 @@
 "use strict";
 
 var PS = Class.PropertyScope;
+var AU = Kekule.ArrayUtils;
 var DU = Kekule.DomUtils;
 var ZU = Kekule.ZoomUtils;
 var CW = Kekule.ChemWidget;
@@ -1437,14 +1438,14 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	},
 
 	/** @private */
-	calcDrawBaseCoord: function(drawOptions)
+	calcDrawBaseCoord: function(drawOptions, applyAutoSize)
 	{
 		var baseCoord;
 		var context = this.getDrawContext();
 		var painter = this.getPainter();
 		var newDimension;
 		// note in continuous repainting phase (such as periodical rotation), we disable auto size
-		if ((!this._isContinuousRepainting) && this.getAutoSize() && this.allowAutoSize())  // need to resize widget dimension
+		if ((!this._isContinuousRepainting) && applyAutoSize && this.getAutoSize() && this.allowAutoSize())  // need to resize widget dimension
 		{
 			var padding = this.getPadding() || 0;
 			var renderBox = painter.estimateScreenBox(context, baseCoord, drawOptions, this.getAllowCoordBorrow());
@@ -1510,12 +1511,12 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	},
 
 	/** @private */
-	calcDrawParams: function(overrideOptions)
+	calcDrawParams: function(overrideOptions, applyAutoSize)
 	{
 		var ops = this.getActualDrawOptions();
 		if (overrideOptions)
 			ops = Object.extend(ops, overrideOptions);
-		var baseCoordResult = this.calcDrawBaseCoord(ops);
+		var baseCoordResult = this.calcDrawBaseCoord(ops, applyAutoSize);
 		return {
 			'drawOptions': ops,
 			'baseCoord': baseCoordResult.baseCoord,
@@ -1631,10 +1632,10 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				transformOps = this._contextTransformOpsMap.get(context) || null;
 				transformOpsChanged = false;
 				//console.log(transformOps);
-				drawParams = this.calcDrawParams(transformOps);
+				drawParams = this.calcDrawParams(transformOps, true);
 			}
 			else
-				drawParams = this.calcDrawParams(overrideOptions);
+				drawParams = this.calcDrawParams(overrideOptions, true);
 
 			//drawParams.drawOptions.unitLength = 2;
 
@@ -2150,8 +2151,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		//var coord = this.getObjDrawBridge().transformScreenCoordToContext(this.getDrawContext(), screenCoord);
 		var coord = this.screenCoordToContext(screenCoord);
 		var refCoord = (this.getRenderType() === Kekule.Render.RendererType.R3D)? {'x': 0, 'y': 0}: null;
-		//console.log(coord, delta);
 		var matchedInfos = boundRecorder.getIntersectionInfos(this.getDrawContext(), coord, refCoord, delta, filterFunc);
+		//console.log(coord, delta, matchedInfos);
 		return matchedInfos;
 	},
 
@@ -2221,6 +2222,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				});
 			}
 		}
+
 		return result;
 	},
 	/**
@@ -2234,7 +2236,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	getTopmostBasicObjectAtCoord: function(screenCoord, boundInflation, filterObjClasses)
 	{
 		var objs = this.getBasicObjectsAtCoord(screenCoord, boundInflation, null, filterObjClasses);
-
 		return objs && objs[0];
 	},
 

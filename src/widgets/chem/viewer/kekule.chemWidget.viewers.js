@@ -211,6 +211,18 @@ Kekule.ChemWidget.ViewerUiMarkerGroup = {
  * @name Kekule.ChemWidget.Viewer#editingDone
  * @event
  */
+/**
+ * Invoked when the pointer is hot tracking on objects in viewer.
+ *   event param of it has fields: {objects: Array}.
+ * @name Kekule.ChemWidget.Viewer#hotTrackOnObjects
+ * @event
+ */
+/**
+ * Invoked when objects are selected in view.
+ *   event param of it has fields: {objects: Array}.
+ * @name Kekule.ChemWidget.Viewer.#selectionChange
+ * @event
+ */
 Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 /** @lends Kekule.ChemWidget.Viewer# */
 {
@@ -735,6 +747,32 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				}
 			}
 		});
+
+		this.defineProp('hotTrackedObjects', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'getter': function()
+			{
+				return this.getPropStoreFieldValue('hotTrackedObjects') || [];
+			},
+			'setter': function(value)
+			{
+				//this.setPropStoreFieldValue('hotTrackedObjects', AU.toArray(value));
+				this.changeHotTrackedObjects(value && AU.toArray(value), true);
+			}
+		});
+		this.defineProp('selectedObjects', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'getter': function()
+			{
+				return this.getPropStoreFieldValue('selectedObjects') || [];
+			},
+			'setter': function(value)
+			{
+				this.changeSelectedObjects(value && AU.toArray(value), true);
+			}
+		});
 	},
 	/** @ignore */
 	initPropValues: function(/*$super*/)
@@ -942,7 +980,17 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setVisibleOfUiMarkerGroup(Kekule.ChemWidget.ViewerUiMarkerGroup.SELECT, false, false);
 		this.setVisibleOfUiMarkerGroup(Kekule.ChemWidget.ViewerUiMarkerGroup.HOTTRACK, false, false);
 		*/
-		this.clearUiMarkers();
+		this.beginUpdateUiMarkers();
+		try
+		{
+			this.clearHotTrackedItems();
+			this.clearSelectedItems();
+			this.clearUiMarkers();
+		}
+		finally
+		{
+			this.endUpdateUiMarkers();
+		}
 		this.tryApplySuper('doLoad', [chemObj]);
 	},
 	/** @private */
@@ -955,6 +1003,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @ignore */
 	_repaintCore: function(overrideOptions)
 	{
+		//console.log('do repaint');
 		this.tryApplySuper('_repaintCore', [overrideOptions]);
 	},
 	/** @ignore */
@@ -962,6 +1011,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		var result = this.tryApplySuper('chemObjRendered', [chemObj, renderOptions]);
 		this.updateUiMarkers(true);
+		//this.repaintUiMarker();
 		return result;
 	},
 
@@ -985,6 +1035,90 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 	},
 
+	/** @ignore */
+	getBoundInfosAtCoord: function(screenCoord, filterFunc, boundInflation)
+	{
+		var boundInfos = this.tryApplySuper('getBoundInfosAtCoord', [screenCoord, filterFunc, boundInflation]);
+		var enableTrackNearest = this.getViewerConfigs().getInteractionConfigs().getEnableTrackOnNearest();
+		if (boundInfos && boundInfos.length && enableTrackNearest)  // sort result by distance to screenCoord
+		{
+			var distanceMap = new Kekule.MapEx();
+			try
+			{
+				var SU = Kekule.Render.MetaShapeUtils;
+				for (var i = boundInfos.length - 1; i >= 0; --i)
+				{
+					var info = boundInfos[i];
+					var shapeInfo = info.boundInfo;
+					var currDistance = SU.getDistance(screenCoord, shapeInfo);
+					distanceMap.set(info, currDistance);
+				}
+				// sort by z-index, the smaller index on bottom
+				boundInfos.sort(function (b1, b2)	{
+					var result = - (b1.boundInfo.shapeType - b2.boundInfo.shapeType);
+					if (result === 0)
+						result = - (distanceMap.get(b1) - distanceMap.get(b2));
+					return result;
+				});
+			}
+			finally
+			{
+				distanceMap.finalize();
+			}
+		}
+		//console.log('boundInfos', screenCoord, boundInfos);
+		return boundInfos;
+	},
+
+	/** @ignore */
+	/*
+	getTopmostBoundInfoAtCoord: function(screenCoord, excludeObjs, boundInflation)
+	{
+		var enableTrackNearest = this.getViewerConfigs().getInteractionConfigs().getEnableTrackOnNearest();
+		if (!enableTrackNearest)
+			return this.tryApplySuper('getTopmostBoundInfoAtCoord', [screenCoord, excludeObjs, boundInflation]);
+
+		// else, track on nearest
+		var SU = Kekule.Render.MetaShapeUtils;
+		var boundInfos = this.getBoundInfosAtCoord(screenCoord, null, boundInflation);
+		//var filteredBoundInfos = [];
+		var result, lastShapeInfo, lastDistance;
+		var setResult = function(boundInfo, shapeInfo, distance)
+		{
+			result = boundInfo;
+			lastShapeInfo = shapeInfo || boundInfo.boundInfo;
+			if (Kekule.ObjUtils.notUnset(distance))
+				lastDistance = distance;
+			else
+				lastDistance = SU.getDistance(screenCoord, lastShapeInfo);
+		};
+		for (var i = boundInfos.length - 1; i >= 0; --i)
+		{
+			var info = boundInfos[i];
+			if (excludeObjs && (excludeObjs.indexOf(info.obj) >= 0))
+				continue;
+			if (!result)
+				setResult(info);
+			else
+			{
+				var shapeInfo = info.boundInfo;
+				if (shapeInfo.shapeType < lastShapeInfo.shapeType)
+					setResult(info, shapeInfo);
+				else if (shapeInfo.shapeType === lastShapeInfo.shapeType)
+				{
+					var currDistance = SU.getDistance(screenCoord, shapeInfo);
+					if (currDistance < lastDistance)
+					{
+						//console.log('distanceCompare', currDistance, lastDistance);
+						setResult(info, shapeInfo, currDistance);
+					}
+				}
+			}
+		}
+		return result;
+	},
+	*/
+
 	/**
 	 * Returns whether the UI marker context is enabled in viewer.
 	 * Descendants or extensions may override this method.
@@ -992,7 +1126,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	getEnableUiContext: function()
 	{
-		return false;
+		return true;
 	},
 	/**
 	 * Returns parent element to create UI context inside viewer.
@@ -1013,7 +1147,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			result.style.width = '100%';
 			result.style.height = '100%';
 			// insert after draw context parent elment
-			var drawContextParentElem = this.getDrawContextParentElem(true);
+			var drawContextParentElem = this.getDrawContextParentElem();
 			var root = drawContextParentElem? drawContextParentElem.parentNode: this.getElement();
 			var refSibling = drawContextParentElem && drawContextParentElem.nextSibling;
 			if (refSibling)
@@ -1180,7 +1314,10 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	beginUpdateUiMarkers: function()
 	{
+		if (Kekule.ObjUtils.isUnset(this._uiMarkerUpdateFlag))
+			this._uiMarkerUpdateFlag = 0;
 		--this._uiMarkerUpdateFlag;
+		this.beginUpdate();   // some times the context should also be repainted to reflect the select/hot track markers
 	},
 	/**
 	 * Call this method to indicate the UI marker update process is over and should be immediately updated.
@@ -1188,7 +1325,10 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	endUpdateUiMarkers: function()
 	{
+		this.endUpdate();
 		++this._uiMarkerUpdateFlag;
+		if (this._uiMarkerUpdateFlag > 0)
+			this._uiMarkerUpdateFlag = 0;
 		if (!this.isUpdatingUiMarkers())
 			this.repaintUiMarker();
 	},
@@ -1200,6 +1340,39 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	isUpdatingUiMarkers: function()
 	{
 		return (this._uiMarkerUpdateFlag < 0);
+	},
+	/** @private */
+	_getUiMarkerOfName: function(markerName, groups, creationMethod)
+	{
+		var result = this.getUiMarkers().getMarkerOfName(markerName);
+		if (!result && creationMethod)  // auto create one
+		{
+			result = creationMethod.apply(this);
+			if (result)
+			{
+				result.setName(markerName);
+				result.setGroups(groups);
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_getDefaultHotTrackUiMarker: function(autoCreate)
+	{
+		var creationMethod;
+		if (autoCreate)
+			creationMethod = this.createShapeBasedMarker;
+		var result = this._getUiMarkerOfName('hotTrackMarker', [Kekule.ChemWidget.ViewerUiMarkerGroup.HOTTRACK], creationMethod);
+		return result;
+	},
+	/** @private */
+	_getDefaultSelectionUiMarker: function(autoCreate)
+	{
+		var creationMethod;
+		if (autoCreate)
+			creationMethod = this.createShapeBasedMarker;
+		var result = this._getUiMarkerOfName('selectionMarker', [Kekule.ChemWidget.ViewerUiMarkerGroup.SELECT], creationMethod);
+		return result;
 	},
 	/**
 	 * Called when transform has been made to objects and UI markers need to be modified according to it.
@@ -1213,7 +1386,40 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.beginUpdateUiMarkers();
 			try
 			{
-				// ???
+				var marker;
+				// hot track
+				var hotTrackedObjs = this.getHotTrackedObjects();
+				//console.log('recalcUiMarkers ui', hotTrackedObjs);
+				if (hotTrackedObjs && hotTrackedObjs.length)
+				{
+					var bounds = this._calcBoundsOfObjects(hotTrackedObjs);
+					var drawStyles = this.getViewerConfigs().getUiMarkerConfigs().getHotTrackMarkerStyles() || {};
+					marker = this._getDefaultHotTrackUiMarker(true);  // auto create
+					this.modifyShapeBasedMarker(marker, bounds, drawStyles, false);
+					this.showUiMarker(marker);
+				}
+				else   // hide hot track marker
+				{
+					marker = this._getDefaultHotTrackUiMarker(false);  // not need to auto create
+					if (marker)
+						this.hideUiMarker(marker, false);
+				}
+				// selected
+				var selectedObjs = this.getSelectedObjects();
+				if (selectedObjs && selectedObjs.length)
+				{
+					var bounds = this._calcBoundsOfObjects(selectedObjs);
+					var drawStyles = this.getViewerConfigs().getUiMarkerConfigs().getSelectionMarkerStyles() || {};
+					marker = this._getDefaultSelectionUiMarker(true);  // auto create
+					this.modifyShapeBasedMarker(marker, bounds, drawStyles, false);
+					this.showUiMarker(marker);
+				}
+				else   // hide hot track marker
+				{
+					marker = this._getDefaultSelectionUiMarker(false);  // not need to auto create
+					if (marker)
+						this.hideUiMarker(marker, false);
+				}
 			}
 			finally
 			{
@@ -1224,6 +1430,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	repaintUiMarker: function()
 	{
+		//console.log('call repaintUiMarker', this._uiMarkerUpdateFlag, this.getHotTrackedObjects());
 		if (this.isUpdatingUiMarkers())
 			return;
 		if (this.getUiDrawBridge() && this.getUiContext())
@@ -1246,7 +1453,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	doUpdateUiMarkers: function()
 	{
-		// do nothing here
+		this.recalcUiMarkers();
 	},
 	/**
 	 * Create a new marker based on shapeInfo.
@@ -1444,6 +1651,233 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.getUiDrawBridge().clearContext(this.getUiContext());
 	},
 
+	/**
+	 * Add object(s) to selection.
+	 * @param {Variant} objs
+	 */
+	addToSelection: function(objs)
+	{
+		var selection = AU.clone(this.getSelectedObjects());
+		var objects = AU.toArray(objs);
+		var changed = false;
+		for (var i = 0, l = objects.length; i < l; ++i)
+		{
+			var obj = objects[i];
+			if (selection.indexOf(obj) >= 0)  // already inside, bypass
+				continue;
+			else
+			{
+				selection.push(obj);
+				changed = true;
+			}
+		}
+		if (changed)
+			this.changeSelectedObjects(selection, true);
+	},
+	/**
+	 * Remove object(s) from selection.
+	 * @param {Variant} objs
+	 */
+	removeFromSelection: function(objs)
+	{
+		var selection = AU.clone(this.getSelectedObjects());
+		var objects = AU.toArray(objs);
+		var changed = false;
+		for (var i = 0, l = objects.length; i < l; ++i)
+		{
+			var obj = objects[i];
+			var index = selection.indexOf(obj);
+			if (index >= 0)  // inside, remove it
+			{
+				selection.splice(index, 1);
+				changed = true;
+			}
+		}
+		if (changed)
+			this.changeSelectedObjects(selection, true);
+	},
+	/**
+	 * Toggle selection state of data items.
+	 * @param {Variant} objs
+	 */
+	toggleSelectingState: function(objs)
+	{
+		var selection = AU.clone(this.getSelectedObjects());
+		var objects = AU.toArray(objs);
+		for (var i = 0, l = objects.length; i < l; ++i)
+		{
+			var obj = objects[i];
+			var index = selection.indexOf(obj);
+			if (index >= 0)  // inside, remove it
+			{
+				selection.splice(index, 1);
+			}
+			else  // not inside, add it
+			{
+				selection.push(obj);
+			}
+		}
+		this.changeSelectedObjects(selection, true);
+	},
+	/**
+	 * Select object(s).
+	 * @param {Variant} objs
+	 */
+	select: function(objs)
+	{
+		var objects = AU.toArray(objs);
+		this.changeSelectedObjects(objects, true);
+	},
+
+	/**
+	 * Clear all hot track items in viewer and all its child sub views.
+	 * @param {Array} byPassedHosts
+	 * @param {Bool} doRepaint
+	 * @private
+	 */
+	clearHotTrackedItems: function(byPassedHosts, doRepaint)
+	{
+		// subviews
+		this.iterateSubViews(function(subView) {
+			if (byPassedHosts && byPassedHosts.indexOf(subView) < 0)
+				subView.doClearHotTrackedItems();
+		});
+		// self
+		if (byPassedHosts && byPassedHosts.indexOf(this) < 0)
+			this.doClearHotTrackedItems();
+		if (doRepaint)
+			this.repaintUiMarker();
+	},
+	/** @private */
+	doClearHotTrackedItems: function(doRepaint)
+	{
+		this.changeHotTrackedObjects([], doRepaint);
+	},
+	/**
+	 * Clear all selected items in viewer and all its child sub views.
+	 * @param {Array} byPassedHosts
+	 * @param {Bool} doRepaint
+	 * @private
+	 */
+	clearSelectedItems: function(byPassedHosts, doRepaint)
+	{
+		// subviews
+		this.iterateSubViews(function(subView) {
+			if (byPassedHosts && byPassedHosts.indexOf(subView) < 0)
+				subView.doClearSelectedItems();
+		});
+		// self
+		if (byPassedHosts && byPassedHosts.indexOf(this) < 0)
+			this.doClearSelectedItems();
+		if (doRepaint)
+			this.repaintUiMarker();
+	},
+	/** @private */
+	doClearSelectedItems: function(doRepaint)
+	{
+		this.changeSelectedObjects([], doRepaint);
+	},
+
+	/** @private */
+	_isSameHotTrackedOrSelectedObjs: function(objs1, objs2)
+	{
+		var o1 = objs1, o2 = objs2;
+		if (o1 && !o1.length)
+			o1 = null;
+		if (o2 && !o2.length)
+			o2 = null;
+		if (o1 == o2)
+			return true;
+		else if (o1 && o2)
+		{
+			return AU.compare(o1, o2, function(a, b) { return (a === b)? 0: -1}) === 0;
+		}
+		else  // !objs1 || !objs2
+			return false;
+	},
+	/** @private */
+	changeHotTrackedObjects: function(newObjects, doRepaint)
+	{
+		var old = this.getHotTrackedObjects() || [];
+		var newObjs = newObjects? AU.toArray(newObjects): [];
+		//console.log('set hot track', newObjects, old, this._isSameHotTrackedOrSelectedObjs(old, newObjects));
+		//console.log('vewer.changeHotTrackedObjects', this.isUpdatingUiMarkers(), this._uiMarkerUpdateFlag, doRepaint);
+		if (!this._isSameHotTrackedOrSelectedObjs(old, newObjs))
+		{
+			if (doRepaint)
+				this.beginUpdateUiMarkers();
+			try
+			{
+				this.setPropStoreFieldValue('hotTrackedObjects', newObjs);
+				if (newObjs && newObjs.length)
+					this.clearHotTrackedItems([this], false);
+				//console.log('new hot track', newObjects, doRepaint);
+				if (doRepaint)
+					this.updateUiMarkers(true);
+
+				this.invokeEvent('hotTrackOnObjects', {'objects': newObjs, 'prevObjects': old});
+			}
+			finally
+			{
+				if (doRepaint)
+					this.endUpdateUiMarkers();
+			}
+		}
+	},
+	/** @private */
+	changeSelectedObjects: function(newObjects, doRepaint)
+	{
+		var old = this.getSelectedObjects();
+		var newObjs = newObjects? AU.toArray(newObjects): [];
+		if (!this._isSameHotTrackedOrSelectedObjs(old, newObjs))
+		{
+			if (doRepaint)
+				this.beginUpdateUiMarkers();
+			try
+			{
+				this.setPropStoreFieldValue('selectedObjects', newObjs);
+				if (newObjs && newObjs.length)
+					this.clearSelectedItems([this], false);
+				if (doRepaint)
+					this.updateUiMarkers(true);
+
+				this.invokeEvent('selectionChange', {'objects': newObjs, 'prevObjects': old});
+			}
+			finally
+			{
+				if (doRepaint)
+					this.endUpdateUiMarkers();
+			}
+		}
+	},
+
+	/** @private */
+	_calcBoundsOfObjects: function(objects, boundInflation)
+	{
+		var bounds = [];
+		if (Kekule.ObjUtils.isUnset(boundInflation))
+			boundInflation = this.getViewerConfigs().getInteractionConfigs().getObjBoundTrackInflation();
+		for (var i = 0; i < objects.length; ++i)
+		{
+			var obj = objects[i];
+			var infos = this.getBoundInfoRecorder().getBelongedInfos(this.getDrawContext(), obj);
+			if (infos && infos.length)
+			{
+				for (var j = 0, k = infos.length; j < k; ++j)
+				{
+					var info = infos[j];
+					var bound = info.boundInfo;
+					if (bound)
+					{
+						// inflate
+						bound = Kekule.Render.MetaShapeUtils.inflateShape(bound, boundInflation);
+						Kekule.ArrayUtils.pushUnique(bounds, bound);
+					}
+				}
+			}
+		}
+		return bounds;
+	},
 
 	/// Methods about popup editing ////////////////
 	/**
@@ -2530,6 +2964,55 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	}
 });
 
+/**
+ * Base class for sub view classes for viewer widget.
+ * @class
+ * @augments Kekule.ChemWidget.ChemObjDisplayerSubView
+ *
+ * @param {Kekule.ChemWidget.ChemObjDisplayer} displayer The parent displayer widget.
+ * @param {Kekule.ChemObject} target The target object inside displayer of this sub view.
+ *
+ * @property {Kekule.ChemWidget.ChemObjDisplayer} displayer The parent displayer widget.
+ * @property {Kekule.ChemObject} target The target object inside displayer of this sub view.
+ */
+Kekule.ChemWidget.ViewerSubView = Class.create(Kekule.ChemWidget.ChemObjDisplayerSubView,
+/** @lends Kekule.ChemWidget.ViewerSubView# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ViewerSubView',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('viewer', {
+			'dataType': 'Kekule.ChemWidget.Viewer',
+			'serializable': false,
+			'setter': null,
+			'getter': function ()
+			{
+				return this.getParent();
+			}
+		});
+	},
+	/**
+	 * Clear all hot track items in sub view.
+	 * @param {Bool} doRepaint
+	 * @private
+	 */
+	doClearHotTrackedItems: function(doRepaint)
+	{
+		// do nothing here
+	},
+	/**
+	 * Clear all selected items in viewer and all its child sub views.
+	 * @param {Bool} doRepaint
+	 * @private
+	 */
+	doClearSelectedItems: function(doRepaint)
+	{
+		// do nothing here
+	},
+});
+
 var XEvent = Kekule.X.Event;
 
 /**
@@ -2710,6 +3193,11 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		this._doInteractiveTransformEnd();
 	},
 	/** @private */
+	isTransforming: function()
+	{
+		return this._transformInfo.isTransforming;
+	},
+	/** @private */
 	_calcRestraintRotateCoord: function(clientX, clientY)
 	{
 		var viewer = this.getViewer();
@@ -2860,6 +3348,45 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	},
 
 	/** @private */
+	tryHotTrackBasicObject: function(screenCoord, boundInflation)
+	{
+	  return this.doTryHotTrackBasicObject(screenCoord, boundInflation);
+	},
+	/** @private */
+	doTryHotTrackBasicObject: function(screenCoord, boundInflation)
+	{
+		var viewer = this.getViewer();
+		if (viewer.getViewerConfigs().getInteractionConfigs().getEnableBasicObjectHotTrack())
+		{
+			var basicObject = viewer.getTopmostBasicObjectAtCoord(screenCoord, boundInflation);
+			//console.log('basic object', basicObject, screenCoord);
+			viewer.setHotTrackedObjects(basicObject || null);
+		}
+	},
+	/** @private */
+	trySelectBasicObject: function(screenCoord, isToggle, boundInflation)
+	{
+		return this.doTrySelectBasicObject(screenCoord, isToggle, boundInflation);
+	},
+	/** @private */
+	doTrySelectBasicObject: function(screenCoord, isToggle, boundInflation)
+	{
+		var viewer = this.getViewer();
+		if (viewer.getViewerConfigs().getInteractionConfigs().getEnableBasicObjectSelect())
+		{
+			var basicObject = viewer.getTopmostBasicObjectAtCoord(screenCoord, boundInflation);
+			//console.log('basic object', basicObject, screenCoord, isToggle);
+			if (isToggle && this.getViewer().getViewerConfigs().getInteractionConfigs().getEnableBasicObjectMultiSelect())
+			{
+				if (basicObject)
+					viewer.toggleSelectingState(basicObject);
+			}
+			else
+				viewer.select(basicObject || null);
+		}
+	},
+
+	/** @private */
 	needReactEvent: function(e)
 	{
 		return this.getEnableInteraction() && this.isEventFromInteractionArea(e);
@@ -2883,6 +3410,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	/** @private */
 	react_mousewheel: function(e)
 	{
+		//console.log('wheel', this.needReactEvent(e));
 		if (this.needReactEvent(e))
 		{
 			var delta = e.wheelDeltaY || e.wheelDelta;
@@ -2903,6 +3431,8 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		{
 			if (e.getPointerType() !== XEvent.PointerType.TOUCH || this.getEnableTouchInteraction())
 			{
+				// record the coord of pointer down, and later compare it in pointerup event, to determinate whether it is a simple click
+				this._pointerLeftButtonDownInitCoord = {'x': e.getScreenX(), 'y': e.getScreenY()};
 				// start mouse drag rotation in 3D render mode
 				//console.log('pointer down', e.pointerId);
 				this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY(), e.getClientX(), e.getClientY(), e, e.pointerId);
@@ -2977,6 +3507,22 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			//this._transformInfo.isTransforming = false;
 			if (this._transformInfo.isTransforming)
 				this._endInteractTransform();
+			if (this._pointerLeftButtonDownInitCoord)
+			{
+				var pointerLeftButtonUpCoord = {'x': e.getScreenX(), 'y': e.getScreenY()};
+				var distance = Kekule.CoordUtils.getDistance(pointerLeftButtonUpCoord, this._pointerLeftButtonDownInitCoord);
+				if (distance < 3)  // TODO: currently the allowed move distance is fixed
+				{
+					// no move between down-up, should be a click event, and we may select object in viewer now
+					//if (this.getViewer().getViewerConfigs().getInteractionConfigs().getEnableBasicObjectSelect())
+					{
+						var screenCoord = this._getEventMouseCoord(e);
+						var isToggle = e.getShiftKey() || e.getCtrlKey();
+						this.trySelectBasicObject(screenCoord, isToggle, this.getViewer().getViewerConfigs().getInteractionConfigs().getObjBoundTrackInflation());
+					}
+				}
+				this._pointerLeftButtonDownInitCoord = null;
+			}
 			//e.preventDefault();
 		}
 	},
@@ -3011,6 +3557,11 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			{
 
 			}
+		}
+		//else if (this.getViewer().getViewerConfigs().getInteractionConfigs().getEnableBasicObjectHotTrack())
+		{
+			var screenCoord = this._getEventMouseCoord(e);
+			this.tryHotTrackBasicObject(screenCoord, this.getViewer().getViewerConfigs().getInteractionConfigs().getObjBoundTrackInflation());
 		}
 	},
 	/** @private */
@@ -3373,18 +3924,48 @@ Kekule.ChemWidget.ViewerConfigs = Class.create(Kekule.ChemWidget.ChemObjDisplaye
 	/** @private */
 	initProperties: function()
 	{
+		this.addConfigProp('interactionConfigs', 'Kekule.ChemWidget.ViewerInteractionConfigs');
 		this.addConfigProp('hotKeyConfigs', 'Kekule.ChemWidget.ViewerHotKeyConfigs');
+		this.addConfigProp('uiMarkerConfigs', 'Kekule.ChemWidget.ViewerUiMarkerConfigs');
 	},
 	/** @private */
 	initPropValues: function()
 	{
 		this.tryApplySuper('initPropValues');
+		this.setPropStoreFieldValue('interactionConfigs', new Kekule.ChemWidget.ViewerInteractionConfigs());
 		this.setPropStoreFieldValue('hotKeyConfigs', new Kekule.ChemWidget.ViewerHotKeyConfigs());
+		this.setPropStoreFieldValue('uiMarkerConfigs', new Kekule.ChemWidget.ViewerUiMarkerConfigs());
 	}
 });
 
 /**
- * Configs of hot key settings of editor.
+ * Configs of interaction with viewer.
+ * @class
+ * @augments Kekule.AbstractConfigs
+ *
+ * @property {Bool} enableBasicObjectHotTrack Whether show the hot track marker when the pointer moves over a basic object (e.g., atom, bond) in viewer.
+ * @property {Bool} enableBasicObjectSelect Whether show the selection marker when the pointer click over a basic object (e.g., atom, bond) in viewer.
+ * @property {Bool} enableBasicObjectMultiSelect Whether multiple selection is enabled in viewer.
+ */
+Kekule.ChemWidget.ViewerInteractionConfigs = Class.create(Kekule.AbstractConfigs,
+/** @lends Kekule.ChemWidget.ViewerInteractionConfigs# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ViewerInteractionConfigs',
+	/** @private */
+	initProperties: function ()
+	{
+		this.addBoolConfigProp('enableBasicObjectHotTrack', false);
+		this.addHashConfigProp('enableBasicObjectSelect', false);
+		this.addHashConfigProp('enableBasicObjectMultiSelect', false);
+		this.addBoolConfigProp('enableTrackOnNearest', true);
+
+		this.addIntConfigProp('objBoundTrackInflation', 5);
+	}
+});
+
+/**
+ * Configs of hot key settings of viewer.
  * @class
  * @augments Kekule.AbstractConfigs
  *
@@ -3428,6 +4009,45 @@ Kekule.ChemWidget.ViewerHotKeyConfigs = Class.create(Kekule.AbstractConfigs,
 			{'key': '3', 'action': CWN.molDisplayTypeBallStick, 'coordMode': 3},
 			{'key': '4', 'action': CWN.molDisplayTypeSpaceFill, 'coordMode': 3}
 		]);
+	}
+});
+
+/**
+ * Config of the UI markers in viewer widget.
+ * @class
+ * @augments Kekule.AbstractConfigs
+ *
+ * @property {Number} spectrumDataPointSelectInflation
+ *
+ * @property {Hash} hotTrackMarkerStyles
+ * @property {Hash} selectionMarkerStyles
+ */
+Kekule.ChemWidget.ViewerUiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
+/** @lends Kekule.ChemWidget.ViewerUiMarkerConfigs# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs',
+	/** @private */
+	initProperties: function()
+	{
+		this.addHashConfigProp('hotTrackMarkerStyles', undefined);
+		this.addHashConfigProp('selectionMarkerStyles', undefined);
+	},
+	/** @ignore */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+		this.setHotTrackMarkerStyles({
+			'color': '#0000FF',
+			'opacity': 0.2
+		});
+		this.setSelectionMarkerStyles({
+			'color': '#0000FF',
+			'opacity': 0.35,
+			'strokeColor': '#0000FF',
+			'fillColor': '#0000FF',
+			'strokeWidth': 2
+		});
 	}
 });
 
