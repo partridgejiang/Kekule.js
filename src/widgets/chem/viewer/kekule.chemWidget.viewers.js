@@ -220,7 +220,7 @@ Kekule.ChemWidget.ViewerUiMarkerGroup = {
 /**
  * Invoked when objects are selected in view.
  *   event param of it has fields: {objects: Array}.
- * @name Kekule.ChemWidget.Viewer.#selectionChange
+ * @name Kekule.ChemWidget.Viewer#selectionChange
  * @event
  */
 Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
