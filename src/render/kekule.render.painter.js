@@ -243,6 +243,8 @@ Kekule.Render.ChemObjPainter = Class.create(ObjectEx,
 	 */
 	draw: function(context, baseCoord, options)
 	{
+		if (!this.getChemObj())
+			return null;
 		this.prepareRenderer();
 		//this.getBoundInfoRecorder().clear(context);
 		/*
