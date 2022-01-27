@@ -2385,7 +2385,7 @@ ClassEx.extendMethods(Kekule.ChemWidget.ViewerBasicInteractionController, {
 		var viewer = this.getViewer();
 		var configs = viewer.getDisplayerConfigs().getSpectrumViewConfigs();
 		var sview = this.getActiveSpectrumViewAtScreenCoord(screenCoord);
-		if (sview && this._mayNeedSpectrumDataHotTrack(sview, configs))
+		if (sview && viewer.getRenderType() === Kekule.Render.RendererType.R2D && this._mayNeedSpectrumDataHotTrack(sview, configs))
 		{
 			return this.doTryHotTrackSpectrumData(screenCoord, viewer, sview, configs);
 		}
@@ -2398,7 +2398,8 @@ ClassEx.extendMethods(Kekule.ChemWidget.ViewerBasicInteractionController, {
 		var viewer = this.getViewer();
 		var configs = viewer.getDisplayerConfigs().getSpectrumViewConfigs();
 		var sview = this.getActiveSpectrumViewAtScreenCoord(screenCoord);
-		if (sview && configs.getDataModeSpecifiedBoolConfigValueOfModeList('enableSpectrumDataSelectOnMode', sview.getDisplayedDataModes()))
+		if (sview && viewer.getRenderType() === Kekule.Render.RendererType.R2D
+			&& configs.getDataModeSpecifiedBoolConfigValueOfModeList('enableSpectrumDataSelectOnMode', sview.getDisplayedDataModes()))
 		{
 			return this.doTrySelectSpectrumData(screenCoord, isToggle, viewer, sview, configs);
 		}

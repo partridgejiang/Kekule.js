@@ -1651,6 +1651,28 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.getUiDrawBridge().clearContext(this.getUiContext());
 	},
 
+	////////////////////////////////////////////////////
+	/**
+	 * Returns whether the select interaction is enabled in viewer.
+	 * @returns {Bool}
+	 */
+	getEnableObjectSelect: function()
+	{
+		// TODO: currently only allowed in 2D viewer
+		return this.getRenderType() === Kekule.Render.RendererType.R2D
+			&& this.getViewerConfigs().getInteractionConfigs().getEnableBasicObjectSelect();
+	},
+	/**
+	 * Returns whether the hot track interaction is enabled in viewer.
+	 * @returns {Bool}
+	 */
+	getEnableObjectHotTrack: function()
+	{
+		// TODO: currently only allowed in 2D viewer
+		return this.getRenderType() === Kekule.Render.RendererType.R2D
+			&& this.getViewerConfigs().getInteractionConfigs().getEnableBasicObjectHotTrack();
+	},
+
 	/**
 	 * Add object(s) to selection.
 	 * @param {Variant} objs
@@ -3356,7 +3378,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	doTryHotTrackBasicObject: function(screenCoord, boundInflation)
 	{
 		var viewer = this.getViewer();
-		if (viewer.getViewerConfigs().getInteractionConfigs().getEnableBasicObjectHotTrack())
+		if (viewer.getEnableObjectHotTrack())
 		{
 			var basicObject = viewer.getTopmostBasicObjectAtCoord(screenCoord, boundInflation);
 			//console.log('basic object', basicObject, screenCoord);
@@ -3372,7 +3394,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	doTrySelectBasicObject: function(screenCoord, isToggle, boundInflation)
 	{
 		var viewer = this.getViewer();
-		if (viewer.getViewerConfigs().getInteractionConfigs().getEnableBasicObjectSelect())
+		if (viewer.getEnableObjectSelect())
 		{
 			var basicObject = viewer.getTopmostBasicObjectAtCoord(screenCoord, boundInflation);
 			//console.log('basic object', basicObject, screenCoord, isToggle);
