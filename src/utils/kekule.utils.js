@@ -1494,7 +1494,7 @@ Kekule.FactoryUtils = {
 					var r = result._items.get(key);
 					if (!r)
 					{
-						var parent = ClassEx.getSuperClass(key);
+						var parent = key && ClassEx.getSuperClass(key);
 						if (parent)
 							r = result.getClass(parent);
 					}
