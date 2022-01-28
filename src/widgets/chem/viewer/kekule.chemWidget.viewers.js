@@ -1818,6 +1818,52 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			return false;
 	},
 	/** @private */
+	_changeHotTrackOrSelectObjectRenderStyles: function(oldObjs, newObjs, isSelect, doRepaint)
+	{
+		var needRepaintContext =  false;
+		var objRenderStyleFieldName = isSelect? '_selectedObjectRenderStyles': '_hotTrackedObjectRenderStyles';
+		if (oldObjs && oldObjs.length)
+		{
+			var oldRenderStyles = this[objRenderStyleFieldName];
+			if (oldRenderStyles)
+			{
+				for (var i = 0, l = oldObjs.length; i < l; ++i)
+				{
+					var obj = oldObjs[i];
+					if (obj.removeOverrideRenderOptionItem)
+					{
+						obj.removeOverrideRenderOptionItem(oldRenderStyles);
+						needRepaintContext = true;
+					}
+				}
+			}
+		}
+		if (newObjs && newObjs.length)
+		{
+			var renderStyles = isSelect ?
+				this.getViewerConfigs().getUiMarkerConfigs().getSelectedObjectStyles() :
+				this.getViewerConfigs().getUiMarkerConfigs().getHotTrackedObjectStyles();
+			if (renderStyles)
+			{
+				this[objRenderStyleFieldName] = renderStyles;
+				for (var i = 0, l = newObjs.length; i < l; ++i)
+				{
+					var obj = newObjs[i];
+					if (obj.addOverrideRenderOptionItem)
+					{
+						obj.addOverrideRenderOptionItem(renderStyles);
+						needRepaintContext = true;
+					}
+				}
+			}
+		}
+		else
+			this[objRenderStyleFieldName] = null;
+
+		if (doRepaint && needRepaintContext)
+			this.requestRepaint();
+	},
+	/** @private */
 	changeHotTrackedObjects: function(newObjects, doRepaint)
 	{
 		var old = this.getHotTrackedObjects() || [];
@@ -1830,6 +1876,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.beginUpdateUiMarkers();
 			try
 			{
+				this._changeHotTrackOrSelectObjectRenderStyles(old, newObjs, false, doRepaint);
+
 				this.setPropStoreFieldValue('hotTrackedObjects', newObjs);
 				if (newObjs && newObjs.length)
 					this.clearHotTrackedItems([this], false);
@@ -1857,6 +1905,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.beginUpdateUiMarkers();
 			try
 			{
+				this._changeHotTrackOrSelectObjectRenderStyles(old, newObjs, true, doRepaint);
+
 				this.setPropStoreFieldValue('selectedObjects', newObjs);
 				if (newObjs && newObjs.length)
 					this.clearSelectedItems([this], false);
@@ -4054,22 +4104,35 @@ Kekule.ChemWidget.ViewerUiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
 	{
 		this.addHashConfigProp('hotTrackMarkerStyles', undefined);
 		this.addHashConfigProp('selectionMarkerStyles', undefined);
+		this.addHashConfigProp('hotTrackedObjectStyles', undefined);
+		this.addHashConfigProp('selectedObjectStyles', undefined);
 	},
 	/** @ignore */
 	initPropValues: function()
 	{
 		this.tryApplySuper('initPropValues');
 		this.setHotTrackMarkerStyles({
-			'color': '#0000FF',
+			//'color': '#0000FF',
+			'strokeColor': '#0000FF',
 			'opacity': 0.2
 		});
 		this.setSelectionMarkerStyles({
-			'color': '#0000FF',
+			//'color': '#0000FF',
 			'opacity': 0.35,
 			'strokeColor': '#0000FF',
-			'fillColor': '#0000FF',
+			//'fillColor': '#0000FF',
 			'strokeWidth': 2
 		});
+		/*
+		this.setHotTrackedObjectStyles({
+			'color': '#FF0000',
+			'nodeDisplayMode': Kekule.Render.NodeLabelDisplayMode.SHOWN
+		});
+		this.setSelectedObjectStyles({
+			'color': '#FF0000',
+			'nodeDisplayMode': Kekule.Render.NodeLabelDisplayMode.SHOWN
+		});
+		*/
 	}
 });
 
