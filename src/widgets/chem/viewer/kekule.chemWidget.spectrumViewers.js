@@ -100,7 +100,10 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 		this.addBoolConfigProp('enableLocalSpectrumView', undefined);
 		this.addNumConfigProp('spectrumAxisLabelFontSizeMin', 15);
 		this.addNumConfigProp('spectrumAxisLabelFontSizeMax', 35);
-		this.addNumConfigProp('spectrumAxisLabelFontSizeFixed', 15);
+		this.addNumConfigProp('spectrumAxisLabelFontSizeFixed', 18);
+		this.addNumConfigProp('spectrumAxisScaleLabelFontSizeMin', 13);
+		this.addNumConfigProp('spectrumAxisScaleLabelFontSizeMax', 32);
+		this.addNumConfigProp('spectrumAxisScaleLabelFontSizeFixed', 15);
 
 		// configs about spectrum data UI marker
 		this.addHashConfigProp('enableSpectrumDataHotTrackOnMode', undefined);
@@ -1885,7 +1888,10 @@ ClassEx.extendMethods(Kekule.ChemWidget.Viewer, {
 				var configs = this.getDisplayerConfigs().getSpectrumViewConfigs();
 				ops.spectrum_axisLabelFontSizeMin = configs.getSpectrumAxisLabelFontSizeMin(); // 15;
 				ops.spectrum_axisLabelFontSizeMax = configs.getSpectrumAxisLabelFontSizeMax(); // 35;
-				ops.spectrum_axisScaleLabelFontSizeFixed = configs.getSpectrumAxisLabelFontSizeFixed();  //15;
+				ops.spectrum_axisLabelFontSizeFixed = configs.getSpectrumAxisLabelFontSizeFixed();  //15;
+				ops.spectrum_axisScaleLabelFontSizeMin = configs.getSpectrumAxisScaleLabelFontSizeMin(); // 15;
+				ops.spectrum_axisScaleLabelFontSizeMax = configs.getSpectrumAxisScaleLabelFontSizeMax(); // 35;
+				ops.spectrum_axisScaleLabelFontSizeFixed = configs.getSpectrumAxisScaleLabelFontSizeFixed();  //15;
 				//sview.applyToRenderOptions(ops);
 			}
 			return $origin(ops);
