@@ -75,8 +75,8 @@ Kekule.globalOptions.add('chemWidget.viewer', {
  *   A 'default' key/value can be used here to provide the default setting of this property.
  * @property {Hash} spectrumHotTrackDataPointMarkerDrawStyles Render styles of hot track data point marker in spectrum.
  * @property {Hash} spectrumSelectDataPointMarkerDrawStyles Render styles of data point selection marker in spectrum.
- * @property {Hash} spectrumHotTrackDataPointDetailMarkerDrawStyles Render styles of hot track data detail marker in spectrum.
- * @property {Hash} spectrumSelectDataPointDetailMarkerDrawStyles Render styles of data detail selection marker in spectrum.
+ * @property {Hash} spectrumHotTrackedDataPointDetailMarkerDrawStyles Render styles of hot track data detail marker in spectrum.
+ * @property {Hash} spectrumSelectedDataPointDetailMarkerDrawStyles Render styles of data detail selection marker in spectrum.
  * @property {Int} spectrumDataPointMarkerSize Size of data point UI marker.
  * @property {Int} spectrumDataPointDetailMarkerPadding Padding of data point detail marker to data point marker.
  * @property {Hash} spectrumPeakHotTrackStyles Render styles of hot tracked spectrum peak.
@@ -113,8 +113,8 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 		//this.addBoolConfigProp('enableSpectrumDataPointDetailMarker', true);
 		this.addHashConfigProp('spectrumHotTrackDataPointMarkerDrawStyles', undefined);
 		this.addHashConfigProp('spectrumSelectDataPointMarkerDrawStyles', undefined);
-		this.addHashConfigProp('spectrumHotTrackDataPointDetailMarkerDrawStyles', undefined);
-		this.addHashConfigProp('spectrumSelectDataPointDetailMarkerDrawStyles', undefined);
+		this.addHashConfigProp('spectrumHotTrackedDataPointDetailMarkerDrawStyles', undefined);
+		this.addHashConfigProp('spectrumSelectedDataPointDetailMarkerDrawStyles', undefined);
 		this.addIntConfigProp('spectrumDataPointMarkerSize', 15);
 		this.addIntConfigProp('spectrumDataPointMarkerWidth', 2);
 		this.addIntConfigProp('spectrumDataPointDetailMarkerValuePrecision', 8);
@@ -170,14 +170,14 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 			'strokeWidth': 1,
 			'opacity': 1
 		});
-		this.setSpectrumHotTrackDataPointDetailMarkerDrawStyles({
+		this.setSpectrumHotTrackedDataPointDetailMarkerDrawStyles({
 			'fontFamily': 'Arial, Helvetica, sans-serif',
 			'fontSize': 15,
 			'color': '#c21717',
 			'strokeWidth': 2,
 			'opacity': 1
 		});
-		this.setSpectrumSelectDataPointDetailMarkerDrawStyles({
+		this.setSpectrumSelectedDataPointDetailMarkerDrawStyles({
 			'fontFamily': 'Arial, Helvetica, sans-serif',
 			'fontSize': 15,
 			'color': '#1919b4',
@@ -1064,7 +1064,7 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.Viewer
 					//console.log('update', dataValue, detailText);
 					//this._updateSpectrumCurrDataPointMarker(baseContextCoord, detailText, dataPointMarkerVisible, dataDetailMarkerVisible, clientBox);
 				}
-				var detailStyles = isSelect? configs.getSpectrumSelectDataPointDetailMarkerDrawStyles(): configs.getSpectrumHotTrackDataPointDetailMarkerDrawStyles();
+				var detailStyles = isSelect? configs.getSpectrumSelectedDataPointDetailMarkerDrawStyles(): configs.getSpectrumHotTrackedDataPointDetailMarkerDrawStyles();
 				var pointStyles = isSelect? configs.getSpectrumSelectDataPointMarkerDrawStyles(): configs.getSpectrumHotTrackDataPointMarkerDrawStyles();
 				this._updateDataDetailMarker(detailMarker, baseContextCoord, {'text': detailText}, dataDetailMarkerVisible, detailStyles, clientBox, false);
 				this._updateDataPointMarker(pointMarker, baseContextCoord, null, dataPointMarkerVisible, pointStyles, clientBox, false);
@@ -2546,6 +2546,383 @@ ClassEx.extendMethods(Kekule.ChemWidget.ActionDisplayerZoomOut, {
 	}
 });
 
+/**
+ * A special object to connect two {@link Kekule.ChemWidget.Viewer} widgets, one displaying the spectrum and another displaying the molecule.
+ * When hot track or select peak in spectrum, the correlated atoms will be marked and vice versa.
+ * @class
+ * @augments ObjectEx
+ */
+Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
+/** @lends Kekule.ChemWidget.SpectrumCorrelationConnector# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.SpectrumCorrelationConnector',
+	/** @constructs */
+	initialize: function(spectrumViewer, moleculeViewer)
+	{
+		this.reactLoadEventOnSpectrumViewerBind = this.reactLoadEventOnSpectrumViewer.bind(this);
+		this.reactEventOnSpectrumViewerBind = this.reactEventOnSpectrumViewer.bind(this);
+		this.reactEventOnMoleculeViewerBind = this.reactEventOnMoleculeViewer.bind(this);
+
+		this.tryApplySuper('initialize');
+		if (spectrumViewer)
+			this.setSpectrumViewer(spectrumViewer);
+		if (moleculeViewer)
+			this.setMoleculeViewer(moleculeViewer);
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('spectrumViewer', {
+			'dataType': 'Kekule.ChemWidget.Viewer',
+			'serializable': false,
+			'setter': function(value)
+			{
+				var old = this.getSpectrumViewer();
+				if (old !== value)
+				{
+					this.doSpectrumViewerChange(value, old);
+					this.setPropStoreFieldValue('spectrumViewer', value);
+				}
+			}
+		});
+		this.defineProp('moleculeViewer', {
+			'dataType': 'Kekule.ChemWidget.Viewer',
+			'serializable': false,
+			'setter': function(value)
+			{
+				var old = this.getMoleculeViewer();
+				if (old !== value)
+				{
+					this.doMoleculeViewerChange(value, old);
+					this.setPropStoreFieldValue('moleculeViewer', value);
+				}
+			}
+		});
+		this.defineProp('autoLoadCorrelatedMolecule', {'dataType': DataType.BOOL});
+
+		this.defineProp('syncFromSpectrumToMolecule', {'dataType': DataType.BOOL});
+		this.defineProp('syncFromMoleculeToSpectrum', {'dataType': DataType.BOOL});
+	},
+	/** @ignore */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+		this.setAutoLoadCorrelatedMolecule(true);
+		this.setSyncFromSpectrumToMolecule(true);
+		this.setSyncFromMoleculeToSpectrum(true);
+	},
+
+	/** @private */
+	_getLoadedSpectrums: function(root)
+	{
+		if (!root)
+		{
+			var viewer = this.getSpectrumViewer();
+			root = viewer.getChemObj();
+		}
+		if (root instanceof Kekule.Spectroscopy.Spectrum)
+			return [root];
+		else
+		{
+			return root.filterChildren(function(obj){
+				return (obj && obj instanceof Kekule.Spectroscopy.Spectrum);
+			}, true);
+		}
+	},
+	/** @private */
+	_getRefMoleculesOfSpectrum: function(spectrum)
+	{
+		return spectrum.getRefMolecules() || [];
+	},
+	/** @private */
+	_getDisplayedSpectrumDataSections: function()
+	{
+		var result = [];
+		var spectrums = this._getLoadedSpectrums();
+		for (var i = 0, l = spectrums.length; i < l; ++i)
+		{
+			if (spectrums[i].getVisible())
+			{
+				var sections = spectrums[i].getDisplayedDataSections();
+				result = result.concat(sections);
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_getSpectrumDataItemAssignments: function(dataSection, dataValueOrIndex)
+	{
+		var assignments;
+		var dataDetail;
+		if (typeof(dataValueOrIndex) === 'number')  // data index
+			dataDetail = dataSection.getExtraInfoAt(dataValueOrIndex);
+		else
+			dataDetail = dataSection.getExtraInfoOf(dataValueOrIndex);
+		if (dataDetail && (dataDetail.getAssignments || dataDetail.assignments))
+		{
+			assignments = dataDetail.getAssignments() || dataDetail.assignments;
+		}
+		return assignments;
+	},
+	/** @private */
+	_getDataItemsExOfCorrelatedMolObject: function(molObject, dataSections)
+	{
+		var spectrums = [];
+		var result = [];
+		for (var i = 0, l = dataSections.length; i < l; ++i)
+		{
+			var section = dataSections[i];
+			var spectrum = section.getParentSpectrum();
+			var spectrumIndex = spectrums.indexOf(spectrum);
+			if (spectrumIndex < 0)
+			{
+				spectrumIndex = spectrums.length;
+				spectrums.push(spectrum);
+				result[spectrumIndex] = {'spectrum': spectrum, dataItemsEx: []};
+			}
+			var dataItemsEx = result[spectrumIndex].dataItemsEx;
+			if (section.isPeakSection())  // now only handled peak
+			{
+				for (var i = 0, l = section.getDataCount(); i < l; ++i)
+				{
+					var assignments = this._getSpectrumDataItemAssignments(section, i);
+					if (assignments && assignments.length)
+					{
+						var match = assignments.indexOf(molObject) >= 0;
+						if (match)
+							dataItemsEx.push({'section': section, 'dataValue': section.getValueAt(i)});
+					}
+				}
+			}
+		}
+		return result;
+	},
+
+	/** @private */
+	doSpectrumViewerChange: function(newViewer, oldViewer)
+	{
+		if (oldViewer)
+		{
+			oldViewer.removeEventListener('load', this.reactLoadEventOnSpectrumViewerBind);
+			oldViewer.removeEventListener('hotTrackOnSpectrumData', this.reactEventOnSpectrumViewerBind);
+			oldViewer.removeEventListener('spectrumDataSelectionChange', this.reactEventOnSpectrumViewerBind);
+		}
+		if (newViewer)
+		{
+			newViewer.addEventListener('load', this.reactLoadEventOnSpectrumViewerBind);
+			newViewer.addEventListener('hotTrackOnSpectrumData', this.reactEventOnSpectrumViewerBind);
+			newViewer.addEventListener('spectrumDataSelectionChange', this.reactEventOnSpectrumViewerBind);
+			this.doTryLoadSpectrumRefMoleculeInViewer(newViewer.getChemObj());
+		}
+	},
+	/** @private */
+	doMoleculeViewerChange: function(newViewer, oldViewer)
+	{
+		if (oldViewer)
+		{
+			oldViewer.removeEventListener('hotTrackOnObjects', this.reactEventOnMoleculeViewerBind);
+			oldViewer.removeEventListener('selectionChange', this.reactEventOnMoleculeViewerBind);
+		}
+		if (newViewer)
+		{
+			newViewer.addEventListener('hotTrackOnObjects', this.reactEventOnMoleculeViewerBind);
+			newViewer.addEventListener('selectionChange', this.reactEventOnMoleculeViewerBind);
+		}
+	},
+
+	/** @private */
+	doSelectOrHotTrackSpectrumAssignments: function(assignments, isSelect, autoLoadMolInViewer)
+	{
+		var molecule;
+		var molChildren = [];
+		for (var i = 0, l = assignments.length; i < l; ++i)
+		{
+			var assignment = assignments[i];
+			if (assignment instanceof Kekule.ChemStructureObject)
+			{
+				var currMol = assignment.getRootFragment();
+				if (currMol)
+				{
+					if (!molecule)
+						molecule = currMol;
+					else if (molecule !== currMol)   // assignment on different molecule, a wrong situation?
+						continue;
+
+					AU.pushUnique(molChildren, assignment);
+				}
+			}
+		}
+		var molViewer = this.getMoleculeViewer();
+		if (molecule)
+		{
+			if (molViewer.getChemObj() !== molecule && autoLoadMolInViewer)
+			{
+				this.doLoadMoleculeInViewer(molecule);
+			}
+		}
+		//console.log(molChildren, isSelect);
+		if (isSelect)
+			molViewer.setSelectedObjects(molChildren);
+		else
+			molViewer.setHotTrackedObjects(molChildren);
+	},
+	/** @private */
+	doSelectOrHotTrackSpectrumPeaks: function(molObjects, isSelect)
+	{
+		var displayedDataSections = this._getDisplayedSpectrumDataSections();
+		var dataItemsExMap = new Kekule.MapEx();
+		try
+		{
+			var spectrums = [];
+			// group up the dataItemEx to spectrum-section-dataValue seq
+			for (var i = 0, l = molObjects.length; i < l; ++i)
+			{
+				var dataItemGroup = this._getDataItemsExOfCorrelatedMolObject(molObjects[i], displayedDataSections);
+				if (dataItemGroup && dataItemGroup.length)
+				{
+					for (var j = 0, k = dataItemGroup.length; j < k; ++j)
+					{
+						var spectrum = dataItemGroup[j].spectrum;
+						var dataItemsEx = dataItemsExMap.get(spectrum);
+						if (!dataItemsEx)
+						{
+							spectrums.push(spectrum);
+							dataItemsEx = [];
+							dataItemsExMap.set(spectrum, dataItemsEx);
+						}
+						AU.pushUnique(dataItemsEx, dataItemGroup[j].dataItemsEx);
+					}
+				}
+			}
+			// hot track or select
+			var dataItemSet = false;
+			var spectrumViewer = this.getSpectrumViewer();
+			for (var i = 0, l = spectrums.length; i < l; ++i)
+			{
+				var dataItemsEx = dataItemsExMap.get(spectrums[i]);
+				var sview = spectrumViewer.getSubView(spectrums[i], Kekule.ChemWidget.Viewer.SpectrumSubView, true);
+				if (sview)
+				{
+					if (isSelect)
+						sview.setSelectedDataItemsEx(dataItemsEx);
+					else
+						sview.setHotTrackedDataItemsEx(dataItemsEx);
+					dataItemSet = true;
+					// since now only one hot tracked / selected sub view can be applied, we will exit the loop after setting the first sub view
+					break;
+				}
+			}
+			if (!dataItemSet)  // no actual selected / hot tracked item, clear the spectrum viewer
+			{
+				if (isSelect)
+					spectrumViewer.clearSelectedItems(null, true);
+				else
+					spectrumViewer.clearHotTrackedItems(null, true);
+			}
+		}
+		finally
+		{
+			dataItemsExMap.finalize();
+		}
+	},
+	/** @private */
+	doLoadMoleculeInViewer: function(molecule)
+	{
+		molecule.setVisible(true);   // some times the correlated molecule is automatically hidden when loading spectrum data
+		this.getMoleculeViewer().setChemObj(molecule);
+	},
+	/** @private */
+	doTryLoadSpectrumRefMoleculeInViewer: function(spectrumViewerRootObj)
+	{
+		if (spectrumViewerRootObj && this.getAutoLoadCorrelatedMolecule())
+		{
+			var spectrums = this._getLoadedSpectrums(spectrumViewerRootObj) || [];
+			var molecule;
+			for (var i = 0, l = spectrums.length; i < l; ++i)
+			{
+				var mols = this._getRefMoleculesOfSpectrum(spectrums[i]);
+				if (mols.length)
+				{
+					molecule = mols[0];
+					break;
+				}
+			}
+			if (molecule)
+			{
+				this.doLoadMoleculeInViewer(molecule);
+			}
+		}
+	},
+
+	/** @private */
+	reactLoadEventOnSpectrumViewer: function(e)
+	{
+		this.doTryLoadSpectrumRefMoleculeInViewer(e.obj);
+	},
+	/** @private */
+	reactEventOnSpectrumViewer: function(e)
+	{
+		if (!this.getSyncFromSpectrumToMolecule())
+			return;
+		if (this._isReactingSpectrumViewerEvent)  // avoid loop events
+			return;
+
+		this._isReactingSpectrumViewerEvent = true;
+		try
+		{
+			var eventName = e.name;
+			var dataItems = e.dataItems || [];
+			var assignmentItems = [];
+			for (var i = 0, l = dataItems.length; i < l; ++i)
+			{
+				var section = dataItems[i].section;
+				if (section.isPeakSection())  // now only handles peak assignments
+				{
+					var dataValue = dataItems[i].dataValue;
+					/*
+					var dataDetail = section.getExtraInfoOf(dataValue);
+					if (dataDetail && (dataDetail.getAssignments || dataDetail.assignments))
+					{
+						var assignments = dataDetail.getAssignments() || dataDetail.assignments;
+						if (assignments)
+						{
+							AU.pushUnique(assignmentItems, assignments);
+						}
+					}
+					*/
+					var assignments = this._getSpectrumDataItemAssignments(section, dataValue);
+					if (assignments)
+						AU.pushUnique(assignmentItems, assignments);
+				}
+			}
+			this.doSelectOrHotTrackSpectrumAssignments(assignmentItems, eventName === 'spectrumDataSelectionChange', this.getAutoLoadCorrelatedMolecule());
+		}
+		finally
+		{
+			this._isReactingSpectrumViewerEvent = false;
+		}
+	},
+	/** @private */
+	reactEventOnMoleculeViewer: function(e)
+	{
+		if (!this.getSyncFromMoleculeToSpectrum())
+			return;
+		if (this._isReactingMoleculeViewerEvent)
+			return;
+		this._isReactingMoleculeViewerEvent = true;
+		try
+		{
+			var eventName = e.name;
+			var objects = e.objects || [];
+			this.doSelectOrHotTrackSpectrumPeaks(objects, eventName === 'selectionChange');
+		}
+		finally
+		{
+			this._isReactingMoleculeViewerEvent = false;
+		}
+	}
+});
 
 /** @private */
 Kekule.ChemWidget.SpectrumViewUtils = {
