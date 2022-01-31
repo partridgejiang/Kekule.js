@@ -3954,7 +3954,11 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		proto[methodName] = function()
 		{
 			//console.log('call', methodName, arguments);
-			return this.getData()[dataMethodName].apply(this.getData(), arguments);
+			var target = this.getData();
+			var result = target[dataMethodName].apply(target, arguments);
+			if (result === target)  // fix for chaining calling of method
+				result = this;
+			return result;
 		}
 	},
 
