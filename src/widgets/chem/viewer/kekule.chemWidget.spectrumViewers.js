@@ -2618,6 +2618,13 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 		this.setSyncFromSpectrumToMolecule(true);
 		this.setSyncFromMoleculeToSpectrum(true);
 	},
+	/** @ignore */
+	doFinalize: function()
+	{
+		this.setMoleculeViewer(null);
+		this.setSpectrumViewer(null);
+		this.tryApplySuper('doFinalize');
+	},
 
 	/** @private */
 	_getLoadedSpectrums: function(root)
