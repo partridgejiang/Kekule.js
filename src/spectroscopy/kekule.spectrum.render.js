@@ -2398,12 +2398,12 @@ Kekule.Render.Spectrum2DRenderer = Class.create(Kekule.Render.ChemObj2DRenderer,
 			return null;
 	},
 	/** @private */
-	_getContinuousSpectrumSectionSamplingCache: function(context, section)
+	_getContinuousSpectrumSectionSamplingCache: function(context, section, allowCreate)
 	{
 		var map = this.getRenderCache(context).continuousSpectrumSectionSamplingCacheMap;
 		if (!map)
 		{
-			return null
+			return null;
 		}
 		var result = map.get(section);
 		if (!result && allowCreate)
