@@ -2562,14 +2562,14 @@ ClassEx.extendMethods(Kekule.ChemWidget.ActionDisplayerZoomOut, {
  * Invoked when spectrum data items / molecule assignment objects are selected in either view.
  *   event param of it has field: {assignmentDetails: array}.
  *   In the array, each item is a hash of {spectrum, dataSection, dataValue, assignments}.
- * @name Kekule.ChemWidget.SpectrumCorrelationConnector#assignmentsSelected
+ * @name Kekule.ChemWidget.SpectrumCorrelationConnector#assignmentSelected
  * @event
  */
 /**
  * Invoked when spectrum data items / molecule assignment objects are hot tracked in either view.
  *   event param of it has field: {assignmentDetails: array}.
  *   In the array, each item is a hash of {spectrum, dataSection, dataValue, assignments}.
- * @name Kekule.ChemWidget.SpectrumCorrelationConnector#assignmentsHotTracked
+ * @name Kekule.ChemWidget.SpectrumCorrelationConnector#assignmentHotTracked
  * @event
  */
 Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
@@ -2861,9 +2861,9 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 	_invokeHotTrackOrSelectAssignmentPairEvent: function(assignmentPairs, isSelect)
 	{
 		if (isSelect)
-			this.invokeEvent('assignmentsSelected', {'assignmentDetails': assignmentPairs});
+			this.invokeEvent('assignmentSelected', {'assignmentDetails': assignmentPairs});
 		else
-			this.invokeEvent('assignmentsHotTracked', {'assignmentDetails': assignmentPairs});
+			this.invokeEvent('assignmentHotTracked', {'assignmentDetails': assignmentPairs});
 	},
 
 	/** @private */
