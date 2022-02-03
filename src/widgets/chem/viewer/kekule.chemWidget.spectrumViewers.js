@@ -2558,6 +2558,20 @@ ClassEx.extendMethods(Kekule.ChemWidget.ActionDisplayerZoomOut, {
  * @class
  * @augments ObjectEx
  */
+/**
+ * Invoked when spectrum data items / molecule assignment objects are selected in either view.
+ *   event param of it has field: {assignmentDetails: array}.
+ *   In the array, each item is a hash of {spectrum, dataSection, dataValue, assignments}.
+ * @name Kekule.ChemWidget.SpectrumCorrelationConnector#assignmentsSelected
+ * @event
+ */
+/**
+ * Invoked when spectrum data items / molecule assignment objects are hot tracked in either view.
+ *   event param of it has field: {assignmentDetails: array}.
+ *   In the array, each item is a hash of {spectrum, dataSection, dataValue, assignments}.
+ * @name Kekule.ChemWidget.SpectrumCorrelationConnector#assignmentsHotTracked
+ * @event
+ */
 Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 /** @lends Kekule.ChemWidget.SpectrumCorrelationConnector# */
 {
@@ -2788,6 +2802,7 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 		try
 		{
 			var spectrums = [];
+			var assignmentPairs = [];
 			// group up the dataItemEx to spectrum-section-dataValue seq
 			for (var i = 0, l = molObjects.length; i < l; ++i)
 			{
@@ -2805,6 +2820,7 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 							dataItemsExMap.set(spectrum, dataItemsEx);
 						}
 						AU.pushUnique(dataItemsEx, dataItemGroup[j].dataItemsEx);
+						assignmentPairs.push({'assignments': [molObjects[i]], 'spectrum': spectrum, 'dataSection': dataItemsEx.section, 'dataValue': dataItemsEx.dataValue});
 					}
 				}
 			}
@@ -2833,12 +2849,23 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 				else
 					spectrumViewer.clearHotTrackedItems(null, true);
 			}
+
+			this._invokeHotTrackOrSelectAssignmentPairEvent(assignmentPairs, isSelect);
 		}
 		finally
 		{
 			dataItemsExMap.finalize();
 		}
 	},
+	/** @private */
+	_invokeHotTrackOrSelectAssignmentPairEvent: function(assignmentPairs, isSelect)
+	{
+		if (isSelect)
+			this.invokeEvent('assignmentsSelected', {'assignmentDetails': assignmentPairs});
+		else
+			this.invokeEvent('assignmentsHotTracked', {'assignmentDetails': assignmentPairs});
+	},
+
 	/** @private */
 	doLoadMoleculeInViewer: function(molecule)
 	{
@@ -2887,6 +2914,7 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 			var eventName = e.name;
 			var dataItems = e.dataItems || [];
 			var assignmentItems = [];
+			var assignmentPairs = [];
 			for (var i = 0, l = dataItems.length; i < l; ++i)
 			{
 				var section = dataItems[i].section;
@@ -2906,10 +2934,15 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 					*/
 					var assignments = this._getSpectrumDataItemAssignments(section, dataValue);
 					if (assignments)
+					{
 						AU.pushUnique(assignmentItems, assignments);
+						assignmentPairs.push({'spectrum': section.getParentSpectrum(), 'dataSection': section, 'dataValue': dataValue, 'assignments': assignments});
+					}
 				}
 			}
-			this.doSelectOrHotTrackSpectrumAssignments(assignmentItems, eventName === 'spectrumDataSelectionChange', this.getAutoLoadCorrelatedMolecule());
+			var isSelect = eventName === 'spectrumDataSelectionChange';
+			this.doSelectOrHotTrackSpectrumAssignments(assignmentItems, isSelect, this.getAutoLoadCorrelatedMolecule());
+			this._invokeHotTrackOrSelectAssignmentPairEvent(assignmentPairs, isSelect);
 		}
 		finally
 		{
