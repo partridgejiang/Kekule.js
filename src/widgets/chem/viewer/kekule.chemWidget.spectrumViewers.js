@@ -2621,16 +2621,16 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 		});
 		this.defineProp('autoLoadCorrelatedMolecule', {'dataType': DataType.BOOL});
 
-		this.defineProp('syncFromSpectrumToMolecule', {'dataType': DataType.BOOL});
-		this.defineProp('syncFromMoleculeToSpectrum', {'dataType': DataType.BOOL});
+		this.defineProp('fromSpectrumToMolecule', {'dataType': DataType.BOOL});
+		this.defineProp('fromMoleculeToSpectrum', {'dataType': DataType.BOOL});
 	},
 	/** @ignore */
 	initPropValues: function()
 	{
 		this.tryApplySuper('initPropValues');
 		this.setAutoLoadCorrelatedMolecule(true);
-		this.setSyncFromSpectrumToMolecule(true);
-		this.setSyncFromMoleculeToSpectrum(true);
+		this.setFromSpectrumToMolecule(true);
+		this.setFromMoleculeToSpectrum(true);
 	},
 	/** @ignore */
 	doFinalize: function()
@@ -2903,7 +2903,7 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 	/** @private */
 	reactEventOnSpectrumViewer: function(e)
 	{
-		if (!this.getSyncFromSpectrumToMolecule())
+		if (!this.getFromSpectrumToMolecule())
 			return;
 		if (this._isReactingSpectrumViewerEvent)  // avoid loop events
 			return;
@@ -2952,7 +2952,7 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 	/** @private */
 	reactEventOnMoleculeViewer: function(e)
 	{
-		if (!this.getSyncFromMoleculeToSpectrum())
+		if (!this.getFromMoleculeToSpectrum())
 			return;
 		if (this._isReactingMoleculeViewerEvent)
 			return;
