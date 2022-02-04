@@ -145,12 +145,12 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 
 		var DM = Kekule.Spectroscopy.DataMode;
 		var value = {'default': true};
-		value[DM.CONTINUOUS] = true;
-		value[DM.PEAK] = true;
+		//value[DM.CONTINUOUS] = true;
+		//value[DM.PEAK] = true;
 		this.setEnableSpectrumDataHotTrackOnMode(value);
 		var value = {'default': false};
-		value[DM.CONTINUOUS] = false;
-		value[DM.PEAK] = true;
+		//value[DM.CONTINUOUS] = false;
+		//value[DM.PEAK] = true;
 		this.setEnableSpectrumDataSelectOnMode(value);
 		var value = {'default': false};
 		this.setEnableSpectrumDataMultiSelectOnMode(value);
