@@ -2210,7 +2210,7 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		map[JcampConsts.LABEL_BLOCK_BEGIN] = this.doStoreTitleLdr.bind(this);  // TITLE
 		map[JcampConsts.LABEL_DX_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, JcampConsts.LABEL_DX_VERSION);  // JCAMP-DX
 		map[JcampConsts.LABEL_CS_VERSION] = this.doStoreLdrToChemObjInfoProp.bind(this, JcampConsts.LABEL_CS_VERSION);  // JCAMP-CS
-		map[JcampConsts.LABEL_BLOCK_ID] = this.doStoreBlockIdLdr.bind(this);   // BLOCK_ID
+		//map[JcampConsts.LABEL_BLOCK_ID] = this.doStoreBlockIdLdr.bind(this);   // BLOCK_ID // no longer needed, as we will store the ID at the beginning of read process
 		map[JcampConsts.LABEL_BLOCK_END] = this._ignoreLdrHandler;  // block end, need not to store value of this ldr
 		var doStoreDateTimeLdrBind = this.doStoreDateTimeLdr.bind(this);
 		map['DATE'] = doStoreDateTimeLdrBind;
@@ -2371,11 +2371,13 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 	{
 		chemObj.setInfoValue('title', Jcamp.LdrValueParserCoder.parseValue(ldr));
 	},
-	/** @private */
+	/* @private */
+	/*
 	doStoreBlockIdLdr: function(ldr, block, chemObj, preferredInfoPropName)
 	{
 		this.setPropStoreFieldValue('blockId', Jcamp.LdrValueParserCoder.parseValue(ldr));
 	},
+	*/
 	/** @private */
 	doStoreCrossRefLdr: function(ldr, block, chemObj, preferredInfoPropName)
 	{
@@ -2484,6 +2486,18 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		//console.log('doBuildCrossRef', srcObj, targetObj, refType, refTypeText);
 	},
 	/**
+	 * Retrieve block ID at the beginning of read prcess.
+	 * @param {Hash} block
+	 */
+	doReadBlockId: function(block)
+	{
+		var ldr = Jcamp.BlockUtils.getBlockLdr(block, JcampConsts.LABEL_BLOCK_ID);
+		if (ldr)
+		{
+			this.setPropStoreFieldValue('blockId', Jcamp.LdrValueParserCoder.parseValue(ldr));
+		}
+	},
+	/**
 	 * Process a block in the analysis tree.
 	 * Decendants may override this method.
 	 * @param {Hash} block
@@ -2532,6 +2546,7 @@ Kekule.IO.Jcamp.BlockReader = Class.create(Kekule.IO.ChemDataReader,
 		var result = this.doCreateChemObjForBlock(block);
 		if (result)
 		{
+			this.doReadBlockId(block);  // retrieve block ID first, since other information may rely on it
 			this.doSetChemObjFromBlock(block, result);
 			if (this.getBlockId())
 				this.setObjWithBlockId(this.getBlockId(), result);
