@@ -1538,7 +1538,8 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.Viewer
 	{
 		var op = Object.create(options || null);
 		op.findNearest = true;
-		var rangeEx = this.calcSpectrumDataRangeInCoordRange(coords, fromCoordSys, options);
+		op.findInReversedOrder = true;  // ensure find data from top to button in z-index when rendering
+		var rangeEx = this.calcSpectrumDataRangeInCoordRange(coords, fromCoordSys, op);
 		if (!rangeEx)
 			return null;
 
@@ -1555,7 +1556,8 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.Viewer
 				var peakPosition = Kekule.Spectroscopy.Utils.getSpectrumPeakPosition(spectrum);
 				var dataValues = rangeEx.dataValues;
 				var matchedValue = dataValues[0];
-				for (var i = 1, l = dataValues.length; i < l; ++i)
+				//for (var i = 1, l = dataValues.length; i < l; ++i)
+				for (var i = dataValues.length - 1; i >= 0; --i)  // from rendering z-index top to bottom
 				{
 					var v = dataValues[i];
 					if ((peakPosition === Kekule.Spectroscopy.DataPeakPosition.MIN && v[depVarSymbol] < matchedValue[depVarSymbol])
@@ -2869,7 +2871,8 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 	/** @private */
 	doLoadMoleculeInViewer: function(molecule)
 	{
-		molecule.setVisible(true);   // some times the correlated molecule is automatically hidden when loading spectrum data
+		if (molecule)
+			molecule.setVisible(true);   // some times the correlated molecule is automatically hidden when loading spectrum data
 		this.getMoleculeViewer().setChemObj(molecule);
 	},
 	/** @private */
@@ -2878,7 +2881,7 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 		if (spectrumViewerRootObj && this.getAutoLoadCorrelatedMolecule())
 		{
 			var spectrums = this._getLoadedSpectrums(spectrumViewerRootObj) || [];
-			var molecule;
+			var molecule = null;
 			for (var i = 0, l = spectrums.length; i < l; ++i)
 			{
 				var mols = this._getRefMoleculesOfSpectrum(spectrums[i]);
@@ -2888,7 +2891,7 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 					break;
 				}
 			}
-			if (molecule)
+			// if (molecule)  // enable auto clear molecule viewer
 			{
 				this.doLoadMoleculeInViewer(molecule);
 			}
