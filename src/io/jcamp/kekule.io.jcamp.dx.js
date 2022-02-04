@@ -1076,7 +1076,6 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 				else
 					result.push(row);
 			}
-			console.log('after merge', result);
 			return result;
 		}
 		else
