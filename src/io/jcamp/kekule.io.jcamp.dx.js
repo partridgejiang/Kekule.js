@@ -957,6 +957,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			result.beginUpdate();
 			try
 			{
+				var dataRows = [];
 				for (var i = 0, l = data.length; i < l; ++i)
 				{
 					// each item is a data group, containing values of all variables
@@ -979,7 +980,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 							else if (vType === 'A')  // peak assignment
 							{
 								if (Kekule.ObjUtils.notUnset(originValues[j]) && !options.disablePeakAssignmentReading)
-									extraDataItem.peakAssignmentRaw = originValues[j];
+									extraDataItem.peakAssignmentRaw = [originValues[j]];
 							}
 							else
 							{
@@ -994,10 +995,24 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 							hasPeakAssignments = true;
 						}
 						//console.log(originValues, inputValues);
-						result.appendData(inputValues);
+						dataRows.push(inputValues);
+						//result.appendData(inputValues);
 					}
 					else
-						result.appendData(data[i]);
+						dataRows.push(data[i]);
+						//result.appendData(data[i]);
+				}
+
+				// merge data rows of same value (but different assigment), e.g.:
+				//   (6.71349,0.34, ,<14>)
+				//   (6.71349,0.34, ,<15>)
+				// which actually means this peak is with two assignment atoms
+				if (hasPeakAssignments)
+					dataRows = this._mergePeakAssignmentDataRows(dataRows, specialVarTypes);
+
+				for (var i = 0, l = dataRows.length; i < l; ++i)
+				{
+					result.appendData(dataRows[i]);
 				}
 				result.setDataSorted(true);
 				if (hasPeakAssignments)
@@ -1011,6 +1026,61 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 		}
 		else  // with no special assigment
 			return this._createVarGroupFormatSpectrumDataSection(formatDetail, data, varInfos, parentSpectrumData, options);
+	},
+	/** @private */
+	_mergePeakAssignmentDataRows: function(dataRows, specialVarTypes)
+	{
+		var NU = Kekule.NumUtils;
+		var isSamePeak = function(row1, row2)
+		{
+			var result = true;
+			for (var i = 0, l = specialVarTypes.length; i < l; ++i)
+			{
+				if (specialVarTypes[i] !== 'A')
+				{
+					var v1 = row1[i];
+					var v2 = row2[i];
+					if (v1 != v2 && (NU.isNormalNumber(v1) && NU.isNormalNumber(v2) && !Kekule.NumUtils.isFloatEqual(v1, v2)))
+					{
+						result = false;
+						break;
+					}
+				}
+			}
+			return result;
+		}
+		var findSamePeakRow = function(row, targetRows)
+		{
+			for (var i = 0, l = targetRows.length; i < l; ++i)
+			{
+				if (isSamePeak(row, targetRows[i]))
+					return targetRows[i];
+			}
+			return null;
+		}
+		if (specialVarTypes.indexOf('A') >= 0)  // may need to merge peak assignments
+		{
+			var result = [];
+			for (var i = 0, l = dataRows.length; i < l; ++i)
+			{
+				var row = dataRows[i];
+				//console.log(row, row._extra);
+				var samePeakRow = findSamePeakRow(row, result);
+				if (samePeakRow && row._extra._peakAssignmentRaw)  // find the same peak row, need to merge
+				{
+					if (samePeakRow._extra._peakAssignmentRaw)
+						samePeakRow._extra._peakAssignmentRaw = samePeakRow._extra._peakAssignmentRaw.concat(row._extra._peakAssignmentRaw);
+					else
+						samePeakRow._extra._peakAssignmentRaw = row._extra._peakAssignmentRaw;
+				}
+				else
+					result.push(row);
+			}
+			console.log('after merge', result);
+			return result;
+		}
+		else
+			return dataRows;
 	},
 	/** @private */
 	_isSpectrumDataLdr: function(ldr, block, chemObj)
@@ -1072,16 +1142,22 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			var extra = dataSection.getExtraInfoAt(i);
 			if (extra && extra._peakAssignmentRaw)
 			{
-				var atomIndex = parseInt(extra._peakAssignmentRaw);
-				if (Kekule.NumUtils.isNormalNumber(atomIndex) && atomIndex > 0)  // the atom index starts with 1
+				var atoms = [];
+				for (var j = 0, jj = extra._peakAssignmentRaw.length; j < jj; ++j)
 				{
-					var atom = targetMol.getNodeAt(atomIndex - 1);
-					if (atom)
+					var assign = extra._peakAssignmentRaw[j];
+					var atomIndex = parseInt(assign);
+					if (Kekule.NumUtils.isNormalNumber(atomIndex) && atomIndex > 0)  // the atom index starts with 1
 					{
-						extra.setAssignment(atom);
-						delete extra._peakAssignmentRaw;
+						var atom = targetMol.getNodeAt(atomIndex - 1);
+						if (atom)
+						{
+							AU.pushUnique(atoms, atom);
+						}
 					}
 				}
+				extra.setAssignments(atoms);
+				delete extra._peakAssignmentRaw;
 			}
 		}
 	}
@@ -1846,7 +1922,9 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 		var refMolecule = spectrumSection.getParentSpectrum().getRefMolecule();
 		//var handlePeakAssignment = withPeakAssignment && refMolecule;  // if refMolecule is empty, peak will actually not be handled
 		spectrumSection.forEach(function(hashValue, index){
+			var valueItems = [];  // we may need to generate multiple lines for one peak with multi-assignments
 			var valueItem = [];
+			var needToExpandVarIndex = false;
 			for (var i = 0, l = allVarDetails.length; i < l; ++i)
 			{
 				var v;
@@ -1862,22 +1940,51 @@ Kekule.IO.Jcamp.DxDataBlockWriter = Class.create(Kekule.IO.Jcamp.BlockWriter,
 				}
 				else if (withPeakAssignment)  // handle A (assignment) string
 				{
+					v = '';  // default, no assignment
 					var assignmentIndex = -1;
 					var extra = spectrumSection.getExtraInfoOf(hashValue);
-					if (extra && extra.getAssignment && refMolecule)
+					if (extra && extra.getAssignments && refMolecule)
 					{
-						var assignmentObj = extra.getAssignment();
-						if (assignmentObj && refMolecule)
-							assignmentIndex = refMolecule.indexOfNode(assignmentObj);
+						var assignmentObjs = extra.getAssignments();
+						var assignIndexes = [];
+						for (var j = 0, jj = assignmentObjs.length; j < jj; ++j)
+						{
+							var assignmentObj = assignmentObjs[j];
+							if (assignmentObj && refMolecule)
+								assignmentIndex = refMolecule.indexOfNode(assignmentObj);
+							if (assignmentIndex >= 0)
+								assignIndexes.push((assignmentIndex + 1).toString());
+							else    // no assignment, do nothing
+								;
+						}
+						if (assignIndexes.length <= 0)  // no assignment
+							v = 0;
+						else if (assignIndexes.length === 1)  // one simple assignment
+							v = assignIndexes[0];
+						else  // multiple, need to expand to several rows later
+						{
+							v = assignIndexes;
+							needToExpandVarIndex = i;
+						}
 					}
-					if (assignmentIndex >= 0)
-						v = (assignmentIndex + 1).toString();
-					else    // no assignment
-						v = '';
 				}
 				valueItem.push(v);
 			}
-			valueGroups.push(valueItem);
+			if (needToExpandVarIndex !== false)
+			{
+				var needToExpandValues = valueItem[needToExpandVarIndex];
+				var valueItems = [];
+				for (var i = 0, l = needToExpandValues.length; i < l; ++i)
+				{
+					var expandedItem = AU.clone(valueItem);
+					expandedItem[needToExpandVarIndex] = needToExpandValues[i];
+					valueItems.push(expandedItem);
+				}
+			}
+			else
+				valueItems = [valueItem];
+			//valueGroups.push(valueItem);
+			valueGroups = valueGroups.concat(valueItems);
 		});
 		var result = Jcamp.Utils.encodeAffnGroupTableLines(valueGroups, {explicitlyEnclosed: true});
 		return result;
