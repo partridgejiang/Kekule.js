@@ -2516,7 +2516,21 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var findNearest = !!centerIndepValue;  // if centerIndepValue is passed, we need to find the nearest value
 		var minDistanceSqr;
 		var result = {'dataIndexes': [], 'dataValues': [], 'range':{}};
-		for (var i = 0, l = this.getDataCount(); i < l; ++i)
+		var indexFrom, indexTo, indexStep;
+		if (extraOptions.findInReversedOrder)
+		{
+			indexFrom = this.getDataCount() - 1;
+			indexTo = 0;
+			indexStep = -1;
+		}
+		else
+		{
+			indexFrom = 0;
+			indexTo = this.getDataCount() - 1;
+			indexStep = 1;
+		}
+		//for (var i = 0, l = this.getDataCount(); i < l; ++i)
+		for (var i = indexFrom; extraOptions.findInReversedOrder? (i >= indexTo): (i <= indexTo); i += indexStep)
 		{
 			var value = this.getHashValueAt(i);
 			var passed = true;
