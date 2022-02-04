@@ -1680,7 +1680,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	addToSelection: function(objs)
 	{
 		var selection = AU.clone(this.getSelectedObjects());
-		var objects = AU.toArray(objs);
+		var objects = objs? AU.toArray(objs): [];
 		var changed = false;
 		for (var i = 0, l = objects.length; i < l; ++i)
 		{
@@ -1703,7 +1703,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	removeFromSelection: function(objs)
 	{
 		var selection = AU.clone(this.getSelectedObjects());
-		var objects = AU.toArray(objs);
+		var objects = objs? AU.toArray(objs): [];
 		var changed = false;
 		for (var i = 0, l = objects.length; i < l; ++i)
 		{
@@ -1747,7 +1747,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 */
 	select: function(objs)
 	{
-		var objects = AU.toArray(objs);
+		var objects = objs? AU.toArray(objs): [];
 		this.changeSelectedObjects(objects, true);
 	},
 
