@@ -272,3 +272,8 @@
 {
     background-image: url("images/slice/iconsSmall/issueVisible.png");
 }
+
+.K-SpectrumInspector-Change-Section > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/icons/spectrumSwitch.png");
+}

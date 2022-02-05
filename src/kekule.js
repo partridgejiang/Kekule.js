@@ -478,6 +478,7 @@ var kekuleFiles = {
 			'widgets/chem/uiMarker/kekule.chemWidget.uiMarkers.js',
 			'widgets/chem/viewer/kekule.chemWidget.viewers.js',
 			'widgets/chem/viewer/kekule.chemWidget.spectrumViewers.js',
+			'widgets/chem/viewer/kekule.chemWidget.spectrumInspectors.js',
 			'widgets/chem/viewer/kekule.chemWidget.viewerGrids.js',
 			'widgets/chem/viewer/kekule.chemWidget.chemObjInserters.js',
 

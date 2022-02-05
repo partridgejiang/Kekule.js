@@ -120,6 +120,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_SPACEFILL: 'Space Fill',
 	CAPTION_HIDEHYDROGENS: 'Show/hide hydrogens',
 	CAPTION_OPENEDITOR: 'Edit...',
+	CAPTION_CHANGE_SPECTRUM_SECTION: 'Switch Spectrum/Section',
+	CAPTION_SET_SPECTRUM_DATA_ASSIGNMENT: 'Set Spectrum Data Assignments',
 	CAPTION_EDITOR_DONE: 'Done',
 	CAPTION_EDITOR_CANCEL: 'Cancel',
 
@@ -148,6 +150,8 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_SPACEFILL: 'Show molecule in space-fill style',
 	HINT_HIDEHYDROGENS: 'Show/hide hydrogen atoms in model',
 	HINT_OPENEDITOR: 'Open an editor to modify displayed object',
+	HINT_CHANGE_SPECTRUM_SECTION: 'Switch spectrum or data section',
+	HINT_SET_SPECTRUM_DATA_ASSIGNMENT: 'Link chem object to spectrum data as assignment',
 	HINT_EDITOR_DONE: 'Save the modification',
 	HINT_EDITOR_CANCEL: 'Discard the modification',
 
@@ -543,6 +547,9 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_AUTOSIZE: 'Whether graph size is determined by object automatically',
 	HINT_AUTOFIT: 'Whether object is zoomed to fullfill the whole graph',
 
+	// SpectrumInspector
+	CAPTION_SPECTRUM_WITH_INDEX: 'Spectrum {0}',
+	CAPTION_SPECTRUM_DATASECTION_WITH_INDEX: 'Data section {0}',
 
 	//HINT_SHOWSIZEINFO: 'Whether show width and height of context',
 
