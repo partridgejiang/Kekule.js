@@ -2625,6 +2625,7 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 
 		this.defineProp('fromSpectrumToMolecule', {'dataType': DataType.BOOL});
 		this.defineProp('fromMoleculeToSpectrum', {'dataType': DataType.BOOL});
+		this.defineProp('enabled', {'dataType': DataType.BOOL});
 	},
 	/** @ignore */
 	initPropValues: function()
@@ -2901,11 +2902,14 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 	/** @private */
 	reactLoadEventOnSpectrumViewer: function(e)
 	{
-		this.doTryLoadSpectrumRefMoleculeInViewer(e.obj);
+		if (this.getEnabled())
+			this.doTryLoadSpectrumRefMoleculeInViewer(e.obj);
 	},
 	/** @private */
 	reactEventOnSpectrumViewer: function(e)
 	{
+		if (!this.getEnabled())
+			return;
 		if (!this.getFromSpectrumToMolecule())
 			return;
 		if (this._isReactingSpectrumViewerEvent)  // avoid loop events
@@ -2955,6 +2959,8 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 	/** @private */
 	reactEventOnMoleculeViewer: function(e)
 	{
+		if (!this.getEnabled())
+			return;
 		if (!this.getFromMoleculeToSpectrum())
 			return;
 		if (this._isReactingMoleculeViewerEvent)
