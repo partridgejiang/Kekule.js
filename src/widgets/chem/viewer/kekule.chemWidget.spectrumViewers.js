@@ -2559,6 +2559,13 @@ ClassEx.extendMethods(Kekule.ChemWidget.ActionDisplayerZoomOut, {
  * When hot track or select peak in spectrum, the correlated atoms will be marked and vice versa.
  * @class
  * @augments ObjectEx
+ *
+ * @property {Kekule.ChemWidget.Viewer} spectrumViewer The viewer displaying spectrum.
+ * @property {Kekule.ChemWidget.Viewer} moleculeViewer The viewer displaying molecule.
+ * @property {Bool} autoLoadCorrelatedMolecule Whether load correlated molecule in molecule viewer automatically when a new spectrum is loaded in spectrum viewer.
+ * @property {Bool} fromSpectrumToMolecule Whether show hot track or selection in molecule viewer when user hot track or select data in spectrum viewer.
+ * @property {Bool} fromMoleculeToSpectrum Whether show hot track or selection in spectrum viewer when user hot track or select object in molecule viewer.
+ * @property {Bool} enabled
  */
 /**
  * Invoked when spectrum data items / molecule assignment objects are selected in either view.
