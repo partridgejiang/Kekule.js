@@ -169,7 +169,7 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 			'opacity': 1
 		});
 		this.setSpectrumSelectDataPointMarkerDrawStyles({
-			'color': '#1919b4',
+			'color': '#0077d6',
 			'strokeWidth': 1,
 			'opacity': 1
 		});
@@ -183,7 +183,7 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 		this.setSpectrumSelectedDataPointDetailMarkerDrawStyles({
 			'fontFamily': 'Arial, Helvetica, sans-serif',
 			'fontSize': 15,
-			'color': '#1919b4',
+			'color': '#0077d6',
 			'strokeWidth': 2,
 			'opacity': 1
 		});
@@ -193,7 +193,7 @@ Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs = Class.create(Kekule.Abst
 		});
 		this.setSpectrumPeakSelectStyles({
 			//'color': '#f50f0f'
-			'color': '#1919b4',
+			'color': '#0077d6',
 			'spectrum_dataStrokeWidthRatio': 0.05
 		});
 
@@ -2641,6 +2641,7 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 		this.setAutoLoadCorrelatedMolecule(true);
 		this.setFromSpectrumToMolecule(true);
 		this.setFromMoleculeToSpectrum(true);
+		this.setEnabled(true);
 	},
 	/** @ignore */
 	doFinalize: function()
