@@ -7,10 +7,15 @@
 	<script src="../../../src/kekule.js?locals=en,zh&language1=en_us&modules=chemWidget,spectroscopy&min=false"></script>
 	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
 	<style>
-		#chemViewer
+		#spectrumViewer
 		{
 			width: 600px;
 			height: 400px;
+		}
+		#molViewer
+		{
+				width: 600px;
+				height: 300px;
 		}
 		#objInspector
 		{
@@ -32,7 +37,7 @@
 		}
 	</style>
 	<script>
-		var viewer, objInspector;
+		var viewer, molViewer, objInspector;
 		var initialConfigValues = {};
 		var initialSpectrumViewConfigValues = {};
 
@@ -334,8 +339,22 @@
 
 		function init()
 		{
-			viewer = Kekule.Widget.getWidgetById('chemViewer');
+			viewer = Kekule.Widget.getWidgetById('spectrumViewer');
+			molViewer = Kekule.Widget.getWidgetById('molViewer');
 			objInspector = Kekule.Widget.getWidgetById('objInspector');
+
+			var iaConfigs = molViewer.getViewerConfigs().getInteractionConfigs();
+			iaConfigs.setEnableBasicObjectHotTrack(true);
+			iaConfigs.setEnableBasicObjectSelect(true);
+			iaConfigs.setEnableBasicObjectMultiSelect(true);
+
+			var connector = new Kekule.ChemWidget.SpectrumCorrelationConnector(viewer, molViewer);
+			connector.on('assignmentsSelected', function(e){
+				console.log('assignmentsSelected', e.assignmentDetails);
+			});
+			connector.on('assignmentsHotTracked', function(e){
+				console.log('assignmentsHotTracked', e.assignmentDetails);
+			});
 
 			viewer.on('load', function(e){
 				var chemObj = viewer.getChemObj();
@@ -343,6 +362,17 @@
 				updateAvailableVarUnits();
 				updateSectionSelector();
 			});
+
+			viewer.on('hoverOnSpectrumData', function(e){
+				/*
+				if (e.dataItem)
+					console.log('Hover on data item', e.dataItem);
+				*/
+			});
+			viewer.on('spectrumDataSelectionChange', function(e){
+				//console.log('SpectrumDataSelectionChange', e, e.dataItems);
+			});
+
 			objInspector.on('propertyChange', function(e){
 				viewer.repaint();
 			});
@@ -357,7 +387,10 @@
 </head>
 <body>
 	<section id="secDisplayer">
-		<div id="chemViewer" data-widget="Kekule.ChemWidget.Viewer"
+		<div id="spectrumViewer" data-widget="Kekule.ChemWidget.Viewer"
+				 data-chem-obj1="" data-autofit="true" data-predefined-setting="fullFunc" data-resizable="true"></div>
+		<br />
+		<div id="molViewer" data-widget="Kekule.ChemWidget.Viewer"
 				 data-chem-obj1="" data-autofit="true" data-predefined-setting="fullFunc" data-resizable="true"></div>
 	</section>
 	<section id="secController">
