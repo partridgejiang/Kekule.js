@@ -272,6 +272,7 @@
 {
     width: 60em;
     height: 25em;
+    overflow: hidden;
 }
 .K-SpectrumInspector .K-SpectrumInspector-Client
 {
@@ -279,6 +280,8 @@
     flex-direction: row;
     height: 100%;
     width: 100%;
+    padding: 0;
+    margin: 0;
 }
 .K-SpectrumInspector.K-Layout-V .K-SpectrumInspector-Client
 {
@@ -287,6 +290,8 @@
 .K-SpectrumInspector .K-SpectrumInspector-Client .K-SpectrumInspector-ClientComponentHolder
 {
     /*outline: 1px solid red;*/
+    padding: 0;
+    margin: 0;
 }
 .K-SpectrumInspector .K-SpectrumInspector-Client .K-SpectrumInspector-ClientComponentHolder-AssocViewer
 {
@@ -312,6 +317,7 @@
     display: block;
     width: 100%;
     height: 100%;
+    margin: 0;
 }
 
 

@@ -18,6 +18,12 @@
 
 "use strict";
 
+Kekule._registerAfterLoadSysProc(function(){
+
+// the following code will be run after both spectroscopy and widget modules are loaded
+if (!Kekule.ChemWidget || !Kekule.Spectroscopy)
+	return;
+
 var OU = Kekule.ObjUtils;
 var AU = Kekule.ArrayUtils;
 var PS = Class.PropertyScope;
@@ -226,10 +232,22 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 				}
 			}
 		});
+		this.defineProp('backgroundColor', {'dataType': DataType.STRING, 'scope': PS.PUBLISHED,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('backgroundColor', value);
+				var sviewer = this.getSpectrumViewer();
+				if (sviewer)
+					sviewer.setBackgroundColor(value);
+				var aviewer = this.getAssocViewer();
+				if (aviewer)
+					aviewer.setBackgroundColor(value);
+			}
+		});
 
 		// private
-		this.defineProp('clientElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
-		this.defineProp('clientComponentHolderElems', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
+		this.defineProp('clientElem', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PRIVATE});
+		this.defineProp('clientComponentHolderElems', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null, 'scope': Class.PropertyScope.PRIVATE});
 		// private spectrum/data section select menu
 		this.defineProp('spectrumDataSectionSelectMenu', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null});
 
@@ -257,7 +275,32 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 				this.setPropStoreFieldValue('enableMultiSelect', bValue);
 			}
 		});
+		this.defineProp('enableDirectInteraction', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				var bValue = !!value;
+				this._applyEnablePropertyToChildViewerConfigs('enableDirectInteraction', bValue);
+				this.setPropStoreFieldValue('enableDirectInteraction', bValue);
+			}
+		});
+		this.defineProp('enableTouchInteraction', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				var bValue = !!value;
+				this._applyEnablePropertyToChildViewerConfigs('enableTouchInteraction', bValue);
+				this.setPropStoreFieldValue('enableTouchInteraction', bValue);
+			}
+		});
+		this.defineProp('enableGesture', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				var bValue = !!value;
+				this._applyEnablePropertyToChildViewerConfigs('enableGesture', bValue);
+				this.setPropStoreFieldValue('enableGesture', bValue);
+			}
+		});
 
+		// TODO: edit is now implemented yet
 		this.defineProp('enableEdit', {'dataType': DataType.BOOL});
 		this.defineProp('isEditing', {'dataType': DataType.BOOL, 'serializable': false, 'setter': null});
 
@@ -273,17 +316,22 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			'toolbarEvokeModes', 'toolbarRevokeModes', 'toolbarRevokeTimeout', 'toolbarParentElem',
 			'menuItems', 'menu',
 			'caption', 'showCaption', 'captionPos', 'autoCaption', 'captionElem',
-			'enableDirectInteraction', 'enableTouchInteraction', 'enableGesture',
 
 			'renderConfigs', 'enableLoadNewFile', 'allowedInputFormatIds', 'allowedOutputFormatIds', 'resetAfterLoad',
 			//'backgroundColor', 'inheritedRenderStyles', 'inheritedRenderColor', 'inheritedRenderBackgroundColor', 'enableCustomCssProperties',
 			'zoom', 'initialZoom', 'padding',
-			'chemObjData', 'chemObjLoaded'
+			'chemObjData', 'chemObjLoaded',
+			['spectrumViewerDrawOptions', 'drawOptions']
 			//['spectrumViewerDisplayed', 'displayed'], ['spectrumViewerVisible', 'visible']
 		], 'spectrumViewer');
 
 		this._defineSubWidgetDelegatedProperties([
-			['assocViewerDisplayed', 'displayed'], ['assocViewerVisible', 'visible']
+			['assocViewerDisplayed', 'displayed'], ['assocViewerVisible', 'visible'],
+			['assocViewerConfigs', 'viewerConfigs'],
+			['assocViewerAllowedMolDisplayTypes', 'allowedMolDisplayTypes'],
+			['assocViewerDrawOptions', 'drawOptions'], ['assocViewerAllowCoordBorrow', 'allowCoordBorrow'],
+			['assocViewerAutoSize', 'autoSize'], ['assocViewerAutofit', 'autofit'], ['assocViewerAutoShrink', 'autoShrink'],
+
 			/*
 			['viewerConfigs', 'assocViewerConfigs'],
 			//'enableHotKey',
@@ -308,7 +356,8 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		this.tryApplySuper('initPropValues');
 		this.setEnableHotTrack(true)
 			.setEnableSelect(true)
-			.setEnableMultiSelect(false);
+			.setEnableMultiSelect(false)
+			.setUseCornerDecoration(true);
 	},
 	/** @private */
 	doFinalize: function()
@@ -570,10 +619,11 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 	/** @private */
 	_createSubSpectrumViewer: function(parentElem)
 	{
-		var spectrumViewer = new Kekule.ChemWidget.Viewer(this, null, Kekule.Render.RendererType.R2D);
+		var spectrumViewer = new Kekule.ChemWidget.Viewer2D(this, null, Kekule.Render.RendererType.R2D);
 		this._overwriteSubSpectrumViewerMethods(spectrumViewer);
 		spectrumViewer.setViewerConfigs(new Kekule.ChemWidget.ViewerConfigs());
 		spectrumViewer.setPadding(20);  // TODO: currently fixed here
+		spectrumViewer.setUseCornerDecoration(false).setBackgroundColor(this.getBackgroundColor());
 		spectrumViewer.addClassName(CCNS.SPECTRUM_INSPECTOR_SPECTRUM_VIEWER);
 		spectrumViewer.addEventListener('showStateChange', this._reactChildViewerShowStateChangeBind);
 		spectrumViewer.appendToElem(parentElem);
@@ -599,6 +649,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		assocViewer.addClassName(CCNS.SPECTRUM_INSPECTOR_ASSOC_VIEWER);
 		assocViewer.setAutoShrink(true);
 		assocViewer.setToolButtons(Kekule.globalOptions.chemWidget.spectrumInspector.assocViewerToolButtons).setEnableToolbar(true);
+		assocViewer.setUseCornerDecoration(false).setBackgroundColor(this.getBackgroundColor());
 		assocViewer.setDisplayed(false);  // hide it at first
 		assocViewer.addEventListener('load', this._reactAssocViewerLoad.bind(this));
 		assocViewer.addEventListener('showStateChange', this._reactChildViewerShowStateChangeBind);
@@ -1458,6 +1509,8 @@ Kekule._registerAfterLoadSysProc(function()
 
 	reg(BNS.changeSpectrumSection, CW.ActionSpectrumInspectorChangeSpectrumSectionStub, widgetClass);
 	reg(BNS.correlateSpectrumDataAndObject, CW.ActionSpectrumInspectorAssignmentCorrelate, widgetClass);
+});
+
 });
 
 })();
