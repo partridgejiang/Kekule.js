@@ -55,6 +55,8 @@ Kekule.globalOptions.add('chemWidget.spectrumInspector', {
 /** @ignore */
 Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassNames, {
 	SPECTRUM_INSPECTOR: 'K-SpectrumInspector',
+	SPECTRUM_INSPECTOR_ASSOC_LEADING: 'K-SpectrumInspector-AssocLeading',
+	SPECTRUM_INSPECTOR_ASSOC_TAILING: 'K-SpectrumInspector-AssocTailing',
 	SPECTRUM_INSPECTOR_IN_EDITING: 'K-SpectrumInspector-Editing',
 	SPECTRUM_INSPECTOR_CLIENT: 'K-SpectrumInspector-Client',
 	SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER: 'K-SpectrumInspector-ClientComponentHolder',
@@ -163,6 +165,13 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 					if (value)
 						this.doAutoShowHideAssocViewer();
 				}
+			}
+		});
+		this.defineProp('assocViewerPosition', {'dataType': DataType.INT, 'enumSource': Kekule.Widget.Position,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('assocViewerPosition', value);
+				this.doAssocViewerPositionChange(value);
 			}
 		});
 
@@ -562,9 +571,9 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		result.push(clientElem);
 
 		var clientComponentHolderElems = {
-			'assocViewer': this._createClientComponentHolderElem(doc, clientElem, CCNS.SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_ASSOC_VIEWER),
+			'spectrumViewer': this._createClientComponentHolderElem(doc, clientElem, CCNS.SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_SPECTRUM_VIEWER),
 			'modifierPanel': this._createClientComponentHolderElem(doc, clientElem, CCNS.SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_MODIFIER_PANEL),
-			'spectrumViewer': this._createClientComponentHolderElem(doc, clientElem, CCNS.SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_SPECTRUM_VIEWER)
+			'assocViewer': this._createClientComponentHolderElem(doc, clientElem, CCNS.SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_ASSOC_VIEWER)
 		};
 		this.setPropStoreFieldValue('clientComponentHolderElems', clientComponentHolderElems);
 
@@ -674,20 +683,19 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		}
 	},
 	/** @private */
-	_reactChildViewerShowStateChange: function(e)
+	doAssocViewerPositionChange: function(newPosition)
 	{
-		var isShown = e.isShown;
-		var targetHolderElem;
-		if (e.widget === this.getAssocViewer())
+		var P = Kekule.Widget.Position;
+		if ((newPosition & P.BOTTOM) || (newPosition & P.RIGHT))  // spectrum on left and molecule on right
 		{
-			targetHolderElem = this.getClientComponentHolderElems().assocViewer;
+			this.removeClassName(CCNS.SPECTRUM_INSPECTOR_ASSOC_LEADING);
+			this.addClassName(CCNS.SPECTRUM_INSPECTOR_ASSOC_TAILING);
 		}
-		else if (e.widget === this.getSpectrumViewer())
+		else  // default, spectrum on right and molecule on left
 		{
-			targetHolderElem = this.getClientComponentHolderElems().spectrumViewer;
+			this.removeClassName(CCNS.SPECTRUM_INSPECTOR_ASSOC_TAILING);
+			this.addClassName(CCNS.SPECTRUM_INSPECTOR_ASSOC_LEADING);
 		}
-		if (targetHolderElem)
-			Kekule.StyleUtils.setDisplay(targetHolderElem, !!isShown);
 	},
 	/** @private */
 	doAutoShowHideAssocViewer: function()
@@ -702,6 +710,22 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			*/
 			this.setAssocViewerDisplayed(displayed);
 		}
+	},
+	/** @private */
+	_reactChildViewerShowStateChange: function(e)
+	{
+		var isShown = e.isShown;
+		var targetHolderElem;
+		if (e.widget === this.getAssocViewer())
+		{
+			targetHolderElem = this.getClientComponentHolderElems().assocViewer;
+		}
+		else if (e.widget === this.getSpectrumViewer())
+		{
+			targetHolderElem = this.getClientComponentHolderElems().spectrumViewer;
+		}
+		if (targetHolderElem)
+			Kekule.StyleUtils.setDisplay(targetHolderElem, !!isShown);
 	},
 
 	/** @private */

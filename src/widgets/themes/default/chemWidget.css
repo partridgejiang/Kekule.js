@@ -277,13 +277,21 @@
 .K-SpectrumInspector .K-SpectrumInspector-Client
 {
     display: flex;
-    flex-direction: row;
+    flex-direction: row-reverse;
     height: 100%;
     width: 100%;
     padding: 0;
     margin: 0;
 }
+.K-SpectrumInspector.K-SpectrumInspector-AssocTailing .K-SpectrumInspector-Client
+{
+    flex-direction: row;
+}
 .K-SpectrumInspector.K-Layout-V .K-SpectrumInspector-Client
+{
+    flex-direction: column-reverse;
+}
+.K-SpectrumInspector.K-SpectrumInspector-AssocTailing.K-Layout-V .K-SpectrumInspector-Client
 {
     flex-direction: column;
 }
