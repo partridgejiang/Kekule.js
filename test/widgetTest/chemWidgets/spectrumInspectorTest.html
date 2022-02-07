@@ -4,6 +4,10 @@
 	<meta charset="UTF-8">
 	<title>Spectrum Inspector Test</title>
 	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+
+	<script src="../../_libs/raphael-min.2.0.1.js"></script>
+	<script src="../../_libs/raphael.export.js"></script>
+
 	<script src="../../../src/kekule.js?min=false"></script>
 
 	<script id="product1" type="chemical/x-kekule-json">
@@ -11,6 +15,17 @@
 	</script>
 	<script>
 		var spectrumInspector;
+
+		function exportImage()
+		{
+			var img = document.getElementById('imgExport');
+			spectrumInspector.exportToDataUriAsync(null, null, function(dataUri, dim) {
+				img.style.width = dim.width + 'px';
+				img.style.height = dim.height + 'px';
+				img.src = dataUri;
+			});
+		}
+
 		function init()
 		{
 			spectrumInspector = Kekule.Widget.getWidgetById('spectrumInspector');
@@ -26,6 +41,10 @@
 	<div id="objInspector" data-widget="Kekule.Widget.ObjectInspector" style="float:right"></div>
 	<div id="spectrumInspector" style1="width:600px;height:400px"
 			 data-widget="Kekule.ChemWidget.SpectrumInspector" data-resizable="true" data-chem-obj="url('../../_chemFiles/spectrum/ISAS_CDX.DX')"></div>
+	</div>
+	<div>
+		<button onclick="exportImage()">Export</button> <br />
+		<img id="imgExport" />
 	</div>
 </body>
 </html>
