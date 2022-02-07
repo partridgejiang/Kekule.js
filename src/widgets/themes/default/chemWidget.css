@@ -297,7 +297,7 @@
 }
 .K-SpectrumInspector .K-SpectrumInspector-Client .K-SpectrumInspector-ClientComponentHolder
 {
-    /*outline: 1px solid red;*/
+    /*border: 1px solid red;*/
     padding: 0;
     margin: 0;
 }
@@ -313,7 +313,12 @@
 {
     /*flex: 0 0 content;*/
     display: none;
-    flex: 0 0 10em;
+    flex: 0 0 auto;
+}
+.K-SpectrumInspector .K-SpectrumInspector-Client .K-SpectrumInspector-ClientComponentHolder-HiddenCanvas
+{
+    flex: 0 0 0;
+    display: none;
 }
 .K-SpectrumInspector.K-SpectrumInspector-Editing .K-SpectrumInspector-Client .K-SpectrumInspector-ClientComponentHolder-ModifierPanel
 {

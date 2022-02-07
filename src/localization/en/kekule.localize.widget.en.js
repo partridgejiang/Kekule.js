@@ -584,6 +584,10 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 	// spectrum viewer
 	CAN_NOT_LOAD_OBJ_OTHER_THAN_SPECTRUM: 'Can not load non-spectrum object',
 
+	// spectrum inspector
+	FAIL_TO_EXPORT_IMAGE_DATAURI_FOR_SPECTRUM: 'Fail to export data URI for spectrum image',
+	FAIL_TO_EXPORT_IMAGE_DATAURI_FOR_ASSOC: 'Fail to export data URI for associated image',
+
 	// editor operations
 	CAN_NOT_SET_COORD_OF_CLASS: 'Can not set coordinate of instance of {0}.',
 	CAN_NOT_SET_DIMENSION_OF_CLASS: 'Can not set dimension of instance of {0}.',

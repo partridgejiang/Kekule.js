@@ -63,6 +63,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_SPECTRUM_VIEWER: 'K-SpectrumInspector-ClientComponentHolder-SpectrumViewer',
 	SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_ASSOC_VIEWER: 'K-SpectrumInspector-ClientComponentHolder-AssocViewer',
 	SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_MODIFIER_PANEL: 'K-SpectrumInspector-ClientComponentHolder-ModifierPanel',
+	SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_HIDDEN_CANVAS: 'K-SpectrumInspector-ClientComponentHolder-HiddenCanvas',
 	SPECTRUM_INSPECTOR_SPECTRUM_VIEWER: 'K-SpectrumInspector-SpectrumViewer',
 	SPECTRUM_INSPECTOR_ASSOC_VIEWER: 'K-SpectrumInspector-AssocViewer',
 
@@ -171,7 +172,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('assocViewerPosition', value);
-				this.doAssocViewerPositionChange(value);
+				this.doChangeAssocViewerPosition(value);
 			}
 		});
 
@@ -330,16 +331,16 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			//'backgroundColor', 'inheritedRenderStyles', 'inheritedRenderColor', 'inheritedRenderBackgroundColor', 'enableCustomCssProperties',
 			'zoom', 'initialZoom', 'padding',
 			'chemObjData', 'chemObjLoaded',
-			['spectrumViewerDrawOptions', 'drawOptions']
+			['spectrumViewerDrawOptions', 'drawOptions'], ['spectrumViewerbackgroundColor', 'backgroundColor']
 			//['spectrumViewerDisplayed', 'displayed'], ['spectrumViewerVisible', 'visible']
 		], 'spectrumViewer');
 
 		this._defineSubWidgetDelegatedProperties([
 			['assocViewerDisplayed', 'displayed'], ['assocViewerVisible', 'visible'],
-			['assocViewerConfigs', 'viewerConfigs'],
+			['assocViewerConfigs', 'viewerConfigs'], ['assocViewerbackgroundColor', 'backgroundColor'],
 			['assocViewerAllowedMolDisplayTypes', 'allowedMolDisplayTypes'],
 			['assocViewerDrawOptions', 'drawOptions'], ['assocViewerAllowCoordBorrow', 'allowCoordBorrow'],
-			['assocViewerAutoSize', 'autoSize'], ['assocViewerAutofit', 'autofit'], ['assocViewerAutoShrink', 'autoShrink'],
+			['assocViewerAutoSize', 'autoSize'], ['assocViewerAutofit', 'autofit'], ['assocViewerAutoShrink', 'autoShrink']
 
 			/*
 			['viewerConfigs', 'assocViewerConfigs'],
@@ -573,7 +574,8 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		var clientComponentHolderElems = {
 			'spectrumViewer': this._createClientComponentHolderElem(doc, clientElem, CCNS.SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_SPECTRUM_VIEWER),
 			'modifierPanel': this._createClientComponentHolderElem(doc, clientElem, CCNS.SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_MODIFIER_PANEL),
-			'assocViewer': this._createClientComponentHolderElem(doc, clientElem, CCNS.SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_ASSOC_VIEWER)
+			'assocViewer': this._createClientComponentHolderElem(doc, clientElem, CCNS.SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_ASSOC_VIEWER),
+			'hiddenCanvas': this._createClientComponentHolderElem(doc, clientElem, CCNS.SPECTRUM_INSPECTOR_CLIENT_COMPONENT_HOLDER_HIDDEN_CANVAS)
 		};
 		this.setPropStoreFieldValue('clientComponentHolderElems', clientComponentHolderElems);
 
@@ -683,7 +685,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		}
 	},
 	/** @private */
-	doAssocViewerPositionChange: function(newPosition)
+	doChangeAssocViewerPosition: function(newPosition)
 	{
 		var P = Kekule.Widget.Position;
 		if ((newPosition & P.BOTTOM) || (newPosition & P.RIGHT))  // spectrum on left and molecule on right
@@ -698,17 +700,38 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		}
 	},
 	/** @private */
+	getAssocViewerActualPosition: function()
+	{
+		var L = Kekule.Widget.Layout;
+		var P = Kekule.Widget.Position;
+		var layout = this.getLayout();
+		var pos = this.getAssocViewerPosition();
+		var result;
+		if (layout === L.VERTICAL)
+		{
+			if (pos & P.BOTTOM || pos & P.RIGHT)
+				result = P.BOTTOM;
+			else
+				result = P.TOP;
+		}
+		else  // horizontal
+		{
+			if (pos & P.BOTTOM || pos & P.RIGHT)
+				result = P.RIGHT;
+			else
+				result = P.LEFT;
+		}
+		return result;
+	},
+	/** @private */
 	doAutoShowHideAssocViewer: function()
 	{
 		var assocViewer = this.getAssocViewer();
 		if (assocViewer)
 		{
 			var displayed = !!assocViewer.getChemObj();
-			/*
-			assocViewer.setDisplayed(displayed);
-			Kekule.StyleUtils.setDisplay(this.getClientComponentHolderElems().assocViewer, displayed);
-			*/
 			this.setAssocViewerDisplayed(displayed);
+			Kekule.StyleUtils.setDisplay(this.getClientComponentHolderElems().assocViewer, displayed);
 		}
 	},
 	/** @private */
@@ -724,6 +747,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		{
 			targetHolderElem = this.getClientComponentHolderElems().spectrumViewer;
 		}
+		//console.log('show change', e.widget === this.getAssocViewer(), e.widget === this.getSpectrumViewer(), targetHolderElem, isShown, e.target.getElement(), e.widget.getElement());
 		if (targetHolderElem)
 			Kekule.StyleUtils.setDisplay(targetHolderElem, !!isShown);
 	},
@@ -1334,6 +1358,127 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		var spectrumDataExItems = this.getSelectedSpectrumDataItemsEx();
 		var assocObjects = this.getSelectedAssocObjects();
 		return this.doSetSpectrumDataAssignments(spectrumDataExItems, assocObjects);
+	},
+
+	/////////////////////////////////////////////////////////
+	/**
+	 * Export drawing content in spectrum inspector to a data URL for <img> tag to use.
+	 * Note this method is executed in an async way and need a callback function to
+	 * receive results.
+	 * @param {String} dataType Type of image data, e.g. 'image/png'.
+	 * @param {Hash} options Export options, usually this is a number between 0 and 1
+	 *   indicating image quality if the requested type is image/jpeg or image/webp.
+	 * @param {Func} callback callback(dataUri, dimension)
+	 * @returns {String}
+	 */
+	exportToDataUriAsync: function(dataType, options, callback)
+	{
+		var op = options || {};
+		var spectrumViewer = this.getSpectrumViewer();
+		var assocViewer = this.getAssocViewer();
+		if (!assocViewer.isShown())
+		{
+			var dataUri = spectrumViewer.isShown() ? spectrumViewer.exportToDataUri(dataType, op) : '';
+			callback(dataUri, spectrumViewer.getContextDimension());
+		}
+		else if (!spectrumViewer.isShown())
+		{
+			var dataUri = assocViewer.isShown() ? assocViewer.exportToDataUri(dataType, op) : '';
+			callback(dataUri, assocViewer.getContextDimension());
+		}
+		else  // both viewers are shown, we need to combine two contexts
+		{
+			var assocDataUri = assocViewer.exportToDataUri(dataType, op);
+			var spectrumDataUri = spectrumViewer.exportToDataUri(dataType, op);
+			var assocPosition = this.getAssocViewerActualPosition();
+			var subViewerExportInfos = this._calcSubViewerOffsetsAndDimensionsForExportDataUri(spectrumViewer, assocViewer, assocPosition);
+
+			var parentElem = this.getClientComponentHolderElems().hiddenCanvas;
+			var drawBridge = spectrumViewer.getDrawBridge();
+			var context = drawBridge.createContext(parentElem, subViewerExportInfos.totalDimension.width, subViewerExportInfos.totalDimension.height);
+			var readyState = {};
+			var setReadyState = function(viewerName, value)
+			{
+				readyState[viewerName] = value;
+				if (!value)  // error occurs
+				{
+					releaseContext();
+					var errorMsg = (viewerName === 'assocViewer')? Kekule.$L('ErrorMsg.FAIL_TO_EXPORT_IMAGE_DATAURI_FOR_ASSOC'): Kekule.$L('ErrorMsg.FAIL_TO_EXPORT_IMAGE_DATAURI_FOR_SPECTRUM')
+					Kekule.warn(errorMsg);
+				}
+				if (readyState.spectrumViewer && readyState.assocViewer)  // all done
+				{
+					done();
+				}
+			}
+			var done = function()  // all child viewer image has been draw on context, now export the total data URI
+			{
+				var dataUri = drawBridge.exportToDataUri(context, dataType, op);
+				if (callback)
+					callback(dataUri, subViewerExportInfos.totalDimension);
+				releaseContext();
+			}
+			var releaseContext = function()
+			{
+				if (context)
+					drawBridge.releaseContext(context);
+				context = null;
+			}
+			//try
+			{
+				drawBridge.drawImage(context, spectrumDataUri, subViewerExportInfos.spectrumViewerOffset,
+					{'x': subViewerExportInfos.spectrumViewerDimension.width, 'y': subViewerExportInfos.spectrumViewerDimension.height}, {},
+					function(success){
+						//console.log('spectrumViewer', success);
+						setReadyState('spectrumViewer', success);
+					}
+				);
+				drawBridge.drawImage(context, assocDataUri, subViewerExportInfos.assocViewerOffset,
+					{'x': subViewerExportInfos.assocViewerDimension.width, 'y': subViewerExportInfos.assocViewerDimension.height}, {},
+					function(success){
+						//console.log('assocViewer', success);
+						setReadyState('assocViewer', success);
+					}
+				);
+			}
+			//finally
+			{
+				//drawBridge.releaseContext(context);
+			}
+		}
+	},
+	/** @private */
+	_calcSubViewerOffsetsAndDimensionsForExportDataUri: function(spectrumViewer, assocViewer, assocPosition)
+	{
+		var assocDim = assocViewer.getContextDimension();
+		var spectrumDim = spectrumViewer.getContextDimension();
+		var assocOffset, spectrumOffset, dim;
+		var P = Kekule.Widget.Position;
+		if (assocPosition & P.TOP)  // assoc viewer on top and spectrum on bottom
+		{
+			assocOffset = {'x': 0, 'y': 0};
+			spectrumOffset = {'x': 0, 'y': assocDim.height};
+			dim = {'width': Math.max(spectrumDim.width, assocDim.width), 'height': spectrumDim.height + assocDim.height};
+		}
+		else if (assocPosition & P.BOTTOM)  // assoc viewer on bottom and spectrum on top
+		{
+			assocOffset = {'x': 0, 'y': spectrumDim.height};
+			spectrumOffset = {'x': 0, 'y': 0};
+			dim = {'width': Math.max(spectrumDim.width, assocDim.width), 'height': spectrumDim.height + assocDim.height};
+		}
+		else if (assocPosition & P.RIGHT)  // assoc viewer on right and spectrum on left
+		{
+			assocOffset = {'x': spectrumDim.width, 'y': 0};
+			spectrumOffset = {'x': 0, 'y': 0};
+			dim = {'width': spectrumDim.width + assocDim.width, 'height': Math.max(spectrumDim.height, assocDim.height)};
+		}
+		else // if (assocPosition & P.LEFT)  // assoc viewer on left and spectrum on right
+		{
+			assocOffset = {'x': 0, 'y': 0};
+			spectrumOffset = {'x': assocDim.width, 'y': 0};
+			dim = {'width': spectrumDim.width + assocDim.width, 'height': Math.max(spectrumDim.height, assocDim.height)};
+		}
+		return {'spectrumViewerOffset': spectrumOffset, 'assocViewerOffset': assocOffset, 'spectrumViewerDimension': spectrumDim, 'assocViewerDimension': assocDim, 'totalDimension': dim};
 	},
 
 	/////////////////////////////////////////////////////////
