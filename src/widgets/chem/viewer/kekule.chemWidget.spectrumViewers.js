@@ -1312,7 +1312,23 @@ Kekule.ChemWidget.Viewer.SpectrumSubView = Class.create(Kekule.ChemWidget.Viewer
 			{
 				// determinate the position of detail text
 				var drawBridge = viewer.getDrawBridge();
-				var textBox = drawBridge.measureText(viewer.getDrawContext(), text, detailDrawStyles);
+				var canMeasureText = drawBridge.canMeasureText && drawBridge.canMeasureText();
+				var canMeasureDrawnText = drawBridge.canMeasureDrawnText && drawBridge.canMeasureDrawnText();
+				var canModifyText = drawBridge.canMeasureText && drawBridge.canModifyText();
+				var textBox;
+				if (canMeasureText)
+					textBox = drawBridge.measureText(viewer.getDrawContext(), text, detailDrawStyles);
+				else if (canMeasureDrawnText && canModifyText)
+				{
+					// draw the text out first
+					//this.modifyTextBasedMarker(marker, null, text, detailDrawStyles, true);
+					var context = this.getViewer().getUiContext();
+					var textElem = drawBridge.drawText(context, {'x': 0, 'y': 0}, text, detailDrawStyles);
+					// then do the measure
+					textBox = drawBridge.measureDrawnText(context, textElem);
+					// remove textElem at last
+					drawBridge.removeDrawnElem(context, textElem);
+				}
 				var textPadding = (configs.getSpectrumDataPointDetailMarkerPadding() || 0) * unitLength;
 				var spaceings = {
 					'x1': contextCoord.x - spectrumClientBox.x1,
