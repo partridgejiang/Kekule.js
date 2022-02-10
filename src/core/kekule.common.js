@@ -2281,6 +2281,9 @@ Kekule.ObjComparer = {
 
 /** @ignore */
 var S_PREFIX_OBJ_REF = '@';  // internal const
+//var S_PREFIX_OBJ_REF_BY_OWNER = '@@';  // internal const
+//var S_PREFIX_OBJ_REF_BY_PARENT = '@P';  // internal const
+//var S_PREFIX_OBJ_REF_BY_PARENTROOT = '@R';  // internal const
 /**
  * Root class for all object related to chemistry in Kekule library.
  * @class
@@ -2347,6 +2350,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 
 		this.__load_owner_objRef_props__ = null;  // used internally
 		this.__load_parent_objRef_props__ = null;  // used internally
+		this.__load_parentRoot_objRef_props__ = null; // used internally
 
 		// react on change (both on self and children)
 		// when object is modified,clear srcInfo information
@@ -2394,6 +2398,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		*/
 		this.__load_owner_objRef_props__ = null;
 		this.__load_parent_objRef_props__ = null;
+		this.__load_parentRoot_objRef_props__ = null;
 		this.setPropStoreFieldValue('attachedCoordStickNodes', null);
 		this.removeSelf();
 		this.tryApplySuper('doFinalize')  /* $super() */;
@@ -2541,7 +2546,10 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	_parentObjectLoaded: function(parent)
 	{
-		this._handleObjRefProps(parent, this.__load_parent_objRef_props__);
+		// now do nothing here
+		//this._handleObjRefProps(parent, this.__load_parent_objRef_props__);
+		// and we can ensure that the root parent is ready now
+		//this._handleObjRefProps(parent, this.__load_parentRoot_objRef_props__);
 	},
 
 	/**
@@ -2552,21 +2560,25 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	 */
 	_ownerObjectLoaded: function(owner)
 	{
-		this._handleObjRefProps(owner, this.__load_owner_objRef_props__);
+		// now do nothing here
+		//this._handleObjRefProps(owner, this.__load_owner_objRef_props__);
 	},
 
 	/** @private */
-	_handleObjRefProps: function(rootObj, refValueStorage)
+	_handleObjRefProps: function(rootStorageObj, refValueStorage)
 	{
 		var objRefPropInfo = refValueStorage;  // this.__load_owner_objRef_props__;
 		if (objRefPropInfo)
 		{
-			if (rootObj && rootObj.getChildAtIndexStack)
+			//if (rootStorageObj && rootStorageObj.getChildAtIndexStack)
 			{
 				var propNames = Kekule.ObjUtils.getOwnedFieldNames(objRefPropInfo);
 				for (var i = 0, l = propNames.length; i < l; ++i)
 				{
 					var propName = propNames[i];
+					var propInfo = this.getPropInfo(propName);
+					var objRefInfo = this._doGetPropObjRefObjInfo(this, propInfo, rootStorageObj);
+					var actualRootObj = objRefInfo.rootObj;
 					var objRefValue = objRefPropInfo[propName];
 					if (DataType.isArrayValue(objRefValue))
 					{
@@ -2576,7 +2588,8 @@ Kekule.ChemObject = Class.create(ObjectEx,
 							var indexStack = this._doUnwrapObjRefSerializationStr(this, objRefValue[i]);
 							if (indexStack)
 							{
-								var obj = rootObj.getChildAtIndexStack(indexStack);
+								//var actualRootObj = this._doRetrieveObjRefRootObjByName(this, indexStack._objRefRoot || '') || rootStorageObj;
+								var obj = actualRootObj.getChildAtIndexStack(indexStack);
 								values.push(obj);
 							}
 							else
@@ -2590,7 +2603,10 @@ Kekule.ChemObject = Class.create(ObjectEx,
 						var value;
 						var indexStack = this._doUnwrapObjRefSerializationStr(this, objRefValue);
 						if (indexStack)
-							value = rootObj.getChildAtIndexStack(indexStack);
+						{
+							//var actualRootObj = this._doRetrieveObjRefRootObjByName(this, indexStack._objRefRoot || '') || rootStorageObj;
+							value = actualRootObj.getChildAtIndexStack(indexStack);
+						}
 						else  // not a obj ref str, do nothing currently
 							;
 						if (value)
@@ -2615,7 +2631,7 @@ Kekule.ChemObject = Class.create(ObjectEx,
 
 	// custom save / load method
 	/** @private */
-	doSaveProp: function(obj, prop, storageNode, serializer)
+	doSaveProp: function(obj, prop, storageNode, options, serializer, rootStorageObj, rootStorageNode, handledObjs)
 	{
 		/*
 		if (prop.name === 'testRefObj')
@@ -2628,37 +2644,44 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			var isObjRefProp = !!prop.objRef;
 			if (isObjRefProp)  // this property is an object reference, refers to another object(s) in this chem space
 			{
+				/*
 				var objRefRootOnParent = (prop.objRefRoot === 'parent');
 				var rootObj = objRefRootOnParent? obj.getParent(): obj.getOwner(); // default is based on owner
-				if (rootObj)
+				*/
+				var objRefInfo = obj._doGetPropObjRefObjInfo(obj, prop, rootStorageObj);
+				if (objRefInfo)
 				{
-					var value = obj.getPropValue(prop.name);
-					if (value)
+					var rootObj = objRefInfo.rootObj;
+					if (rootObj)
 					{
-						if (Kekule.ArrayUtils.isArray(value))  // maybe an array of object references
+						var value = obj.getPropValue(prop.name);
+						if (value)
 						{
-							//if (prop.dataType === DataType.ARRAY)
+							if (Kekule.ArrayUtils.isArray(value))  // maybe an array of object references
 							{
-								var serializationValues = [];
-								for (var i = 0, l = value.length; i < l; ++i)
+								//if (prop.dataType === DataType.ARRAY)
 								{
-									var sv = obj._doGetObjRefSerializationValue(rootObj, obj, value[i]);
-									if (sv)
-										serializationValues.push(sv);
-									else
-										serializationValues.push(value[i]);  // those who can not be transformed, keep it
+									var serializationValues = [];
+									for (var i = 0, l = value.length; i < l; ++i)
+									{
+										var sv = obj._doGetObjRefSerializationValue(rootObj, obj, value[i], objRefInfo.objRefRoot);
+										if (sv)
+											serializationValues.push(sv);
+										else
+											serializationValues.push(value[i]);  // those who can not be transformed, keep it
+									}
+									serializer.doSaveFieldValue(obj, prop.name, serializationValues, storageNode, serializer.getValueExplicitType(serializationValues), options, rootObj, rootStorageNode, handledObjs);
+									return true;
 								}
-								serializer.doSaveFieldValue(obj, prop.name, serializationValues, storageNode, serializer.getValueExplicitType(serializationValues));
-								return true;
 							}
-						}
-						else // single object reference
-						{
-							var serializationValue = obj._doGetObjRefSerializationValue(rootObj, obj, value);
-							if (serializationValue)
+							else // single object reference
 							{
-								serializer.doSaveFieldValue(obj, prop.name, serializationValue, storageNode, serializer.getValueExplicitType(serializationValue));
-								return true;  // handled, do not save again in default action
+								var serializationValue = obj._doGetObjRefSerializationValue(rootObj, obj, value, objRefInfo.objRefRoot);
+								if (serializationValue)
+								{
+									serializer.doSaveFieldValue(obj, prop.name, serializationValue, storageNode, serializer.getValueExplicitType(serializationValue), options, rootObj, rootStorageNode, handledObjs);
+									return true;  // handled, do not save again in default action
+								}
 							}
 						}
 					}
@@ -2667,20 +2690,26 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		}
 	},
 	/** @private */
-	_doGetObjRefSerializationValue: function(owner, currObj, objRef)
+	_doGetObjRefSerializationValue: function(rootObj, currObj, objRef, objRefRootName)
 	{
-		var indexStack = owner.indexStackOfChild(objRef);
+		var indexStack = rootObj.indexStackOfChild && rootObj.indexStackOfChild(objRef);
 		//console.log('indexStack', indexStack);
 		if (indexStack && indexStack.length)
 		{
-			var str = S_PREFIX_OBJ_REF + JSON.stringify(indexStack);
+			/*
+			var prefix = (objRefRootName == 'parent')? S_PREFIX_OBJ_REF_BY_PARENT:
+				(objRefRootName == 'parentRoot')? S_PREFIX_OBJ_REF_BY_PARENTROOT:
+				S_PREFIX_OBJ_REF_BY_OWNER;
+			*/
+			var prefix = S_PREFIX_OBJ_REF;
+			var str = prefix + JSON.stringify(indexStack);
 			return str;
 		}
 		else
 			return null;
 	},
 	/** @private */
-	doLoadProp: function(obj, prop, storageNode, serializer)
+	doLoadProp: function(obj, prop, storageNode, serializer, rootObj, rootStorageNode, handledObjs)
 	{
 		if (!prop.serializable)
 			return;
@@ -2690,36 +2719,69 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			var isObjRefProp = !!prop.objRef;
 			if (isObjRefProp)  // this property is an object reference, refers to another object(s) in this chem space
 			{
+				/*
 				var objRefRootOnParent = (prop.objRefRoot === 'parent');
 				var storageObj = objRefRootOnParent? obj.__load_parent_objRef_props__: obj.__load_owner_objRef_props__; // default is based on owner
-				if (!storageObj)
-				{
-					storageObj = {};
-					if (objRefRootOnParent)
-						obj.__load_parent_objRef_props__ = storageObj;
-					else
-						obj.__load_owner_objRef_props__ = storageObj;
-				}
+				*/
 				// retrieve the ref str first
-				var value = serializer.doLoadFieldValue(obj, prop.name, storageNode /*, DataType.STRING*/);
+				var value = serializer.doLoadFieldValue(obj, prop.name, storageNode, null/*, DataType.STRING*/, rootObj, rootStorageNode, handledObjs);
 				if (value)
 				{
-					if (typeof(value) === 'string' && value.startsWith(S_PREFIX_OBJ_REF))  // maybe a reference string
+					var objRefInfo = obj._doGetPropObjRefObjInfo && obj._doGetPropObjRefObjInfo(obj, prop, rootStorageNode);
+					var storageObjName = objRefInfo.storageObjName;
+					var storageObj = obj[storageObjName];
+					if (!storageObj)
 					{
-						//var indexStack = this._doUnwrapObjRefSerializationStr(obj, prop, value);
-						//if (indexStack)
-						{
-							storageObj[prop.name] = value;  // save this index stack string, and set the real object after the chem space is loaded
-							return true;    // handled, do not load again in default action
-						}
+						storageObj = {};
+						obj[storageObjName] = storageObj;
 					}
-					else if (DataType.isArrayValue(value))  // may be an ref array
+					storageObj[prop.name] = value;  // save this ref value, and set the real object after the the whole loading process is done
+					return true;    // handled, do not load again in default action
+				}
+				/*
+				var objRefInfo = obj._doGetPropObjRefObjInfo && obj._doGetPropObjRefObjInfo(obj, prop, rootStorageNode);
+				if (objRefInfo)
+				{
+					// retrieve the ref str first
+					//var value = serializer.doLoadFieldValue(obj, prop.name, storageNode, null, rootObj, rootStorageNode, handledObjs);
+					//if (value)
 					{
-						storageObj[prop.name] = value;  // save this index stack array, and set the real object after the chem space is loaded
-						return true;    // handled, do not load again in default action
+						var defStorageObjName = objRefInfo.storageObjName;
+						var storageObjName = defStorageObjName;
+						var serializationStrInfo = obj._doGetObjRefSerializationStrInfo && obj._doGetObjRefSerializationStrInfo(value);
+						if (serializationStrInfo)
+							storageObjName = obj._doGetProObjRefStorageObjNameFromObjRefRootName && obj._doGetProObjRefStorageObjNameFromObjRefRootName(serializationStrInfo.objRefRoot);
+						if (!storageObjName)  // can not determinated from serialized value, use the default
+							storageObjName = objRefInfo.storageObjName;
+						var storageObj = obj[storageObjName];
+						if (!storageObj)
+						{
+							storageObj = {};
+							obj[storageObjName] = storageObj;
+						}
+						// retrieve the ref str first
+						//var value = serializer.doLoadFieldValue(obj, prop.name, storageNode);
+						//if (value)
+						{
+							if (typeof (value) === 'string' && value.startsWith(S_PREFIX_OBJ_REF))  // maybe a reference string
+							{
+								//var indexStack = this._doUnwrapObjRefSerializationStr(obj, prop, value);
+								//if (indexStack)
+								{
+									storageObj[prop.name] = value;  // save this index stack string, and set the real object after the chem space is loaded
+									return true;    // handled, do not load again in default action
+								}
+							}
+							else if (DataType.isArrayValue(value))  // may be an ref array
+							{
+								storageObj[prop.name] = value;  // save this index stack array, and set the real object after the chem space is loaded
+								return true;    // handled, do not load again in default action
+							}
+						}
+						//return true;  // handled, do not load again in default action
 					}
 				}
-				//return true;  // handled, do not load again in default action
+			  */
 			}
 		}
 	},
@@ -2728,10 +2790,22 @@ Kekule.ChemObject = Class.create(ObjectEx,
 	{
 		try
 		{
-			var jsonStr = serializationStr.substr(1);  // remove leading @
+			/*
+			var info = currObj._doGetObjRefSerializationStrInfo && currObj._doGetObjRefSerializationStrInfo(serializationStr);
+			var jsonStr;
+			if (info)
+				jsonStr = serializationStr.substr(info.prefix.length);  // remove leading prefix
+			else
+				jsonStr = serializationStr.substr(S_PREFIX_OBJ_REF.length);  // remove leading @, for backward compatible
+			*/
+			var jsonStr = serializationStr.startsWith(S_PREFIX_OBJ_REF)? serializationStr.substr(S_PREFIX_OBJ_REF.length): serializationStr;
 			var indexStack = JSON.parse(jsonStr);
 			if (DataType.isArrayValue(indexStack))
 			{
+				/*
+				if (info)  // record the objRefRoot info
+					indexStack._objRefRoot = info.objRefRoot;
+				*/
 				return indexStack;
 			}
 			else
@@ -2742,12 +2816,139 @@ Kekule.ChemObject = Class.create(ObjectEx,
 			Kekule.error(e);
 		}
 	},
+	/* @private */
+	/*
+	_doGetObjRefSerializationStrInfo: function(str)
+	{
+		var objRefRoot, prefix;
+		if (str.startsWith(S_PREFIX_OBJ_REF_BY_PARENT))
+		{
+			objRefRoot = 'parent';
+			prefix = S_PREFIX_OBJ_REF_BY_PARENT;
+		}
+		else if (str.startsWith(S_PREFIX_OBJ_REF_BY_PARENTROOT))
+		{
+			objRefRoot = 'parentRoot';
+			prefix = S_PREFIX_OBJ_REF_BY_PARENTROOT;
+		}
+		else if (str.startsWith(S_PREFIX_OBJ_REF_BY_OWNER))
+		{
+			objRefRoot = 'owner';
+			prefix = S_PREFIX_OBJ_REF_BY_OWNER;
+		}
+		else if (str.startsWith(S_PREFIX_OBJ_REF))  // not determinated, or saved by old version of Kekule.js
+		{
+			objRefRoot = 'explicit';
+			prefix = S_PREFIX_OBJ_REF;
+		}
+		else
+		{
+			objRefRoot = null;
+			prefix = '';
+		}
+		return {
+			'prefix': prefix,
+			'objRefRoot': objRefRoot
+		}
+	},
+	*/
+	/* @private */
+	/*
+	_doRetrieveObjRefRootObjByName: function(obj, objRefRootName)
+	{
+		var result = (objRefRootName === 'parent')? (obj.getParent && obj.getParent()):
+			(objRefRootName === 'parentRoot')? (obj.getParentRoot && obj.getParentRoot()):
+			(objRefRootName === 'owner')? (obj.getOwner && obj.getOwner()):
+			null;
+		return result;
+	},
+	*/
+	/* @private */
+	/*
+	_doGetProObjRefStorageObjNameFromObjRefRootName: function(objRefRootName)
+	{
+		var storageObjName = (objRefRootName === 'parent')? '__load_parent_objRef_props__':
+			(objRefRootName === 'owner')? '__load_owner_objRef_props__':
+			(objRefRootName === 'root')? '__load_root_objRef_props__':
+			null;
+		return storageObjName;
+	},
+	*/
+	/** @private */
+	_doGetPropObjRefObjInfo: function(obj, prop, storageRootObj)
+	{
+		var objRefRoot = prop.objRefRoot;
+		var objRefRootOnParent = (objRefRoot === 'parent');
+		var objRefRootOnOwner = (objRefRoot === 'owner');
+		var objRefRootOnStorageRoot = (objRefRoot === 'storageRoot');
+		var rootObj = objRefRootOnParent? (obj.getParent && obj.getParent()):
+			objRefRootOnOwner? (obj.getOwner && obj.getOwner()):
+			objRefRootOnStorageRoot? storageRootObj:
+			null;
+		if (!rootObj)  // determinate smartly, defaultly the owner will be regarded as the ref root
+		{
+			var owner = obj.getOwner && obj.getOwner();
+			if (owner)
+			{
+				objRefRoot = 'owner';
+				objRefRootOnOwner = true;
+				rootObj = owner;
+			}
+			else
+			{
+				objRefRoot = 'storageRoot';
+				objRefRootOnStorageRoot = true;
+				rootObj = storageRootObj;
+			}
+		}
+		/*
+		if (!rootObj && !prop.objRefRoot)  // default setting, determinte root smartly
+		{
+			var owner = obj.getOwner && obj.getOwner();
+			if (owner)
+			{
+				rootObj = owner;
+				objRefRoot = 'owner';
+				objRefRootOnOwner = true;
+			}
+			else
+			{
+				var parentRoot = obj.getParentRoot && obj.getParentRoot();
+				if (parentRoot)
+				{
+					rootObj = parentRoot;
+					objRefRoot = 'parentRoot';
+					objRefRootOnParentRoot = true;
+				}
+			}
+		}
+		*/
+		/*
+		var storageObjName = objRefRootOnParent? '__load_parent_objRef_props__':
+			objRefRootOnParentRoot? '__load_parentRoot_objRef_props__':
+			objRefRootOnOwner? '__load_owner_objRef_props__':
+			null; // default can not load
+		*/
+		var storageObjName = '__load_objRef_props__';
+		return {
+			'objRefRoot': objRefRoot,
+			'rootObj': rootObj,
+			'storageObjName': storageObjName
+		};
+	},
 
 	/** @private */
-	loaded: function(/*$super*/)
+	loaded: function(rootObj)
 	{
-		this.tryApplySuper('loaded')  /* $super() */;
+		this.tryApplySuper('loaded', [rootObj]);
 		this.notifyParentLoaded();
+	},
+	/** @private */
+	allLoaded: function(rootObj)
+	{
+		this.tryApplySuper('allLoaded', [rootObj]);
+		// handle prop ref values
+		this._handleObjRefProps(rootObj, this.__load_objRef_props__);
 	},
 
 	/** @private */
@@ -3026,6 +3227,22 @@ Kekule.ChemObject = Class.create(ObjectEx,
 				result = p.getParentList() || [];
 			}
 			result.unshift(p);
+		}
+		return result;
+	},
+	/**
+	 * Returns the root object of parent list.
+	 * @returns {Kekule.ChemObject}
+	 */
+	getParentRoot: function()
+	{
+		var result = this.getParent();
+		if (result)
+		{
+			if (result.getParentRoot)
+			{
+				result = result.getParentRoot() || result;
+			}
 		}
 		return result;
 	},
@@ -4346,12 +4563,12 @@ Kekule.ChemObjList = Class.create(Kekule.ChemObject,
 	},
 
 	/** @private */
-	loaded: function(/*$super*/)
+	loaded: function(rootObj)
 	{
 		// update parent and owner of children
 		this.ownerChanged(this.getOwner());
 		this.parentChanged(this.getParent());
-		this.tryApplySuper('loaded')  /* $super() */;
+		this.tryApplySuper('loaded', [rootObj]);
 	},
 
 	/* @private */
@@ -4801,7 +5018,7 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 		});
 	},
 	/** @private */
-	loaded: function(/*$super*/)
+	loaded: function(rootObj)
 	{
 		var objList = this.getChildren();
 		if (objList)
@@ -4809,7 +5026,7 @@ Kekule.ChemSpaceElement = Class.create(Kekule.ChemObject,
 			objList.parentChanged(this);
 			objList.ownerChanged(this.getOwner());
 		}
-		this.tryApplySuper('loaded')  /* $super() */;
+		this.tryApplySuper('loaded', [rootObj]);
 	},
 
 	/** @ignore */
@@ -5013,7 +5230,7 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 		});
 	},
 	/** @private */
-	loaded: function(/*$super*/)
+	loaded: function(rootObj)
 	{
 		var root = this.getRoot();
 		if (root)
@@ -5021,7 +5238,7 @@ Kekule.ChemSpace = Class.create(Kekule.ChemObject,
 			root.setParent(this);
 			root.setOwner(this);
 		}
-		this.tryApplySuper('loaded')  /* $super() */;
+		this.tryApplySuper('loaded', [rootObj]);
 		this.notifyOwnerLoaded();
 	},
 

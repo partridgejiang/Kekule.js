@@ -2538,16 +2538,34 @@ ObjectEx = Class.create(
 	},
 
 	/**
-	 * Called after this object is saved through a serialization system. Descendants may override this.
+	 * Called after this object is saved through a serialization system (but others may still pend to save). Descendants may override this.
+	 * @param {Object} rootObj Root object when do the serialization.
 	 */
-	saved: function()
+	saved: function(rootObj)
 	{
 		// do nothing here
 	},
 	/**
-	 * Called after this object is loaded by a serialization system. Descendants may override this.
+	 * Called after this object is saved through a serialization system and the whole serialization process is done. Descendants may override this.
+	 * @param {Object} rootObj Root object when do the serialization.
 	 */
-	loaded: function()
+	allSaved: function(rootObj)
+	{
+		// do nothing here
+	},
+	/**
+	 * Called after this object is loaded by a serialization system (but others may still pend to load). Descendants may override this.
+	 * @param {Object} rootObj Root object when do the serialization.
+	 */
+	loaded: function(rootObj)
+	{
+		// do nothing here
+	},
+	/**
+	 * Called after this object is loaded by a serialization system and the whole serialization process is done. Descendants may override this.
+	 * @param {Object} rootObj Root object when do the serialization.
+	 */
+	allLoaded: function(rootObj)
 	{
 		// do nothing here
 	},

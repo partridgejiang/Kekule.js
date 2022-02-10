@@ -405,7 +405,7 @@ ObjSerializer = Class.create(ObjectEx,
 
 	// Methods used for save
 	/**
-	 * Save an object to destNode.
+	 * Save an root object to root storageNode.
 	 * @param {Object} obj Object to save, can be a normal Object or {@link ObjectEx}.
 	 * @param {Object} storageNode Node to save data. Each concrete serializer has its own type of node to store data.
 	 * @param {Hash} options Save options. Can have the following fields:
@@ -414,19 +414,53 @@ ObjSerializer = Class.create(ObjectEx,
 	 *     propFilter: function(prop, obj), return value decides which property should be saved
 	 *   }
 	 */
-	save: function save(obj, storageNode, options)
+	save: function(obj, storageNode, options)
+	{
+		var savedObjs = [];  // record all loaded objects
+		var result = this.saveObj(obj, storageNode, options, obj, storageNode, savedObjs);
+		if (result)
+		{
+			for (var i = 0, l = savedObjs.length; i < l; ++i)
+			{
+				if (savedObjs[i] && this.isFunction(savedObjs[i].allSaved))
+					savedObjs[i].allSaved(obj);
+			}
+		}
+		return result;
+	},
+	/**
+	 * Do actual work of method save, saving an object to destNode.
+	 * @param {Object} obj Object to save, can be a normal Object or {@link ObjectEx}.
+	 * @param {Object} storageNode Node to save data. Each concrete serializer has its own type of node to store data.
+	 * @param {Hash} options Save options. Can have the following fields:
+	 *   {
+	 *     saveDefaultValues: Bool,
+	 *     propFilter: function(prop, obj), return value decides which property should be saved
+	 *   }
+	 * @param {Object} rootObj The root object to be saved.
+	 * @param {Object} rootStorageNode The root storage node to be saved.
+	 * @param {Array} handledObjs An array to record all handled objects.
+	 * @private
+	 */
+	saveObj: function(obj, storageNode, options, rootObj, rootStorageNode, handledObjs)
 	{
 		if (typeof(obj) == 'object')
 		{
 			var customSaveMethod = this.getObjCustomSaveMethod(obj);
 			if (customSaveMethod)
 			{
-				return customSaveMethod(obj, storageNode, this);
+				return customSaveMethod(obj, storageNode, options || {}, this, rootObj, rootStorageNode, handledObjs);
 			}
 		}
-		var result = this.doSave(obj, storageNode, options || {});
-		if (result && this.isFunction(obj.saved))
-			obj.saved();
+		var result = this.doSave(obj, storageNode, options || {}, rootObj, rootStorageNode, handledObjs);
+		if (result)
+		{
+			if (!handledObjs)
+				console.log(obj, obj.getClassName && obj.getClassName());
+			handledObjs.push(obj);
+			if (this.isFunction(obj.saved))
+				obj.saved(rootObj);
+		}
 		return result;
 	},
 
@@ -435,20 +469,23 @@ ObjSerializer = Class.create(ObjectEx,
 	 * @param {Object} obj
 	 * @param {Object} storageNode
 	 * @param {Hash} options Save options.
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doSave: function(obj, storageNode, options)
+	doSave: function(obj, storageNode, options, rootObj, rootStorageNode, handledObjs)
 	{
 		if (typeof(obj) == 'object')
 		{
 			if (obj instanceof ObjectEx)  // ObjectEx
-				this.doSaveObjectEx(obj, storageNode, options);
+				this.doSaveObjectEx(obj, storageNode, options, rootObj, rootStorageNode, handledObjs);
 			else if (this.isArray(obj))  // Array
-				this.doSaveArray(obj, storageNode);
+				this.doSaveArray(obj, storageNode, options, rootObj, rootStorageNode, handledObjs);
 			else if (this.isDate(obj))  // date
-				this.doSaveDate(obj, storageNode);
+				this.doSaveDate(obj, storageNode, options, rootObj, rootStorageNode, handledObjs);
 			else  // a normal object
-				this.doSaveSimpleObject(obj, storageNode);
+				this.doSaveSimpleObject(obj, storageNode, options, rootObj, rootStorageNode, handledObjs);
 		}
 		this.setStorageNodeExplicitType(storageNode, this.getValueExplicitType(obj));
 		return obj;
@@ -458,9 +495,13 @@ ObjSerializer = Class.create(ObjectEx,
 	 * Save a normal JS object to storageNode. Serialize all fields.
 	 * @param {Object} obj
 	 * @param {Object} storageNode
+	 * @param {Hash} options
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doSaveSimpleObject: function(obj, storageNode)
+	doSaveSimpleObject: function(obj, storageNode, options, rootObj, rootStorageNode, handledObjs)
 	{
 		for (var fieldName in obj)
 		{
@@ -470,17 +511,22 @@ ObjSerializer = Class.create(ObjectEx,
 			var explicitType;
 			if (this.isComplexType(fieldValue))
 				explicitType = this.getValueExplicitType(fieldValue);
-			this.doSaveFieldValue(obj, fieldName, fieldValue, storageNode, explicitType);
+			this.doSaveFieldValue(obj, fieldName, fieldValue, storageNode, explicitType, options, rootObj, rootStorageNode, handledObjs);
 		}
 	},
 	/**
 	 * Save an array to storageNode. Serialize all items.
 	 * @param {Array} arrayObj
 	 * @param {Object} storageNode
+	 * @param {Hash} options
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doSaveArray: function(arrayObj, storageNode)
+	doSaveArray: function(arrayObj, storageNode, options, rootObj, rootStorageNode, handledObjs)
 	{
+		//console.log('do save array base', arrayObj, storageNode);
 		for (var i = 0, l = arrayObj.length; i < l; ++i)
 		{
 			var item = arrayObj[i];
@@ -489,7 +535,7 @@ ObjSerializer = Class.create(ObjectEx,
 			{
 				var subNode = this.appendArrayItemStorageNode(storageNode, this.propNameToStorageName(nodeName), this.isArray(item));
 				this.setStorageNodeExplicitType(subNode, this.getValueExplicitType(item));
-				this.save(item, subNode);
+				this.saveObj(item, subNode, options, rootObj, rootStorageNode, handledObjs);
 			}
 			else // simple type
 				this.doAppendArrayItemSimpleValue(this.serializeValue(item), typeof(item), storageNode);
@@ -499,23 +545,30 @@ ObjSerializer = Class.create(ObjectEx,
 	 * Save an date to storageNode..
 	 * @param {Date} obj
 	 * @param {Object} storageNode
+	 * @param {Hash} options
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doSaveDate: function(obj, storageNode)
+	doSaveDate: function(obj, storageNode, options, rootObj, rootStorageNode, handledObjs)
 	{
 		var s = obj.toUTCString();
 		this.doSaveSimpleValue(obj,
 			this.propNameToStorageName(this.getDefaultDateStorageName()),
-			this.serializeValue(s), DataType.DATE, storageNode);
+			this.serializeValue(s), DataType.DATE, storageNode, options, rootObj, rootStorageNode);
 	},
 	/**
 	 * Save a instance of {@link ObjectEx} to storageNode. Serialize all serializable properties.
 	 * @param {ObjectEx} obj
 	 * @param {Object} storageNode
 	 * @param {Hash} options Save options.
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doSaveObjectEx: function(obj, storageNode, options)
+	doSaveObjectEx: function(obj, storageNode, options, rootObj, rootStorageNode, handledObjs)
 	{
 		var props = obj.getAllPropList();
 		var propFilter = options.propFilter;
@@ -530,7 +583,7 @@ ObjSerializer = Class.create(ObjectEx,
 			var customSaveMethod = this.getObjCustomPropSaveMethod(obj);
 			var saved = false;
 			if (customSaveMethod)
-				saved = customSaveMethod(obj, prop, storageNode, this);
+				saved = customSaveMethod(obj, prop, storageNode, options, this, rootObj, rootStorageNode, handledObjs);
 			if (!!saved)
 				continue;
 
@@ -538,7 +591,7 @@ ObjSerializer = Class.create(ObjectEx,
 			{
 				var needSerialize = (typeof(prop.serializable) === 'function')? prop.serializable.apply(obj): prop.serializable;
 				if (needSerialize)
-					this.doSaveObjectExProp(obj, prop, storageNode, options);
+					this.doSaveObjectExProp(obj, prop, storageNode, options, rootObj, rootStorageNode, handledObjs);
 			}
 		}
 	},
@@ -548,9 +601,12 @@ ObjSerializer = Class.create(ObjectEx,
 	 * @param {Object} prop Property to save.
 	 * @param {Object} storageNode
 	 * @param {Hash} options Save options.
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doSaveObjectExProp: function(obj, prop, storageNode, options)
+	doSaveObjectExProp: function(obj, prop, storageNode, options, rootObj, rootStorageNode, handledObjs)
 	{
 		var propName = prop.name;
 		var propType = prop.dataType;
@@ -575,7 +631,7 @@ ObjSerializer = Class.create(ObjectEx,
 				}
 			}
 			var serializationName = obj.getPropSerializationName(propName, this.getSerializerName()) || propName;
-			this.doSaveFieldValue(obj, /*propName*/serializationName, propValue, storageNode, explicitType);
+			this.doSaveFieldValue(obj, /*propName*/serializationName, propValue, storageNode, explicitType, options, rootObj, rootStorageNode, handledObjs);
 		}
 	},
 	/**
@@ -585,9 +641,13 @@ ObjSerializer = Class.create(ObjectEx,
 	 * @param {Variant} fieldValue
 	 * @param {Object} storageNode
 	 * @param {String} explicitType
+	 * @param {Hash} options
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doSaveFieldValue: function(obj, fieldName, fieldValue, storageNode, explicitType)
+	doSaveFieldValue: function(obj, fieldName, fieldValue, storageNode, explicitType, options, rootObj, rootStorageNode, handledObjs)
 	{
 		if (typeof(fieldValue) != 'function')  // can not save a function currently
 		{
@@ -596,12 +656,12 @@ ObjSerializer = Class.create(ObjectEx,
 				var subNode = this.createChildStorageNode(storageNode, this.propNameToStorageName(fieldName), this.isArray(fieldValue));
 				if (explicitType)
 					this.setStorageNodeExplicitType(subNode, explicitType);
-				this.save(fieldValue, subNode);
+				this.saveObj(fieldValue, subNode, options, rootObj, rootStorageNode, handledObjs);
 			}
 			else // a simple value
 			{
 				this.doSaveSimpleValue(obj, this.propNameToStorageName(fieldName),
-				  this.serializeValue(fieldValue), this.getValueExplicitType(fieldValue), storageNode);
+				  this.serializeValue(fieldValue), this.getValueExplicitType(fieldValue), storageNode, options, rootObj, rootStorageNode, handledObjs);
 			}
 		}
 	},
@@ -613,9 +673,12 @@ ObjSerializer = Class.create(ObjectEx,
 	 * @param {Variant} storageValue
 	 * @param {String} valueType Type of original value.
 	 * @param {Object} storageNode
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doSaveSimpleValue: function(obj, storageName, storageValue, valueType, storageNode)
+	doSaveSimpleValue: function(obj, storageName, storageValue, valueType, storageNode, options, rootObj, rootStorageNode, handledObjs)
 	{
 		// do nothing here
 	},
@@ -633,7 +696,7 @@ ObjSerializer = Class.create(ObjectEx,
 
 	// Methods to load data
 	/**
-	 * load an object from storageNode.
+	 * load an root object from root storageNode.
 	 * @param {Object} obj Object to load, can be a normal Object or {@link ObjectEx}.
 	 *   Leave this param to null will force the serializer create a new instance.
 	 * @param {Object} storageNode Node to save data. Each concrete serializer has its own type of node to store data.
@@ -641,36 +704,71 @@ ObjSerializer = Class.create(ObjectEx,
 	 */
 	load: function(obj, storageNode)
 	{
+		var loadedObjs = [];  // record all loaded objects
+		var result = this.loadObj(obj, storageNode, obj, storageNode, loadedObjs);
+		if (result)
+		{
+			for (var i = 0, l = loadedObjs.length; i < l; ++i)
+			{
+				if (loadedObjs[i] && this.isFunction(loadedObjs[i].allLoaded))
+					loadedObjs[i].allLoaded(obj || result);  // if obj is null, result is the new created object
+			}
+		}
+		return result;
+	},
+	/**
+	 * Do actual work of method load, loading an object from storageNode.
+	 * @param {Object} obj Object to load, can be a normal Object or {@link ObjectEx}.
+	 *   Leave this param to null will force the serializer create a new instance.
+	 * @param {Object} storageNode Node to save data. Each concrete serializer has its own type of node to store data.
+	 * @param {Object} rootObj The root obj loaded with load method.
+	 * @param {Object} rootStorageNode The root storage node loaded with load method.
+	 * @param {Array} handledObjs An array to record all handled objects.
+	 * @returns {Object} Object loaded.
+	 * @private
+	 */
+	loadObj: function(obj, storageNode, rootObj, rootStorageNode, handledObjs)
+	{
 		if (!obj)  // obj is null, create new one
 		{
 			var objType = this.getStorageNodeExplicitType(storageNode);
 			if (objType)
 				obj = DataType.createInstance(objType);
 			else if (this.doLoadUntypedNode)
-				return this.doLoadUntypedNode(storageNode);
+				return this.doLoadUntypedNode(storageNode, rootObj, rootStorageNode);
 			else
 				return null;   // can not load
 		}
+		if (!rootObj)   // if rootObj is unset, use this new created one
+			rootObj = obj;
 		if (typeof(obj) === 'object')
 		{
 			var customLoadMethod = this.getObjCustomLoadMethod(obj);
 			if (customLoadMethod)
 			{
-				return customLoadMethod(obj, storageNode, this);
+				return customLoadMethod(obj, storageNode, this, rootObj, rootStorageNode, handledObjs);
 			}
 		}
-		var result = this.doLoad(obj, storageNode);
-		if (result && this.isFunction(obj.loaded))
-			obj.loaded();
+		var result = this.doLoad(obj, storageNode, rootObj, rootStorageNode, handledObjs);
+		if (result)
+		{
+			var loadedObj = obj || result;  // if obj is null, result is the new created object
+			handledObjs.push(loadedObj);
+			if (this.isFunction(loadedObj.loaded))
+				loadedObj.loaded(rootObj);
+		}
 		return result;
 	},
 	/**
 	 * The real load job is done here. Descendants can override this.
 	 * @param {Object} obj
 	 * @param {Object} storageNode
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs An array to storage all handled objects.
 	 * @private
 	 */
-	doLoad: function(obj, storageNode)
+	doLoad: function(obj, storageNode, rootObj, rootStorageNode, handledObjs)
 	{
 		var explicitType = this.getStorageNodeExplicitType(storageNode);
 		if (typeof(obj) == 'object')
@@ -680,7 +778,7 @@ ObjSerializer = Class.create(ObjectEx,
 				obj.beginUpdate();
 				try
 				{
-					obj = this.doLoadObjectEx(obj, storageNode);
+					obj = this.doLoadObjectEx(obj, storageNode, rootObj, rootStorageNode, handledObjs);
 				}
 				finally
 				{
@@ -688,11 +786,11 @@ ObjSerializer = Class.create(ObjectEx,
 				}
 			}
 			else if (this.isArray(obj)) // Array
-				obj = this.doLoadArray(obj, storageNode);
+				obj = this.doLoadArray(obj, storageNode, rootObj, rootStorageNode, handledObjs);
 			else if (this.isDate(obj))  // date
-				obj = this.doLoadDate(obj, storageNode);
+				obj = this.doLoadDate(obj, storageNode, rootObj, rootStorageNode, handledObjs);
 			else // a normal object
- 				obj = this.doLoadSimpleObject(obj, storageNode);
+ 				obj = this.doLoadSimpleObject(obj, storageNode, rootObj, rootStorageNode, handledObjs);
 		}
 		return obj;
 	},
@@ -700,9 +798,12 @@ ObjSerializer = Class.create(ObjectEx,
 	 * Load an array from storageNode. Deserialize all items.
 	 * @param {Array} arrayObj
 	 * @param {Object} storageNode
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doLoadArray: function(arrayObj, storageNode)
+	doLoadArray: function(arrayObj, storageNode, rootObj, rootStorageNode, handledObjs)
 	{
 		var itemNodes = this.getAllArrayItemStorageNodes(storageNode);
 		for (var i = 0, l = itemNodes.length; i < l; ++i)
@@ -717,13 +818,13 @@ ObjSerializer = Class.create(ObjectEx,
 					if (valueType) // complex value
 					{
 						obj = DataType.createInstance(valueType);
-						this.load(obj, node);
+						this.loadObj(obj, node, rootObj, rootStorageNode, handledObjs);
 					}
 					else
 					{
 						// guess it is an object
 						obj = {};
-						this.load(obj, node);
+						this.loadObj(obj, node, rootObj, rootStorageNode, handledObjs);
 					}
 					arrayObj.push(obj);
 				}
@@ -740,12 +841,15 @@ ObjSerializer = Class.create(ObjectEx,
 	 * Load a date object from storageNode.
 	 * @param {Date} obj
 	 * @param {Object} storageNode
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doLoadDate: function(obj, storageNode)
+	doLoadDate: function(obj, storageNode, rootObj, rootStorageNode, handledObjs)
 	{
 		var storageName = this.propNameToStorageName(this.getDefaultDateStorageName());
-		var s = this.doLoadSimpleValue(obj, storageName, DataType.DATE, storageNode);
+		var s = this.doLoadSimpleValue(obj, storageName, DataType.DATE, storageNode, rootObj, rootStorageNode, handledObjs);
 		if (s)
 		{
 			var r = new Date(s);
@@ -760,9 +864,12 @@ ObjSerializer = Class.create(ObjectEx,
 	 * Load a normal JS object from storageNode. Deserialize all fields.
 	 * @param {Object} obj
 	 * @param {Object} storageNode
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doLoadSimpleObject: function(obj, storageNode)
+	doLoadSimpleObject: function(obj, storageNode, rootObj, rootStorageNode, handledObjs)
 	{
 		// fetch all stored fields
 		var storageNames = this.getAllStoredStorageNames(storageNode);
@@ -782,12 +889,12 @@ ObjSerializer = Class.create(ObjectEx,
 				}
 				else
 					subObj = {};  // guess it is a object
-				this.load(subObj, subNode);
+				this.loadObj(subObj, subNode, rootObj, rootStorageNode, handledObjs);
 				obj[fieldName] = subObj;
 			}
 			else // simple type
 			{
-				var value = this.doLoadSimpleValue(obj, storageName, null, storageNode);  // value type is unknown
+				var value = this.doLoadSimpleValue(obj, storageName, null, storageNode, rootObj, rootStorageNode, handledObjs);  // value type is unknown
 				obj[fieldName] = value;
 			}
 		}
@@ -797,9 +904,12 @@ ObjSerializer = Class.create(ObjectEx,
 	 * Load a instance of {@link ObjectEx} to storageNode. Deserialize all serializable properties.
 	 * @param {ObjectEx} obj
 	 * @param {Object} storageNode
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doLoadObjectEx: function(obj, storageNode)
+	doLoadObjectEx: function(obj, storageNode, rootObj, rootStorageNode, handledObjs)
 	{
 		var props = obj.getAllPropList();
 		for (var i = 0, l = props.getLength(); i < l; ++i)
@@ -813,12 +923,12 @@ ObjSerializer = Class.create(ObjectEx,
 			var loaded = false;
 			if (customLoadMethod)
 			{
-				loaded = customLoadMethod(obj, prop, storageNode, this);
+				loaded = customLoadMethod(obj, prop, storageNode, this, rootObj, rootStorageNode, handledObjs);
 			}
 			if (!!loaded)
 				continue;
 
-			this.doLoadObjectExProp(obj, prop, storageNode);
+			this.doLoadObjectExProp(obj, prop, storageNode, rootObj, rootStorageNode, handledObjs);
 		}
 		return obj;
 	},
@@ -827,14 +937,17 @@ ObjSerializer = Class.create(ObjectEx,
 	 * @param {ObjectEx} obj Object to save.
 	 * @param {Object} prop Property to save.
 	 * @param {Object} storageNode
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @private
 	 */
-	doLoadObjectExProp: function(obj, prop, storageNode)
+	doLoadObjectExProp: function(obj, prop, storageNode, rootObj, rootStorageNode, handledObjs)
 	{
 		var propName = prop.name;
 		var propType = prop.dataType;
 		var serializationName = obj.getPropSerializationName(propName, this.getSerializerName()) || propName;
-		var propValue = this.doLoadFieldValue(obj, /*propName*/serializationName, storageNode, propType);
+		var propValue = this.doLoadFieldValue(obj, /*propName*/serializationName, storageNode, propType, rootObj, rootStorageNode, handledObjs);
 
 		if ((propValue !== null) && (propValue !== undefined))
 		{
@@ -847,10 +960,13 @@ ObjSerializer = Class.create(ObjectEx,
 	 * @param {String} fieldName
 	 * @param {Object} storageNode
 	 * @param {String} supposedValueType
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs
 	 * @returns {Variant} Value loaded
 	 * @private
 	 */
-	doLoadFieldValue: function(obj, fieldName, storageNode, supposedValueType)
+	doLoadFieldValue: function(obj, fieldName, storageNode, supposedValueType, rootObj, rootStorageNode, handledObjs)
 	{
 		var result;
 		var handled = false;
@@ -867,13 +983,13 @@ ObjSerializer = Class.create(ObjectEx,
 				}
 				else
 					result = DataType.createInstance(supposedValueType);
-				this.load(result, subNode);
+				this.loadObj(result, subNode, rootObj, rootStorageNode, handledObjs);
 				handled = true;
 			}
 		}
 		if (DataType.isSimpleType(supposedValueType) || (!handled))  // simple type, or load complex subnode not found, load directly
 		{
-			result = this.doLoadSimpleValue(obj, this.propNameToStorageName(fieldName), supposedValueType, storageNode);
+			result = this.doLoadSimpleValue(obj, this.propNameToStorageName(fieldName), supposedValueType, storageNode, rootObj, rootStorageNode, handledObjs);
 		}
 		return result;
 	},
@@ -883,15 +999,18 @@ ObjSerializer = Class.create(ObjectEx,
 	 * @param {String} storageName
 	 * @param {String} valueType Type of original value.
 	 * @param {Object} storageNode
+	 * @param {Object} rootObj
+	 * @param {Object} rootStorageNode
+	 * @param {Array} handledObjs An array to storage all handled objects.
 	 * @private
 	 */
-	doLoadSimpleValue: function(obj, storageName, valueType, storageNode)
+	doLoadSimpleValue: function(obj, storageName, valueType, storageNode, rootObj, rootStorageNode, handledObjs)
 	{
-		var storageValue = this.doLoadSimpleStorageValue(storageName, storageNode);
+		var storageValue = this.doLoadSimpleStorageValue(storageName, storageNode, rootObj, rootStorageNode, handledObjs);
 		return this.deserializeValue(storageValue, valueType);
 	},
 	/** @private */
-	doLoadSimpleStorageValue: function(storageName, storageNode)
+	doLoadSimpleStorageValue: function(storageName, storageNode, rootObj, rootStorageNode, handledObjs)
 	{
 		// do nothing here
 	},
@@ -995,7 +1114,7 @@ JsonObjSerializer = Class.create(ObjSerializer,
 			return r;
 	},
 	/** @private */
-	doSaveSimpleValue: function(obj, storageName, storageValue, valueType, storageNode)
+	doSaveSimpleValue: function(obj, storageName, storageValue, valueType, storageNode, options, rootObj, rootStorageNode, handledObjs)
 	{
 		storageNode[storageName] = storageValue;
 	},
@@ -1005,12 +1124,12 @@ JsonObjSerializer = Class.create(ObjSerializer,
 		return arrayStorageNode.push(storageValue);
 	},
 	/** @private */
-	doLoadSimpleStorageValue: function(storageName, storageNode)
+	doLoadSimpleStorageValue: function(storageName, storageNode, rootObj, rootStorageNode, handledObjs)
 	{
 		return storageNode[storageName];
 	},
 	/** @private */
-	doLoadUntypedNode: function(storageNode)
+	doLoadUntypedNode: function(storageNode, rootObj, rootStorageNode, handledObjs)
 	{
 		return storageNode;
 	},
@@ -1295,20 +1414,25 @@ XmlObjSerializer = Class.create(ObjSerializer,
 		else
 			return result;
 	},
-	/** @private */
-	doSaveSimpleObject: function(/*$super, */obj, storageNode)
+	/* @private */
+
+	doSaveSimpleObject: function(obj, storageNode, options, rootObj, rootStorageNode, handledObjs)
 	{
-		this.tryApplySuper('doSaveSimpleObject', [obj, storageNode])  /* $super(obj, storageNode) */;
+		return this.tryApplySuper('doSaveSimpleObject', [obj, storageNode, options, rootObj, rootStorageNode, handledObjs]);
 		//storageNode.setAttribute('type', typeof(obj));
 	},
-	/** @private */
-	doSaveArray: function(/*$super, */arrayObj, storageNode)
+
+	/* @private */
+	/*
+	doSaveArray: function(arrayObj, storageNode, options, rootObj, rootStorageNode, handledObjs)
 	{
-		this.tryApplySuper('doSaveArray', [arrayObj, storageNode])  /* $super(arrayObj, storageNode) */;
+		console.log('do save array xml', arrayObj, storageNode);
+		return this.tryApplySuper('doSaveArray', [arrayObj, storageNode, options, rootObj, rootStorageNode, handledObjs]);
 		//storageNode.setAttribute('type', 'array');
 	},
+	*/
 	/** @private */
-	doSaveSimpleValue: function(obj, storageName, storageValue, valueType, storageNode)
+	doSaveSimpleValue: function(obj, storageName, storageValue, valueType, storageNode, options, rootObj, rootStorageNode, handledObjs)
 	{
 		storageNode.setAttribute(storageName, storageValue);
 	},
@@ -1323,7 +1447,7 @@ XmlObjSerializer = Class.create(ObjSerializer,
 		node.appendChild(textNode);
 	},
 	/** @private */
-	doLoadSimpleStorageValue: function(storageName, storageNode)
+	doLoadSimpleStorageValue: function(storageName, storageNode, rootObj, rootStorageNode, handledObjs)
 	{
 		return storageNode.getAttribute(storageName) || undefined;  // '' may be returned with unexisted attribute valueby xmldom.js, regard it as undefined
 	},

@@ -688,7 +688,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 
 	// custom save / load method
 	/** @ignore */
-	doSaveProp: function(obj, prop, storageNode, serializer)
+	doSaveProp: function(obj, prop, storageNode, options, serializer, rootObj, rootStorageNode, handledObjs)
 	{
 		if (!prop.serializable)
 			return;
@@ -697,13 +697,13 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		{
 			var node = serializer.createChildStorageNode(storageNode, serializer.propNameToStorageName('dataItems'), false);
 			var subNode = serializer.createChildStorageNode(node, serializer.propNameToStorageName('values'), true); // create sub node for array
-			serializer.save(obj.getDataItems(), subNode);  // save array values in this sub node
+			serializer.saveObj(obj.getDataItems(), subNode, options, rootObj, rootStorageNode, handledObjs);  // save array values in this sub node
 			// extract all extra info of data array and save them
 			var extraInfos = obj._extractAllExtraInfoOfDataItems();
 			if (extraInfos.length)
 			{
 				var subNode = serializer.createChildStorageNode(node, serializer.propNameToStorageName('extras'), true);
-				serializer.save(extraInfos, subNode);
+				serializer.saveObj(extraInfos, subNode, options, rootObj, rootStorageNode, handledObjs);
 			}
 			return true;  // this property is handled, do not use default save method
 		}
@@ -711,7 +711,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			return false;  // use the default method
 	},
 	/** @ignore */
-	doLoadProp: function(obj, prop, storageNode, serializer)
+	doLoadProp: function(obj, prop, storageNode, serializer, rootObj, rootStorageNode, handledObjs)
 	{
 		if (!prop.serializable)
 			return;
@@ -721,14 +721,14 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			var items = [];
 			var node = serializer.getChildStorageNode(storageNode, serializer.propNameToStorageName('dataItems'));
 			var subNode = serializer.getChildStorageNode(node, serializer.propNameToStorageName('values')); // get sub node for array
-			serializer.load(items, subNode);
+			serializer.loadObj(items, subNode, rootObj, rootStorageNode, handledObjs);
 			obj.setPropStoreFieldValue('dataItems', items);
 			// then the extra info
 			var subNode = serializer.getChildStorageNode(node, serializer.propNameToStorageName('extras'));
 			if (subNode)
 			{
 				var extras = [];
-				serializer.load(extras, subNode);
+				serializer.loadObj(extras, subNode, rootObj, rootStorageNode, handledObjs);
 				obj._writeExtraInfoOfDataItems(extras);
 			}
 			return true;
@@ -3049,7 +3049,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 		},
 
 		/** @ignore */
-		loaded: function(/*$super*/)
+		loaded: function(rootObj)
 		{
 			var sections = this.getSections();
 			if (sections)
@@ -3057,7 +3057,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 				sections.parentChanged(this);
 				sections.ownerChanged(this.getOwner());
 			}
-			this.tryApplySuper('loaded');
+			this.tryApplySuper('loaded', [rootObj]);
 		},
 
 		/**
