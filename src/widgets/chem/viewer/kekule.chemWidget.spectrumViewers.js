@@ -2673,16 +2673,21 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 		if (!root)
 		{
 			var viewer = this.getSpectrumViewer();
-			root = viewer.getChemObj();
+			root = viewer && viewer.getChemObj();
 		}
-		if (root instanceof Kekule.Spectroscopy.Spectrum)
-			return [root];
-		else
+		if (root)
 		{
-			return root.filterChildren(function(obj){
-				return (obj && obj instanceof Kekule.Spectroscopy.Spectrum);
-			}, true);
+			if (root instanceof Kekule.Spectroscopy.Spectrum)
+				return [root];
+			else
+			{
+				return root.filterChildren(function(obj){
+					return (obj && obj instanceof Kekule.Spectroscopy.Spectrum);
+				}, true);
+			}
 		}
+		else
+			return [];
 	},
 	/** @private */
 	_getRefMoleculesOfSpectrum: function(spectrum)
@@ -2903,7 +2908,9 @@ Kekule.ChemWidget.SpectrumCorrelationConnector = Class.create(ObjectEx,
 	/** @private */
 	doTryLoadSpectrumRefMoleculeInViewer: function(spectrumViewerRootObj)
 	{
-		if (spectrumViewerRootObj && this.getAutoLoadCorrelatedMolecule())
+		if (!this.getSpectrumViewer() || !this.getMoleculeViewer())
+			return;
+		if (/*spectrumViewerRootObj &&*/ this.getAutoLoadCorrelatedMolecule())
 		{
 			var spectrums = this._getLoadedSpectrums(spectrumViewerRootObj) || [];
 			var molecule = null;
