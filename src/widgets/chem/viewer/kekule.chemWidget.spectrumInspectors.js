@@ -44,6 +44,7 @@ Kekule.globalOptions.add('chemWidget.spectrumInspector', {
 		BNS.zoomIn, BNS.zoomOut,
 		BNS.reset,
 		BNS.copy
+		//BNS.config
 	],
 	assocViewerToolButtons: [
 		BNS.saveData,
@@ -330,8 +331,8 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		});
 
 		// TODO: edit is now implemented yet
-		this.defineProp('enableEdit', {'dataType': DataType.BOOL});
-		this.defineProp('isEditing', {'dataType': DataType.BOOL, 'serializable': false, 'setter': null});
+		this.defineProp('enableEdit', {'dataType': DataType.BOOL, 'scope': PS.PRIVATE});
+		this.defineProp('isEditing', {'dataType': DataType.BOOL, 'serializable': false, 'setter': null, 'scope': PS.PRIVATE});
 
 		// properties from child widgets
 		this._defineSubWidgetDelegatedProperties([
@@ -350,6 +351,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			//'backgroundColor', 'inheritedRenderStyles', 'inheritedRenderColor', 'inheritedRenderBackgroundColor', 'enableCustomCssProperties',
 			'zoom', 'initialZoom', 'padding',
 			'chemObjData', 'chemObjLoaded',
+			['spectrumViewerConfigs', 'viewerConfigs'], ['spectrumViewerRenderConfigs', 'renderConfigs'],
 			['spectrumViewerDrawOptions', 'drawOptions'], ['spectrumViewerbackgroundColor', 'backgroundColor']
 			//['spectrumViewerDisplayed', 'displayed'], ['spectrumViewerVisible', 'visible']
 		], 'spectrumViewer');
@@ -358,6 +360,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			['assocViewerDisplayed', 'displayed'], ['assocViewerVisible', 'visible'],
 			['assocViewerConfigs', 'viewerConfigs'], ['assocViewerbackgroundColor', 'backgroundColor'],
 			['assocViewerAllowedMolDisplayTypes', 'allowedMolDisplayTypes'],
+			['assocViewerRenderConfigs', 'renderConfigs'],
 			['assocViewerDrawOptions', 'drawOptions'], ['assocViewerAllowCoordBorrow', 'allowCoordBorrow'],
 			['assocViewerAutoSize', 'autoSize'], ['assocViewerAutofit', 'autofit'], ['assocViewerAutoShrink', 'autoShrink']
 
@@ -990,7 +993,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 	/** @private */
 	_isCompActionDelegatableToSpectrumViewer: function(compName)
 	{
-		return [BNS.changeSpectrumSection, BNS.correlateSpectrumDataAndObject, BNS.reset].indexOf(compName) >= 0
+		return [BNS.changeSpectrumSection, BNS.correlateSpectrumDataAndObject, BNS.reset, BNS.config].indexOf(compName) >= 0
 	},
 	/** @private */
 	_getActionOfComp: function(compName, canCreate, defActionClass)
@@ -1594,6 +1597,95 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 });
 
 /**
+ * A special class to give a setting facade for SpectrumInspector.
+ * Do not use this class alone.
+ * @class
+ * @augments Kekule.Widget.BaseWidget.Settings
+ * @ignore
+ */
+Kekule.ChemWidget.SpectrumInspector.Settings = Class.create(Kekule.Widget.BaseWidget.Settings,
+/** @lends Kekule.ChemWidget.SpectrumInspector.Settings# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.SpectrumInspector.Settings',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineDelegatedProps([
+			'enableLoadNewFile', 'enableHotTrack', 'enableSelect', 'enableMultiSelect',
+			'enableDirectInteraction', 'enableTouchInteraction',
+			'enableToolbar', 'toolbarPos', 'toolbarMarginHorizontal', 'toolbarMarginVertical',
+			//'enableEdit', 'modalEdit',
+			'autoSyncUiMarkerStyles', 'autoShowHideAssocViewer', 'assocViewerPosition', 'enableOperationFromSpectrumToMolecule', 'enableOperationFromMoleculeToSpectrum',
+			'assocViewerAutoSize', 'assocViewerAutofit', 'assocViewerAutoShrink'
+		]);
+	},
+	/** @private */
+	getSpectrumInspector: function()
+	{
+		return this.getWidget();
+	}
+});
+
+/**
+ * A special widget class to open a config widget for SpectrumInspector.
+ * Do not use this widget alone.
+ * @class
+ * @augments Kekule.Widget.Configurator
+ *
+ * @param {Kekule.ChemWidget.SpectrumInspector} spectrumInspector
+ */
+Kekule.ChemWidget.SpectrumInspector.Configurator = Class.create(Kekule.Widget.Configurator,
+/** @lends Kekule.ChemWidget.SpectrumInspector.Configurator# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.SpectrumInspector.Configurator',
+	/** @private */
+	TAB_BTN_DATA_FIELD: '__$data__',
+	/** @construct */
+	initialize: function(spectrumInspector)
+	{
+		this.tryApplySuper('initialize', [spectrumInspector]);
+	},
+	/** @ignore */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+		this.setLayout(Kekule.Widget.Layout.HORIZONTAL);
+	},
+	/** @private */
+	getCategoryInfos: function()
+	{
+		var result = this.tryApplySuper('getCategoryInfos');
+		var inspector = this.getSpectrumInspector();
+
+		var configPropNames = ['spectrumViewerConfigs', 'spectrumViewerRenderConfigs', 'assocViewerConfigs', 'assocViewerRenderConfigs'];
+		for (var i = 0, l = configPropNames.length; i < l; ++i)
+		{
+			var propInfo = inspector.getPropInfo(configPropNames[i]);
+			var obj = inspector.getPropValue(configPropNames[i]);
+			if (obj)
+			{
+				result.push({
+					'obj': obj,
+					'name': propInfo.name,
+					'title': propInfo.title,
+					'description': propInfo.description
+				});
+			}
+		}
+
+		return result;
+	},
+	/** @private */
+	getSpectrumInspector: function()
+	{
+		return this.getWidget();
+	}
+});
+
+
+/**
  * Base class for actions for spectrum inspector widget.
  * @class
  * @augments Kekule.Action
@@ -1767,6 +1859,7 @@ Kekule._registerAfterLoadSysProc(function()
 	reg(BNS.reset, CW.ActionSpectrumInspectorReset, widgetClass);
 	reg(BNS.changeSpectrumSection, CW.ActionSpectrumInspectorChangeSpectrumSectionStub, widgetClass);
 	reg(BNS.correlateSpectrumDataAndObject, CW.ActionSpectrumInspectorAssignmentCorrelate, widgetClass);
+	reg(BNS.config, Kekule.Widget.ActionOpenConfigWidget, widgetClass);
 });
 
 });
