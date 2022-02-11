@@ -1249,6 +1249,40 @@
     font-size: 90%;
 }
 
+.K-SpectrumObjInserter
+{
+    width: 60em;
+    height: 27em;
+}
+.K-SpectrumObjInserter .K-SpectrumObjInserter-Container
+{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+.K-SpectrumObjInserter .K-SpectrumObjInserter-Container .K-SpectrumObjInserter-Toolbar-Area
+{
+    flex: 0 0 content;
+}
+.K-SpectrumObjInserter .K-SpectrumObjInserter-Container .K-SpectrumObjInserter-Client
+{
+    flex: 1 1 auto;
+}
+.K-SpectrumObjInserter .K-SpectrumObjInserter-Container .K-SpectrumObjInserter-Client .K-SpectrumInspector
+{
+    width: 100%;
+    height: 100%;
+}
+
+.K-SpectrumObjInserter .K-SpectrumObjInserter-InfoLabel
+{
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    z-index: 10;
+}
+
 .K-Chem-ComposerDialog .K-Chem-Composer
 {
     width: 650px;

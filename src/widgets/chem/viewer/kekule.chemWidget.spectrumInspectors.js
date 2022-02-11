@@ -242,6 +242,25 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 				}
 			}
 		});
+		this.defineProp('spectrumViewportRanges', {
+			'dataType': DataType.HASH, 'serializable': false,
+			'getter': function()
+			{
+				var sview = this.getSpectrumSubView();
+				//return (sview? sview.getViewportRanges(): this.getPropStoreFieldValue('spectrumViewportRanges')) || {};
+				return sview && sview.getViewportRanges();
+			},
+			'setter': function(value)
+			{
+				var sview = this.getSpectrumSubView();
+				if (sview)
+				{
+					sview.setViewportRanges(value);
+					sview.applyToRenderOptions();
+				}
+				//this.setPropStoreFieldValue('spectrumViewportRanges', value);
+			}
+		});
 		this.defineProp('backgroundColor', {'dataType': DataType.STRING, 'scope': PS.PUBLISHED,
 			'setter': function(value)
 			{
@@ -546,6 +565,28 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 	doGetWidgetClassName: function()
 	{
 		return this.tryApplySuper('doGetWidgetClassName') + ' ' + CCNS.SPECTRUM_INSPECTOR;
+	},
+
+	/** @ignore */
+	canUsePlaceHolderOnElem: function(elem)
+	{
+		// When using a img element with src image, it may contains the figure of spectrum
+		var imgSrc = elem.getAttribute('src');
+		return (elem.tagName.toLowerCase() === 'img') && (!!imgSrc);
+	},
+	/** @ignore */
+	doSetElement: function(element)
+	{
+		var elem = element;
+		if (elem)
+		{
+			var tagName = elem.tagName.toLowerCase();
+			if (tagName === 'img')  // is an image placeholder element, need to use span to replace it
+			{
+				elem = Kekule.DomUtils.replaceTagName(elem, 'span');
+			}
+		}
+		return this.tryApplySuper('doSetElement', [elem]);
 	},
 
 	/** @ignore */
@@ -949,7 +990,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 	/** @private */
 	_isCompActionDelegatableToSpectrumViewer: function(compName)
 	{
-		return [BNS.changeSpectrumSection, BNS.correlateSpectrumDataAndObject].indexOf(compName) >= 0
+		return [BNS.changeSpectrumSection, BNS.correlateSpectrumDataAndObject, BNS.reset].indexOf(compName) >= 0
 	},
 	/** @private */
 	_getActionOfComp: function(compName, canCreate, defActionClass)
@@ -995,6 +1036,11 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 				spectrums = newObj.filterChildren(function(child){ return child && (child instanceof sClass); });
 			var oldSpectrums = this.getSpectrums();
 			this.spectrumsChanged(spectrums, oldSpectrums);
+		}
+		else  // clear objects in inspector
+		{
+			var oldSpectrums = this.getSpectrums();
+			this.spectrumsChanged([], oldSpectrums);
 		}
 	},
 	/** @private */
@@ -1123,39 +1169,41 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 	 */
 	syncHotTrackAndSelectStylesBetweenViewers: function()
 	{
-		var spectrumViewConfigs = this.getSpectrumViewer().getViewerConfigs().getSpectrumViewConfigs();
-		var assocViewConfigs = this.getAssocViewer().getViewerConfigs().getUiMarkerConfigs();
-
-		// styles of spectrum
 		var section = this.getActiveDataSection();
-		var dataMode = section.getMode();
-		var hotTrackUiMarkerStyles = spectrumViewConfigs.getDataModeSpecifiedConfigValue('spectrumDataHotTrackUiMarkersOnMode', dataMode) && spectrumViewConfigs.getDataModeSpecifiedConfigValue('spectrumHotTrackDataPointMarkerDrawStyles', dataMode);
-		var selectUiMarkerStyles = spectrumViewConfigs.getDataModeSpecifiedConfigValue('spectrumDataSelectUiMarkersOnMode', dataMode) && spectrumViewConfigs.getDataModeSpecifiedConfigValue('spectrumSelectDataPointMarkerDrawStyles', dataMode);
-		var hotTrackObjStyles, selectObjStyles;
-		//console.log('styles', hotTrackUiMarkerStyles, selectUiMarkerStyles);
-		if (dataMode === Kekule.Spectroscopy.DataMode.PEAK)
+		if (section)  // sync styles of spectrum
 		{
-			hotTrackObjStyles = spectrumViewConfigs.getSpectrumPeakHotTrackStyles();
-			selectObjStyles = spectrumViewConfigs.getSpectrumPeakSelectStyles();
+			var spectrumViewConfigs = this.getSpectrumViewer().getViewerConfigs().getSpectrumViewConfigs();
+			var assocViewConfigs = this.getAssocViewer().getViewerConfigs().getUiMarkerConfigs();
+
+			var dataMode = section.getMode();
+			var hotTrackUiMarkerStyles = spectrumViewConfigs.getDataModeSpecifiedConfigValue('spectrumDataHotTrackUiMarkersOnMode', dataMode) && spectrumViewConfigs.getDataModeSpecifiedConfigValue('spectrumHotTrackDataPointMarkerDrawStyles', dataMode);
+			var selectUiMarkerStyles = spectrumViewConfigs.getDataModeSpecifiedConfigValue('spectrumDataSelectUiMarkersOnMode', dataMode) && spectrumViewConfigs.getDataModeSpecifiedConfigValue('spectrumSelectDataPointMarkerDrawStyles', dataMode);
+			var hotTrackObjStyles, selectObjStyles;
+			//console.log('styles', hotTrackUiMarkerStyles, selectUiMarkerStyles);
+			if (dataMode === Kekule.Spectroscopy.DataMode.PEAK)
+			{
+				hotTrackObjStyles = spectrumViewConfigs.getSpectrumPeakHotTrackStyles();
+				selectObjStyles = spectrumViewConfigs.getSpectrumPeakSelectStyles();
+			}
+			var transparentStyles = {'opacity': 0, 'color': 'transparent'};
+			// apply to assoc viewer
+			if (hotTrackUiMarkerStyles)
+				assocViewConfigs.setHotTrackMarkerStyles(Object.extend({}, hotTrackUiMarkerStyles));
+			else
+				assocViewConfigs.setHotTrackMarkerStyles(transparentStyles);
+			if (selectUiMarkerStyles)
+				assocViewConfigs.setSelectionMarkerStyles(Object.extend({}, selectUiMarkerStyles));
+			else
+				assocViewConfigs.setSelectionMarkerStyles(transparentStyles);
+			if (hotTrackObjStyles)
+				assocViewConfigs.setHotTrackedObjectStyles(Object.extend({'nodeDisplayMode': Kekule.Render.NodeLabelDisplayMode.SHOWN}, hotTrackObjStyles));  // ensure the node to be styled even it is C atom
+			else
+				assocViewConfigs.setHotTrackedObjectStyles({});
+			if (selectObjStyles)
+				assocViewConfigs.setSelectedObjectStyles(Object.extend({'nodeDisplayMode': Kekule.Render.NodeLabelDisplayMode.SHOWN}, selectObjStyles));
+			else
+				assocViewConfigs.setSelectedObjectStyles({});
 		}
-		var transparentStyles = {'opacity': 0, 'color': 'transparent'};
-		// apply to assoc viewer
-		if (hotTrackUiMarkerStyles)
-			assocViewConfigs.setHotTrackMarkerStyles(Object.extend({}, hotTrackUiMarkerStyles));
-		else
-			assocViewConfigs.setHotTrackMarkerStyles(transparentStyles);
-		if (selectUiMarkerStyles)
-			assocViewConfigs.setSelectionMarkerStyles(Object.extend({}, selectUiMarkerStyles));
-		else
-			assocViewConfigs.setSelectionMarkerStyles(transparentStyles);
-		if (hotTrackObjStyles)
-			assocViewConfigs.setHotTrackedObjectStyles(Object.extend({'nodeDisplayMode': Kekule.Render.NodeLabelDisplayMode.SHOWN}, hotTrackObjStyles));  // ensure the node to be styled even it is C atom
-		else
-			assocViewConfigs.setHotTrackedObjectStyles({});
-		if (selectObjStyles)
-			assocViewConfigs.setSelectedObjectStyles(Object.extend({'nodeDisplayMode': Kekule.Render.NodeLabelDisplayMode.SHOWN}, selectObjStyles));
-		else
-			assocViewConfigs.setSelectedObjectStyles({});
 	},
 
 	/**
@@ -1166,6 +1214,19 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 	{
 		var v = this.getSpectrumViewer();
 		return v && v.getSubView(this.getActiveSpectrum(), Kekule.ChemWidget.Viewer.SpectrumSubView, true);
+	},
+
+	/**
+	 * Reset display to initial state (no zoom, rotation and so on).
+	 */
+	resetDisplay: function()
+	{
+		var v = this.getSpectrumViewer();
+		if (v)
+			v.resetDisplay();
+		var v = this.getAssocViewer();
+		if (v)
+			v.resetDisplay();
 	},
 
 	/**
@@ -1587,6 +1648,33 @@ Kekule.ChemWidget.ActionOnSpectrumInspector = Class.create(Kekule.Action,
 });
 
 /**
+ * Action for reset viewers in spectrum inspector widget.
+ * @class
+ * @augments Kekule.ChemWidget.ActionOnSpectrumInspector
+ */
+Kekule.ChemWidget.ActionSpectrumInspectorReset = Class.create(Kekule.ChemWidget.ActionOnSpectrumInspector,
+/** @lends Kekule.ChemWidget.ActionSpectrumInspectorReset# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ActionSpectrumInspectorReset',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_RESET,
+	/** @constructs */
+	initialize: function(inspector)
+	{
+		this.tryApplySuper('initialize', [inspector, Kekule.$L('ChemWidgetTexts.CAPTION_RESETVIEW'), Kekule.$L('ChemWidgetTexts.HINT_RESETVIEW')]);
+	},
+	/** @private */
+	doExecute: function(target)
+	{
+		this.tryApplySuper('doExecute', [target]);
+		var inspector = this.getSpectrumInspector();
+		inspector.resetDisplay();
+		// this.getDisplayer().resetDisplay();
+	}
+});
+
+/**
  * Action used for the stub button to switch displayed spectrum/data sections.
  * @class
  * @augments Kekule.ChemWidget.ActionOnSpectrumInspector
@@ -1676,6 +1764,7 @@ Kekule._registerAfterLoadSysProc(function()
 	var widgetClass = Kekule.ChemWidget.SpectrumInspector;
 	var reg = AM.registerNamedActionClass;
 
+	reg(BNS.reset, CW.ActionSpectrumInspectorReset, widgetClass);
 	reg(BNS.changeSpectrumSection, CW.ActionSpectrumInspectorChangeSpectrumSectionStub, widgetClass);
 	reg(BNS.correlateSpectrumDataAndObject, CW.ActionSpectrumInspectorAssignmentCorrelate, widgetClass);
 });

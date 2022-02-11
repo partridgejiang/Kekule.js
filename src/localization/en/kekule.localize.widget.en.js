@@ -550,6 +550,10 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	// SpectrumInspector
 	CAPTION_SPECTRUM_WITH_INDEX: 'Spectrum {0}',
 	CAPTION_SPECTRUM_DATASECTION_WITH_INDEX: 'Data section {0}',
+	CAPTION_INTERACTIONS: 'Interactions: ',
+	CAPTION_ENABLE_HOTTRACK: 'Enable hot track',
+	CAPTION_ENABLE_SELECT: 'Enable select',
+	CAPTION_ENABLE_MULTISELECT: 'Enable multi-select',
 
 	//HINT_SHOWSIZEINFO: 'Whether show width and height of context',
 
