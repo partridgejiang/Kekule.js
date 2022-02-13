@@ -36,6 +36,11 @@
           document.getElementById('imgPanel').appendChild(imgElem);
         });
       });
+
+      Kekule.Widget.getWidgetById('btnImport').addEventListener('execute', function(){
+        var imgElem = document.getElementById('imgPanel').getElementsByTagName('img')[0];
+        spectrumObjInserter.importFromElem(imgElem);
+      });
       /*
       Kekule.Widget.AutoLauncher.enabled = false;
       Kekule.Widget.AutoLauncher.enableDynamicDomCheck = false;
@@ -51,6 +56,7 @@
     <br />
     <br />
     <button id="btnAdd" data-widget="Kekule.Widget.Button">Add Image</button>
+    <button id="btnImport" data-widget="Kekule.Widget.Button">Import</button>
   </div>
   <div id="imgPanel">
 

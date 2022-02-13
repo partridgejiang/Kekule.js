@@ -725,6 +725,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	 * Load a chem object and apply settings in this widget from specified attribs.
 	 * @param {Kekule.ChemObject} chemObj
 	 * @param {Hash} detail
+	 * @deprecated
 	 */
 	importChemObjWithDetails: function(chemObj, detail)
 	{
@@ -743,6 +744,15 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		if (detail.backgroundColor)
 			this.setBackgroundColor(detail.backgroundColor, this.getRenderType());
 		return this;
+	},
+	/**
+	 * Load a chem object and apply settings in this widget from specified attribs.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Hash} detail
+	 */
+	importFromDetails: function(chemObj, detail)
+	{
+		return this.importChemObjWithDetails(chemObj, details);
 	},
 
 	/**
@@ -1040,7 +1050,7 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 
 		// spectrum inspector delegated properties
 		this._defineSpectrumInspectorDelegatedProperties([
-			'backgroundColor',
+			'spectrumViewportRanges', 'backgroundColor',
 			'enableHotTrack', 'enableSelect', 'enableMultiSelect',
 			'enableDirectInteraction', 'enableTouchInteraction', 'enableGesture',
 			'chemObjLoaded', 'renderConfigs', 'viewerConfigs', 'toolButtons',
@@ -1347,6 +1357,88 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 				callback(imgElem);
 		});
 	},
+
+	/**
+	 * Load spectrum object and apply settings in this widget from specified attribs.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Hash} detail
+	 */
+	importFromDetails: function(chemObj, detail)
+	{
+		this.setChemObj(chemObj);
+
+		this.getSpectrumInspector().beginUpdate();
+		try
+		{
+			if (detail.spectrumViewportRanges)
+				this.setSpectrumViewportRanges(detail.spectrumViewportRanges);
+			if (detail.spectrumViewerDrawOptions)
+				this.setSpectrumViewerDrawOptions(detail.spectrumViewerDrawOptions);
+			if (detail.assocViewerDrawOptions)
+				this.setAssocViewerDrawOptions(detail.assocViewerDrawOptions);
+			if (detail.backgroundColor)
+				this.setBackgroundColor(detail.backgroundColor);
+			if (OU.notUnset(detail.enableHotTrack))
+				this.setEnableHotTrack(detail.enableHotTrack);
+			if (OU.notUnset(detail.enableSelect))
+				this.setEnableSelect(detail.enableSelect);
+			if (OU.notUnset(detail.enableMultiSelect))
+				this.setEnableMultiSelect(detail.enableMultiSelect);
+			if (detail.width && detail.height)
+			{
+				this.setSpectrumInspectorDimension({width: detail.width, height: detail.height});
+			}
+		}
+		finally
+		{
+			this.getSpectrumInspector().endUpdate();
+		}
+		return this;
+	},
+
+	/**
+	 * Load spectrum and apply settings in this widget from hash attribs of an HTML element previously exported.
+	 * @param {Hash} attribs
+	 */
+	importFromElemAttribs: function(attribs)
+	{
+		//if (!attribs.width)
+		attribs.width = DataType.JsonUtility.parse(attribs.width);
+		//if (!attribs.height)
+		attribs.height = DataType.JsonUtility.parse(attribs.height);
+		var chemObjJson = attribs['data-chem-obj'];
+		var chemObj = chemObjJson? Kekule.IO.loadMimeData(chemObjJson, 'chemical/x-kekule-json'): null;
+		if (attribs['data-spectrum-viewport-ranges'])
+			attribs.spectrumViewportRanges = DataType.JsonUtility.parse(attribs['data-spectrum-viewport-ranges']);
+		if (attribs['data-spectrum-viewer-draw-options'])
+			attribs.spectrumViewerDrawOptions = DataType.JsonUtility.parse(attribs['data-spectrum-viewer-draw-options']);
+		if (attribs['data-assoc-viewer-draw-options'])
+			attribs.assocViewerDrawOptions = DataType.JsonUtility.parse(attribs['data-assoc-viewer-draw-options']);
+		if (attribs['data-background-color'])
+			attribs.backgroundColor = attribs['data-background-color'];
+		if (attribs['data-enable-hot-track'])
+			attribs.enableHotTrack = DataType.JsonUtility.parse(attribs['data-enable-hot-track']);
+		if (attribs['data-enable-select'])
+			attribs.enableSelect = DataType.JsonUtility.parse(attribs['data-enable-select']);
+		if (attribs['data-enable-multi-select'])
+			attribs.enableMultiSelect = DataType.JsonUtility.parse(attribs['data-enable-multi-select']);
+		return this.importFromDetails(chemObj, attribs);
+	},
+
+	/**
+	 * Load spectrum object and apply settings in this widget from an HTML element previously exported.
+	 * @param {HTMLElement} element
+	 */
+	importFromElem: function(element)
+	{
+		var dim = Kekule.HtmlElementUtils.getElemPageRect(element);
+		var attribs = Kekule.DomUtils.fetchAttributeValuesToJson(element);
+		if (!attribs.width)
+			attribs.width = dim.width;
+		if (!attribs.height)
+			attribs.height = dim.height;
+		return this.importFromElemAttribs(attribs);
+	}
 });
 
 /**
