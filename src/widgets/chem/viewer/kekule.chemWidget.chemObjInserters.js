@@ -604,6 +604,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	 * @param {String} dataType
 	 * @param {Hash}options
 	 * @returns {Hash}
+	 * @deprecated
 	 */
 	exportDetails: function(dataType, options)
 	{
@@ -635,12 +636,25 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		}
 		return result;
 	},
+	/**
+	 * Returns the detail information about export drawing content in viewer and with additional informations.
+	 * @param {String} dataType
+	 * @param {Hash}options
+	 * @param {Func} callback Callback function with a Hash param details.
+	 * @deprecated
+	 */
+	getImgExportDetailsAsync: function(imgDataType, options, callback)
+	{
+		var details = this.exportDetails(imgDataType, options);
+		callback(details);
+	},
 
 	/**
 	 * If export viewer to a HTML img element, this method returns the essential attributes.
 	 * @param {String} dataType Export image data type.
 	 * @param {Hash} options
 	 * @returns {Hash} Attribute/value pairs.
+	 * @deprecated
 	 */
 	getExportImgElemAttributes: function(dataType, options)
 	{
@@ -670,6 +684,17 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		if (Kekule.ObjUtils.notUnset(detail.backgroundColor))
 			result['data-background-color'] = detail.backgroundColor;
 		return result;
+	},
+	/**
+	 * If export viewer to a HTML img element, this method returns the essential attributes.
+	 * @param {String} dataType Export image data type.
+	 * @param {Hash} options
+	 * @param {Func} callback A call back function with attribs param.
+	 */
+	getExportImgElemAttributesAsync: function(dataType, options, callback)
+	{
+		var attribs = this.getExportImgElemAttributes(dataType, options);
+		callback(attribs);
 	},
 
 	/**
@@ -1259,11 +1284,12 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 		var deltaH = dimension.height - oldDim.height;
 		var selfOldDim = this.getDimension();
 		var selfNewDim = {'width': selfOldDim.width + deltaW, 'height': selfOldDim.height + deltaH};
+		//console.log(oldDim, dimension, deltaW, deltaH, selfOldDim, selfNewDim);
 		this.setDimension(selfNewDim.width, selfNewDim.height);
 		return this;
 	},
 	/** @private */
-	getImgExportDetailsAsync: function(doc, imgDataType, options, callback)
+	getImgExportDetailsAsync: function(imgDataType, options, callback)
 	{
 		try
 		{
@@ -1273,12 +1299,15 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 				'enableHotTrack': spectrumInspector.getEnableHotTrack(),
 				'enableSelect': spectrumInspector.getEnableSelect(),
 				'enableMultiSelect': spectrumInspector.getEnableMultiSelect(),
-				'spectrumViewerDrawOptions': spectrumInspector.getSpectrumViewer().getActualDrawOptions(),
-				'spectrumViewerDrawOptionsJson': JSON.stringify(spectrumInspector.getSpectrumViewer().getActualDrawOptions()),
+				'spectrumViewerDrawOptions': spectrumInspector.getSpectrumViewerDrawOptions(), //spectrumInspector.getSpectrumViewer().getActualDrawOptions(),
+				'spectrumViewerDrawOptionsJson': spectrumInspector.getSpectrumViewerDrawOptions()?
+					JSON.stringify(spectrumInspector.getSpectrumViewerDrawOptions()): '',
 				'spectrumViewportRanges': spectrumInspector.getSpectrumViewportRanges(),
-				'spectrumViewportRangesJson': JSON.stringify(spectrumInspector.getSpectrumViewportRanges()),
-				'assocViewerDrawOptions': spectrumInspector.getAssocViewer().getActualDrawOptions(),
-				'assocViewerDrawOptionsJson': JSON.stringify(spectrumInspector.getAssocViewer().getActualDrawOptions()),
+				'spectrumViewportRangesJson': spectrumInspector.getSpectrumViewportRanges()?
+					JSON.stringify(spectrumInspector.getSpectrumViewportRanges()): '',
+				'assocViewerDrawOptions':spectrumInspector.getAssocViewerDrawOptions(), // spectrumInspector.getAssocViewer().getActualDrawOptions(),
+				'assocViewerDrawOptionsJson': spectrumInspector.getAssocViewerDrawOptions()?
+					JSON.stringify(spectrumInspector.getAssocViewerDrawOptions()): '',
 				'chemObj': spectrumInspector.getChemObj(),
 				'chemObjJson': Kekule.IO.saveMimeData(this.getChemObj(), Kekule.IO.MimeType.KEKULE_JSON)
 			};
@@ -1295,10 +1324,53 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 			throw e;
 		}
 	},
+	/**
+	 * If export spectrum to a HTML img element, this method returns the essential attributes.
+	 * @param {String} dataType Export image data type.
+	 * @param {Hash} options
+	 * @param {Func} callback With hash param attribs.
+	 * @returns {Hash} Attribute/value pairs.
+	 */
+	getExportImgElemAttributesAsync: function(dataType, options, callback)
+	{
+		this.getImgExportDetailsAsync(dataType, options, function(detail){
+			var style = 'width:' + detail.width + 'px; height:' + detail.height + 'px';
+			var attribs = {
+				'src': detail.dataUri,
+				'style': style,
+				'width': detail.width,
+				'height': detail.height,
+				'data-kekule-widget': 'Kekule.ChemWidget.SpectrumInspector',
+				'data-chem-obj': detail.chemObjJson,
+				'data-spectrum-viewer-draw-options': detail.spectrumViewerDrawOptionsJson,
+				'data-assoc-viewer-draw-options': detail.assocViewerDrawOptionsJson
+			};
+			if (detail.spectrumViewportRangesJson)
+				attribs['data-spectrum-viewport-ranges'] = detail.spectrumViewportRangesJson;
+			if (OU.notUnset(detail.enableHotTrack))
+				attribs['data-enable-hot-track'] = detail.enableHotTrack;
+			if (OU.notUnset(detail.enableSelect))
+				attribs['data-enable-select'] = detail.enableSelect;
+			if (OU.notUnset(detail.enableMultiSelect))
+				attribs['data-enable-multi-select'] = detail.enableMultiSelect;
+			if (Kekule.ObjUtils.notUnset(detail.backgroundColor))
+				attribs['data-background-color'] = detail.backgroundColor;
+			callback(attribs);
+		});
+
+		/*
+		if (detail.backgroundColor)
+			style += '; background-color: ' + detail.backgroundColor;
+		else if (this.getIs3D())
+			style += '; background-color: #000';
+		*/
+
+	},
 	/** @private */
 	exportToSingleImgElementAsync: function(doc, imgDataType, options, callback)
 	{
-		this.getImgExportDetailsAsync(doc, imgDataType, options, function(details){
+		//this.getImgExportDetailsAsync(imgDataType, options, function(details){
+		this.getExportImgElemAttributesAsync(imgDataType, options, function(details){
 			if (!details)  // failed
 			{
 				callback(null);
@@ -1306,6 +1378,7 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 			else  // success
 			{
 				var img = doc.createElement('img');
+				/*
 				img.setAttribute('style', 'width:' + details.width + 'px; height:' + details.height + 'px');
 				img.setAttribute('src', details.dataUri);
 				img.setAttribute('data-kekule-widget', 'Kekule.ChemWidget.SpectrumInspector');
@@ -1325,6 +1398,8 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 					img.setAttribute('data-enable-select', details.enableSelect);
 				if (OU.notUnset(details.enableMultiSelect))
 					img.setAttribute('data-enable-multi-select', details.enableMultiSelect);
+				*/
+				Kekule.DomUtils.setElemAttributes(img, details);
 				callback(img);
 			}
 		});
