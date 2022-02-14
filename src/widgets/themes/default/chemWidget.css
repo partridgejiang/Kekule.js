@@ -1268,11 +1268,13 @@
 .K-SpectrumObjInserter .K-SpectrumObjInserter-Container .K-SpectrumObjInserter-Client
 {
     flex: 1 1 auto;
+    padding: 0;
 }
 .K-SpectrumObjInserter .K-SpectrumObjInserter-Container .K-SpectrumObjInserter-Client .K-SpectrumInspector
 {
     width: 100%;
     height: 100%;
+    margin: 0;
 }
 
 .K-SpectrumObjInserter .K-SpectrumObjInserter-InfoLabel
