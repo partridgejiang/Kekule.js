@@ -1082,7 +1082,7 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 			'spectrumViewerDrawOptions',
 			'assocViewerDrawOptions', 'assocViewerConfigs', 'assocViewerAllowCoordBorrow',
 			'assocViewerAutoSize', 'assocViewerAutofit', 'assocViewerAutoShrink',
-			'assocViewerAllowedMolDisplayTypes'
+			'assocViewerAllowedMolDisplayTypes', 'assocViewerVisualMode'
 		]);
 	},
 
@@ -1305,9 +1305,10 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 				'spectrumViewportRanges': spectrumInspector.getSpectrumViewportRanges(),
 				'spectrumViewportRangesJson': spectrumInspector.getSpectrumViewportRanges()?
 					JSON.stringify(spectrumInspector.getSpectrumViewportRanges()): '',
-				'assocViewerDrawOptions':spectrumInspector.getAssocViewerDrawOptions(), // spectrumInspector.getAssocViewer().getActualDrawOptions(),
+				'assocViewerDrawOptions': spectrumInspector.getAssocViewerDrawOptions(), // spectrumInspector.getAssocViewer().getActualDrawOptions(),
 				'assocViewerDrawOptionsJson': spectrumInspector.getAssocViewerDrawOptions()?
 					JSON.stringify(spectrumInspector.getAssocViewerDrawOptions()): '',
+				'assocViewerVisualMode': spectrumInspector.getAssocViewerVisualMode(),
 				'chemObj': spectrumInspector.getChemObj(),
 				'chemObjJson': Kekule.IO.saveMimeData(this.getChemObj(), Kekule.IO.MimeType.KEKULE_JSON)
 			};
@@ -1343,7 +1344,8 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 				'data-kekule-widget': 'Kekule.ChemWidget.SpectrumInspector',
 				'data-chem-obj': detail.chemObjJson,
 				'data-spectrum-viewer-draw-options': detail.spectrumViewerDrawOptionsJson,
-				'data-assoc-viewer-draw-options': detail.assocViewerDrawOptionsJson
+				'data-assoc-viewer-draw-options': detail.assocViewerDrawOptionsJson,
+				'data-assoc-viewer-visual-mode': JSON.stringify(detail.assocViewerVisualMode)
 			};
 			if (detail.spectrumViewportRangesJson)
 				attribs['data-spectrum-viewport-ranges'] = detail.spectrumViewportRangesJson;
@@ -1459,6 +1461,8 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 				this.setEnableSelect(detail.enableSelect);
 			if (OU.notUnset(detail.enableMultiSelect))
 				this.setEnableMultiSelect(detail.enableMultiSelect);
+			if (OU.notUnset(detail.assocViewerVisualMode))
+				this.setAssocViewerVisualMode(detail.assocViewerVisualMode);
 			if (detail.width && detail.height)
 			{
 				this.setSpectrumInspectorDimension({width: detail.width, height: detail.height});
@@ -1497,6 +1501,8 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 			attribs.enableSelect = DataType.JsonUtility.parse(attribs['data-enable-select']);
 		if (attribs['data-enable-multi-select'])
 			attribs.enableMultiSelect = DataType.JsonUtility.parse(attribs['data-enable-multi-select']);
+		if (attribs['data-assoc-viewer-visual-mode'])
+			attribs.assocViewerVisualMode = DataType.JsonUtility.parse(attribs['data-assoc-viewer-visual-mode']);
 		return this.importFromDetails(chemObj, attribs);
 	},
 
@@ -1579,6 +1585,28 @@ Kekule.ChemWidget.SpectrumObjInserter.Configurator = Class.create(Kekule.Widget.
 
 		element.appendChild(region);
 
+		// assoc visual mode
+		var region = doc.createElement('div');
+		region.className = CCNS.CHEMOBJSETTER_REGION;
+		var labelElem = doc.createElement('label');
+		labelElem.className = CCNS.CHEMOBJSETTER_REGION_LABEL;
+		DU.setElementText(labelElem, Kekule.$L('ChemWidgetTexts.CAPTION_ASSOC_VIEWER_VISUAL_MODE'));
+		region.appendChild(labelElem);
+		region.appendChild(doc.createElement('br'));
+
+		var AVVM = Kekule.ChemWidget.SpectrumInspector.AssocViewerVisualMode;
+		var selectBox = new Kekule.Widget.SelectBox(this);
+		selectBox.setItems([
+			{text: Kekule.$L('ChemWidgetTexts.CAPTION_ASSOC_VIEWER_VISUAL_MODE_AUTO'), value: AVVM.AUTO},
+			{text: Kekule.$L('ChemWidgetTexts.CAPTION_ASSOC_VIEWER_VISUAL_MODE_VISIBLE'), value: AVVM.VISIBLE},
+			{text: Kekule.$L('ChemWidgetTexts.CAPTION_ASSOC_VIEWER_VISUAL_MODE_INVISIBLE'), value: AVVM.INVISIBLE}
+		])
+			.addClassName(CCNS.CHEMOBJSETTER_LINE)
+			.appendToElem(region);
+		this._selectBoxAssocViewerVisualMode = selectBox;
+
+		element.appendChild(region);
+
 		// background color setter
 		var region = doc.createElement('div');
 		region.className = CCNS.CHEMOBJSETTER_REGION;
@@ -1607,6 +1635,7 @@ Kekule.ChemWidget.SpectrumObjInserter.Configurator = Class.create(Kekule.Widget.
 			this._checkBoxEnableMultiSelect.setChecked(w.getEnableMultiSelect());
 			var color = w.getBackgroundColor();
 			this._colorPicker.setValue(color || Kekule.Widget.ColorPicker.SpecialColors.TRANSPARENT);
+			this._selectBoxAssocViewerVisualMode.setValue(w.getAssocViewerVisualMode());
 		}
 	},
 	/** @private */
@@ -1616,12 +1645,20 @@ Kekule.ChemWidget.SpectrumObjInserter.Configurator = Class.create(Kekule.Widget.
 		var w = this.getWidget();
 		if (w)
 		{
-			w.setEnableHotTrack(this._checkBoxEnableHotTrack.getChecked());
-			w.setEnableSelect(this._checkBoxEnableSelect.getChecked());
-			w.setEnableMultiSelect(this._checkBoxEnableMultiSelect.getChecked());
-			w.setBackgroundColor(this._colorPicker.getValue());
-
-			w.invokeEvent('configSave');  // a special event invoked on parent widget, indicating the config value has been changed
+			w.beginUpdate();
+			try
+			{
+				w.setEnableHotTrack(this._checkBoxEnableHotTrack.getChecked());
+				w.setEnableSelect(this._checkBoxEnableSelect.getChecked());
+				w.setEnableMultiSelect(this._checkBoxEnableMultiSelect.getChecked());
+				w.setBackgroundColor(this._colorPicker.getValue());
+				w.setAssocViewerVisualMode(this._selectBoxAssocViewerVisualMode.getValue());
+				w.invokeEvent('configSave');  // a special event invoked on parent widget, indicating the config value has been changed
+			}
+			finally
+			{
+				w.endUpdate();
+			}
 		}
 	}
 });

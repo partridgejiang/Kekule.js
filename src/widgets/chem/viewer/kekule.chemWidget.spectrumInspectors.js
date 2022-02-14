@@ -43,8 +43,8 @@ Kekule.globalOptions.add('chemWidget.spectrumInspector', {
 		//BNS.correlateSpectrumDataAndObject,
 		BNS.zoomIn, BNS.zoomOut,
 		BNS.reset,
-		BNS.copy
-		//BNS.config
+		BNS.copy,
+		BNS.config
 	],
 	assocViewerToolButtons: [
 		BNS.saveData,
@@ -138,7 +138,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		this._spectrumViewerGetSavingTargetObjOverwriteBind = this._spectrumViewerGetSavingTargetObjOverwrite.bind(this);
 		this._reactChildViewerShowStateChangeBind = this._reactChildViewerShowStateChange.bind(this);
 		this.setPropStoreFieldValue('autoSyncUiMarkerStyles', true);
-		this.setPropStoreFieldValue('autoShowHideAssocViewer', true);
+		this.setPropStoreFieldValue('assocViewerVisualMode', AVVM.AUTO);
 		this.tryApplySuper('initialize', [parentOrElementOrDocument]);
 	},
 	/** @private */
@@ -158,17 +158,42 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 				}
 			}
 		});
-		this.defineProp('autoShowHideAssocViewer', {'dataType': DataType.BOOL,
+		this.defineProp('assocViewerVisualMode', {'dataType': DataType.INT, 'enumSource': Kekule.ChemWidget.SpectrumInspector.AssocViewerVisualMode,
+			'setter': function(value)
+			{
+				var old = this.getAssocViewerVisualMode();
+				if (value !== old)
+				{
+					this.setPropStoreFieldValue('assocViewerVisualMode', value);
+					this.doAssocViewerVisualModeChange(value, old);
+				}
+			}
+		});
+		this.defineProp('autoShowHideAssocViewer', {'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PUBLIC,
+			'getter': function()
+			{
+				return this.getAssocViewerVisualMode() === AVVM.AUTO;
+			},
+			'setter': null
+			/*
 			'setter': function(value)
 			{
 				if (value != this.getAutoShowHideAssocViewer())
 				{
-					this.setPropStoreFieldValue('autoShowHideAssocViewer', !!value);
+					var currVisible = this.getAssocViewerDisplayed() && this.getAssocViewerVisible();
 					if (value)
-						this.doAutoShowHideAssocViewer();
+						this.setAssocViewerVisualMode(AVVM.AUTO);
+					else
+						this.setAssocViewerVisualMode(currVisible? AVVM.VISIBLE: AVVM.INVISIBLE);
+
+					//this.setPropStoreFieldValue('autoShowHideAssocViewer', !!value);
+					//if (value)
+					//	this.doAutoShowHideAssocViewer();
 				}
 			}
+			*/
 		});
+
 		this.defineProp('assocViewerPosition', {'dataType': DataType.INT, 'enumSource': Kekule.Widget.Position,
 			'setter': function(value)
 			{
@@ -357,7 +382,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		], 'spectrumViewer');
 
 		this._defineSubWidgetDelegatedProperties([
-			['assocViewerDisplayed', 'displayed'], ['assocViewerVisible', 'visible'],
+			//['assocViewerDisplayed', 'displayed'], ['assocViewerVisible', 'visible'],
 			['assocViewerConfigs', 'viewerConfigs'], ['assocViewerbackgroundColor', 'backgroundColor'],
 			['assocViewerAllowedMolDisplayTypes', 'allowedMolDisplayTypes'],
 			['assocViewerRenderConfigs', 'renderConfigs'],
@@ -768,13 +793,36 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		return result;
 	},
 	/** @private */
+	doAssocViewerVisualModeChange: function(newValue, oldValue)
+	{
+		var assocViewer = this.getAssocViewer();
+		if (assocViewer)
+		{
+			var M = Kekule.ChemWidget.SpectrumInspector.AssocViewerVisualMode;
+			if (newValue === M.AUTO)
+			{
+				this.doAutoShowHideAssocViewer();
+			}
+			else if (newValue === M.VISIBLE || newValue === M.INVISIBLE);
+			{
+				var visible = (newValue === M.VISIBLE);
+				assocViewer.setDisplayed(visible);
+				if (visible)
+					assocViewer.setVisible(visible);
+			}
+		}
+	},
+	/** @private */
 	doAutoShowHideAssocViewer: function()
 	{
 		var assocViewer = this.getAssocViewer();
 		if (assocViewer)
 		{
 			var displayed = !!assocViewer.getChemObj();
-			this.setAssocViewerDisplayed(displayed);
+			//this.setAssocViewerDisplayed(displayed);
+			assocViewer.setDisplayed(displayed);
+			if (displayed)
+				assocViewer.setVisible(displayed);;
 			Kekule.StyleUtils.setDisplay(this.getClientComponentHolderElems().assocViewer, displayed);
 		}
 	},
@@ -1597,6 +1645,21 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 });
 
 /**
+ * Enumeration of the assoc viewer display mode in a spectrum inspector.
+ * @enum
+ */
+Kekule.ChemWidget.SpectrumInspector.AssocViewerVisualMode = {
+	/** The assoc viewer will always be shown, even if it is empty. */
+	VISIBLE: 1,
+	/** The assoc viewer will always be hidden, even if it is not empty. */
+	INVISIBLE: 2,
+	/** The assoc viewer will be shown when it is not empty. */
+	AUTO: 0
+};
+/** @ignore */
+var AVVM = Kekule.ChemWidget.SpectrumInspector.AssocViewerVisualMode;
+
+/**
  * A special class to give a setting facade for SpectrumInspector.
  * Do not use this class alone.
  * @class
@@ -1616,7 +1679,7 @@ Kekule.ChemWidget.SpectrumInspector.Settings = Class.create(Kekule.Widget.BaseWi
 			'enableDirectInteraction', 'enableTouchInteraction',
 			'enableToolbar', 'toolbarPos', 'toolbarMarginHorizontal', 'toolbarMarginVertical',
 			//'enableEdit', 'modalEdit',
-			'autoSyncUiMarkerStyles', 'autoShowHideAssocViewer', 'assocViewerPosition', 'enableOperationFromSpectrumToMolecule', 'enableOperationFromMoleculeToSpectrum',
+			'autoSyncUiMarkerStyles', 'assocViewerVisualMode', 'assocViewerPosition', 'enableOperationFromSpectrumToMolecule', 'enableOperationFromMoleculeToSpectrum',
 			'assocViewerAutoSize', 'assocViewerAutofit', 'assocViewerAutoShrink'
 		]);
 	},
