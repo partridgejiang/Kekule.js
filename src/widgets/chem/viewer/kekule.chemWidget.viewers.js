@@ -1761,11 +1761,11 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		// subviews
 		this.iterateSubViews(function(subView) {
-			if (byPassedHosts && byPassedHosts.indexOf(subView) < 0)
+			if (!byPassedHosts || byPassedHosts.indexOf(subView) < 0)
 				subView.doClearHotTrackedItems();
 		});
 		// self
-		if (byPassedHosts && byPassedHosts.indexOf(this) < 0)
+		if (!byPassedHosts || byPassedHosts.indexOf(this) < 0)
 			this.doClearHotTrackedItems();
 		if (doRepaint)
 			this.repaintUiMarker();
@@ -3551,10 +3551,10 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 
 	react_pointerleave: function(e)
 	{
-		//console.log('pointer_leave!', e.getTarget(), e.getCurrentTarget());
 		//this._transformInfo.isTransforming = false;
 		if (this._transformInfo.isTransforming)
 			this._endInteractTransform();
+		this.getViewer().clearHotTrackedItems(null, true);
 	},
 
 	/** @private */
