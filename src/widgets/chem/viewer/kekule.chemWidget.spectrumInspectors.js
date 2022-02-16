@@ -49,7 +49,11 @@ Kekule.globalOptions.add('chemWidget.spectrumInspector', {
 	assocViewerToolButtons: [
 		BNS.saveData,
 		BNS.copy
-	]
+	],
+	'enableToolbar': true,
+	'enableDirectInteraction': true,
+	'enableTouchInteraction': true,
+	'enableGestureInteraction': false
 });
 
 
@@ -353,7 +357,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			'setter': function(value)
 			{
 				var bValue = !!value;
-				this._applyEnablePropertyToChildViewerConfigs('enableDirectInteraction', bValue);
+				this._applyPropertyToChildViewerProperty('enableDirectInteraction', bValue);
 				this.setPropStoreFieldValue('enableDirectInteraction', bValue);
 			}
 		});
@@ -361,15 +365,15 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			'setter': function(value)
 			{
 				var bValue = !!value;
-				this._applyEnablePropertyToChildViewerConfigs('enableTouchInteraction', bValue);
+				this._applyPropertyToChildViewerProperty('enableTouchInteraction', bValue);
 				this.setPropStoreFieldValue('enableTouchInteraction', bValue);
 			}
 		});
-		this.defineProp('enableGesture', {'dataType': DataType.BOOL,
+		this.defineProp('enableGestureInteraction', {'dataType': DataType.BOOL,
 			'setter': function(value)
 			{
 				var bValue = !!value;
-				this._applyEnablePropertyToChildViewerConfigs('enableGesture', bValue);
+				this._applyPropertyToChildViewerProperty('enableGesture', bValue);
 				this.setPropStoreFieldValue('enableGesture', bValue);
 			}
 		});
@@ -434,6 +438,12 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			.setEnableSelect(true)
 			.setEnableMultiSelect(false)
 			.setUseCornerDecoration(true);
+		var oneOf = Kekule.oneOf;
+		var options = Kekule.globalOptions.get('chemWidget.spectrumInspector') || {};
+		this.setEnableToolbar(oneOf(options.enableToolbar, true))
+			.setEnableDirectInteraction(oneOf(options.enableDirectInteraction, true))
+			.setEnableTouchInteraction(oneOf(options.enableTouchInteraction, true))
+			.setEnableGestureInteraction(oneOf(options.enableGestureInteraction, true));
 	},
 	/** @private */
 	doFinalize: function()
@@ -1185,6 +1195,16 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		return v && v.getViewerConfigs();
 	},
 
+	/** @private */
+	_applyPropertyToChildViewerProperty: function(propName, propValue)
+	{
+		var v = this.getSpectrumViewer();
+		if (v)
+			v.setPropValue(propName, propValue);
+		v = this.getAssocViewer();
+		if (v)
+			v.setPropValue(propName, propValue);
+	},
 	/** @private */
 	_applyEnablePropertyToChildViewerConfigs: function(propName, propValue)
 	{
