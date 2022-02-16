@@ -681,7 +681,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 
 		var spectrumViewer = this._createSubSpectrumViewer(clientComponentHolderElems.spectrumViewer);
 		this.setPropStoreFieldValue('spectrumViewer', spectrumViewer);
-		spectrumViewer.setToolButtons(Kekule.globalOptions.chemWidget.spectrumInspector.toolButtons).setEnableToolbar(true);  // important, create tool button need to be after spectrumViewer property is set
+		spectrumViewer.setToolButtons(this.getDefaultToolBarButtons()).setEnableToolbar(true);  // important, create tool button need to be after spectrumViewer property is set
 
 		var assocViewer = this._createSubAssocViewer(clientComponentHolderElems.assocViewer);
 		this.setPropStoreFieldValue('assocViewer', assocViewer);
@@ -746,6 +746,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		spectrumViewer.overwriteMethod('doSetChemObj', this._spectrumViewerSetChemObjOverwriteBind);
 		spectrumViewer.overwriteMethod('createToolButton', this._spectrumViewerCreateToolButtonOverwriteBind);
 		spectrumViewer.overwriteMethod('getSavingTargetObj', this._spectrumViewerGetSavingTargetObjOverwriteBind);
+		spectrumViewer.overwriteMethod('getDefaultToolBarButtons', this.getDefaultToolBarButtons.bind(this));
 	},
 	/** @private */
 	_createSubAssocViewer: function(parentElem)
@@ -1099,6 +1100,12 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		}
 		else
 			return null;
+	},
+
+	/** @private */
+	getDefaultToolBarButtons: function()
+	{
+		return Kekule.globalOptions.chemWidget.spectrumInspector.toolButtons;
 	},
 
 	/////  methods about chemObj load/save
@@ -1817,6 +1824,38 @@ Kekule.ChemWidget.SpectrumInspector.Configurator = Class.create(Kekule.Widget.Co
 	{
 		return this.getWidget();
 	}
+});
+
+// register predefined settings of viewer
+var SM = Kekule.ObjPropSettingManager;
+SM.register('Kekule.ChemWidget.SpectrumInspector.fullFunc', {
+	enableToolbar: true,
+	enableDirectInteraction: true,
+	enableTouchInteraction: true,
+	enableEdit: true,
+	toolButtons: null   // create all default tool buttons
+});
+SM.register('Kekule.ChemWidget.SpectrumInspector.basic', {  // inspector with basic function, suitable for embedded spectrum object with limited size
+	enableToolbar: true,
+	enableDirectInteraction: true,
+	enableTouchInteraction: true,
+	toolButtons: [/*BNS.loadData,*/ BNS.saveData, BNS.changeSpectrumSection, BNS.zoomIn, BNS.zoomOut]
+	// TODO: BNS.changeSpectrumSection action has problem when displaying in menu
+	//menuItems: [BNS.saveData, BNS.changeSpectrumSection, '-', BNS.zoomIn, BNS.zoomOut]
+});
+SM.register('Kekule.ChemWidget.SpectrumInspector.mini', {  // inspector with only one menu button
+	enableToolbar: true,
+	enableDirectInteraction: true,
+	enableTouchInteraction: false,
+	toolButtons: [BNS.changeSpectrumSection]
+	//menuItems: [BNS.saveData, BNS.changeSpectrumSection, '-', BNS.zoomIn, BNS.zoomOut]
+});
+SM.register('Kekule.ChemWidget.SpectrumInspector.static', {  // inspector with no interaction ability, suitable for static embedded chem object
+	enableToolbar: false,
+	enableDirectInteraction: false,
+	enableTouchInteraction: false,
+	toolButtons: [],
+	menuItems: []
 });
 
 
