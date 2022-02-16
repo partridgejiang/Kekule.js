@@ -822,7 +822,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			//this.setAssocViewerDisplayed(displayed);
 			assocViewer.setDisplayed(displayed);
 			if (displayed)
-				assocViewer.setVisible(displayed);;
+				assocViewer.setVisible(displayed);
 			Kekule.StyleUtils.setDisplay(this.getClientComponentHolderElems().assocViewer, displayed);
 		}
 	},
@@ -870,7 +870,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			}
 			else
 			{
-				if (dataSection && dataSection != this.getActiveDataSection())
+				if (dataSection && dataSection !== this.getActiveDataSection())
 					this.setActiveDataSection(dataSection);
 			}
 		}
