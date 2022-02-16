@@ -108,6 +108,25 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  * //@property {Bool} isEditing
  */
 /**
+ * Invoked when the a chem object (or null) is loaded into the spectrum inspector.
+ * The spectrum inside this chem object will then be loaded in the child spectrum viewer.
+ *   event param of it has two fields: {obj, spectrums}.
+ * @name Kekule.ChemWidget.SpectrumInspector#load
+ * @event
+ */
+/**
+ * Invoked when the a spectrum (or null) is actually be loaded into the child spectrum viewer.
+ *   event param of it has one fields: {spectrum}.
+ * @name Kekule.ChemWidget.SpectrumInspector#loadSpectrum
+ * @event
+ */
+/**
+ * Invoked when the a molecule (or null) is actually be loaded into the child assoc viewer.
+ *   event param of it has one fields: {obj}.
+ * @name Kekule.ChemWidget.SpectrumInspector#loadAssoc
+ * @event
+ */
+/**
  * Invoked when spectrum data items / molecule assignment objects are selected in inspector.
  *   event param of it has field: {assignmentDetails: array}.
  *   In the array, each item is a hash of {spectrum, dataSection, dataValue, assignments}.
@@ -705,7 +724,9 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		spectrumViewer.setPadding(20);  // TODO: currently fixed here
 		spectrumViewer.setUseCornerDecoration(false).setBackgroundColor(this.getBackgroundColor());
 		spectrumViewer.addClassName(CCNS.SPECTRUM_INSPECTOR_SPECTRUM_VIEWER);
+		var self = this;
 		spectrumViewer.addEventListener('showStateChange', this._reactChildViewerShowStateChangeBind);
+		spectrumViewer.addEventListener('load', function(e){ if (e.widget === self.getSpectrumViewer())  self.invokeEvent('loadSpectrum', {'spectrum': e.obj}); });
 		spectrumViewer.appendToElem(parentElem);
 		return spectrumViewer;
 	},
@@ -732,7 +753,9 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		assocViewer.setUseCornerDecoration(false).setBackgroundColor(this.getBackgroundColor());
 		assocViewer.setDisplayed(false);  // hide it at first
 		assocViewer.addEventListener('load', this._reactAssocViewerLoad.bind(this));
-		assocViewer.addEventListener('showStateChange', this._reactChildViewerShowStateChangeBind);
+		var self = this;
+		assocViewer.addEventListener('showStateChange', this._reactChildViewerShowStateChangeBind)
+		assocViewer.addEventListener('load', function(e){ if (e.widget === self.getAssocViewer()) self.invokeEvent('loadAssoc', {'obj': e.obj}); });
 		assocViewer.appendToElem(parentElem);
 		return assocViewer;
 	},
@@ -1086,6 +1109,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			else
 				spectrums = newObj.filterChildren(function(child){ return child && (child instanceof sClass); });
 			var oldSpectrums = this.getSpectrums();
+			this.invokeEvent('load', {'obj': newObj, 'spectrums': spectrums ||[]});
 			this.spectrumsChanged(spectrums, oldSpectrums);
 		}
 		else  // clear objects in inspector
@@ -1591,6 +1615,34 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			dim = {'width': spectrumDim.width + assocDim.width, 'height': Math.max(spectrumDim.height, assocDim.height)};
 		}
 		return {'spectrumViewerOffset': spectrumOffset, 'assocViewerOffset': assocOffset, 'spectrumViewerDimension': spectrumDim, 'assocViewerDimension': assocDim, 'totalDimension': dim};
+	},
+
+	/**
+	 * Repaint the child viewers inside spectrum inspector.
+	 * @param {Hash} overrideOptions
+	 */
+	repaint: function(overrideOptions)
+	{
+		var viewer = this.getSpectrumViewer();
+		if (viewer)
+			viewer.repaint(overrideOptions);
+		viewer = this.getAssocViewer();
+		if (viewer)
+			viewer.repaint(overrideOptions);
+	},
+	/**
+	 * Request a repaint process. The actual repainting will be suspended till idle.
+	 * Use this method rather than directly calling repaint() may reduce the concrete repainting times.
+	 * @param {Hash} overrideOptions
+	 */
+	requestRepaint: function(overrideOptions)
+	{
+		var viewer = this.getSpectrumViewer();
+		if (viewer)
+			viewer.requestRepaint(overrideOptions);
+		viewer = this.getAssocViewer();
+		if (viewer)
+			viewer.requestRepaint(overrideOptions);
 	},
 
 	/////////////////////////////////////////////////////////

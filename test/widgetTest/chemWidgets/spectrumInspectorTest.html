@@ -31,6 +31,11 @@
 			spectrumInspector = Kekule.Widget.getWidgetById('spectrumInspector');
 			Kekule.Widget.getWidgetById('objInspector').setObjects(spectrumInspector);
 
+			spectrumInspector.on('load', e => console.log('load', e));
+			spectrumInspector.on('loadSpectrum', e => console.log('loadSpectrum', e));
+			spectrumInspector.on('loadAssoc', e => console.log('loadAssoc', e));
+
+
 			//spectrumInspector.on('spectrumAssignmentSelected', e => console.log(e));
 		}
 
