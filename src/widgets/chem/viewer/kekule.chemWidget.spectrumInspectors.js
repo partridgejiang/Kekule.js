@@ -197,24 +197,21 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			{
 				return this.getAssocViewerVisualMode() === AVVM.AUTO;
 			},
-			'setter': null
-			/*
 			'setter': function(value)
 			{
-				if (value != this.getAutoShowHideAssocViewer())
+				var bValue = !!value;
+				if (bValue !== this.getAutoShowHideAssocViewer())
 				{
-					var currVisible = this.getAssocViewerDisplayed() && this.getAssocViewerVisible();
-					if (value)
+					if (bValue)
 						this.setAssocViewerVisualMode(AVVM.AUTO);
 					else
-						this.setAssocViewerVisualMode(currVisible? AVVM.VISIBLE: AVVM.INVISIBLE);
-
-					//this.setPropStoreFieldValue('autoShowHideAssocViewer', !!value);
-					//if (value)
-					//	this.doAutoShowHideAssocViewer();
+					{
+						var assocViewer = this.getAssocViewer();
+						var currVisible = assocViewer && assocViewer.isShown();
+						this.setAssocViewerVisualMode(currVisible ? AVVM.VISIBLE : AVVM.INVISIBLE);
+					}
 				}
 			}
-			*/
 		});
 
 		this.defineProp('assocViewerPosition', {'dataType': DataType.INT, 'enumSource': Kekule.Widget.Position,
@@ -837,7 +834,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			{
 				this.doAutoShowHideAssocViewer();
 			}
-			else if (newValue === M.VISIBLE || newValue === M.INVISIBLE);
+			else if (newValue === M.VISIBLE || newValue === M.INVISIBLE)
 			{
 				var visible = (newValue === M.VISIBLE);
 				assocViewer.setDisplayed(visible);
