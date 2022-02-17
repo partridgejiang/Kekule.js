@@ -83,6 +83,7 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
 
 /**
  * An widget to view the spectrum and its correlation molecules.
+ * This widget containing two main child viewer widgets: spectrumViewer and assocViewer, where the later is used to display the correlated molecule of spectrum.
  * @class
  * @augments Kekule.ChemWidget.AbstractWidget
  *
@@ -96,6 +97,9 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  * @property {Kekule.ChemWidget.SpectrumCorrelationConnector} correlationConnector The child correlation connector to link spectrum and assoc viewer. Readonly.
  * @property {Bool} autoSyncUiMarkerStyles Whether change the hot track / select UI marker styles in {@link Kekule.ChemWidget.SpectrumInspector.assocViewer} to meet the styles in {@link Kekule.ChemWidget.SpectrumInspector.spectrumViewer}.
  * @property {Bool} autoShowHideAssocViewer If true, when the loaded spectrum has no correlated molecule, the {@link Kekule.ChemWidget.SpectrumInspector.assocViewer} will be automatically hidden.
+ * @property {Int} assocViewerPosition The position of assoc viewer, can be set with value from {@link Kekule.Widget.Position}.
+ * @property {String} assocViewerSize CSS value to set the size of assoc viewer, e.g. '33%', '15em'.
+ * @property {Int} assocViewerVisualMode Value from {@link Kekule.ChemWidget.SpectrumInspector.AssocViewerVisualMode}, determinates whether the assoc viewer is visible.
  * @property {Kekule.ChemObject} chemObj Chem object loaded in inspector.
  *   When set this property, child spectrums in chemObj will be extracted and displayed in {@link Kekule.ChemWidget.SpectrumInspector.spectrumViewer}.
  * @property {Array} spectrums Spectrums extracted from {@link Kekule.ChemWidget.SpectrumInspector.chemObj}.
@@ -103,10 +107,15 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  * @property {Int} activeSpectrumIndex The index of {@link Kekule.ChemWidget.SpectrumInspector.activeSpectrum} in {@link Kekule.ChemWidget.SpectrumInspector.spectrums}.
  * @property {Kekule.Spectroscopy.SpectrumDataSection} activeDataSection The child data section of {@link Kekule.ChemWidget.SpectrumInspector.activeSpectrum} currently be displayed in {@link Kekule.ChemWidget.SpectrumInspector.spectrumViewer}.
  * @property {int} activeDataSecrtionIndex The index of {@link Kekule.ChemWidget.SpectrumInspector.activeDataSection} in {@link Kekule.ChemWidget.SpectrumInspector.activeSpectrum}.
+ * @property {String} backgroundColor Background color of both viewers inside this widget.
  *
  * @property {Bool} enableHotTrack Whether hot tracking is enabled in both {@link Kekule.ChemWidget.SpectrumInspector.spectrumViewer} and {@link Kekule.ChemWidget.SpectrumInspector.assocViewer}.
  * @property {Bool} enableSelect Whether selecting is enabled in both {@link Kekule.ChemWidget.SpectrumInspector.spectrumViewer} and {@link Kekule.ChemWidget.SpectrumInspector.assocViewer}.
  * @property {Bool} enableMultiSelect Whether multi selecting is enabled in both {@link Kekule.ChemWidget.SpectrumInspector.spectrumViewer} and {@link Kekule.ChemWidget.SpectrumInspector.assocViewer}.
+ *
+ * @property {Bool} enableDirectInteraction
+ * @property {Bool} enableTouchInteraction
+ * @property {Bool} enableGestureInteraction
  *
  * //@property {Bool} enableEdit
  * //@property {Bool} isEditing
@@ -219,6 +228,21 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 			{
 				this.setPropStoreFieldValue('assocViewerPosition', value);
 				this.doChangeAssocViewerPosition(value);
+			}
+		});
+		this.defineProp('assocViewerSize', {'dataType': DataType.STRING,
+			'getter': function()
+			{
+				var elems = this.getClientComponentHolderElems();
+				var elem = elems && elems.assocViewer;
+				return elem && this.getStyleProperty('flexBasis', elem);
+			},
+			'setter': function(value)
+			{
+				var elems = this.getClientComponentHolderElems();
+				var elem = elems && elems.assocViewer;
+				if (elem)
+					this.setStyleProperty('flexBasis', value, elem);
 			}
 		});
 

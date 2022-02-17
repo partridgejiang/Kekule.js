@@ -1077,12 +1077,12 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 		this._defineSpectrumInspectorDelegatedProperties([
 			'spectrumViewportRanges', 'backgroundColor',
 			'enableHotTrack', 'enableSelect', 'enableMultiSelect',
-			'enableDirectInteraction', 'enableTouchInteraction', 'enableGesture',
+			'enableDirectInteraction', 'enableTouchInteraction', 'enableGestureInteraction',
 			'chemObjLoaded', 'renderConfigs', 'viewerConfigs', 'toolButtons',
 			'spectrumViewerDrawOptions',
 			'assocViewerDrawOptions', 'assocViewerConfigs', 'assocViewerAllowCoordBorrow',
 			'assocViewerAutoSize', 'assocViewerAutofit', 'assocViewerAutoShrink',
-			'assocViewerAllowedMolDisplayTypes', 'assocViewerVisualMode'
+			'assocViewerAllowedMolDisplayTypes', 'assocViewerVisualMode', 'assocViewerSize'
 		]);
 	},
 
@@ -1309,6 +1309,7 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 				'assocViewerDrawOptionsJson': spectrumInspector.getAssocViewerDrawOptions()?
 					JSON.stringify(spectrumInspector.getAssocViewerDrawOptions()): '',
 				'assocViewerVisualMode': spectrumInspector.getAssocViewerVisualMode(),
+				'assocViewerSize': spectrumInspector.getAssocViewerSize(),
 				'chemObj': spectrumInspector.getChemObj(),
 				'chemObjJson': Kekule.IO.saveMimeData(this.getChemObj(), Kekule.IO.MimeType.KEKULE_JSON)
 			};
@@ -1344,9 +1345,12 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 				'data-kekule-widget': 'Kekule.ChemWidget.SpectrumInspector',
 				'data-chem-obj': detail.chemObjJson,
 				'data-spectrum-viewer-draw-options': detail.spectrumViewerDrawOptionsJson,
-				'data-assoc-viewer-draw-options': detail.assocViewerDrawOptionsJson,
-				'data-assoc-viewer-visual-mode': JSON.stringify(detail.assocViewerVisualMode)
+				'data-assoc-viewer-draw-options': detail.assocViewerDrawOptionsJson
 			};
+			if (Kekule.ObjUtils.notUnset(detail.assocViewerVisualMode))
+				attribs['data-assoc-viewer-visual-mode'] = JSON.stringify(detail.assocViewerVisualMode);
+			if (Kekule.ObjUtils.notUnset(detail.assocViewerSize))
+				attribs['data-assoc-viewer-size'] = detail.assocViewerSize;
 			if (detail.spectrumViewportRangesJson)
 				attribs['data-spectrum-viewport-ranges'] = detail.spectrumViewportRangesJson;
 			if (OU.notUnset(detail.enableHotTrack))
@@ -1463,6 +1467,8 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 				this.setEnableMultiSelect(detail.enableMultiSelect);
 			if (OU.notUnset(detail.assocViewerVisualMode))
 				this.setAssocViewerVisualMode(detail.assocViewerVisualMode);
+			if (OU.notUnset(detail.assocViewerSize))
+				this.setAssocViewerSize(detail.assocViewerSize);
 			if (detail.width && detail.height)
 			{
 				this.setSpectrumInspectorDimension({width: detail.width, height: detail.height});
@@ -1538,7 +1544,7 @@ Kekule.ChemWidget.SpectrumObjInserter.Configurator = Class.create(Kekule.Widget.
 	{
 		this.tryApplySuper('initialize', [widget])  /* $super(widget) */;
 
-		this.addEventListener('valueChange', function(e){ this.saveConfigValues(); }, this);
+		this.addEventListener('valueChange', this._reactInputWidgetValueChange.bind(this));
 	},
 	/** @ignore */
 	initPropValues: function(/*$super*/)
@@ -1605,6 +1611,25 @@ Kekule.ChemWidget.SpectrumObjInserter.Configurator = Class.create(Kekule.Widget.
 			.appendToElem(region);
 		this._selectBoxAssocViewerVisualMode = selectBox;
 
+		// assoc size
+		var region = doc.createElement('div');
+		region.className = CCNS.CHEMOBJSETTER_REGION;
+		var labelElem = doc.createElement('label');
+		labelElem.className = CCNS.CHEMOBJSETTER_REGION_LABEL;
+		DU.setElementText(labelElem, Kekule.$L('ChemWidgetTexts.CAPTION_ASSOC_VIEWER_SIZE'));
+		region.appendChild(labelElem);
+		region.appendChild(doc.createElement('br'));
+		var inputElem = doc.createElement('input');
+		inputElem.setAttribute('type', 'range');
+		inputElem.setAttribute('min', '0');
+		inputElem.setAttribute('max', '100');
+		inputElem.setAttribute('step', '5');
+		var reactRawInputElemValueChangeBind = this._reactRawInputElemValueChange.bind(this);
+		Kekule.X.Event.addListener(inputElem, 'change', reactRawInputElemValueChangeBind);
+		Kekule.X.Event.addListener(inputElem, 'input', reactRawInputElemValueChangeBind);
+		this._assocViewerSizeInputElem = inputElem;
+		region.appendChild(inputElem);
+
 		element.appendChild(region);
 
 		// background color setter
@@ -1623,6 +1648,49 @@ Kekule.ChemWidget.SpectrumObjInserter.Configurator = Class.create(Kekule.Widget.
 		this._colorPicker = colorPicker;
 		element.appendChild(region);
 	},
+
+	/** @private */
+	_reactInputWidgetValueChange: function(e)
+	{
+		this.saveConfigValues();
+	},
+	/** @private */
+	_reactRawInputElemValueChange: function(e)
+	{
+		this.saveConfigValues();
+	},
+
+	/** @private */
+	_getSpectrumInspectorAssovViewerSizePercent: function()
+	{
+		var result = this.__$spectrumInspectorAssocViewerSizePercent$__;
+		if (OU.isUnset(result))
+		{
+			var w = this.getWidget();
+			w = w && w.getSpectrumInspector();
+			if (w)
+			{
+				var totalDim = w.getDimension() || {};
+				var assocViewerDim = w.getAssocViewer().getDimension() || {};
+				var layout = w.getLayout();
+				var sizeField = (layout === Kekule.Widget.Layout.VERTICAL)? 'height': 'width';
+				result = 100 * (assocViewerDim[sizeField] || 0) / (totalDim[sizeField] || 1);
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_setSpectrumInspectorAssovViewerSizePercent: function(value)
+	{
+		this.__$spectrumInspectorAssocViewerSizePercent$__ = value;
+		var w = this.getWidget();
+		w = w && w.getSpectrumInspector();
+		if (w)
+		{
+			w.setAssocViewerSize(Math.round(value) + '%');
+		}
+	},
+
 	/** @private */
 	loadConfigValues: function()
 	{
@@ -1636,6 +1704,7 @@ Kekule.ChemWidget.SpectrumObjInserter.Configurator = Class.create(Kekule.Widget.
 			var color = w.getBackgroundColor();
 			this._colorPicker.setValue(color || Kekule.Widget.ColorPicker.SpecialColors.TRANSPARENT);
 			this._selectBoxAssocViewerVisualMode.setValue(w.getAssocViewerVisualMode());
+			this._assocViewerSizeInputElem.value = Math.round(this._getSpectrumInspectorAssovViewerSizePercent());
 		}
 	},
 	/** @private */
@@ -1653,6 +1722,7 @@ Kekule.ChemWidget.SpectrumObjInserter.Configurator = Class.create(Kekule.Widget.
 				w.setEnableMultiSelect(this._checkBoxEnableMultiSelect.getChecked());
 				w.setBackgroundColor(this._colorPicker.getValue());
 				w.setAssocViewerVisualMode(this._selectBoxAssocViewerVisualMode.getValue());
+				this._setSpectrumInspectorAssovViewerSizePercent(parseFloat(this._assocViewerSizeInputElem.value));
 				w.invokeEvent('configSave');  // a special event invoked on parent widget, indicating the config value has been changed
 			}
 			finally

@@ -554,6 +554,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_ENABLE_HOTTRACK: 'Enable hot track',
 	CAPTION_ENABLE_SELECT: 'Enable select',
 	CAPTION_ENABLE_MULTISELECT: 'Enable multi-select',
+	CAPTION_ASSOC_VIEWER_SIZE: 'Correlated molecule viewer size: ',
 	CAPTION_ASSOC_VIEWER_VISUAL_MODE: 'Correlated molecule display mode: ',
 	CAPTION_ASSOC_VIEWER_VISUAL_MODE_AUTO: 'Auto',
 	CAPTION_ASSOC_VIEWER_VISUAL_MODE_VISIBLE: 'Always displayed',
