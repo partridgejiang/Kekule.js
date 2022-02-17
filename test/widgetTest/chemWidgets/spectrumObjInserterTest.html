@@ -20,8 +20,9 @@
   -->
 
   <script>
+    var spectrumObjInserter;
     Kekule.X.domReady(function(){
-      var spectrumObjInserter = Kekule.Widget.getWidgetById('spectrumObjInserter');
+      spectrumObjInserter = Kekule.Widget.getWidgetById('spectrumObjInserter');
       Kekule.Widget.getWidgetById('objInspector').setObjects(spectrumObjInserter);
       Kekule.Widget.getWidgetById('btnAdd').addEventListener('execute', function(){
         spectrumObjInserter.createExportHtmlElementAsync(document, null, null, function(imgElem){
