@@ -50,6 +50,7 @@ Kekule.globalOptions.add('chemWidget.spectrumInspector', {
 		BNS.saveData,
 		BNS.copy
 	],
+	'assocViewerSize': '25%',
 	'enableToolbar': true,
 	'enableDirectInteraction': true,
 	'enableTouchInteraction': true,
@@ -706,6 +707,9 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 
 		var assocViewer = this._createSubAssocViewer(clientComponentHolderElems.assocViewer);
 		this.setPropStoreFieldValue('assocViewer', assocViewer);
+		var options = Kekule.globalOptions.get('chemWidget.spectrumInspector') || {};
+		if (Kekule.ObjUtils.notUnset(options.assocViewerSize))
+			this.setAssocViewerSize(options.assocViewerSize);
 
 		this._applyAllEnablePropertiesToChildViewerConfigs();
 

@@ -1670,13 +1670,28 @@ Kekule.ChemWidget.SpectrumObjInserter.Configurator = Class.create(Kekule.Widget.
 			w = w && w.getSpectrumInspector();
 			if (w)
 			{
-				var totalDim = w.getDimension() || {};
-				var assocViewerDim = w.getAssocViewer().getDimension() || {};
-				var layout = w.getLayout();
-				var sizeField = (layout === Kekule.Widget.Layout.VERTICAL)? 'height': 'width';
-				result = 100 * (assocViewerDim[sizeField] || 0) / (totalDim[sizeField] || 1);
+				var size = w.getAssocViewerSize();
+				if (size && typeof(size) === 'string')
+				{
+					var unitsValue = Kekule.StyleUtils.analysisUnitsValue(size);
+					if (unitsValue.units = '%')
+						result = unitsValue.value;
+				}
+
+				if (OU.isUnset(result))
+				{
+					var totalDim = w.getDimension() || {};
+					var assocViewerDim = w.getAssocViewer().getDimension() || {};
+					var layout = w.getLayout();
+					var sizeField = (layout === Kekule.Widget.Layout.VERTICAL) ? 'height' : 'width';
+					result = 100 * (assocViewerDim[sizeField] || 0) / (totalDim[sizeField] || 1);
+				}
 			}
 		}
+		if (result < 0)
+			result = 0;
+		else if (result > 100)
+			result = 100;
 		return result;
 	},
 	/** @private */
