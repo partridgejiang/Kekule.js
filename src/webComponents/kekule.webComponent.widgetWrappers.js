@@ -22,7 +22,9 @@ var wrapWidgetConfigs = [
 	{'widgetClassName': 'Kekule.ChemWidget.Viewer', 'htmlTagName': 'kekule-viewer'},
 	{'widgetClassName': 'Kekule.ChemWidget.Viewer2D', 'htmlTagName': 'kekule-viewer2d'},
 	{'widgetClassName': 'Kekule.ChemWidget.Viewer3D', 'htmlTagName': 'kekule-viewer3d'},
+	{'widgetClassName': 'Kekule.ChemWidget.SpectrumInspector', 'htmlTagName': 'kekule-spectrum-inspector'},
 	{'widgetClassName': 'Kekule.ChemWidget.ChemObjInserter', 'htmlTagName': 'kekule-chem-obj-inserter'},
+	{'widgetClassName': 'Kekule.ChemWidget.SpectrumObjInserter', 'htmlTagName': 'kekule-spectrum-obj-inserter'},
 	{'widgetClassName': 'Kekule.Editor.Composer', 'htmlTagName': 'kekule-composer'}
 ];
 

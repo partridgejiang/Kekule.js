@@ -976,28 +976,34 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/**
 	 * Zoom in.
 	 */
+	/*
 	zoomIn: function(step, zoomCenterCoord)
 	{
 		var curr = this.getCurrZoom();
 		var ratio = Kekule.ZoomUtils.getNextZoomInRatio(curr, step || 1);
 		return this.zoomTo(ratio, null, zoomCenterCoord);
 	},
+	*/
 	/**
 	 * Zoom out.
 	 */
+	/*
 	zoomOut: function(step, zoomCenterCoord)
 	{
 		var curr = this.getCurrZoom();
 		var ratio = Kekule.ZoomUtils.getNextZoomOutRatio(curr, step || 1);
 		return this.zoomTo(ratio, null, zoomCenterCoord);
 	},
+	*/
 	/**
 	 * Reset to normal size.
 	 */
+	/*
 	resetZoom: function(zoomCenterCoord)
 	{
 		return this.zoomTo(this.getInitialZoom() || 1, null, zoomCenterCoord);
 	},
+	*/
 
 	/**
 	 * Change the size of client element.
@@ -2275,36 +2281,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 
 		return actualValue;
 	},
-	/** @private */
-	clearBoundMap: function()
-	{
-		this.getBoundInfoRecorder().clear(this.getObjContext());
-	},
-	/**
-	 * Returns topmost bound item in z-index.
-	 * Descendants may override this method to implement more accurate algorithm.
-	 * @param {Array} boundItems
-	 * @param {Array} excludeObjs Objects in this array will not be returned.
-	 * @returns {Object}
-	 * @private
-	 */
-	findTopmostBoundInfo: function(boundItems, excludeObjs)
-	{
-		if (boundItems && boundItems.length)
-		{
-			var result = null;
-			var index = boundItems.length - 1;
-			result = boundItems[index];
-			while ((index >= 0) && (excludeObjs && (excludeObjs.indexOf(result.obj) >= 0)))
-			{
-				--index;
-				result = boundItems[index];
-			}
-			return result;
-		}
-		else
-			return null;
-	},
+
 	/**
 	 * Returns all bound map item at x/y.
 	 * Input coord is based on the screen coord system.
@@ -2317,6 +2294,9 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		if (!boundInflation)
 			throw 'boundInflation not set!';
 		*/
+		var delta = boundInflation || this.getCurrBoundInflation() || this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackMinInflation();
+		return this.tryApplySuper('getBoundInfosAtCoord', [screenCoord, filterFunc, delta]);
+		/*
 		var boundRecorder = this.getBoundInfoRecorder();
 		var delta = boundInflation || this.getCurrBoundInflation() || this.getEditorConfigs().getInteractionConfigs().getObjBoundTrackMinInflation();
 		//var coord = this.getObjDrawBridge().transformScreenCoordToContext(this.getObjContext(), screenCoord);
@@ -2325,6 +2305,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//console.log(coord, delta);
 		var matchedInfos = boundRecorder.getIntersectionInfos(this.getObjContext(), coord, refCoord, delta, filterFunc);
 		return matchedInfos;
+		*/
 	},
 	/**
 	 * returns the topmost bound map item at x/y.
@@ -2337,7 +2318,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		var enableTrackNearest = this.getEditorConfigs().getInteractionConfigs().getEnableTrackOnNearest();
 		if (!enableTrackNearest)
-			return this.findTopmostBoundInfo(this.getBoundInfosAtCoord(screenCoord, null, boundInflation), excludeObjs, boundInflation);
+			//return this.findTopmostBoundInfo(this.getBoundInfosAtCoord(screenCoord, null, boundInflation), excludeObjs, boundInflation);
+			return this.tryApplySuper('getTopmostBoundInfoAtCoord', [screenCoord, excludeObjs, boundInflation]);
 		// else, track on nearest
 		// new approach, find nearest boundInfo at coord
 		var SU = Kekule.Render.MetaShapeUtils;
@@ -4679,12 +4661,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	},
 
 	// Coord translate methods
-	/**
+	/*
 	 * Translate coord to value of another coord system.
 	 * @param {Hash} coord
 	 * @param {Int} fromSys
 	 * @param {Int} toSys
 	 */
+	/*
 	translateCoord: function(coord, fromSys, toSys)
 	{
 		if (!coord)
@@ -4724,12 +4707,14 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				return coord;
 		}
 	},
-	/**
+	*/
+	/*
 	 * Translate a distance value to a distance in another coord system.
 	 * @param {Hash} coord
 	 * @param {Int} fromSys
 	 * @param {Int} toSys
 	 */
+	/*
 	translateDistance: function(distance, fromSys, toSys)
 	{
 		var coord0 = {'x': 0, 'y': 0, 'z': 0};
@@ -4738,7 +4723,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		var transCoord1 = this.translateCoord(coord1, fromSys, toSys);
 		return Kekule.CoordUtils.getDistance(transCoord0, transCoord1);
 	},
-
+	*/
 	/**
 	 * Transform sizes and coords of objects based on coord sys of current editor.
 	 * @param {Array} objects
@@ -4776,79 +4761,86 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	 * @param {Hash} objCoord
 	 * @returns {Hash}
 	 */
+	/*
 	objCoordToContext: function(objCoord)
 	{
 		var S = Kekule.Editor.CoordSys;
 		return this.translateCoord(objCoord, S.OBJ, S.CONTEXT);
 	},
-	/**
+	*/
+	/*
 	 * Turn context coord to obj one.
 	 * @param {Hash} contextCoord
 	 * @returns {Hash}
 	 */
+	/*
 	contextCoordToObj: function(contextCoord)
 	{
 		var S = Kekule.Editor.CoordSys;
 		return this.translateCoord(contextCoord, S.CONTEXT, S.OBJ);
 	},
+	*/
 	/*
 	 * Turn obj coord to screen one.
 	 * @param {Hash} objCoord
 	 * @returns {Hash}
 	 */
+	/*
 	objCoordToScreen: function(objCoord)
 	{
 		var S = Kekule.Editor.CoordSys;
 		return this.translateCoord(objCoord, S.OBJ, S.SCREEN);
 	},
-	/**
+	*/
+	/*
 	 * Turn screen coord to obj one.
 	 * @param {Hash} contextCoord
 	 * @returns {Hash}
 	 */
+	/*
 	screenCoordToObj: function(screenCoord)
 	{
 		var S = Kekule.Editor.CoordSys;
 		return this.translateCoord(screenCoord, S.SCREEN, S.OBJ);
 	},
-
-	/**
+	*/
+	/*
 	 * Turn screen based coord to context one.
 	 * @param {Hash} screenCoord
 	 * @returns {Hash}
 	 */
+	/*
 	screenCoordToContext: function(screenCoord)
 	{
-		/*
-		var coord = this.getObjDrawBridge().transformScreenCoordToContext(this.getObjContext(), screenCoord);
-		return coord;
-		*/
 		var S = Kekule.Editor.CoordSys;
 		return this.translateCoord(screenCoord, S.SCREEN, S.CONTEXT);
 	},
-	/**
+	*/
+	/*
 	 * Turn context based coord to screen one.
 	 * @param {Hash} screenCoord
 	 * @returns {Hash}
 	 */
+	/*
 	contextCoordToScreen: function(screenCoord)
 	{
 		var S = Kekule.Editor.CoordSys;
 		return this.translateCoord(screenCoord, S.CONTEXT, S.SCREEN);
 	},
-
-	/**
+	*/
+	/*
 	 * Turn box coords based on screen system to context one.
 	 * @param {Hash} screenCoord
 	 * @returns {Hash}
 	 */
+	/*
 	screenBoxToContext: function(screenBox)
 	{
 		var coord1 = this.screenCoordToContext({'x': screenBox.x1, 'y': screenBox.y1});
 		var coord2 = this.screenCoordToContext({'x': screenBox.x2, 'y': screenBox.y2});
 		return {'x1': coord1.x, 'y1': coord1.y, 'x2': coord2.x, 'y2': coord2.y};
 	},
-
+	*/
 	///////////////////////////////////////////////////////
 
 	/**

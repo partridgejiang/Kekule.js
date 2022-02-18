@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
 
   <script src="../_libs/three_new/Three.min.js"></script>
-  <script src="../../src/kekule.js?min=false&modules=webComponent"></script>
+  <script src="../../src/kekule.js?min=false&modules=webComponent,spectroscopy"></script>
 
   <script type="chemical/x-mdl-molfile" id="resMol">
 cyclohextone.mol
@@ -59,7 +59,7 @@ M  END
 
     window.onerror = function(message, source, lineno, colno, error)
     {
-      Kekule.log('[error]' + message + ' / ' + error.stack.toString());
+      Kekule.log('[error]' + message + ' / ' + error + ' ' + (error && error.stack && error.stack.toString()));
     };
 
     function addElement()
@@ -91,6 +91,10 @@ M  END
     <!--
     <kekule-periodic-table></kekule-periodic-table>
     -->
+
+    <br />
+    <kekule-spectrum-inspector id="spectrumInspector" style="width:800px;height:300px" resizable="true" assoc-viewer-size="40%" chem-obj="url('../_chemFiles/spectrum/ISAS_CDX.DX')"></kekule-spectrum-inspector>
+
   </p>
   <div id="panelLog">
 

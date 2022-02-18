@@ -492,6 +492,8 @@ Kekule.Render.CanvasRendererBridge = Class.create(Kekule.Render.Abstract2DDrawBr
 				if (callback)
 					callback(true);
 				self.doneDraw(context, options);
+				// release img element event handler
+				imgElem.onload = null;
 			}
 			catch(e)
 			{

@@ -144,6 +144,12 @@
     background-image: url('images/slice/icons16/info.png');
 }
 
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-InfoLabel,
+.K-SpectrumObjInserter .K-SpectrumObjInserter-InfoLabel
+{
+    color: #aaa;
+}
+
 .K-Chem-Viewer-Menu-Button > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons/menu.png");
@@ -271,4 +277,9 @@
 .K-Chem-Toggle-ShowIssues > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/iconsSmall/issueVisible.png");
+}
+
+.K-SpectrumInspector-Change-Section > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/icons/spectrumSwitch.png");
 }

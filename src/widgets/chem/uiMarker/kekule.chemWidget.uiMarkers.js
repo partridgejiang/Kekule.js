@@ -32,6 +32,8 @@ var oneOf = Kekule.oneOf;
  *     opacity: opacity to draw marker.
  * 	 }
  * @property {Bool} visible Whether this marker can be seen in context.
+ * @property {String} name A user-defined name of UI marker.
+ * @property {Array} groups Group names of UI marker.
  */
 Kekule.ChemWidget.AbstractUIMarker = Class.create(ObjectEx,
 /** @lends Kekule.ChemWidget.AbstractUIMarker# */
@@ -50,6 +52,9 @@ Kekule.ChemWidget.AbstractUIMarker = Class.create(ObjectEx,
 		// draw styles
 		this.defineProp('drawStyles', {'dataType': DataType.OBJECT});
 		this.defineProp('visible', {'dataType': DataType.BOOL});
+		this.defineProp('name', {'dataType': DataType.STRING});
+		//this.defineProp('group', {'dataType': DataType.STRING});
+		this.defineProp('groups', {'dataType': DataType.ARRAY});
 	}
 });
 
@@ -168,6 +173,48 @@ Kekule.ChemWidget.UiMarkerCollection = Class.create(ObjectEx,
 	getMarkerAt: function(index)
 	{
 		return this.getMarkers()[index];
+	},
+	/**
+	 * Returns the marker with a user-defined name.
+	 * @param {String} name
+	 * @returns {Kekule.ChemWidget.AbstractMarker}
+	 */
+	getMarkerOfName: function(name)
+	{
+		for (var i = 0, l = this.getMarkerCount(); i < l; ++i)
+		{
+			var marker = this.getMarkerAt(i);
+			if (marker.getName() === name)
+				return marker;
+		}
+		return null;
+	},
+	/**
+	 * Returns the markers within a specified group.
+	 * @param {Variant} groupOrGroups A group string, or an array of multiple groups
+	 * @returns {Array} Array of {Kekule.ChemWidget.AbstractMarker}.
+	 */
+	getMarkersOfGroup: function(groupOrGroups)
+	{
+		var groups = Kekule.ArrayUtils.toArray(groupOrGroups);
+		var result = [];
+		for (var i = 0, l = this.getMarkerCount(); i < l; ++i)
+		{
+			var marker = this.getMarkerAt(i);
+			var currGroups = marker.getGroups();
+			var matched = true;
+			for (var j = 0, k = groups.length; j < k; ++j)
+			{
+				if (currGroups.indexOf(groups[j]) < 0)
+				{
+					matched = false;
+					break;
+				}
+			}
+			if (matched)
+				result.push(marker);
+		}
+		return result;
 	},
 	/**
 	 * Add a marker to collection.

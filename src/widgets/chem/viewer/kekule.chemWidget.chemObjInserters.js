@@ -18,7 +18,8 @@
  * requires /widgets/advCtrls/kekule.widget.colorPickers.js
  * requires /widgets/chem/kekule.chemWidget.base.js
  * requires /widgets/chem/kekule.chemWidget.chemObjDisplayers.js
- * requires /widgets/chem/kekule.chemWidget.viewers.js
+ * requires /widgets/chem/viewer/kekule.chemWidget.viewers.js
+ * requires /widgets/chem/viewer/kekule.chemWidget.spectrumInspectors.js
  * requires /widgets/advCtrls/kekule.widget.widgetGrids.js
  * requires /widgets/chem/kekule.chemWidget.dialogs.js
  *
@@ -29,6 +30,7 @@
 "use strict";
 
 var PS = Class.PropertyScope;
+var OU = Kekule.ObjUtils;
 var DU = Kekule.DomUtils;
 var AU = Kekule.ArrayUtils;
 var CW = Kekule.ChemWidget;
@@ -48,7 +50,16 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	CHEMOBJSETTER_LINE: 'K-Chem-Obj-Setter-Line',
 	//CHEMOBJSETTER_OPTIONPANEL: 'K-Chem-Obj-Setter-OptionPanel',
 
-	CHEMOBJSETTER_CONFIGURATOR: 'K-Chem-Obj-Setter-Configurator'
+	CHEMOBJSETTER_CONFIGURATOR: 'K-Chem-Obj-Setter-Configurator',
+
+	SPECTRUMOBJ_INSERTER: 'K-SpectrumObjInserter',
+	SPECTRUMOBJ_INSERTER_CONTAINER_ELEM: 'K-SpectrumObjInserter-Container',
+	SPECTRUMOBJ_INSERTER_CLIENT: 'K-SpectrumObjInserter-Client',
+	SPECTRUMOBJ_INSERTER_TOOLBAR_AREA: 'K-SpectrumObjInserter-Toolbar-Area',
+	SPECTRUMOBJ_INSERTER_INFOLABEL: 'K-SpectrumObjInserter-InfoLabel',
+	SPECTRUMOBJ_INSERTER_SPECTRUM_INSPECTOR: 'K-SpectrumObjInserter-SpectrumInspector',
+
+	SPECTRUMOBJ_INSERTER_CONFIGURATOR: 'K-SpectrumObjInserter-Configurator',
 });
 
 var CNS = Kekule.Widget.HtmlClassNames;
@@ -70,7 +81,7 @@ Kekule.globalOptions.add('chemWidget.ChemObjInserter', {
  *
  * @property {Kekule.ChemWidget.Viewer} viewer The viewer instance embedded in this widget.
  * @property {Int} renderType Display in 2D or 3D. Value from {@link Kekule.Render.RendererType}.
- * @property {Kekule.ChemObject} chemObj The root object in editor.
+ * @property {Kekule.ChemObject} chemObj The root object in viewer.
  * @property {Bool} showInfo Whether info label is shown.
  */
 Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidget,
@@ -103,6 +114,9 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	{
 		if (this._configAction)
 			this._configAction.finalize();
+		var viewer = this.getPropStoreFieldValue('viewer');
+		if (viewer)
+			viewer.finalize();
 		this.tryApplySuper('doFinalize')  /* $super() */;
 	},
 	/** @private */
@@ -194,6 +208,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		// from viewer
 		this._defineViewerDelegatedProp('autoSize');
 		this._defineViewerDelegatedProp('autofit');
+		this._defineViewerDelegatedProp('autoShrink');
 		this._defineViewerDelegatedProp('viewerConfigs');
 		this._defineViewerDelegatedProp('allowedMolDisplayTypes');
 		this._defineViewerDelegatedProp('enableEdit');
@@ -204,6 +219,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		this._defineViewerDelegatedProp('toolButtons');
 		this._defineViewerDelegatedProp('enableDirectInteraction');
 		this._defineViewerDelegatedProp('enableTouchInteraction');
+		this._defineViewerDelegatedProp('enableGesture');
 	},
 	/** @ignore */
 	initPropValues: function(/*$super*/)
@@ -588,6 +604,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	 * @param {String} dataType
 	 * @param {Hash}options
 	 * @returns {Hash}
+	 * @deprecated
 	 */
 	exportDetails: function(dataType, options)
 	{
@@ -619,12 +636,25 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		}
 		return result;
 	},
+	/**
+	 * Returns the detail information about export drawing content in viewer and with additional informations.
+	 * @param {String} dataType
+	 * @param {Hash}options
+	 * @param {Func} callback Callback function with a Hash param details.
+	 * @deprecated
+	 */
+	getImgExportDetailsAsync: function(imgDataType, options, callback)
+	{
+		var details = this.exportDetails(imgDataType, options);
+		callback(details);
+	},
 
 	/**
 	 * If export viewer to a HTML img element, this method returns the essential attributes.
 	 * @param {String} dataType Export image data type.
 	 * @param {Hash} options
 	 * @returns {Hash} Attribute/value pairs.
+	 * @deprecated
 	 */
 	getExportImgElemAttributes: function(dataType, options)
 	{
@@ -655,6 +685,17 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			result['data-background-color'] = detail.backgroundColor;
 		return result;
 	},
+	/**
+	 * If export viewer to a HTML img element, this method returns the essential attributes.
+	 * @param {String} dataType Export image data type.
+	 * @param {Hash} options
+	 * @param {Func} callback A call back function with attribs param.
+	 */
+	getExportImgElemAttributesAsync: function(dataType, options, callback)
+	{
+		var attribs = this.getExportImgElemAttributes(dataType, options);
+		callback(attribs);
+	},
 
 	/**
 	 * Export viewer to a new created HTML img element.
@@ -671,11 +712,45 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		Kekule.DomUtils.setElemAttributes(result, attribs);
 		return result;
 	},
+	/**
+	 * Export viewer to a new created HTML element.
+	 * @param {HTMLElement} doc
+	 * @param {String} imgDataType Export image data type
+	 * @param {Hash} options
+	 * @returns {HTMLElement}
+	 */
+	createExportHtmlElement: function(doc, imgDataType, options)
+	{
+		return this.createExportImgElement(doc, imgDataType, options);
+	},
+	/**
+	 * Export viewer to a new created HTML element (async way).
+	 * @param {HTMLElement} doc
+	 * @param {String} imgDataType Export image data type
+	 * @param {Hash} options
+	 * @param {Func} callback callback(htmlElement)
+	 * @returns {HTMLElement}
+	 */
+	createExportHtmlElementAsync: function(doc, imgDataType, options, callback)
+	{
+		try
+		{
+			var elem = this.createExportImgElement(doc, imgDataType, options);
+			if (callback)
+				callback(elem);
+		}
+		catch(e)
+		{
+			callback(null);
+			throw e;
+		}
+	},
 
 	/**
 	 * Load a chem object and apply settings in this widget from specified attribs.
 	 * @param {Kekule.ChemObject} chemObj
 	 * @param {Hash} detail
+	 * @deprecated
 	 */
 	importChemObjWithDetails: function(chemObj, detail)
 	{
@@ -694,6 +769,15 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		if (detail.backgroundColor)
 			this.setBackgroundColor(detail.backgroundColor, this.getRenderType());
 		return this;
+	},
+	/**
+	 * Load a chem object and apply settings in this widget from specified attribs.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Hash} detail
+	 */
+	importFromDetails: function(chemObj, detail)
+	{
+		return this.importChemObjWithDetails(chemObj, details);
 	},
 
 	/**
@@ -889,6 +973,781 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 			w.invokeEvent('configSave');  // a special event invoked on parent widget, indicating the config value has been changed
 		}
 	}
+});
+
+Kekule._registerAfterLoadSysProc(function(){
+
+// the following code will be run after both spectroscopy and widget modules are loaded
+if (!Kekule.ChemWidget || !Kekule.Spectroscopy)
+	return;
+
+/**
+ * A widget to insert spectrum elements to HTML document.
+ * This widget is mainly designed for extra web editor plugins or browser addons.
+ * @class
+ * @augments Kekule.ChemWidget.AbstractWidget
+ *
+ * @property {Kekule.ChemWidget.SpectrumInspector} spectrumInspector The SpectrumInspector instance embedded in this widget.
+ * @property {Kekule.ChemObject} chemObj The root object in spectrum inspector.
+ * @property {Bool} showInfo Whether info label is shown.
+ */
+Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractWidget,
+/** @lends Kekule.ChemWidget.SpectrumObjInserter# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.SpectrumObjInserter',
+	/** @private */
+	DEF_BGCOLOR_2D: 'transparent',
+	/** @construct */
+	initialize: function(parentOrElementOrDocument, spectrum)
+	{
+		this._configAction = new Kekule.Widget.ActionOpenConfigWidget(this);
+		this._toolbarParentElem = null;
+		this._infoLabel = null;
+		this._infoLabelTemplate = Kekule.$L('ChemWidgetTexts.CAPTION_WIDTH_HEIGHT');
+		this.tryApplySuper('initialize', [parentOrElementOrDocument]);
+	},
+	/** @private */
+	doFinalize: function()
+	{
+		if (this._configAction)
+			this._configAction.finalize();
+		var inspector = this.getPropStoreFieldValue('spectrumInspector');
+		if (inspector)
+			inspector.finalize();
+		var panel = this.getPropStoreFieldValue('clientPanel');
+		if (panel)
+			panel.finalize();
+		this.tryApplySuper('doFinalize');
+	},
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('spectrumInspector', {
+			'dataType': 'Kekule.ChemWidget.SpectrumInspector', 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('spectrumInspector');
+				if (!result)
+				{
+					result = this.createSpectrumInspector();
+					this.setPropStoreFieldValue('spectrumInspector', result);
+				}
+				return result;
+			}
+		});
+		this.defineProp('chemObj', {'dataType': 'Kekule.ChemObject', 'serializable': false, 'scope': PS.PUBLIC,
+			'getter': function()
+			{
+				var inspector = this.getPropStoreFieldValue('spectrumInspector');
+				return inspector? inspector.getChemObj(): this.getPropStoreFieldValue('chemObj');
+			},
+			'setter': function(value)
+			{
+				//var oldObj = this.getPropStoreFieldValue('chemObj');
+				//if (value !== oldObj)  // some times oldObj itself may change and may need to repaint
+				{
+					this.setPropStoreFieldValue('chemObj', value);
+					if (this.getSpectrumInspector())
+						this.getSpectrumInspector().setChemObj(value);
+				}
+			}
+		});
+		this.defineProp('showInfo', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				return this._infoLabel && Kekule.StyleUtils.isShown(this._infoLabel);
+			},
+			'setter': function(value)
+			{
+				if (this._infoLabel)
+					Kekule.StyleUtils.setDisplay(this._infoLabel, value);
+			}
+		});
+		/*
+		this.defineProp('backgroundColor', {'dataType': DataType.STRING,
+			'setter': function(value) { this.setPropStoreFieldValue('backgroundColor', value); this.backgroundColorChange(); }
+		});
+		*/
+		//this.defineProp('exportViewerPredefinedSetting', {'dataType': DataType.STRING});
+
+		this.defineProp('clientPanel', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': false, 'scope': PS.PRIVATE});
+
+		// spectrum inspector delegated properties
+		this._defineSpectrumInspectorDelegatedProperties([
+			'spectrumViewportRanges', 'backgroundColor',
+			'enableHotTrack', 'enableSelect', 'enableMultiSelect',
+			'enableDirectInteraction', 'enableTouchInteraction', 'enableGestureInteraction',
+			'chemObjLoaded', 'renderConfigs', 'viewerConfigs', 'toolButtons',
+			'spectrumViewerDrawOptions',
+			'assocViewerDrawOptions', 'assocViewerConfigs', 'assocViewerAllowCoordBorrow',
+			'assocViewerAutoSize', 'assocViewerAutofit', 'assocViewerAutoShrink',
+			'assocViewerAllowedMolDisplayTypes', 'assocViewerVisualMode', 'assocViewerSize'
+		]);
+	},
+
+	/**
+	 *  Defines properties directly map to properties of spectrum inspector.
+	 *  The propNames is a array, each item is either a simple string for the property name (same in this and targetWidget)
+	 *  or an array of [propertyNameForThis, propertyNameInTarget].
+	 *  @param {Array} propNames
+	 *  @private
+	 */
+	_defineSpectrumInspectorDelegatedProperties: function(propNames)
+	{
+		var targetWidgetClass = Kekule.ChemWidget.SpectrumInspector;
+
+		var self = this;
+		var propName, targetPropName;
+		for (var i = 0, l = propNames.length; i < l; ++i)
+		{
+			var item = propNames[i];
+			targetPropName = null;
+			if (AU.isArray(item))
+			{
+				propName = item[0];
+				targetPropName = item[1];
+			}
+			else
+				propName = item;
+			if (!targetPropName)
+				targetPropName = propName;
+			(function(targetWidgetClass, propName, targetPropName){
+				var targetPropInfo = ClassEx.getPropInfo(targetWidgetClass, targetPropName);
+				var propOptions = Object.create(targetPropInfo);
+				propOptions.getter = null;
+				propOptions.setter = null;
+				propOptions.serializable = false;
+				if (targetPropInfo.getter)
+				{
+					propOptions.getter = function()
+					{
+						var target = this.getSpectrumInspector();
+						return target? target.getPropValue(targetPropName): undefined;
+					};
+				}
+				if (targetPropInfo.setter)
+				{
+					propOptions.setter = function(value)
+					{
+						var target = this.getSpectrumInspector();
+						if (target)
+							target.setPropValue(targetPropName, value);
+					}
+				}
+				self.defineProp(propName, propOptions);
+			})(targetWidgetClass, propName, targetPropName);
+		}
+	},
+	/** @private */
+	loadPredefinedResDataToProp: function(propName, resData, success)
+	{
+		if (propName === 'chemObj')  // only this property can be set by predefined resource
+		{
+			if (success)
+			{
+				var chemObj = Kekule.IO.loadTypedData(resData.data, resData.resType, resData.resUri);
+				this.setChemObj(chemObj);
+			}
+			else  // else, failed
+			{
+				Kekule.error(Kekule.$L('ErrorMsg.CANNOT_LOAD_RES_OF_URI') + resData.resUri || '');
+			}
+		}
+	},
+	/** @ignore */
+	doGetWidgetClassName: function(/*$super*/)
+	{
+		var result = this.tryApplySuper('doGetWidgetClassName') + ' ' + CCNS.SPECTRUMOBJ_INSERTER;
+		return result;
+	},
+	/** @ignore */
+	doCreateRootElement: function(doc)
+	{
+		var result = doc.createElement('div');
+		return result;
+	},
+	/** @ignore */
+	doCreateSubElements: function(doc, rootElem)
+	{
+		var result = this.tryApplySuper('doCreateSubElements', [doc, rootElem]);
+		var containerElem = doc.createElement('div');
+		containerElem.className = CCNS.SPECTRUMOBJ_INSERTER_CONTAINER_ELEM;
+		this._containerElem = containerElem;
+		// create child widgets
+		// toolbar
+		this.createToolbarParent(containerElem);
+		// client
+		var clientPanel = new Kekule.Widget.Panel(this);
+		clientPanel.addClassName(CCNS.SPECTRUMOBJ_INSERTER_CLIENT);
+		clientPanel.setUseCornerDecoration(false);
+		clientPanel.appendToElem(containerElem);
+		this.setPropStoreFieldValue('clientPanel', clientPanel);
+		this.createSpectrumInspector(clientPanel.getCoreElement());
+		this.createInfoLabel(clientPanel.getCoreElement(), this.getSpectrumInspector());
+
+		rootElem.appendChild(containerElem);
+
+		if (this.setResizable)
+			this.setResizable(true);
+
+		return result;
+	},
+
+	/** @ignore */
+	getResizerElement: function()
+	{
+		return this.getClientPanel()? this.getClientPanel().getCoreElement(): this.getCoreElement();
+	},
+
+	/** @private */
+	createSpectrumInspector: function(rootElem)
+	{
+		var BNS = Kekule.ChemWidget.ComponentWidgetNames;
+		var EM = Kekule.Widget.EvokeMode;
+		var result = new Kekule.ChemWidget.SpectrumInspector(this);
+		result.addClassName([CNS.DYN_CREATED, CCNS.SPECTRUMOBJ_INSERTER_SPECTRUM_INSPECTOR]);
+
+		// set default value
+		var buttons = AU.exclude(result.getToolButtons(), BNS.config);
+		buttons.push({
+			'action': this._configAction
+		});
+		buttons.splice(2, 0, BNS.clearObjs);
+		result.setToolbarParentElem(this._toolbarParentElem);
+		result.setToolButtons(buttons);
+		result.setToolbarPos(Kekule.Widget.Position.BOTTOM);
+		result.setToolbarMarginVertical(-2);
+		result.getSpectrumViewer().setToolbarEvokeModes([EM.ALWAYS]);
+		result.getAssocViewer().setToolbarEvokeModes([]);
+		//result.setResizable(true);
+
+		//result.getAssocViewerConfigs().getInteractionConfigs().setEnableBasicObjectSelect(false).setEnableBasicObjectHotTrack(false);
+		//result.getSpectrumViewerConfigs().getInteractionConfigs().setEnableBasicObjectSelect(false).setEnableBasicObjectHotTrack(false);
+		//result.getSpectrumViewerConfigs().getSpectrumViewConfigs().setEnableSpectrumDataSelectOnMode({'default': false}).setEnableSpectrumDataHotTrackOnMode({'default': false});
+
+		result.addEventListener('resize', this.updateInfoLabel, this);
+		result.appendToElem(rootElem);
+		result.setChemObj(this.getChemObj());
+
+		this.setPropStoreFieldValue('spectrumInspector', result);
+
+		//this.backgroundColorChange();  // force change background color
+
+		return result;
+	},
+	/** @private */
+	createToolbarParent: function(rootElem)
+	{
+		var result = rootElem.ownerDocument.createElement('div');
+		result.className = CCNS.SPECTRUMOBJ_INSERTER_TOOLBAR_AREA;
+		rootElem.appendChild(result);
+		this._toolbarParentElem = result;
+		return result;
+	},
+	/** @private */
+	createInfoLabel: function(parentElem, spectrumInspector)
+	{
+		var result = this.getDocument().createElement('div');
+		result.className = CNS.DYN_CREATED + ' ' + CCNS.SPECTRUMOBJ_INSERTER_INFOLABEL;
+		parentElem.appendChild(result);
+		this._infoLabel = result;
+		return result;
+	},
+	/** @private */
+	updateInfoLabel: function()
+	{
+		var spectrumInspector = this.getSpectrumInspector();
+		if (spectrumInspector && this._infoLabel)
+		{
+			var dim = spectrumInspector.getDimension();
+			var s = dim? this._infoLabelTemplate.format(Math.round(dim.width), Math.round(dim.height)): '';
+			Kekule.DomUtils.setElementText(this._infoLabel, s);
+		}
+	},
+	/**
+	 * Returns dimension of spectrum inspector.
+	 * @returns {Hash}
+	 */
+	getSpectrumInspectorDimension: function()
+	{
+		return this.getSpectrumInspector().getDimension();
+	},
+	/**
+	 * Resize self to make viewer context at dimension.
+	 * @param {Hash} dimension
+	 */
+	setSpectrumInspectorDimension: function(dimension)
+	{
+		var oldDim = this.getSpectrumInspectorDimension();
+		var deltaW = dimension.width - oldDim.width;
+		var deltaH = dimension.height - oldDim.height;
+		var selfOldDim = this.getDimension();
+		var selfNewDim = {'width': selfOldDim.width + deltaW, 'height': selfOldDim.height + deltaH};
+		//console.log(oldDim, dimension, deltaW, deltaH, selfOldDim, selfNewDim);
+		this.setDimension(selfNewDim.width, selfNewDim.height);
+		return this;
+	},
+	/** @private */
+	getImgExportDetailsAsync: function(imgDataType, options, callback)
+	{
+		try
+		{
+			var spectrumInspector = this.getSpectrumInspector();
+			var details = {
+				'backgroundColor': spectrumInspector.getBackgroundColor(),
+				'enableHotTrack': spectrumInspector.getEnableHotTrack(),
+				'enableSelect': spectrumInspector.getEnableSelect(),
+				'enableMultiSelect': spectrumInspector.getEnableMultiSelect(),
+				'spectrumViewerDrawOptions': spectrumInspector.getSpectrumViewerDrawOptions(), //spectrumInspector.getSpectrumViewer().getActualDrawOptions(),
+				'spectrumViewerDrawOptionsJson': spectrumInspector.getSpectrumViewerDrawOptions()?
+					JSON.stringify(spectrumInspector.getSpectrumViewerDrawOptions()): '',
+				'spectrumViewportRanges': spectrumInspector.getSpectrumViewportRanges(),
+				'spectrumViewportRangesJson': spectrumInspector.getSpectrumViewportRanges()?
+					JSON.stringify(spectrumInspector.getSpectrumViewportRanges()): '',
+				'assocViewerDrawOptions': spectrumInspector.getAssocViewerDrawOptions(), // spectrumInspector.getAssocViewer().getActualDrawOptions(),
+				'assocViewerDrawOptionsJson': spectrumInspector.getAssocViewerDrawOptions()?
+					JSON.stringify(spectrumInspector.getAssocViewerDrawOptions()): '',
+				'assocViewerVisualMode': spectrumInspector.getAssocViewerVisualMode(),
+				'assocViewerSize': spectrumInspector.getAssocViewerSize(),
+				'chemObj': spectrumInspector.getChemObj(),
+				'chemObjJson': Kekule.IO.saveMimeData(this.getChemObj(), Kekule.IO.MimeType.KEKULE_JSON)
+			};
+			spectrumInspector.exportToDataUriAsync(imgDataType, options, function(dataUri, dimension){
+				details.dataUri = dataUri;
+				details.width = Math.round(dimension.width);
+				details.height = Math.round(dimension.height);
+				callback(details);
+			});
+		}
+		catch(e)
+		{
+			callback(null);
+			throw e;
+		}
+	},
+	/**
+	 * If export spectrum to a HTML img element, this method returns the essential attributes.
+	 * @param {String} dataType Export image data type.
+	 * @param {Hash} options
+	 * @param {Func} callback With hash param attribs.
+	 * @returns {Hash} Attribute/value pairs.
+	 */
+	getExportImgElemAttributesAsync: function(dataType, options, callback)
+	{
+		this.getImgExportDetailsAsync(dataType, options, function(detail){
+			var style = 'width:' + detail.width + 'px; height:' + detail.height + 'px';
+			var attribs = {
+				'src': detail.dataUri,
+				'style': style,
+				'width': detail.width,
+				'height': detail.height,
+				'data-kekule-widget': 'Kekule.ChemWidget.SpectrumInspector',
+				'data-chem-obj': detail.chemObjJson,
+				'data-spectrum-viewer-draw-options': detail.spectrumViewerDrawOptionsJson,
+				'data-assoc-viewer-draw-options': detail.assocViewerDrawOptionsJson
+			};
+			if (Kekule.ObjUtils.notUnset(detail.assocViewerVisualMode))
+				attribs['data-assoc-viewer-visual-mode'] = JSON.stringify(detail.assocViewerVisualMode);
+			if (Kekule.ObjUtils.notUnset(detail.assocViewerSize))
+				attribs['data-assoc-viewer-size'] = detail.assocViewerSize;
+			if (detail.spectrumViewportRangesJson)
+				attribs['data-spectrum-viewport-ranges'] = detail.spectrumViewportRangesJson;
+			if (OU.notUnset(detail.enableHotTrack))
+				attribs['data-enable-hot-track'] = detail.enableHotTrack;
+			if (OU.notUnset(detail.enableSelect))
+				attribs['data-enable-select'] = detail.enableSelect;
+			if (OU.notUnset(detail.enableMultiSelect))
+				attribs['data-enable-multi-select'] = detail.enableMultiSelect;
+			if (Kekule.ObjUtils.notUnset(detail.backgroundColor))
+				attribs['data-background-color'] = detail.backgroundColor;
+			callback(attribs);
+		});
+
+		/*
+		if (detail.backgroundColor)
+			style += '; background-color: ' + detail.backgroundColor;
+		else if (this.getIs3D())
+			style += '; background-color: #000';
+		*/
+
+	},
+	/** @private */
+	exportToSingleImgElementAsync: function(doc, imgDataType, options, callback)
+	{
+		//this.getImgExportDetailsAsync(imgDataType, options, function(details){
+		this.getExportImgElemAttributesAsync(imgDataType, options, function(details){
+			if (!details)  // failed
+			{
+				callback(null);
+			}
+			else  // success
+			{
+				var img = doc.createElement('img');
+				/*
+				img.setAttribute('style', 'width:' + details.width + 'px; height:' + details.height + 'px');
+				img.setAttribute('src', details.dataUri);
+				img.setAttribute('data-kekule-widget', 'Kekule.ChemWidget.SpectrumInspector');
+				if (details.chemObj)
+					img.setAttribute('data-chem-obj', details.chemObjJson);
+				if (details.spectrumViewportRanges)
+					img.setAttribute('data-spectrum-viewport-ranges', details.spectrumViewportRangesJson);
+				if (details.spectrumViewerDrawOptions)
+					img.setAttribute('data-spectrum-viewer-draw-options', details.spectrumViewerDrawOptionsJson);
+				if (details.assocViewerDrawOptions)
+					img.setAttribute('data-assoc-viewer-draw-options', details.assocViewerDrawOptionsJson);
+				if (details.backgroundColor)
+					img.setAttribute('data-background-color', details.backgroundColor);
+				if (OU.notUnset(details.enableHotTrack))
+					img.setAttribute('data-enable-hot-track', details.enableHotTrack);
+				if (OU.notUnset(details.enableSelect))
+					img.setAttribute('data-enable-select', details.enableSelect);
+				if (OU.notUnset(details.enableMultiSelect))
+					img.setAttribute('data-enable-multi-select', details.enableMultiSelect);
+				*/
+				Kekule.DomUtils.setElemAttributes(img, details);
+				callback(img);
+			}
+		});
+	},
+	/*
+	 * Export viewer to a new created HTML element.
+	 * @param {HTMLElement} doc
+	 * @param {String} imgDataType Export image data type
+	 * @param {Hash} options
+	 * @returns {HTMLElement}
+	 */
+	/*
+	createExportHtmlElement: function(doc, imgDataType, options)
+	{
+
+	},
+	*/
+	/**
+	 * Export viewer to a new created HTML element (async way).
+	 * @param {HTMLElement} doc
+	 * @param {String} imgDataType Export image data type
+	 * @param {Hash} options
+	 * @param {Func} callback callback(htmlElement)
+	 * @returns {HTMLElement}
+	 */
+	createExportHtmlElementAsync: function(doc, imgDataType, options, callback)
+	{
+		this.exportToSingleImgElementAsync(doc, imgDataType, options, function(imgElem){
+			if (callback)
+				callback(imgElem);
+		});
+	},
+
+	/**
+	 * Load spectrum object and apply settings in this widget from specified attribs.
+	 * @param {Kekule.ChemObject} chemObj
+	 * @param {Hash} detail
+	 */
+	importFromDetails: function(chemObj, detail)
+	{
+		this.setChemObj(chemObj);
+
+		this.getSpectrumInspector().beginUpdate();
+		try
+		{
+			if (detail.spectrumViewportRanges)
+				this.setSpectrumViewportRanges(detail.spectrumViewportRanges);
+			if (detail.spectrumViewerDrawOptions)
+				this.setSpectrumViewerDrawOptions(detail.spectrumViewerDrawOptions);
+			if (detail.assocViewerDrawOptions)
+				this.setAssocViewerDrawOptions(detail.assocViewerDrawOptions);
+			if (detail.backgroundColor)
+				this.setBackgroundColor(detail.backgroundColor);
+			if (OU.notUnset(detail.enableHotTrack))
+				this.setEnableHotTrack(detail.enableHotTrack);
+			if (OU.notUnset(detail.enableSelect))
+				this.setEnableSelect(detail.enableSelect);
+			if (OU.notUnset(detail.enableMultiSelect))
+				this.setEnableMultiSelect(detail.enableMultiSelect);
+			if (OU.notUnset(detail.assocViewerVisualMode))
+				this.setAssocViewerVisualMode(detail.assocViewerVisualMode);
+			if (OU.notUnset(detail.assocViewerSize))
+				this.setAssocViewerSize(detail.assocViewerSize);
+			if (detail.width && detail.height)
+			{
+				this.setSpectrumInspectorDimension({width: detail.width, height: detail.height});
+			}
+		}
+		finally
+		{
+			this.getSpectrumInspector().endUpdate();
+		}
+		return this;
+	},
+
+	/**
+	 * Load spectrum and apply settings in this widget from hash attribs of an HTML element previously exported.
+	 * @param {Hash} attribs
+	 */
+	importFromElemAttribs: function(attribs)
+	{
+		//if (!attribs.width)
+		attribs.width = DataType.JsonUtility.parse(attribs.width);
+		//if (!attribs.height)
+		attribs.height = DataType.JsonUtility.parse(attribs.height);
+		var chemObjJson = attribs['data-chem-obj'];
+		var chemObj = chemObjJson? Kekule.IO.loadMimeData(chemObjJson, 'chemical/x-kekule-json'): null;
+		if (attribs['data-spectrum-viewport-ranges'])
+			attribs.spectrumViewportRanges = DataType.JsonUtility.parse(attribs['data-spectrum-viewport-ranges']);
+		if (attribs['data-spectrum-viewer-draw-options'])
+			attribs.spectrumViewerDrawOptions = DataType.JsonUtility.parse(attribs['data-spectrum-viewer-draw-options']);
+		if (attribs['data-assoc-viewer-draw-options'])
+			attribs.assocViewerDrawOptions = DataType.JsonUtility.parse(attribs['data-assoc-viewer-draw-options']);
+		if (attribs['data-background-color'])
+			attribs.backgroundColor = attribs['data-background-color'];
+		if (attribs['data-enable-hot-track'])
+			attribs.enableHotTrack = DataType.JsonUtility.parse(attribs['data-enable-hot-track']);
+		if (attribs['data-enable-select'])
+			attribs.enableSelect = DataType.JsonUtility.parse(attribs['data-enable-select']);
+		if (attribs['data-enable-multi-select'])
+			attribs.enableMultiSelect = DataType.JsonUtility.parse(attribs['data-enable-multi-select']);
+		if (attribs['data-assoc-viewer-visual-mode'])
+			attribs.assocViewerVisualMode = DataType.JsonUtility.parse(attribs['data-assoc-viewer-visual-mode']);
+		return this.importFromDetails(chemObj, attribs);
+	},
+
+	/**
+	 * Load spectrum object and apply settings in this widget from an HTML element previously exported.
+	 * @param {HTMLElement} element
+	 */
+	importFromElem: function(element)
+	{
+		var dim = Kekule.HtmlElementUtils.getElemPageRect(element);
+		var attribs = Kekule.DomUtils.fetchAttributeValuesToJson(element);
+		if (!attribs.width)
+			attribs.width = dim.width;
+		if (!attribs.height)
+			attribs.height = dim.height;
+		return this.importFromElemAttribs(attribs);
+	}
+});
+
+/**
+ * A special widget class to open a config widget for ChemObjDisplayer.
+ * Do not use this widget alone.
+ * @class
+ * @augments Kekule.Widget.Configurator
+ */
+Kekule.ChemWidget.SpectrumObjInserter.Configurator = Class.create(Kekule.Widget.Configurator,
+/** @lends Kekule.ChemWidget.SpectrumObjInserter.Configurator# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.SpectrumObjInserter.Configurator',
+	/** @construct */
+	initialize: function(widget)
+	{
+		this.tryApplySuper('initialize', [widget])  /* $super(widget) */;
+
+		this.addEventListener('valueChange', this._reactInputWidgetValueChange.bind(this));
+	},
+	/** @ignore */
+	initPropValues: function(/*$super*/)
+	{
+		this.tryApplySuper('initPropValues')  /* $super() */;
+		this.setAutoUpdate(true);
+	},
+	/** @ignore */
+	doGetWidgetClassName: function(/*$super*/)
+	{
+		return this.tryApplySuper('doGetWidgetClassName')  + ' ' + CCNS.SPECTRUMOBJ_INSERTER_CONFIGURATOR
+			+ ' ' + CCNS.CHEMOBJSETTER_CONFIGURATOR;  // copy styles from chemObjSetter
+	},
+	/** @ignore */
+	doCreateSubElements: function(doc, element)
+	{
+		// interactions
+		var region = doc.createElement('div');
+		region.className = CCNS.CHEMOBJSETTER_REGION;
+
+		var labelElem = doc.createElement('label');
+		labelElem.className = CCNS.CHEMOBJSETTER_REGION_LABEL;
+		DU.setElementText(labelElem, Kekule.$L('ChemWidgetTexts.CAPTION_INTERACTIONS'));
+		region.appendChild(labelElem);
+		region.appendChild(doc.createElement('br'));
+
+		var checkBox = new Kekule.Widget.CheckBox(this);
+		checkBox.setText(Kekule.$L('ChemWidgetTexts.CAPTION_ENABLE_HOTTRACK'))
+			.addClassName(CCNS.CHEMOBJSETTER_LINE)
+			.appendToElem(region);
+		this._checkBoxEnableHotTrack = checkBox;
+
+		var checkBox = new Kekule.Widget.CheckBox(this);
+		checkBox.setText(Kekule.$L('ChemWidgetTexts.CAPTION_ENABLE_SELECT'))
+			.addClassName(CCNS.CHEMOBJSETTER_LINE)
+			.appendToElem(region);
+		this._checkBoxEnableSelect = checkBox;
+
+		var checkBox = new Kekule.Widget.CheckBox(this);
+		checkBox.setText(Kekule.$L('ChemWidgetTexts.CAPTION_ENABLE_MULTISELECT'))
+			.addClassName(CCNS.CHEMOBJSETTER_LINE)
+			.appendToElem(region);
+		this._checkBoxEnableMultiSelect = checkBox;
+
+		element.appendChild(region);
+
+		// assoc visual mode
+		var region = doc.createElement('div');
+		region.className = CCNS.CHEMOBJSETTER_REGION;
+		var labelElem = doc.createElement('label');
+		labelElem.className = CCNS.CHEMOBJSETTER_REGION_LABEL;
+		DU.setElementText(labelElem, Kekule.$L('ChemWidgetTexts.CAPTION_ASSOC_VIEWER_VISUAL_MODE'));
+		region.appendChild(labelElem);
+		region.appendChild(doc.createElement('br'));
+
+		var AVVM = Kekule.ChemWidget.SpectrumInspector.AssocViewerVisualMode;
+		var selectBox = new Kekule.Widget.SelectBox(this);
+		selectBox.setItems([
+			{text: Kekule.$L('ChemWidgetTexts.CAPTION_ASSOC_VIEWER_VISUAL_MODE_AUTO'), value: AVVM.AUTO},
+			{text: Kekule.$L('ChemWidgetTexts.CAPTION_ASSOC_VIEWER_VISUAL_MODE_VISIBLE'), value: AVVM.VISIBLE},
+			{text: Kekule.$L('ChemWidgetTexts.CAPTION_ASSOC_VIEWER_VISUAL_MODE_INVISIBLE'), value: AVVM.INVISIBLE}
+		])
+			.addClassName(CCNS.CHEMOBJSETTER_LINE)
+			.appendToElem(region);
+		this._selectBoxAssocViewerVisualMode = selectBox;
+
+		// assoc size
+		var region = doc.createElement('div');
+		region.className = CCNS.CHEMOBJSETTER_REGION;
+		var labelElem = doc.createElement('label');
+		labelElem.className = CCNS.CHEMOBJSETTER_REGION_LABEL;
+		DU.setElementText(labelElem, Kekule.$L('ChemWidgetTexts.CAPTION_ASSOC_VIEWER_SIZE'));
+		region.appendChild(labelElem);
+		region.appendChild(doc.createElement('br'));
+		var inputElem = doc.createElement('input');
+		inputElem.setAttribute('type', 'range');
+		inputElem.setAttribute('min', '0');
+		inputElem.setAttribute('max', '100');
+		inputElem.setAttribute('step', '5');
+		var reactRawInputElemValueChangeBind = this._reactRawInputElemValueChange.bind(this);
+		Kekule.X.Event.addListener(inputElem, 'change', reactRawInputElemValueChangeBind);
+		Kekule.X.Event.addListener(inputElem, 'input', reactRawInputElemValueChangeBind);
+		this._assocViewerSizeInputElem = inputElem;
+		region.appendChild(inputElem);
+
+		element.appendChild(region);
+
+		// background color setter
+		var region = doc.createElement('div');
+		region.className = CCNS.CHEMOBJSETTER_REGION;
+		var labelElem = doc.createElement('label');
+		labelElem.className = CCNS.CHEMOBJSETTER_REGION_LABEL;
+		DU.setElementText(labelElem, Kekule.$L('ChemWidgetTexts.CAPTION_BACKGROUND_COLOR'));
+		region.appendChild(labelElem);
+		region.appendChild(doc.createElement('br'));
+		var colorPicker = new Kekule.Widget.ColorPicker(this);
+		colorPicker.setSpecialColors([
+			Kekule.Widget.ColorPicker.SpecialColors.TRANSPARENT
+		]);
+		colorPicker.appendToElem(region);
+		this._colorPicker = colorPicker;
+		element.appendChild(region);
+	},
+
+	/** @private */
+	_reactInputWidgetValueChange: function(e)
+	{
+		this.saveConfigValues();
+	},
+	/** @private */
+	_reactRawInputElemValueChange: function(e)
+	{
+		this.saveConfigValues();
+	},
+
+	/** @private */
+	_getSpectrumInspectorAssovViewerSizePercent: function()
+	{
+		var result = this.__$spectrumInspectorAssocViewerSizePercent$__;
+		if (OU.isUnset(result))
+		{
+			var w = this.getWidget();
+			w = w && w.getSpectrumInspector();
+			if (w)
+			{
+				var size = w.getAssocViewerSize();
+				if (size && typeof(size) === 'string')
+				{
+					var unitsValue = Kekule.StyleUtils.analysisUnitsValue(size);
+					if (unitsValue.units = '%')
+						result = unitsValue.value;
+				}
+
+				if (OU.isUnset(result))
+				{
+					var totalDim = w.getDimension() || {};
+					var assocViewerDim = w.getAssocViewer().getDimension() || {};
+					var layout = w.getLayout();
+					var sizeField = (layout === Kekule.Widget.Layout.VERTICAL) ? 'height' : 'width';
+					result = 100 * (assocViewerDim[sizeField] || 0) / (totalDim[sizeField] || 1);
+				}
+			}
+		}
+		if (result < 0)
+			result = 0;
+		else if (result > 100)
+			result = 100;
+		return result;
+	},
+	/** @private */
+	_setSpectrumInspectorAssovViewerSizePercent: function(value)
+	{
+		this.__$spectrumInspectorAssocViewerSizePercent$__ = value;
+		var w = this.getWidget();
+		w = w && w.getSpectrumInspector();
+		if (w)
+		{
+			w.setAssocViewerSize(Math.round(value) + '%');
+		}
+	},
+
+	/** @private */
+	loadConfigValues: function()
+	{
+		this.tryApplySuper('loadConfigValues');
+		var w = this.getWidget();
+		if (w)
+		{
+			this._checkBoxEnableHotTrack.setChecked(w.getEnableHotTrack());
+			this._checkBoxEnableSelect.setChecked(w.getEnableSelect());
+			this._checkBoxEnableMultiSelect.setChecked(w.getEnableMultiSelect());
+			var color = w.getBackgroundColor();
+			this._colorPicker.setValue(color || Kekule.Widget.ColorPicker.SpecialColors.TRANSPARENT);
+			this._selectBoxAssocViewerVisualMode.setValue(w.getAssocViewerVisualMode());
+			this._assocViewerSizeInputElem.value = Math.round(this._getSpectrumInspectorAssovViewerSizePercent());
+		}
+	},
+	/** @private */
+	saveConfigValues: function()
+	{
+		this.tryApplySuper('saveConfigValues');
+		var w = this.getWidget();
+		if (w)
+		{
+			w.beginUpdate();
+			try
+			{
+				w.setEnableHotTrack(this._checkBoxEnableHotTrack.getChecked());
+				w.setEnableSelect(this._checkBoxEnableSelect.getChecked());
+				w.setEnableMultiSelect(this._checkBoxEnableMultiSelect.getChecked());
+				w.setBackgroundColor(this._colorPicker.getValue());
+				w.setAssocViewerVisualMode(this._selectBoxAssocViewerVisualMode.getValue());
+				this._setSpectrumInspectorAssovViewerSizePercent(parseFloat(this._assocViewerSizeInputElem.value));
+				w.invokeEvent('configSave');  // a special event invoked on parent widget, indicating the config value has been changed
+			}
+			finally
+			{
+				w.endUpdate();
+			}
+		}
+	}
+});
+
 });
 
 })();

@@ -7,10 +7,15 @@
 	<script src="../../../src/kekule.js?locals=en,zh&language1=en_us&modules=chemWidget,spectroscopy&min=false"></script>
 	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
 	<style>
-		#chemViewer
+		#spectrumViewer
 		{
 			width: 600px;
 			height: 400px;
+		}
+		#molViewer
+		{
+				width: 600px;
+				height: 300px;
 		}
 		#objInspector
 		{
@@ -32,12 +37,17 @@
 		}
 	</style>
 	<script>
-		var viewer, objInspector;
+		var viewer, molViewer, objInspector;
 		var initialConfigValues = {};
+		var initialSpectrumViewConfigValues = {};
 
 		function getSpectrumDisplayConfigs()
 		{
 			return viewer.getRenderConfigs().getSpectrumDisplayConfigs();
+		}
+		function getSpectrumViewConfigs()
+		{
+			return viewer.getDisplayerConfigs().getSpectrumViewConfigs();
 		}
 
 		function $(id)
@@ -78,6 +88,12 @@
 			var configInputElems = rootElem.querySelectorAll('[data-config-prop]');
 			return configInputElems;
 		}
+		function getAllSpectrumViewConfigInputElems()
+		{
+			var rootElem = $('secController');
+			var configInputElems = rootElem.querySelectorAll('[data-view-config-prop]');
+			return configInputElems;
+		}
 
 		function showCodeSnippet(code, doRepaint)
 		{
@@ -97,12 +113,25 @@
 			}
 			var value = getInputElemValue(elem);
 			var configPropName = elem.getAttribute('data-config-prop');
+			var spectrumViewConfigPropName = elem.getAttribute('data-view-config-prop');
 			if (configPropName)
 			{
 				getSpectrumDisplayConfigs().setPropValue(configPropName, value);
 				var quotedValue = (typeof(value) === 'string')? '\'' + value + '\'': value;
 				var code = 'viewer.getRenderConfigs().getSpectrumDisplayConfigs().set' + configPropName.upperFirst() + '(' + quotedValue + ');';
 				showCodeSnippet(code, true);
+			}
+			else if (spectrumViewConfigPropName)
+			{
+				var sSpectrumMode = elem.getAttribute('data-view-config-prop-mode');
+				if (sSpectrumMode)
+				{
+					getSpectrumViewConfigs().setDataModeSpecifiedConfigValue(spectrumViewConfigPropName, value, parseInt(sSpectrumMode));
+				}
+				else
+				{
+					getSpectrumViewConfigs().setPropValue(spectrumViewConfigPropName, value);
+				}
 			}
 			else if (elem.tagName.toLowerCase() === 'select')  // var unit, or active section selector
 			{
@@ -249,29 +278,60 @@
 				setInputElemValue(elem, value);
 			});
 
+			//var spectrumViewConfigInputElems = getAllSpectrumViewConfigInputElems();
+
 			if (viewer.getChemObj())
 				viewer.repaint();
 		}
 
-		function initConfigValues(config)
+		function initConfigValues(config, spectrumViewConfig)
 		{
 			if (!config)
 				config = getSpectrumDisplayConfigs();
+			if (!spectrumViewConfig)
+				spectrumViewConfig = getSpectrumViewConfigs();
 
 			var configInputElems = getAllConfigInputElems();
-
 			configInputElems.forEach(function(elem){
 				var configPropName = elem.getAttribute('data-config-prop');
+
 				if (!configPropName)
 				{
 					console.warn('Config prop name not set', elem);
 				}
-				else
+				else // if (configPropName)
 				{
 					if (!config.getPropInfo(configPropName))
 						console.warn('Config prop name not found', configPropName);
-					var value = config.getPropValue(configPropName);
-					initialConfigValues[configPropName] = value;
+					else
+					{
+						var value = config.getPropValue(configPropName);
+						initialConfigValues[configPropName] = value;
+						setInputElemValue(elem, value);
+					}
+				}
+			});
+
+			var spectrumViewConfigInputElems = getAllSpectrumViewConfigInputElems();
+			spectrumViewConfigInputElems.forEach(function(elem){
+				var spectrumViewConfigPropName = elem.getAttribute('data-view-config-prop');
+				if (!spectrumViewConfigPropName)
+				{
+					console.warn('Spectrum view config prop name not set', elem);
+				}
+				else
+				{
+					if (!spectrumViewConfig.getPropInfo(spectrumViewConfigPropName))
+						console.warn('Spectrum view config prop name not found', spectrumViewConfigPropName);
+					var sSpectrumDataMode = elem.getAttribute('data-view-config-prop-mode');
+					var value;
+					if (Kekule.ObjUtils.notUnset(sSpectrumDataMode))
+					{
+						value = spectrumViewConfig.getDataModeSpecifiedConfigValue(spectrumViewConfigPropName, parseInt(sSpectrumDataMode));
+					}
+					else
+						value = spectrumViewConfig.getPropValue(spectrumViewConfigPropName);
+					initialSpectrumViewConfigValues[spectrumViewConfigPropName] = spectrumViewConfig.getPropValue(spectrumViewConfigPropName);
 					setInputElemValue(elem, value);
 				}
 			});
@@ -279,8 +339,22 @@
 
 		function init()
 		{
-			viewer = Kekule.Widget.getWidgetById('chemViewer');
+			viewer = Kekule.Widget.getWidgetById('spectrumViewer');
+			molViewer = Kekule.Widget.getWidgetById('molViewer');
 			objInspector = Kekule.Widget.getWidgetById('objInspector');
+
+			var iaConfigs = molViewer.getViewerConfigs().getInteractionConfigs();
+			iaConfigs.setEnableBasicObjectHotTrack(true);
+			iaConfigs.setEnableBasicObjectSelect(true);
+			iaConfigs.setEnableBasicObjectMultiSelect(true);
+
+			var connector = new Kekule.ChemWidget.SpectrumCorrelationConnector(viewer, molViewer);
+			connector.on('assignmentsSelected', function(e){
+				console.log('assignmentsSelected', e.assignmentDetails);
+			});
+			connector.on('assignmentsHotTracked', function(e){
+				console.log('assignmentsHotTracked', e.assignmentDetails);
+			});
 
 			viewer.on('load', function(e){
 				var chemObj = viewer.getChemObj();
@@ -288,6 +362,17 @@
 				updateAvailableVarUnits();
 				updateSectionSelector();
 			});
+
+			viewer.on('hoverOnSpectrumData', function(e){
+				/*
+				if (e.dataItem)
+					console.log('Hover on data item', e.dataItem);
+				*/
+			});
+			viewer.on('spectrumDataSelectionChange', function(e){
+				//console.log('SpectrumDataSelectionChange', e, e.dataItems);
+			});
+
 			objInspector.on('propertyChange', function(e){
 				viewer.repaint();
 			});
@@ -302,7 +387,11 @@
 </head>
 <body>
 	<section id="secDisplayer">
-		<div id="chemViewer" data-widget="Kekule.ChemWidget.Viewer" data-chem-obj1="" data-autofit="true" data-predefined-setting="fullFunc"></div>
+		<div id="spectrumViewer" data-widget="Kekule.ChemWidget.Viewer"
+				 data-chem-obj1="" data-autofit="true" data-predefined-setting="fullFunc" data-resizable="true"></div>
+		<br />
+		<div id="molViewer" data-widget="Kekule.ChemWidget.Viewer"
+				 data-chem-obj1="" data-autofit="true" data-predefined-setting="fullFunc" data-resizable="true"></div>
 	</section>
 	<section id="secController">
 		<form id="formController" action="#" onsubmit="javascript:void();">
@@ -335,6 +424,8 @@
 				<br />
 				<label>Data stroke width ratio: </label><input id="inputDataStrokeWidthRatio" data-config-prop="dataStrokeWidthRatio" type="number" step="0.025" />
 				<label>min: </label><input id="inputDataStrokeWidthMin" data-config-prop="dataStrokeWidthMin" type="number" step="0.5" />
+				<label>max: </label><input id="inputDataStrokeWidthMax" data-config-prop="dataStrokeWidthMax" type="number" step="0.5" />
+				<label>fixed: </label><input id="inputDataStrokeWidthFixed" data-config-prop="dataStrokeWidthFixed" type="number" step="0.5" />
 			</fieldset>
 			<fieldset>
 				<legend>Axis render</legend>
@@ -345,9 +436,12 @@
 					<br />
 					<label>Axis width ratio: </label><input id="inputAxisWidthRatio" data-config-prop="axisWidthRatio" type="number" step="0.025" />
 					<label>min: </label><input id="inputAxisWidthMin" data-config-prop="axisWidthMin" type="number" step="0.5" />
+					<label>max: </label><input id="inputAxisWidthMax" data-config-prop="axisWidthMax" type="number" step="0.5" />
+					<label>fixed: </label><input id="inputAxisWidthFixed" data-config-prop="axisWidthFixed" type="number" step="0.5" />
 					<br />
 					<label>Axis scale mark size ratio: </label><input id="inputScaleSizeRatio" data-config-prop="axisScaleMarkSizeRatio" type="number" step="0.05" />
 					<label>min: </label><input id="inputScaleSizeMin" data-config-prop="axisScaleMarkSizeMin" type="number" step="0.5" />
+					<label>max: </label><input id="inputScaleSizeMax" data-config-prop="axisScaleMarkSizeMax" type="number" step="0.5" />
 					<label>Unlabeled ratio: </label><input id="inputUnlabeledScaleSizeRatio" data-config-prop="axisUnlabeledScaleSizeRatio" type="number" step="0.05" />
 					<br />
 					<label>Scale mark preferred count: </label><input id="inputScaleMarkPreferredCount" data-config-prop="axisScaleMarkPreferredCount" type="number" />
@@ -386,6 +480,20 @@
 					<label>Display label</label><input id="inputDisplayDepAxisLabel" data-config-prop="displayDependentAxisLabel" type="checkbox" />
 					<label>Display unit</label><input id="inputDisplayDepAxisUnit" data-config-prop="displayDependentAxisUnit" type="checkbox" />
 				</fieldset>
+			</fieldset>
+			<fieldset>
+				<legend>Spectrum View Interactions</legend>
+				<label>Enable data hot track</label>
+					<label><input id="inputEnableDataHotTrackOnContinuous" data-view-config-prop="enableSpectrumDataHotTrackOnMode" data-view-config-prop-mode="1" type="checkbox" />in continuous</label>
+					<label><input id="inputEnableDataHotTrackOnPeak" data-view-config-prop="enableSpectrumDataHotTrackOnMode" data-view-config-prop-mode="2" type="checkbox" />in peak spectrum</label>
+				<br />
+				<label>Enable data select</label>
+					<label><input id="inputEnableDataSelectOnContinuous" data-view-config-prop="enableSpectrumDataSelectOnMode" data-view-config-prop-mode="1" type="checkbox" />in continuous</label>
+					<label><input id="inputEnableDataSelectOnPeak" data-view-config-prop="enableSpectrumDataSelectOnMode" data-view-config-prop-mode="2" type="checkbox" />in peak spectrum</label>
+				<br />
+				<label>Enable multi-select</label>
+					<label><input id="inputEnableDataMultiSelectOnContinuous" data-view-config-prop="enableSpectrumDataMultiSelectOnMode" data-view-config-prop-mode="1" type="checkbox" />in continuous</label>
+					<label><input id="inputEnableDataMultiSelectOnPeak" data-view-config-prop="enableSpectrumDataMultiSelectOnMode" data-view-config-prop-mode="2" type="checkbox" />in peak spectrum</label>
 			</fieldset>
 			<button id="btnResetValues" type="button">Reset values</button>
 		</form>

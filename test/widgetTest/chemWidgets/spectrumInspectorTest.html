@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Spectrum Inspector Test</title>
+	<link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+
+	<script src="../../_libs/raphael-min.2.0.1.js"></script>
+	<script src="../../_libs/raphael.export.js"></script>
+
+	<script src="../../../src/kekule.js?min=false"></script>
+
+	<script id="product1" type="chemical/x-kekule-json">
+    {"id":"m1","renderOptions":{"expanded":true,"__type__":"object"},"coord2D":{"x":12.912444254557293,"y":37.61377766927083,"__type__":"object"},"charge":0,"ctab":{"nodes":[{"__type__":"Kekule.Atom","id":"a3","coord2D":{"x":0.6928203230275525,"y":0.3999999999999986,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a18","coord2D":{"x":1.3856406460551032,"y":0.7999999999999972,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a15","coord2D":{"x":0,"y":0.7999999999999972,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a2","coord2D":{"x":0.6928203230275525,"y":-0.3999999999999986,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a19","coord2D":{"x":2.078460969082652,"y":0.3999999999999986,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a21","coord2D":{"x":1.3856406460551032,"y":1.5999999999999943,"__type__":"object"},"charge":0,"isotopeId":"O"},{"__type__":"Kekule.Atom","id":"a16","coord2D":{"x":-0.6928203230275507,"y":0.3999999999999986,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a1","coord2D":{"x":0,"y":-0.7999999999999972,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a20","coord2D":{"x":2.771281292110203,"y":0.7999999999999972,"__type__":"object"},"charge":0,"isotopeId":"C"},{"__type__":"Kekule.Atom","id":"a17","coord2D":{"x":-0.6928203230275507,"y":-0.3999999999999986,"__type__":"object"},"charge":0,"isotopeId":"C"}],"anchorNodes":[],"connectors":[{"__type__":"Kekule.Bond","id":"b17","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,1]},{"__type__":"Kekule.Bond","id":"b3","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[0,2]},{"__type__":"Kekule.Bond","id":"b2","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[0,3]},{"__type__":"Kekule.Bond","id":"b18","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[1,4]},{"__type__":"Kekule.Bond","id":"b20","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[1,5]},{"__type__":"Kekule.Bond","id":"b14","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[2,6]},{"__type__":"Kekule.Bond","id":"b1","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[3,7]},{"__type__":"Kekule.Bond","id":"b19","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[4,8]},{"__type__":"Kekule.Bond","id":"b15","bondType":"covalent","bondOrder":1,"electronCount":2,"isInAromaticRing":false,"connectedNodes":[6,9]},{"__type__":"Kekule.Bond","id":"b16","bondType":"covalent","bondOrder":2,"electronCount":4,"isInAromaticRing":false,"connectedNodes":[7,9]}],"__type__":"Kekule.StructureConnectionTable"},"__type__":"Kekule.Molecule"}
+	</script>
+	<script>
+		var spectrumInspector;
+
+		function exportImage()
+		{
+			var img = document.getElementById('imgExport');
+			spectrumInspector.exportToDataUriAsync(null, null, function(dataUri, dim) {
+				img.style.width = dim.width + 'px';
+				img.style.height = dim.height + 'px';
+				img.src = dataUri;
+			});
+		}
+
+		function init()
+		{
+			spectrumInspector = Kekule.Widget.getWidgetById('spectrumInspector');
+			Kekule.Widget.getWidgetById('objInspector').setObjects(spectrumInspector);
+
+			spectrumInspector.on('load', e => console.log('load', e));
+			spectrumInspector.on('loadSpectrum', e => console.log('loadSpectrum', e));
+			spectrumInspector.on('loadAssoc', e => console.log('loadAssoc', e));
+
+
+			//spectrumInspector.on('spectrumAssignmentSelected', e => console.log(e));
+		}
+
+		Kekule.X.domReady(init);
+	</script>
+</head>
+<body>
+	<div id="objInspector" data-widget="Kekule.Widget.ObjectInspector" style="float:right"></div>
+	<div id="spectrumInspector" style1="width:600px;height:400px"
+			 data-widget="Kekule.ChemWidget.SpectrumInspector" data-predefined-setting1="fullFunc" data-resizable="true" data-chem-obj="url('../../_chemFiles/spectrum/ISAS_CDX.DX')"></div>
+	</div>
+	<div>
+		<button onclick="exportImage()">Export</button> <br />
+		<img id="imgExport" />
+	</div>
+</body>
+</html>

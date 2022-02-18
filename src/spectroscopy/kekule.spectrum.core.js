@@ -39,10 +39,62 @@ Kekule.Spectroscopy.DataMode = {
 };
 
 /**
+ * Enumeration of peak position in spectrum data curve.
+ * @enum
+ */
+Kekule.Spectroscopy.DataPeakPosition = {
+	MAX: 0,
+	MIN: 1
+};
+
+/**
  * Some util methods about spectroscopy.
  * @class
  */
 Kekule.Spectroscopy.Utils = {
+	/**
+	 * Returns the preferred peak position of spectrum.
+	 * @param {Variant} spectrumOrDataSection
+	 * @returns {Int} Value from {@link Kekule.Spectroscopy.DataPeakPosition}.
+	 */
+	getSpectrumPeakPosition: function(spectrumOrDataSection)
+	{
+		var stype = (spectrumOrDataSection.getSpectrumType)? spectrumOrDataSection.getSpectrumType():
+			(spectrumOrDataSection.getParentSpectrum() && spectrumOrDataSection.getParentSpectrum().getSpectrumType());
+		return (stype === Kekule.Spectroscopy.SpectrumType.IR)?
+			Kekule.Spectroscopy.DataPeakPosition.MIN:
+			Kekule.Spectroscopy.DataPeakPosition.MAX;
+	},
+	/**
+	 * Expand range with new values.
+	 * @param {Hash} range
+	 * @param {Array} values
+	 */
+	expandDataRange: function(range, values)
+	{
+		var vs = AU.toArray(values);
+		var r = range || {};
+		for (var i = 0, ii = vs.length; i < ii; ++i)
+		{
+			var value = vs[i];
+			var fields = Kekule.ObjUtils.getOwnedFieldNames(value);
+			for (var j = 0, jj = fields.length; j < jj; ++j)
+			{
+				var fieldName = fields[j];
+				var fieldValue = value[fieldName];
+				if (!r[fieldName])
+					r[fieldName] = {'min': fieldValue, 'max': fieldValue};
+				else
+				{
+					if (fieldValue < r[fieldName].min)
+						r[fieldName].min = fieldValue;
+					else if (fieldValue > r[fieldName].max)
+						r[fieldName].max = fieldValue;
+				}
+			}
+		}
+		return r;
+	},
 	/**
 	 * Merge two data ranges.
 	 * Each item is a hash like {x: {min: minValue, max: maxValue}, y: {min: minValue, max: maxValue}}.
@@ -122,6 +174,26 @@ Kekule.Spectroscopy.Utils = {
 		//console.log(result, scaleBase);
 		return result;
 	},
+
+	/*
+	 * Calculate the standardized distance square between two data points.
+	 * The srcData/targetData/dataRanges should have the same dimension.
+	 * @param {Array} srcData
+	 * @param {Array} targetData
+	 * @param {Array} dataRangeValues Array of {min, max}.
+	 * @returns {Float}
+	 */
+	/*
+	calcStandardizedDistanceSqr: function(srcData, targetData, dataRangeValues)
+	{
+		var length = dataRanges.length;
+		for (var i = 0; i < length; ++i)
+		{
+
+		}
+	},
+	*/
+
 	/**
 	 * Generate a suitable label key for storing the spectrum info(meta/condition/parameter...) value.
 	 * @param {String} name The core name of key, e.g. observedFrequency.
@@ -133,6 +205,25 @@ Kekule.Spectroscopy.Utils = {
 	{
 		var prefix = spectrumType || namespace;
 		return prefix? prefix + MetaPropNamespace.DELIMITER + name: name;
+	},
+
+	/**
+	 * Returns the default class to storing extra information for a data item in dataSection.
+	 * @param {Kekule.Spectroscopy.SpectrumDataSection} dataSection
+	 */
+	getDefaultDataExtraInfoClass: function(dataSection)
+	{
+		var mode = dataSection.getMode();
+		return (mode === Kekule.Spectroscopy.DataMode.PEAK)? Kekule.Spectroscopy.SpectrumPeakDetails: Kekule.Spectroscopy.SpectrumDataDetails;
+	},
+	/**
+	 * Create a default object to storing extra information for a data item in dataSection.
+	 * @param {Kekule.Spectroscopy.SpectrumDataSection} dataSection
+	 */
+	createDefaultDataExtraInfoObject: function(dataSection)
+	{
+		var c = Kekule.Spectroscopy.Utils.getDefaultDataExtraInfoClass(dataSection);
+		return c && new c();
 	}
 };
 
@@ -460,6 +551,7 @@ Kekule.Spectroscopy.SpectrumVarDefinition = Class.create(Kekule.VarDefinition,
  * @property {Array} localVarInfos Stores the local variable information. Each item is a hash containing fields {'symbol', 'range'(optional)}.
  * @property {Array} varSymbols Array of variable symbols such as ['X', 'Y'].
  * @property {Int} mode Data mode of section, continuous or peak.
+ * @property {Date} modifiedTime Time that do the last modification to data.
  * @property {Hash} peakRoot
  * @property {String} name
  * @property {String} title
@@ -470,8 +562,13 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	/** @private */
 	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumDataSection',
 	/** @private */
+	DATAITEM_SRC_FIELD_NAME: '_src',
+	/** @private */
+	DATAITEM_EXTRA_FIELD_NAME: '_extra',
+	/** @private */
 	initialize: function(name, parent, localVariables)
 	{
+		this.updateDataModifiedTime();
 		this.setPropStoreFieldValue('name', name);
 		this.setPropStoreFieldValue('localVarInfos', []);
 		this.setPropStoreFieldValue('dataItems', []);
@@ -559,6 +656,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			}
 		});
 		this.defineProp('defPeakRoot', {'dataType': DataType.Hash});
+		this.defineProp('modifiedTime', {'dataType': DataType.DATE, 'setter': null});
 		// private, stores the data items, each item is a hash, e.g. {x: 1, y: 10, w: 2}
 		this.defineProp('dataItems', {'dataType': DataType.ARRAY, 'setter': null, 'scope': PS.PRIVATE});
 	},
@@ -590,7 +688,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 
 	// custom save / load method
 	/** @ignore */
-	doSaveProp: function(obj, prop, storageNode, serializer)
+	doSaveProp: function(obj, prop, storageNode, options, serializer, rootObj, rootStorageNode, handledObjs)
 	{
 		if (!prop.serializable)
 			return;
@@ -599,13 +697,13 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		{
 			var node = serializer.createChildStorageNode(storageNode, serializer.propNameToStorageName('dataItems'), false);
 			var subNode = serializer.createChildStorageNode(node, serializer.propNameToStorageName('values'), true); // create sub node for array
-			serializer.save(obj.getDataItems(), subNode);  // save array values in this sub node
+			serializer.saveObj(obj.getDataItems(), subNode, options, rootObj, rootStorageNode, handledObjs);  // save array values in this sub node
 			// extract all extra info of data array and save them
 			var extraInfos = obj._extractAllExtraInfoOfDataItems();
 			if (extraInfos.length)
 			{
 				var subNode = serializer.createChildStorageNode(node, serializer.propNameToStorageName('extras'), true);
-				serializer.save(extraInfos, subNode);
+				serializer.saveObj(extraInfos, subNode, options, rootObj, rootStorageNode, handledObjs);
 			}
 			return true;  // this property is handled, do not use default save method
 		}
@@ -613,7 +711,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			return false;  // use the default method
 	},
 	/** @ignore */
-	doLoadProp: function(obj, prop, storageNode, serializer)
+	doLoadProp: function(obj, prop, storageNode, serializer, rootObj, rootStorageNode, handledObjs)
 	{
 		if (!prop.serializable)
 			return;
@@ -623,20 +721,42 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 			var items = [];
 			var node = serializer.getChildStorageNode(storageNode, serializer.propNameToStorageName('dataItems'));
 			var subNode = serializer.getChildStorageNode(node, serializer.propNameToStorageName('values')); // get sub node for array
-			serializer.load(items, subNode);
+			serializer.loadObj(items, subNode, rootObj, rootStorageNode, handledObjs);
 			obj.setPropStoreFieldValue('dataItems', items);
 			// then the extra info
 			var subNode = serializer.getChildStorageNode(node, serializer.propNameToStorageName('extras'));
 			if (subNode)
 			{
 				var extras = [];
-				serializer.load(extras, subNode);
+				serializer.loadObj(extras, subNode, rootObj, rootStorageNode, handledObjs);
 				obj._writeExtraInfoOfDataItems(extras);
 			}
 			return true;
 		}
 		else
 			return false;  // use the default method
+	},
+	/** @private */
+	_setSysFieldOfDataItem: function(dataItem, fieldName, fieldValue)
+	{
+		try
+		{
+			if (Object.defineProperty)
+			{
+				Object.defineProperty(dataItem, fieldName, {
+					'value': fieldValue,
+					'configurable': true,
+					'writable': true,
+					'enumerable': false
+				});
+			}
+			else
+				dataItem[fieldName] = fieldValue;
+		}
+		catch(e)
+		{
+			dataItem[fieldName] = fieldValue;
+		}
 	},
 	/** @private */
 	_extractAllExtraInfoOfDataItems: function()
@@ -943,9 +1063,25 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		}
 		return result;
 	},
+	/**
+	 * Returns the local variable symbols of certain dependency.
+	 * @param {Int} dependency
+	 * @returns {Array}
+	 */
+	getLocalVarSymbolsOfDependency: function(dependency)
+	{
+		var varInfos = this.getLocalVarInfoOfDependency(dependency);
+		var result = [];
+		for (var i = 0, l = varInfos.length; i < l; ++i)
+		{
+			result.push(varInfos[i].varDef.getSymbol());
+		}
+		return result;
+	},
 
 	/**
 	 * Returns the from/to value of a continuous variable.
+	 * Note the return values of this function are all based on internal var unit.
 	 * @param {Variant} varNameOrIndexOrDef
 	 * @returns {Hash} Hash of {fromValue, toValue}
 	 */
@@ -1437,19 +1573,45 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		{
 			result.push(hashValue[symbols[i]]);
 		}
+		var src = this._getDataValueSrc(hashValue);
+		if (src)
+		{
+			this._setSysFieldOfDataItem(result, this.DATAITEM_SRC_FIELD_NAME, src);
+		}
+
 		// then the extra fields
-		if (hashValue._extra)
-			result._extra = hashValue._extra;
+		var extra;
+		if (src && src[this.DATAITEM_EXTRA_FIELD_NAME])
+		{
+			//result._extra = hashValue._extra;
+			extra = src[this.DATAITEM_EXTRA_FIELD_NAME];
+		}
 		else
 		{
 			// then the remaining fields of hashValue, storing in _extra field of array item
-			var remainingFields = AU.exclude(Kekule.ObjUtils.getOwnedFieldNames(hashValue, false), symbols);
+			var remainingFields = AU.exclude(
+				Kekule.ObjUtils.getOwnedFieldNames(hashValue, false),
+				[this.DATAITEM_SRC_FIELD_NAME, this.DATAITEM_EXTRA_FIELD_NAME].concat(symbols));
 			if (remainingFields.length)
-				result._extra = {};
+				extra = {};
 			for (var i = 0, l = remainingFields.length; i < l; ++i)
 			{
-				result._extra[remainingFields[i]] = hashValue[remainingFields[i]];
+				extra[remainingFields[i]] = hashValue[remainingFields[i]];
 			}
+		}
+		if (extra)
+			//this.setExtraInfoOf(result, extra);
+			this._setSysFieldOfDataItem(src || result, this.DATAITEM_EXTRA_FIELD_NAME, extra);
+		return result;
+	},
+	/** @private */
+	_convArrayToSymboledHash: function(arrayValue, symbols)
+	{
+		var result = {};
+		for (var i = 0, l = Math.min(symbols.length, arrayValue.length); i < l; ++i)
+		{
+			var value = arrayValue[i];
+			result[symbols[i]] = value;
 		}
 		return result;
 	},
@@ -1469,11 +1631,17 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 				value = arrayValue[i];
 			result[symbols[i]] = value;
 		}//
-		if (arrayValue._extra)
+		var src = this._getDataValueSrc(arrayValue);
+
+		if (src[this.DATAITEM_EXTRA_FIELD_NAME])
 		{
 			//result = Object.extend(result, arrayValue._extra);
-			result._extra = arrayValue._extra;
+			//result._extra = arrayValue._extra;
+			this._setSysFieldOfDataItem(result, this.DATAITEM_EXTRA_FIELD_NAME, arrayValue[this.DATAITEM_EXTRA_FIELD_NAME]);
 		}
+
+		this._setSysFieldOfDataItem(result, this.DATAITEM_SRC_FIELD_NAME, src || arrayValue);
+		//result._raw = arrayValue;
 		return result;
 	},
 	/** @private */
@@ -1554,6 +1722,42 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	},
 
 	/**
+	 * Returns the order of an independent var in current sorted data array.
+	 * @param {String} varSymbol
+	 * @returns {Int} 1 for ascending order, -1 for descending order and 0 for unknown.
+	 */
+	getIndependentVarValueOrder: function(varSymbol)
+	{
+		var result = 0;
+		if (this.isDataSorted())
+		{
+			var self = this;
+			var _getValidVarValueEx = function(varSymbol, fromIndex, toIndex, delta)
+			{
+				var currIndex = fromIndex;
+				var info = {};
+				var passed = false;
+				do
+				{
+					info.value = self.getHashValueAt(currIndex)[varSymbol];
+					info.index = currIndex;
+					currIndex += delta;
+					passed = Kekule.NumUtils.isNormalNumber(info.value);
+				}
+				while (!passed && ((delta > 0 && currIndex <= maxIndex) || (delta < 0 && currIndex >= toIndex)));
+				return (passed)? info: null;
+			}
+			var maxIndex = this.getDataCount() - 1;
+			var infoFrom = _getValidVarValueEx(varSymbol, 0, maxIndex, 1);
+			var infoTo = _getValidVarValueEx(varSymbol, maxIndex, 0, -1)
+			if (infoFrom && infoTo && infoFrom.index < infoTo.index)
+				result = Math.sign(infoTo.value - infoFrom.value);
+		}
+		return result;
+	},
+
+
+	/**
 	 * Returns the count of data items.
 	 * @returns {Int}
 	 */
@@ -1576,8 +1780,14 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		var items = this.getDataItems();
 		this.setDataSorted(false);
 		this.clearCache();
+		this.updateDataModifiedTime();
 		this.notifyPropSet('dataItems', items);
 		this.invokeEvent('dataChange', {'data': items})
+	},
+	/** @private */
+	updateDataModifiedTime: function()
+	{
+		this.setPropStoreFieldValue('modifiedTime', new Date());
 	},
 	/**
 	 * Clear all data items.
@@ -1587,6 +1797,18 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		this.setDataItems([]);
 		this.notifyDataChange();
 		this.setDataSorted(true);  // empty data are always sorted
+	},
+	/**
+	 * Returns the index of data item in this section. The item is can be a hash or an array.
+	 * If it is a hash, the hash fields must matches {@link Kekule.Spectroscopy.SpectrumData.independentVars} and {@link Kekule.Spectroscopy.SpectrumData.dependentVars}.
+	 * @param {Variant} item
+	 * @returns {Int}
+	 */
+	indexOfDataItem: function(item)
+	{
+		var dataItem = item[this.DATAITEM_SRC_FIELD_NAME] || item;
+		var items = this.getDataItems();
+		return items.indexOf(dataItem);
 	},
 	/**
 	 * Add new data item. The item is can be a hash or an array.
@@ -1605,6 +1827,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		{
 			var items = this.getDataItems();
 			items.push(d);
+			if (d[this.DATAITEM_EXTRA_FIELD_NAME])
+				this._extraInfoAdded(d[this.DATAITEM_EXTRA_FIELD_NAME]);
 			this.notifyDataChange();
 			return d;
 		}
@@ -1636,10 +1860,11 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	getRawValueAt: function(index)
 	{
-		var rawValue = this.getDataItems()[index];
-		if (rawValue)
+		var srcValue = this.getDataItems()[index];
+		if (srcValue)
 		{
-			var result = AU.clone(rawValue);
+			var result = AU.clone(srcValue);
+			result[this.DATAITEM_SRC_FIELD_NAME] = srcValue;
 			var isContinousData = this.getMode() === Kekule.Spectroscopy.DataMode.CONTINUOUS;
 			//if (this.getMode() === Kekule.Spectroscopy.DataMode.CONTINUOUS)
 			{
@@ -1666,8 +1891,11 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 					result[i] = v;
 				}
 			}
-			if (rawValue._extra)  // copy the extra properties
-				result._extra = rawValue._extra;
+			if (srcValue[this.DATAITEM_EXTRA_FIELD_NAME])  // copy the extra properties
+			{
+				//result._extra = rawValue._extra;
+				this._setSysFieldOfDataItem(result, this.DATAITEM_EXTRA_FIELD_NAME, srcValue._extra);
+			}
 			return result;
 		}
 		else
@@ -1682,6 +1910,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 * Get the data value at index.
 	 * @param {Int} index
 	 * @returns {Hash} The hashed form of value.
+	 *   The hash value's ._raw field stores the original array form value.
+	 *   It may also containing a ._extra field storing the extra information of spectrum data.
 	 */
 	getValueAt: function(index, options)
 	{
@@ -1695,13 +1925,15 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	setRawValueAt: function(index, value)
 	{
 		var oldValue = this.getDataItems()[index];
-		if (oldValue && oldValue._extra)
-			this._extraInfoRemoved(oldValue._extra);
+		if (oldValue && oldValue[this.DATAITEM_EXTRA_FIELD_NAME])
+			this._extraInfoRemoved(oldValue[this.DATAITEM_EXTRA_FIELD_NAME]);
 		this.getDataItems()[index] = value;
-		if (value._extra)
+		if (value[this.DATAITEM_EXTRA_FIELD_NAME])
 		{
-			this._extraInfoAdded(value._extra);
+			this._setSysFieldOfDataItem(value, this.DATAITEM_EXTRA_FIELD_NAME, value[this.DATAITEM_EXTRA_FIELD_NAME]);  // redefine the value._extra field with special descriptors
+			this._extraInfoAdded(value[this.DATAITEM_EXTRA_FIELD_NAME]);
 		}
+		this.notifyDataChange();
 		return this;
 	},
 	/** @private */
@@ -1726,6 +1958,38 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		this.setRawValueAt(index, d);
 		return this;
 	},
+
+	/** @private */
+	_getDataValueSrc: function(value)
+	{
+		if (!value)
+			return null;
+		else if (DataType.isArrayValue(value))
+			return value[this.DATAITEM_SRC_FIELD_NAME] || value;
+		else
+			return value[this.DATAITEM_SRC_FIELD_NAME];
+	},
+
+	/**
+	 * Create a new extra info object for value or index.
+	 * If no default object can be created, null will be returned.
+	 * Descendants may override this method.
+	 * @param {Variant} valueOrIndex
+	 * @returns {Object}
+	 */
+	createDefaultExtraInfoObjectFor: function(valueOrIndex)
+	{
+		var infoClass = (this.isPeakSection())? Kekule.Spectroscopy.SpectrumPeakDetails: null;
+		var result = infoClass? new infoClass(): null;
+		if (result && Kekule.ObjUtils.notUnset(valueOrIndex))
+		{
+			if (typeof(valueOrIndex) === 'number')  // index
+				this.setExtraInfoAt(valueOrIndex, result);
+			else if (valueOrIndex)
+				this.setExtraInfoOf(valueOrIndex, result);
+		}
+		return result;
+	},
 	/**
 	 * Get the extra information of a data value.
 	 * @param {Variant} value Data value in hash or array form.
@@ -1733,7 +1997,8 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	getExtraInfoOf: function(value)
 	{
-		return value._extra;
+		var src = this._getDataValueSrc(value) || value
+		return src[this.DATAITEM_EXTRA_FIELD_NAME] || value[this.DATAITEM_EXTRA_FIELD_NAME];
 	},
 	/**
 	 * Set the extra information of a data value.
@@ -1742,10 +2007,18 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	 */
 	setExtraInfoOf: function(value, info)
 	{
-		if (value._extra)
-			this._extraInfoRemoved(value._extra);
-		value._extra = info;
+		var target = this._getDataValueSrc(value) || value;
+		/*
+		if (!DataType.isArrayValue(value))  // is hash value, get its _raw field first
+			src = value[this.DATAITEM_SRC_FIELD_NAME];
+		else
+			src = value;
+		*/
+		if (target[this.DATAITEM_EXTRA_FIELD_NAME])
+			this._extraInfoRemoved(target[this.DATAITEM_EXTRA_FIELD_NAME]);
+		this._setSysFieldOfDataItem(target, this.DATAITEM_EXTRA_FIELD_NAME, info);
 		this._extraInfoAdded(info);
+		this.notifyDataChange();
 		return this;
 	},
 	/**
@@ -1756,7 +2029,7 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	getExtraInfoAt: function(index)
 	{
 		var d = this.getDataItems()[index];
-		return d && d._extra;
+		return d && d[this.DATAITEM_EXTRA_FIELD_NAME];
 	},
 	/**
 	 * Set the extra information of data value at index.
@@ -1766,10 +2039,11 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	setExtraInfoAt: function(index, info)
 	{
 		var d = this.getDataItems()[index];
-		if (d._extra)
-			this._extraInfoRemoved(d._extra);
-		d._extra = info;
+		if (d[this.DATAITEM_EXTRA_FIELD_NAME])
+			this._extraInfoRemoved(d[this.DATAITEM_EXTRA_FIELD_NAME]);
+		this._setSysFieldOfDataItem(d, this.DATAITEM_EXTRA_FIELD_NAME, info);
 		this._extraInfoAdded(info);
+		this.notifyDataChange();
 		return this;
 	},
 	/** @private */
@@ -1791,6 +2065,40 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 		}
 	},
 
+	/*
+	 * Get the extra peak detail information (based on {@link Kekule.Spectroscopy.SpectrumPeakDetails}).
+	 * @param {Variant} value Data value in hash or array form.
+	 * @param {Bool} autoCreate If the peak is without extra info, whether automatically create an instance of {@link Kekule.Spectroscopy.SpectrumPeakDetails}.
+	 * @returns {Kekule.Spectroscopy.SpectrumPeakDetails}
+	 */
+	/*
+	getPeakDetailsOf: function(value, autoCreate)
+	{
+		var extra = this.getExtraInfoOf(value);
+		if (!extra && autoCreate)
+		{
+			extra = new Kekule.Spectroscopy.SpectrumPeakDetails();
+			this.setExtraInfoOf(value, extra);
+		}
+		return extra && ((extra instanceof Kekule.Spectroscopy.SpectrumPeakDetails)? extra: null);
+	},
+	*/
+	/*
+	 * Get the extra peak detail information (based on {@link Kekule.Spectroscopy.SpectrumPeakDetails}).
+	 * @param {Int} index
+	 * @param {Bool} autoCreate If the peak is without extra info, whether automatically create an instance of {@link Kekule.Spectroscopy.SpectrumPeakDetails}.
+	 * @returns {Kekule.Spectroscopy.SpectrumPeakDetails}
+	 */
+	/*
+	getPeakDetailsAt: function(index, autoCreate)
+	{
+		var value = this.getRawValueAt(index);
+		if (value)
+			return this.getPeakDetailsOf(value, autoCreate);
+		else
+			return null;
+	},
+	*/
 	/**
 	 * Returns the peak root value of data item value.
 	 * @param {Hash} value
@@ -1817,27 +2125,531 @@ Kekule.Spectroscopy.SpectrumDataSection = Class.create(Kekule.ChemObject,
 	},
 
 	/**
+	 * Get the data item indexes that locates around independent variable values.
+	 * This method is recommended to be used in peak mode spectrum data section.
+	 * @param {Variant} independentValues A hash value with symbol: number map, or an array of values, or a single number value.
+	 * @param {Hash} extraOptions
+	 * @returns {Array}
+	 */
+	getSurroundingDataItemIndexesFromIndependent: function(independentValues, extraOptions)
+	{
+		// TODO: unfinished
+	},
+	/**
+	 * Get the data item index from independent variable values.
+	 * If the independentValues not pointed to a data item, -1 will be returned.
+	 * This method is recommended to be used in peak mode spectrum data section.
+	 * @param {Variant} independentValues A hash value with symbol: number map, or an array of values, or a single number value.
+	 * @param {Hash} extraOptions
+	 * @returns {Int}
+	 */
+	getDataItemIndexFromIndependent: function(independentValues, extraOptions)
+	{
+		var indepHashValues = {};
+		if (typeof(independentValues) === 'number')  // a direct number value,
+			indepHashValues = this._convArrayToSymboledHash([independentValues], this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT));
+		else if (DataType.isArrayValue(independentValues))
+			indepHashValues = this._convArrayToSymboledHash(independentValues, this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT));
+		else
+			indepHashValues = independentValues;
+
+		var indepVarSymbols = Kekule.ObjUtils.getOwnedFieldNames(indepHashValues);
+		var varDataRange = this.calcDataRange(indepVarSymbols);
+		var allowedErrorRate = extraOptions && extraOptions.allowedErrorRate;
+		var allowedError = {};
+		for (var i = 0, l = indepVarSymbols.length; i < l; ++i)
+		{
+			var symbol = indepVarSymbols[i];
+			var indepSearchValue = indepHashValues[symbol];
+			if (indepSearchValue < varDataRange[symbol].min || indepSearchValue > varDataRange[symbol].max)
+				return -1;
+			else
+				allowedError[symbol] = allowedErrorRate && ((varDataRange[symbol].max - varDataRange[symbol].min) * allowedErrorRate);
+		}
+
+		var resultDetails = {'index': -1, 'distanceSqr': 0};
+		for (var i = 0, l = this.getDataCount(); i < l; ++i)
+		{
+			var value = this.getHashValueAt(i);
+			var distanceSqr;
+			var peakMatch = true;
+			for (var j = 0, k = indepVarSymbols.length; j < k; ++j)
+			{
+				var symbol = indepVarSymbols[j];
+				var indepSearchValue = indepHashValues[symbol];
+				var currValue = value[symbol];
+				var indepDistance = Math.abs(currValue - indepSearchValue);
+				if (indepDistance <= allowedError[symbol])
+				{
+					distanceSqr += Math.sqr(indepDistance / varDataRange[symbol]);
+				}
+				else // indep value not match to this peak
+				{
+					peakMatch = false;
+					break;
+				}
+			}
+			if (peakMatch)  // found the candicate peak, compare to the prev candicate one, chose with the min distance
+			{
+				if (resultDetails.index < 0 || resultDetails.distanceSqr > distanceSqr)
+				{
+					resultDetails.index = i;
+					resultDetails.distanceSqr = distanceSqr;
+				}
+			}
+		}
+		return resultDetails.index;
+	},
+	/**
+	 * Returns the data hash value item from independent variable values.
+	 * If the independentValues not pointed to a data value item, null will be returned.
+	 * This method is recommended to be used in peak mode spectrum data section.
+	 * @param {Variant} independentValues A hash value with symbol: number map, or an array of values, or a single number value.
+	 * @param {Hash} extraOptions
+	 * @returns {Int}
+	 */
+	getDataValueFromIndependent: function(independentValues, extraOptions)
+	{
+		var index = this.getDataItemIndexFromIndependent(independentValues, extraOptions);
+		return (index >= 0)? this.getValueAt(index): null;
+	},
+	/**
 	 * Calculate values of dependant variable values from independent variable values.
-	 * @param {Hash} independentValues
+	 * @param {Variant} independentValues A hash value with symbol: number map, or an array of values, or a single number value.
 	 * @param {Hash} extraOptions
 	 * @returns {Hash}
 	 */
-	getDependentValues: function(independentValues, extraOptions)
+	calcValueFromIndependent: function(independentValues, extraOptions)
 	{
-		return this.doGetDependentValues(independantValues, extraOptions);
+		var indepHashValues = {};
+		if (typeof(independentValues) === 'number')  // a direct number value,
+			indepHashValues = this._convArrayToSymboledHash([independentValues], this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT));
+		else if (DataType.isArrayValue(independentValues))
+			indepHashValues = this._convArrayToSymboledHash(independentValues, this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT));
+		else
+			indepHashValues = independentValues;
+		return this.doCalcValueFromIndependent(indepHashValues, extraOptions);
 	},
 	/**
-	 * Do actual work of {@link Kekule.Spectroscopy.SpectrumData.getDependentValues}.
-	 * Descendants should override this method.
+	 * Do actual work of {@link Kekule.Spectroscopy.SpectrumData.calcValueFromIndependent}.
+	 * Descendants may override this method.
 	 * @param {Hash} independentValues
 	 * @param {Hash} extraOptions
 	 * @returns {Hash}
 	 * @private
 	 */
-	doGetDependentValues: function(independentValues, extraOptions)
+	doCalcValueFromIndependent: function(independentValues, extraOptions)
 	{
-		return {};
+		var mode = this.getMode();
+		return (mode === Kekule.Spectroscopy.DataMode.PEAK)?
+			this._doCalcValueFromIndependentInPeakMode(independentValues, extraOptions):
+			this._doCalcValueFromIndependentInContinousMode(independentValues, extraOptions);
 	},
+	/** @private */
+	_doCalcValueFromIndependentInPeakMode: function(independentValues, extraOptions)
+	{
+		/*
+		// TODO: currently only handles data with one one independent var, but this approach can handle most of the spectrum cases
+		var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
+		if (indepVarSymbols.length > 1)
+			return null;
+		var indepVarSymbol = indepVarSymbols[0];
+		var indepDataRange = this.calcDataRange([indepVarSymbol])[indepVarSymbol];
+		var indepSearchValue = independentValues[indepVarSymbol];
+		if (indepSearchValue < indepDataRange.min || indepSearchValue > indepDataRange.max)
+			return null;
+
+		var allowedError = ((extraOptions && extraOptions.allowedErrorRate) || Kekule.globalOptions.spectrum.data.allowedComparisonErrorRate)
+			* (indepDataRange.max - indepDataRange.min);
+		var resultDetails = {'value': null, 'distance': indepDataRange.max - indepDataRange.min};
+		for (var i = 0, l = this.getDataCount(); i < l; ++i)
+		{
+			var value = this.getHashValueAt(i);
+			var indepDistance = Math.abs(value[indepVarSymbol] - indepSearchValue);
+			if (indepDistance <= allowedError)
+			{
+				if (indepDistance < resultDetails.distance)
+				{
+					resultDetails.value = value;
+					resultDetails.distance = indepDistance;
+				}
+			}
+		}
+		if (!resultDetails.value)  // use the default peak root value
+			resultDetails.value = this.getPeakRootValueOf(independentValues);
+
+		//delete resultDetails.value[indepVarSymbol];  // remove the indepedent var, only use the dependent ones
+		return resultDetails.value;
+		*/
+		var peakIndex = this.getDataItemIndexFromIndependent(independentValues, extraOptions);
+		if (peakIndex >= 0)  // found the peak
+			return this.getHashValueAt(peakIndex);
+		else  // use the default peak root value
+			return this.getPeakRootValueOf(independentValues);
+	},
+	/** @private */
+	_doCalcValueFromIndependentInContinousMode: function(independentValues, extraOptions)
+	{
+		var resultEx = this._doCalcValueFromIndependentInContinousModeEx(independentValues, extraOptions);
+		return resultEx && resultEx.value;
+	},
+	/** @private */
+	_doCalcValueFromIndependentInContinousModeEx: function(independentValues, extraOptions)
+	{
+		// TODO: currently only handles data with one one independent var, but this approach can handle most of the spectrum cases
+		var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
+		var depVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.DEPENDENT);
+		if (indepVarSymbols.length > 1)
+			return null;
+		var indepVarSymbol = indepVarSymbols[0];
+		var indepVarValue = independentValues[indepVarSymbol];
+		var totalDataRange = this.calcDataRange([indepVarSymbol])[indepVarSymbol];
+		if (indepVarValue < totalDataRange.min || indepVarValue > totalDataRange.max)
+			return null;
+
+		var resultValue;
+		var dataIndexFloor = -1, dataIndexCeil = -1;
+		var useContinuousVarRange = true;
+		var varDef = this.getLocalVarDef(indepVarSymbol);
+		var dataCount = this.getDataCount();
+		useContinuousVarRange = !varDef.hasDifferentExternalUnit();  // the value get from getContinuousVarRange function in based on internal unit
+		if (useContinuousVarRange)
+		{
+			var indepVarRange = this.getContinuousVarRange(indepVarSymbol);
+			useContinuousVarRange = !!indepVarRange;
+		}
+		if (useContinuousVarRange)
+		{
+			var dataIndex = (indepVarValue - indepVarRange.fromValue) / (indepVarRange.toValue - indepVarRange.fromValue) * (dataCount - 1);
+			dataIndexFloor = Math.max(Math.floor(dataIndex), 0);
+			dataIndexCeil = Math.min(Math.ceil(dataIndex), dataCount - 1);
+		}
+		else
+		{
+			//indepVarRange = this.calcDataRange([indepVarSymbols])[indepVarSymbol];
+			var indepOrder = this.getIndependentVarValueOrder(indepVarSymbol);
+			if (indepOrder === 0)  // var values are not ordered, can not calculate
+			{
+				// do nothing, keep dataIndexFloor/dataIndexCeil < 0
+			}
+			else
+			{
+				var reversedOrder = indepOrder < 0;
+				var indexes = this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepVarValue, 0, dataCount - 1, reversedOrder);
+				dataIndexFloor = indexes[0];
+				dataIndexCeil = indexes[1];
+			}
+		}
+
+		if (dataIndexFloor < 0 || dataIndexCeil < 0)
+			return null;
+		if (dataIndexFloor === dataIndexCeil)
+			//return this.getHashValueAt(dataIndexFloor);
+			resultValue = this.getHashValueAt(dataIndexFloor);
+		else
+		{
+			/*
+			var valueFloor = this.getHashValueAt(dataIndexFloor);
+			var valueCeil = this.getHashValueAt(dataIndexCeil);
+			var ratio = (indepVarValue - valueFloor[indepVarSymbol]) / (valueCeil[indepVarSymbol] - valueFloor[indepVarSymbol]);
+			var result = {};
+			var symbols =  Kekule.ObjUtils.getOwnedFieldNames(valueFloor);
+			for (var i = 0, l = symbols.length; i < l; ++i)
+			{
+				var symbol = symbols[i];
+				if (symbol === indepVarSymbol)
+					result[symbol] = indepVarValue;
+				else
+					result[symbol] = valueFloor[symbol] + (valueCeil[symbol] - valueFloor[symbol]) * ratio;
+			}
+			*/
+			//var valueFloor = this.getHashValueAt(dataIndexFloor);
+			//var depVarSymbols = Kekule.ObjUtils.getOwnedFieldNames(valueFloor);
+			//AU.remove(depVarSymbols, indepVarSymbol);
+
+			var depValues = this._calcIntermediateDependentVarValuesBetween(depVarSymbols, indepVarSymbol, indepVarValue, dataIndexFloor, dataIndexCeil);
+			resultValue = {};
+			resultValue[indepVarSymbol] = indepVarValue;
+			resultValue = Object.extend(resultValue, depValues);  // ensure the independent value first
+			//console.log('calc', result, depVarSymbols, indepVarSymbol, indepVarValue, dataIndexFloor, dataIndexCeil);
+			//return result;
+		}
+		return {
+			'value': resultValue,
+			'dataIndexes': [dataIndexFloor, dataIndexCeil]
+		};
+	},
+	/** @private */
+	_calcNeighborDataIndexesToIndependentValue: function(indepVarSymbol, indepValue, fromIndex, toIndex, reversedOrder)
+	{
+		if (toIndex - fromIndex <= 2)
+			return [fromIndex, toIndex];
+		var halfIndex = Math.round((fromIndex + toIndex) / 2);
+		var halfValue = this.getHashValueAt(halfIndex)[indepVarSymbol];
+		if (halfValue === indepValue)
+			return [halfIndex, halfIndex];
+		else if (halfValue <= indepValue)
+			return !reversedOrder?
+				this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, halfIndex, toIndex, reversedOrder):
+				this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, fromIndex, halfIndex, reversedOrder);
+		else
+			return !reversedOrder?
+				this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, fromIndex, halfIndex, reversedOrder):
+				this._calcNeighborDataIndexesToIndependentValue(indepVarSymbol, indepValue, halfIndex, toIndex, reversedOrder);
+	},
+	/** @private */
+	_calcIntermediateDependentVarValuesBetween: function(depVarSymbols, indepVarSymbol, indepVarValue, floorIndex, ceilIndex)
+	{
+		if (floorIndex === ceilIndex)
+		{
+			var value = this.getHashValueAt(floorIndex);
+			var result = {};
+			for (var i = 0, l = depVarSymbols.length; i < l; ++i)
+			{
+				result[depVarSymbols[i]] = value[depVarSymbols[i]];
+			}
+			return result;
+		}
+
+		var valueFloor = this.getHashValueAt(floorIndex);
+		var valueCeil = this.getHashValueAt(ceilIndex);
+
+		var floorIndepValue = valueFloor[indepVarSymbol];
+		var ceilIndepValue = valueCeil[indepVarSymbol];
+		if (!Kekule.NumUtils.isNormalNumber(floorIndepValue))
+		{
+			if (floorIndex > 0)
+				return this._calcIntermediateDependentVarValuesBetween(depVarSymbols, indepVarSymbol, indepVarValue, floorIndex - 1, ceilIndex);
+			else
+				return this._calcIntermediateDependentVarValuesBetween(depVarSymbols, indepVarSymbol, indepVarValue, ceilIndex, ceilIndex);
+		}
+		else if (!Kekule.NumUtils.isNormalNumber(ceilIndepValue))
+		{
+			if (ceilIndex < this.getDataCount() - 1)
+				return this._calcIntermediateDependentVarValuesBetween(depVarSymbols, indepVarSymbol, indepVarValue, floorIndex, ceilIndex + 1);
+			else
+				return this._calcIntermediateDependentVarValuesBetween(depVarSymbols, indepVarSymbol, indepVarValue, floorIndex, floorIndex);
+		}
+		else
+		{
+			var ratio = (indepVarValue - valueFloor[indepVarSymbol]) / (valueCeil[indepVarSymbol] - valueFloor[indepVarSymbol]);
+			var result = {};
+			for (var i = 0, l = depVarSymbols.length; i < l; ++i)
+			{
+				var symbol = depVarSymbols[i];
+				var floorDepValue = valueFloor[symbol];
+				var ceilDepValue = valueCeil[symbol];
+				var resultValue = false;
+				if (!Kekule.NumUtils.isNormalNumber(floorDepValue))
+				{
+					if (floorIndex > 0)
+						resultValue = this._calcIntermediateDependentVarValuesBetween([symbol], indepVarSymbol, indepVarValue, floorIndex - 1, ceilIndex);
+					else
+						resultValue = ceilDepValue[symbol];
+				}
+				else if (!Kekule.NumUtils.isNormalNumber(ceilDepValue))
+				{
+					if (ceilIndex < this.getDataCount() - 1)
+						resultValue = this._calcIntermediateDependentVarValuesBetween([symbol], indepVarSymbol, indepVarValue, floorIndex, ceilIndex + 1);
+					else
+						resultValue = floorDepValue[symbol];
+				}
+				else
+					resultValue = floorDepValue + (ceilDepValue - floorDepValue) * ratio;
+				result[symbol] = resultValue;
+			}
+			return result;
+		}
+
+		/*
+		var symbols =  Kekule.ObjUtils.getOwnedFieldNames(valueFloor);
+		for (var i = 0, l = symbols.length; i < l; ++i)
+		{
+			var symbol = symbols[i];
+			if (symbol === indepVarSymbol)
+				result[symbol] = indepVarValue;
+			else
+				result[symbol] = valueFloor[symbol] + (valueCeil[symbol] - valueFloor[symbol]) * ratio;
+		}
+		//var valueFloor
+		var ratio = (indepVarValue - valueFloor[indepVarSymbol]) / (valueCeil[indepVarSymbol] - valueFloor[indepVarSymbol]);
+		*/
+	},
+
+	/**
+	 * Calculate value ranges of dependant variables from independent variable value ranges.
+	 * @param {Variant} independentRanges A hash value with {symbol: {min, max}} map, or an array of {min, max}.
+	 * @param {Hash} extraOptions
+	 * @returns {Hash} Including the following fields: {range, dataIndexes, dataValues}
+	 */
+	calcValueRangeFromIndependentRangeEx: function(independentRanges, extraOptions)
+	{
+		var indepHashRanges = {};
+		if (DataType.isArrayValue(independentRanges))
+			indepHashRanges = this._convArrayToSymboledHash(independentRanges, this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT));
+		else
+			indepHashRanges = independentRanges;
+		return this.doCalcValueRangeFromIndependentRangeEx(indepHashRanges, extraOptions);
+	},
+	/** @private */
+	doCalcValueRangeFromIndependentRangeEx: function(independentRanges, extraOptions)
+	{
+		var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
+		var depVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.DEPENDENT);
+		var totalDataRange = this.calcDataRange(indepVarSymbols);
+		var findNearest = extraOptions && extraOptions.findNearest;
+
+		var actualIndepRanges = {};
+		var centerIndepValue = {};
+		for (var i = 0, l = indepVarSymbols.length; i < l; ++i)
+		{
+			var indepVarSymbol = indepVarSymbols[i];
+			if (independentRanges[indepVarSymbol])
+			{
+				var indepVarRange = Object.extend({}, independentRanges[indepVarSymbol]);
+				var currTotalDataRange = totalDataRange[indepVarSymbol];
+
+				if (indepVarRange.min < currTotalDataRange.min)
+					indepVarRange.min = currTotalDataRange.min;
+				if (indepVarRange.max > currTotalDataRange.max)
+					indepVarRange.max = currTotalDataRange.max;
+				actualIndepRanges[indepVarSymbol] = indepVarRange;
+				centerIndepValue[indepVarSymbol] = (indepVarRange.min + indepVarRange.max) / 2;
+			}
+		}
+
+		var mode = this.getMode();
+		var result = (mode === Kekule.Spectroscopy.DataMode.PEAK)?
+			this._doCalcValueRangeFromIndependentRangeInPeakModeEx(actualIndepRanges, centerIndepValue, indepVarSymbols, depVarSymbols, extraOptions):
+			this._doCalcValueRangeFromIndependentRangeInContinousModeEx(actualIndepRanges, centerIndepValue, indepVarSymbols, depVarSymbols, extraOptions);
+		if (result && result.range)  // check if no legal range returned
+		{
+			if (Kekule.ObjUtils.getOwnedFieldNames(result.range) <= 0)
+				result.range = null;
+		}
+		return result;
+	},
+	/** @private */
+	_doCalcValueRangeFromIndependentRangeInPeakModeEx: function(independentRanges, centerIndepValue, indepVarSymbols, depVarSymbols, extraOptions)
+	{
+		var findNearest = !!centerIndepValue;  // if centerIndepValue is passed, we need to find the nearest value
+		var minDistanceSqr;
+		var result = {'dataIndexes': [], 'dataValues': [], 'range':{}};
+		var indexFrom, indexTo, indexStep;
+		if (extraOptions.findInReversedOrder)
+		{
+			indexFrom = this.getDataCount() - 1;
+			indexTo = 0;
+			indexStep = -1;
+		}
+		else
+		{
+			indexFrom = 0;
+			indexTo = this.getDataCount() - 1;
+			indexStep = 1;
+		}
+		//for (var i = 0, l = this.getDataCount(); i < l; ++i)
+		for (var i = indexFrom; extraOptions.findInReversedOrder? (i >= indexTo): (i <= indexTo); i += indexStep)
+		{
+			var value = this.getHashValueAt(i);
+			var passed = true;
+			var distanceSqr = 0;
+			for (var j = 0, jj = indepVarSymbols.length; j < jj; ++j)
+			{
+				var indepSymbol = indepVarSymbols[j];
+				passed = (value[indepSymbol] >= independentRanges[indepSymbol].min)
+					&& (value[indepSymbol] <= independentRanges[indepSymbol].max);
+				if (!passed)
+					break;
+				else
+				{
+					if (findNearest)
+						distanceSqr += Math.sqr(value[indepSymbol] - centerIndepValue[indepSymbol]);
+				}
+			}
+			if (passed)
+			{
+				result.dataIndexes.push(i);
+				result.dataValues.push(value);
+				if (findNearest)
+				{
+					if (minDistanceSqr === undefined || distanceSqr < minDistanceSqr)
+					{
+						minDistanceSqr = distanceSqr;
+						result.nearest = {'dataIndex': i, 'dataValue': value};
+					}
+				}
+			}
+		}
+		result.range = Kekule.Spectroscopy.Utils.expandDataRange(result.range, result.dataValues);
+		return result;
+	},
+	/** @private */
+	_doCalcValueRangeFromIndependentRangeInContinousModeEx: function(independentRanges, centerIndepValue, indepVarSymbols, depVarSymbols, extraOptions)
+	{
+		// TODO: currently only handles data with one one independent var, but this approach can handle most of the spectrum cases
+		//var indepVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.INDEPENDENT);
+		//var depVarSymbols = this.getLocalVarSymbolsOfDependency(Kekule.VarDependency.DEPENDENT);
+		if (indepVarSymbols.length > 1)
+			return null;
+		var indepVarSymbol = indepVarSymbols[0];
+		var indepVarRange = independentRanges[indepVarSymbol];
+		/*
+		var totalDataRange = this.calcDataRange([indepVarSymbol])[indepVarSymbol];
+		if (indepVarRange.min < totalDataRange.min)
+			indepVarRange.min = totalDataRange.min;
+		if (indepVarRange.max > totalDataRange.max)
+			indepVarRange.max = totalDataRange.max;
+		*/
+		var indepV1 = {}, indepV2 = {};
+		indepV1[indepVarSymbol] = indepVarRange.min;
+		indepV2[indepVarSymbol] = indepVarRange.max;
+		var valueEx1 = this._doCalcValueFromIndependentInContinousModeEx(indepV1, extraOptions);
+		var valueEx2 = this._doCalcValueFromIndependentInContinousModeEx(indepV2, extraOptions);
+		if (!valueEx1 || !valueEx2)
+			return null;
+
+		var isIndepValueReversed = (valueEx1.dataIndexes[0] > valueEx2.dataIndexes[0]);
+		var rangeDataIndexes = {}
+		if (isIndepValueReversed)
+		{
+			rangeDataIndexes.fromIndex = valueEx2.dataIndexes[1];
+			rangeDataIndexes.toIndex = valueEx1.dataIndexes[0];
+		}
+		else
+		{
+			rangeDataIndexes.fromIndex = valueEx1.dataIndexes[1];
+			rangeDataIndexes.toIndex = valueEx2.dataIndexes[0];
+		}
+
+		//var dataValues = [];
+
+		var result = {'range': {}, 'dataIndexes': [], 'dataValues': []};
+		for (var i = rangeDataIndexes.fromIndex; i <= rangeDataIndexes.toIndex; ++i)
+		{
+			var value = this.getHashValueAt(i)
+			result.dataValues.push(value);
+			result.dataIndexes.push(i);
+			result.range = Kekule.Spectroscopy.Utils.expandDataRange(result.range, value);
+		}
+		result.range = Kekule.Spectroscopy.Utils.expandDataRange(result.range, [valueEx1.value, valueEx2.value]);
+		// the leading and tailing values between data points
+		if (isIndepValueReversed)
+		{
+			result.dataValues.push(valueEx1.value);
+			result.dataValues.unshift(valueEx2.value);
+		}
+		else
+		{
+			result.dataValues.push(valueEx2.value);
+			result.dataValues.unshift(valueEx1.value);
+		}
+		result.dataIndexes.push(-1);
+		result.dataIndexes.unshift(-1);
+
+		return result;
+	},
+
 	/**
 	 * Returns an iterator to iterate all data in this object.
 	 * If iterator is not available, null should be returned.
@@ -2237,7 +3049,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 		},
 
 		/** @ignore */
-		loaded: function(/*$super*/)
+		loaded: function(rootObj)
 		{
 			var sections = this.getSections();
 			if (sections)
@@ -2245,7 +3057,7 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 				sections.parentChanged(this);
 				sections.ownerChanged(this.getOwner());
 			}
-			this.tryApplySuper('loaded');
+			this.tryApplySuper('loaded', [rootObj]);
 		},
 
 		/**
@@ -2756,30 +3568,6 @@ Kekule.Spectroscopy.SpectrumData = Class.create(ObjectEx,
 		this.getActiveSection().setExtraInfoAt(index, info);
 		return this;
 	},
-
-	/**
-	 * Calculate values of dependant variable values from independent variable values.
-	 * @param {Hash} independentValues
-	 * @param {Hash} extraOptions
-	 * @returns {Hash}
-	 */
-	getDependentValues: function(independentValues, extraOptions)
-	{
-		return this.doGetDependentValues(independantValues, extraOptions);
-	},
-	/**
-	 * Do actual work of {@link Kekule.Spectroscopy.SpectrumData.getDependentValues}.
-	 * Descendants should override this method.
-	 * @param {Hash} independentValues
-	 * @param {Hash} extraOptions
-	 * @returns {Hash}
-	 * @private
-	 */
-	doGetDependentValues: function(independentValues, extraOptions)
-	{
-		// TODO: unfinished
-		return {};
-	},
 	/**
 	 * Returns an iterator to iterate all data in this object.
 	 * If iterator is not available, null should be returned.
@@ -2888,25 +3676,22 @@ Kekule.Spectroscopy.PeakMultiplicity = {
 };
 
 /**
- * A special class to store the additional peak information (e.g. the assignment ref object of peak).
+ * A special class to store the extra information of spectrum data value (e.g. the assignment ref object of peak).
  * @class
  * @augments Kekule.ChemObject
  *
  * @param {Hash} params
  *
  * @property {Kekule.ChemObject} assignments The assignment targets array of peak, usually containing only an atom or a bond.
- * @property {Kekule.ChemObject} assignment The assignment target of peak, first item of {@link Kekule.Spectroscopy.SpectrumPeakDetails.assignments}, usually an atom or a bond.
- * @property {String} shape Shape of peak, usually be set with value from {@link Kekule.Spectroscopy.PeakShape}.
- * @property {VARIANT} multiplicity Multiplicity of peak.
- *   Usually be set with value from {@link Kekule.Spectroscopy.PeakMultiplicity}, but a custom string value (e.g. 'triplet121') is also allowed.
+ * @property {Kekule.ChemObject} assignment The assignment target of peak, first item of {@link Kekule.Spectroscopy.SpectrumDataDetails.assignments}, usually an atom or a bond.
  */
-Kekule.Spectroscopy.SpectrumPeakDetails = Class.create(Kekule.ChemObject,
-/** @lends Kekule.Spectroscopy.SpectrumPeakDetails# */
+Kekule.Spectroscopy.SpectrumDataDetails = Class.create(Kekule.ChemObject,
+/** @lends Kekule.Spectroscopy.SpectrumDataDetails# */
 {
 	/** @private */
-	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumPeakDetails',
+	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumDataDetails',
 	/** @private */
-	initialize: function (params)
+	initialize: function(params)
 	{
 		this.setPropStoreFieldValue('assignments', []);
 		this.tryApplySuper('initialize', []);
@@ -2926,8 +3711,6 @@ Kekule.Spectroscopy.SpectrumPeakDetails = Class.create(Kekule.ChemObject,
 			'getter': function() { return (this.getAssignments() || [])[0]; },
 			'setter': function(value) { this.setAssignments(value); }
 		});
-		this.defineProp('shape', {'dataType': DataType.STRING});
-		this.defineProp('multiplicity', {'dataType': DataType.VARIANT});
 	},
 	/** @ignore */
 	doFinalize: function()
@@ -2938,13 +3721,13 @@ Kekule.Spectroscopy.SpectrumPeakDetails = Class.create(Kekule.ChemObject,
 	/** @ignore */
 	getAutoIdPrefix: function()
 	{
-		return 'p';
+		return 'd';
 	},
 	/** @ignore */
 	isEmpty: function()
 	{
 		var assignments = this.getAssignments();
-		return !this.getShape() && Kekule.ObjUtils.isUnset(this.getMultiplicity()) && (!assignments || !assignments.length);
+		return (!assignments || !assignments.length);
 	},
 	/**
 	 * Returns whether this peak detail has assignments info.
@@ -2962,9 +3745,53 @@ Kekule.Spectroscopy.SpectrumPeakDetails = Class.create(Kekule.ChemObject,
 		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
 		{
 			result = result || [];
+			result.unshift('assignments');
+		}
+		return result;
+	}
+});
+
+/**
+ * A special class to store the additional peak information (e.g. the assignment ref object of peak, the peak shape, multiplicity).
+ * @class
+ * @augments Kekule.Spectroscopy.SpectrumDataDetails
+ *
+ * @property {String} shape Shape of peak, usually be set with value from {@link Kekule.Spectroscopy.PeakShape}.
+ * @property {VARIANT} multiplicity Multiplicity of peak.
+ *   Usually be set with value from {@link Kekule.Spectroscopy.PeakMultiplicity}, but a custom string value (e.g. 'triplet121') is also allowed.
+ */
+Kekule.Spectroscopy.SpectrumPeakDetails = Class.create(Kekule.Spectroscopy.SpectrumDataDetails,
+/** @lends Kekule.Spectroscopy.SpectrumPeakDetails# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.Spectroscopy.SpectrumPeakDetails',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('shape', {'dataType': DataType.STRING});
+		this.defineProp('multiplicity', {'dataType': DataType.VARIANT});
+	},
+	/** @ignore */
+	getAutoIdPrefix: function()
+	{
+		return 'p';
+	},
+	/** @ignore */
+	isEmpty: function()
+	{
+		var result = this.tryApplySuper('isEmpty');
+		result = result && !this.getShape() && Kekule.ObjUtils.isUnset(this.getMultiplicity());
+		return result;
+	},
+	/** @ignore */
+	doGetComparisonPropNames: function(options)
+	{
+		var result = this.tryApplySuper('doGetComparisonPropNames', [options]);
+		if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE)
+		{
+			result = result || [];
 			result.unshift('shape');
 			result.unshift('multiplicity');
-			result.unshift('assignments');
 		}
 		return result;
 	}
@@ -3199,7 +4026,11 @@ Kekule.Spectroscopy.Spectrum = Class.create(Kekule.ChemObject,
 		proto[methodName] = function()
 		{
 			//console.log('call', methodName, arguments);
-			return this.getData()[dataMethodName].apply(this.getData(), arguments);
+			var target = this.getData();
+			var result = target[dataMethodName].apply(target, arguments);
+			if (result === target)  // fix for chaining calling of method
+				result = this;
+			return result;
 		}
 	},
 

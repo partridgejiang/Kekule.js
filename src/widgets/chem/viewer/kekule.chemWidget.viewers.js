@@ -16,6 +16,7 @@
  * requires /widgets/kekule.widget.helpers.js
  * requires /widgets/chem/kekule.chemWidget.base.js
  * requires /widgets/chem/kekule.chemWidget.chemObjDisplayers.js
+ * requires /widgets/chem/uiMarker/kekule.chemWidget.uiMarkers.js
  * requires /widgets/operation/kekule.actions.js
  * requires /widgets/commonCtrls/kekule.widget.buttons.js
  * requires /widgets/commonCtrls/kekule.widget.containers.js
@@ -88,6 +89,7 @@ Kekule.globalOptions.add('chemWidget.viewer', {
 	'enableToolbar': false,
 	'enableDirectInteraction': true,
 	'enableTouchInteraction': false,
+	'enableGestureInteraction': false,
 	'showCaption': false,
 
 	'useNormalBackground': false,
@@ -102,8 +104,10 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	VIEWER: 'K-Chem-Viewer',
 	VIEWER2D: 'K-Chem-Viewer2D',
 	VIEWER3D: 'K-Chem-Viewer3D',
+	VIEWER_CLIENT: 'K-Chem-Viewer-Client',
 	VIEWER_CAPTION: 'K-Chem-Viewer-Caption',
 	VIEWER_EMBEDDED_TOOLBAR: 'K-Chem-Viewer-Embedded-Toolbar',
+	VIEWER_UICONTEXT_PARENT: 'K-Chem-Viewer-UiContext-Parent',
 
 	VIEWER_MENU_BUTTON: 'K-Chem-Viewer-Menu-Button',
 
@@ -120,6 +124,17 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 
 var CNS = Kekule.Widget.HtmlClassNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
+
+/**
+ * Enumeration of some common used UI markers groups.
+ * @enum
+ */
+Kekule.ChemWidget.ViewerUiMarkerGroup = {
+	/** Ui markers for hot tracking objects. */
+	HOTTRACK: 'hotTrack',
+	/** Ui markers for selecting objects. */
+	SELECT: 'select'
+};
 
 /**
  * An universal viewer widget for chem objects (especially molecules).
@@ -196,6 +211,18 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
  * @name Kekule.ChemWidget.Viewer#editingDone
  * @event
  */
+/**
+ * Invoked when the pointer is hot tracking on objects in viewer.
+ *   event param of it has fields: {objects: Array}.
+ * @name Kekule.ChemWidget.Viewer#hotTrackOnObjects
+ * @event
+ */
+/**
+ * Invoked when objects are selected in view.
+ *   event param of it has fields: {objects: Array}.
+ * @name Kekule.ChemWidget.Viewer#selectionChange
+ * @event
+ */
 Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 /** @lends Kekule.ChemWidget.Viewer# */
 {
@@ -211,6 +238,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	DEF_TOOLBAR_EVOKE_MODES: [/*EM.ALWAYS,*/ EM.EVOKEE_CLICK, EM.EVOKEE_MOUSE_ENTER, EM.EVOKEE_TOUCH],
 	/** @private */
 	DEF_TOOLBAR_REVOKE_MODES: [/*EM.ALWAYS,*/ /*EM.EVOKEE_CLICK,*/ EM.EVOKEE_MOUSE_LEAVE, EM.EVOKER_TIMEOUT],
+	/** @private */
+	OBSERVING_GESTURES: ['pinch', 'pinchstart', 'pinchmove', 'pinchend', 'pinchcancel', 'pinchin', 'pinchout'],
 	/** @construct */
 	initialize: function(/*$super, */parentOrElementOrDocument, chemObj, renderType, viewerConfigs)
 	{
@@ -273,11 +302,16 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.endUpdate();
 		}
 
+		var gOptions = Kekule.globalOptions.get('chemWidget.viewer') || {};
+		this.setEnableGesture(oneOf(gOptions.enableGestureInteraction, false));  // the hammer event reactor need to be installed after element is bind
 		this.addIaController('default', new Kekule.ChemWidget.ViewerBasicInteractionController(this), true);
 	},
 	/** @private */
 	doFinalize: function(/*$super*/)
 	{
+		var markers = this.getUiMarkers();
+		if (markers)
+			markers.finalize();
 		//this.getPainter().finalize();
 		var toolBar = this.getToolbar();
 		this.tryApplySuper('doFinalize')  /* $super() */;
@@ -326,12 +360,112 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			'setter': function(value) { return this.setDisplayerConfigs(value); }
 		});
 
+		//this.defineProp('enableUiContext', {'dataType': DataType.BOOL});
+		this.defineProp('uiDrawBridge', {'dataType': DataType.OBJECT, 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				if (!this.getEnableUiContext())
+					return null;
+				var result = this.getPropStoreFieldValue('uiDrawBridge');
+				if (!result && !this.__$uiDrawBridgeInitialized$__)
+				{
+					this.__$uiDrawBridgeInitialized$__ = true;
+					result = this.createUiDrawBridge();
+					this.setPropStoreFieldValue('uiDrawBridge', result);
+				}
+				return result;
+			}
+		});
+		this.defineProp('uiContext', {'dataType': DataType.OBJECT, 'serializable': false,
+			'getter': function()
+			{
+				if (!this.getEnableUiContext())
+					return null;
+				var result = this.getPropStoreFieldValue('uiContext');
+				if (!result)
+				{
+					var bridge = this.getUiDrawBridge();
+					if (bridge)
+					{
+						var elem = this.getUiContextParentElem();
+						if (!elem)
+							return null;
+						else
+						{
+							var dim = Kekule.HtmlElementUtils.getElemScrollDimension(elem);
+							//var dim = Kekule.HtmlElementUtils.getElemClientDimension(elem);
+							result = bridge.createContext(elem, dim.width, dim.height);
+							this.setPropStoreFieldValue('uiContext', result);
+						}
+					}
+				}
+				return result;
+			}
+		});
+		this.defineProp('uiPainter', {'dataType': 'Kekule.Render.ChemObjPainter', 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('uiPainter');
+				if (!result)
+				{
+					// ui painter will always in 2D mode
+					var markers = this.getUiMarkers();
+					result = new Kekule.Render.ChemObjPainter(Kekule.Render.RendererType.R2D, markers, this.getUiDrawBridge());
+					result.setCanModifyTargetObj(true);
+					this.setPropStoreFieldValue('uiPainter', result);
+					return result;
+				}
+				return result;
+			}
+		});
+		this.defineProp('uiRenderer', {'dataType': 'Kekule.Render.AbstractRenderer', 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				var p = this.getUiPainter();
+				if (p)
+				{
+					var r = p.getRenderer();
+					if (!r)
+						p.prepareRenderer();
+					return p.getRenderer() || null;
+				}
+				else
+					return null;
+			}
+		});
+		// private ui marks properties
+		this.defineProp('uiMarkers', {'dataType': 'Kekule.ChemWidget.UiMarkerCollection', 'serializable': false, 'setter': null,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('uiMarkers');
+				if (!result)
+				{
+					result = new Kekule.ChemWidget.UiMarkerCollection();
+					this.setPropStoreFieldValue('uiMarkers', result);
+				}
+				return result;
+			}
+		});
+
 		this.defineProp('allowedMolDisplayTypes', {'dataType': DataType.ARRAY, 'scope': PS.PUBLIC,
 			'setter': function(value)
 			{
 				this.setPropStoreFieldValue('allowedMolDisplayTypes', value);
 				//this.updateToolbar();
 				this.updateUiComps();
+			}
+		});
+		this.defineProp('retainAspect', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				var op = this.getDrawOptions() || {};
+				return op.retainAspect;
+			},
+			'setter': function(value)
+			{
+				var op = this.getDrawOptions() || {};
+				op.retainAspect = !!value;
+				return this.setDrawOptions(op);
 			}
 		});
 
@@ -595,6 +729,50 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				this.setTouchAction(value? 'none': null);
 			}
 		});
+		this.defineProp('enableGesture', {'dataType': DataType.BOOL,
+			'setter': function(value)
+			{
+				var bValue = !!value;
+				if (this.getEnableGesture() !== bValue)
+				{
+					this.setPropStoreFieldValue('enableGesture', bValue);
+					if (bValue)
+					{
+						this.startObservingGestureEvents(this.OBSERVING_GESTURES);
+					}
+					else
+					{
+						this.startObservingGestureEvents(this.OBSERVING_GESTURES);
+					}
+				}
+			}
+		});
+
+		this.defineProp('hotTrackedObjects', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'getter': function()
+			{
+				return this.getPropStoreFieldValue('hotTrackedObjects') || [];
+			},
+			'setter': function(value)
+			{
+				//this.setPropStoreFieldValue('hotTrackedObjects', AU.toArray(value));
+				this.changeHotTrackedObjects(value && AU.toArray(value), true);
+			}
+		});
+		this.defineProp('selectedObjects', {
+			'dataType': DataType.ARRAY,
+			'serializable': false,
+			'getter': function()
+			{
+				return this.getPropStoreFieldValue('selectedObjects') || [];
+			},
+			'setter': function(value)
+			{
+				this.changeSelectedObjects(value && AU.toArray(value), true);
+			}
+		});
 	},
 	/** @ignore */
 	initPropValues: function(/*$super*/)
@@ -692,6 +870,16 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		return result;
 	},
 	/** @ignore */
+	doCreateSubElements: function(doc, docFragment)
+	{
+		// client element
+		var clientElem = doc.createElement('div');
+		clientElem.className = CCNS.VIEWER_CLIENT;
+		this._clientElement = clientElem;
+		docFragment.appendChild(clientElem);
+		return [clientElem];
+	},
+	/** @ignore */
 	doGetWidgetClassName: function(/*$super*/)
 	{
 		var result = this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CCNS.VIEWER;
@@ -712,6 +900,12 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	{
 		return (renderType === Kekule.Render.RendererType.R3D)?
 			CCNS.VIEWER3D: CCNS.VIEWER2D;
+	},
+
+	/** @ignore */
+	getClientElement: function()
+	{
+		return this._clientElement;
 	},
 
 	/** @ignore */
@@ -746,6 +940,18 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.tryApplySuper('refitDrawContext', [doNotRepaint])  /* $super(doNotRepaint) */;
 		this.adjustToolbarPos();
 	},
+	/** @ignore */
+	changeContextDimension: function(newDimension)
+	{
+		if (this.getEnableUiContext())
+		{
+			if (this.getUiDrawBridge() && this.getUiContext())
+			{
+				this.doChangeContextDimension(this.getUiContext(), this.getUiDrawBridge(), newDimension, true);
+			}
+		}
+		return this.tryApplySuper('changeContextDimension', [newDimension]);
+	},
 
 	/** @ignore */
 	getAllowRenderTypeChange: function()
@@ -766,11 +972,47 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.updateUiComps();
 	},
 
+	/** @ignore */
+	doLoad: function(chemObj)
+	{
+		// clear UI markers when loading a new object
+		/*
+		this.setVisibleOfUiMarkerGroup(Kekule.ChemWidget.ViewerUiMarkerGroup.SELECT, false, false);
+		this.setVisibleOfUiMarkerGroup(Kekule.ChemWidget.ViewerUiMarkerGroup.HOTTRACK, false, false);
+		*/
+		this.beginUpdateUiMarkers();
+		try
+		{
+			this.clearHotTrackedItems();
+			this.clearSelectedItems();
+			this.clearUiMarkers();
+		}
+		finally
+		{
+			this.endUpdateUiMarkers();
+		}
+		this.tryApplySuper('doLoad', [chemObj]);
+	},
 	/** @private */
 	doLoadEnd: function(chemObj)
 	{
 		this.updateActions();
 		this.autoDetectCaption();
+	},
+
+	/** @ignore */
+	_repaintCore: function(overrideOptions)
+	{
+		//console.log('do repaint');
+		this.tryApplySuper('_repaintCore', [overrideOptions]);
+	},
+	/** @ignore */
+	chemObjRendered: function(chemObj, renderOptions)
+	{
+		var result = this.tryApplySuper('chemObjRendered', [chemObj, renderOptions]);
+		this.updateUiMarkers(true);
+		//this.repaintUiMarker();
+		return result;
 	},
 
 	/** @private */
@@ -791,6 +1033,143 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			else
 				Kekule.HtmlElementUtils.removeClass(elem, CNS.CORNER_ALL);
 		}
+	},
+
+	/** @ignore */
+	getBoundInfosAtCoord: function(screenCoord, filterFunc, boundInflation)
+	{
+		var boundInfos = this.tryApplySuper('getBoundInfosAtCoord', [screenCoord, filterFunc, boundInflation]);
+		var enableTrackNearest = this.getViewerConfigs().getInteractionConfigs().getEnableTrackOnNearest();
+		if (boundInfos && boundInfos.length && enableTrackNearest)  // sort result by distance to screenCoord
+		{
+			var distanceMap = new Kekule.MapEx();
+			try
+			{
+				var SU = Kekule.Render.MetaShapeUtils;
+				for (var i = boundInfos.length - 1; i >= 0; --i)
+				{
+					var info = boundInfos[i];
+					var shapeInfo = info.boundInfo;
+					var currDistance = SU.getDistance(screenCoord, shapeInfo);
+					distanceMap.set(info, currDistance);
+				}
+				// sort by z-index, the smaller index on bottom
+				boundInfos.sort(function (b1, b2)	{
+					var result = - (b1.boundInfo.shapeType - b2.boundInfo.shapeType);
+					if (result === 0)
+						result = - (distanceMap.get(b1) - distanceMap.get(b2));
+					return result;
+				});
+			}
+			finally
+			{
+				distanceMap.finalize();
+			}
+		}
+		//console.log('boundInfos', screenCoord, boundInfos);
+		return boundInfos;
+	},
+
+	/** @ignore */
+	/*
+	getTopmostBoundInfoAtCoord: function(screenCoord, excludeObjs, boundInflation)
+	{
+		var enableTrackNearest = this.getViewerConfigs().getInteractionConfigs().getEnableTrackOnNearest();
+		if (!enableTrackNearest)
+			return this.tryApplySuper('getTopmostBoundInfoAtCoord', [screenCoord, excludeObjs, boundInflation]);
+
+		// else, track on nearest
+		var SU = Kekule.Render.MetaShapeUtils;
+		var boundInfos = this.getBoundInfosAtCoord(screenCoord, null, boundInflation);
+		//var filteredBoundInfos = [];
+		var result, lastShapeInfo, lastDistance;
+		var setResult = function(boundInfo, shapeInfo, distance)
+		{
+			result = boundInfo;
+			lastShapeInfo = shapeInfo || boundInfo.boundInfo;
+			if (Kekule.ObjUtils.notUnset(distance))
+				lastDistance = distance;
+			else
+				lastDistance = SU.getDistance(screenCoord, lastShapeInfo);
+		};
+		for (var i = boundInfos.length - 1; i >= 0; --i)
+		{
+			var info = boundInfos[i];
+			if (excludeObjs && (excludeObjs.indexOf(info.obj) >= 0))
+				continue;
+			if (!result)
+				setResult(info);
+			else
+			{
+				var shapeInfo = info.boundInfo;
+				if (shapeInfo.shapeType < lastShapeInfo.shapeType)
+					setResult(info, shapeInfo);
+				else if (shapeInfo.shapeType === lastShapeInfo.shapeType)
+				{
+					var currDistance = SU.getDistance(screenCoord, shapeInfo);
+					if (currDistance < lastDistance)
+					{
+						//console.log('distanceCompare', currDistance, lastDistance);
+						setResult(info, shapeInfo, currDistance);
+					}
+				}
+			}
+		}
+		return result;
+	},
+	*/
+
+	/**
+	 * Returns whether the UI marker context is enabled in viewer.
+	 * Descendants or extensions may override this method.
+	 * @returns {Bool}
+	 */
+	getEnableUiContext: function()
+	{
+		return true;
+	},
+	/**
+	 * Returns parent element to create UI context inside viewer.
+	 * @private
+	 */
+	getUiContextParentElem: function(disableAutoCreate)
+	{
+		if (!this.getEnableUiContext())
+			return null;
+		var result = this._uiContextParentElem;
+		if (!result && !disableAutoCreate)  // create new
+		{
+			result = this.getDocument().createElement('div'); // IMPORTANT: span may cause dimension calc problem of context
+			this._uiContextParentElem = result;
+			Kekule.HtmlElementUtils.addClass(result, CNS.DYN_CREATED);
+			Kekule.HtmlElementUtils.addClass(result, CCNS.VIEWER_UICONTEXT_PARENT);
+			// IMPORTANT: force to fullfill the parent, otherwise draw context dimension calculation may have problem
+			result.style.width = '100%';
+			result.style.height = '100%';
+			// insert after draw context parent elment
+			var drawContextParentElem = this.getDrawContextParentElem();
+			var root = drawContextParentElem? drawContextParentElem.parentNode: this.getElement();
+			var refSibling = drawContextParentElem && drawContextParentElem.nextSibling;
+			if (refSibling)
+				root.insertBefore(result, refSibling);
+			else
+				root.appendChild(result);
+		}
+		return result;
+	},
+	/** @private */
+	createUiDrawBridge: function()
+	{
+		// UI marker will always be in 2D
+		var result = Kekule.Render.DrawBridge2DMananger.getPreferredBridgeInstance();
+		if (!result)   // can not find suitable draw bridge
+		{
+			//Kekule.error(Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
+			var errorMsg = Kekule.Render.DrawBridge2DMananger.getUnavailableMessage() || Kekule.error(Kekule.$L('ErrorMsg.DRAW_BRIDGE_NOT_SUPPORTED'));
+			if (errorMsg)
+				this.reportException(errorMsg, Kekule.ExceptionLevel.NOT_FATAL_ERROR);
+		}
+		return result;
 	},
 
 	/** @private */
@@ -849,7 +1228,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	/** @private */
 	getInteractionReceiverElem: function()
 	{
-		return this.getDrawContextParentElem();
+		//return this.getDrawContextParentElem();
+		return this.getClientElement();
 	},
 
 	/** @ignore */
@@ -926,6 +1306,650 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		elem.style.display = displayCaption? 'inherit': 'none';
 	},
 	*/
+
+	//////////////////// methods about UI markers ///////////////////////////////
+	/**
+	 * Notify that currently is modifing UI markers and the editor need not to repaint them.
+	 * @private
+	 */
+	beginUpdateUiMarkers: function()
+	{
+		if (Kekule.ObjUtils.isUnset(this._uiMarkerUpdateFlag))
+			this._uiMarkerUpdateFlag = 0;
+		--this._uiMarkerUpdateFlag;
+		this.beginUpdate();   // some times the context should also be repainted to reflect the select/hot track markers
+	},
+	/**
+	 * Call this method to indicate the UI marker update process is over and should be immediately updated.
+	 * @private
+	 */
+	endUpdateUiMarkers: function()
+	{
+		this.endUpdate();
+		++this._uiMarkerUpdateFlag;
+		if (this._uiMarkerUpdateFlag > 0)
+			this._uiMarkerUpdateFlag = 0;
+		if (!this.isUpdatingUiMarkers())
+			this.repaintUiMarker();
+	},
+	/**
+	 * Check if the editor is under continuous UI marker update.
+	 * @returns {Bool}
+	 * @private
+	 */
+	isUpdatingUiMarkers: function()
+	{
+		return (this._uiMarkerUpdateFlag < 0);
+	},
+	/** @private */
+	_getUiMarkerOfName: function(markerName, groups, creationMethod)
+	{
+		var result = this.getUiMarkers().getMarkerOfName(markerName);
+		if (!result && creationMethod)  // auto create one
+		{
+			result = creationMethod.apply(this);
+			if (result)
+			{
+				result.setName(markerName);
+				result.setGroups(groups);
+			}
+		}
+		return result;
+	},
+	/** @private */
+	_getDefaultHotTrackUiMarker: function(autoCreate)
+	{
+		var creationMethod;
+		if (autoCreate)
+			creationMethod = this.createShapeBasedMarker;
+		var result = this._getUiMarkerOfName('hotTrackMarker', [Kekule.ChemWidget.ViewerUiMarkerGroup.HOTTRACK], creationMethod);
+		return result;
+	},
+	/** @private */
+	_getDefaultSelectionUiMarker: function(autoCreate)
+	{
+		var creationMethod;
+		if (autoCreate)
+			creationMethod = this.createShapeBasedMarker;
+		var result = this._getUiMarkerOfName('selectionMarker', [Kekule.ChemWidget.ViewerUiMarkerGroup.SELECT], creationMethod);
+		return result;
+	},
+	/**
+	 * Called when transform has been made to objects and UI markers need to be modified according to it.
+	 * The UI markers will also be repainted.
+	 * @private
+	 */
+	recalcUiMarkers: function()
+	{
+		if (this.getUiDrawBridge())
+		{
+			this.beginUpdateUiMarkers();
+			try
+			{
+				var marker;
+				// hot track
+				var hotTrackedObjs = this.getHotTrackedObjects();
+				//console.log('recalcUiMarkers ui', hotTrackedObjs);
+				if (hotTrackedObjs && hotTrackedObjs.length)
+				{
+					var bounds = this._calcBoundsOfObjects(hotTrackedObjs);
+					var drawStyles = this.getViewerConfigs().getUiMarkerConfigs().getHotTrackMarkerStyles() || {};
+					marker = this._getDefaultHotTrackUiMarker(true);  // auto create
+					this.modifyShapeBasedMarker(marker, bounds, drawStyles, false);
+					this.showUiMarker(marker);
+				}
+				else   // hide hot track marker
+				{
+					marker = this._getDefaultHotTrackUiMarker(false);  // not need to auto create
+					if (marker)
+						this.hideUiMarker(marker, false);
+				}
+				// selected
+				var selectedObjs = this.getSelectedObjects();
+				if (selectedObjs && selectedObjs.length)
+				{
+					var bounds = this._calcBoundsOfObjects(selectedObjs);
+					var drawStyles = this.getViewerConfigs().getUiMarkerConfigs().getSelectionMarkerStyles() || {};
+					marker = this._getDefaultSelectionUiMarker(true);  // auto create
+					this.modifyShapeBasedMarker(marker, bounds, drawStyles, false);
+					this.showUiMarker(marker);
+				}
+				else   // hide hot track marker
+				{
+					marker = this._getDefaultSelectionUiMarker(false);  // not need to auto create
+					if (marker)
+						this.hideUiMarker(marker, false);
+				}
+			}
+			finally
+			{
+				this.endUpdateUiMarkers();
+			}
+		}
+	},
+	/** @private */
+	repaintUiMarker: function()
+	{
+		//console.log('call repaintUiMarker', this._uiMarkerUpdateFlag, this.getHotTrackedObjects());
+		if (this.isUpdatingUiMarkers())
+			return;
+		if (this.getUiDrawBridge() && this.getUiContext())
+		{
+			this.clearUiContext();
+			var drawParams = this.calcDrawParams();
+			this.getUiPainter().draw(this.getUiContext(), drawParams.baseCoord, drawParams.drawOptions);
+		}
+	},
+	/**
+	 * Update the properties of existed UI markers according the current chem object state.
+	 * @private
+	 */
+	updateUiMarkers: function(doRepaint)
+	{
+		this.doUpdateUiMarkers();
+		if (doRepaint)
+			this.repaintUiMarker();
+	},
+	/** @private */
+	doUpdateUiMarkers: function()
+	{
+		this.recalcUiMarkers();
+	},
+	/**
+	 * Create a new marker based on shapeInfo.
+	 * @private
+	 */
+	createShapeBasedMarker: function(/*markerPropName,*/ shapeInfo, drawStyles, extraPropValues, updateRenderer)
+	{
+		var marker = new Kekule.ChemWidget.MetaShapeUiMarker();
+		if (shapeInfo)
+			marker.setShapeInfo(shapeInfo);
+		if (drawStyles)
+			marker.setDrawStyles(drawStyles);
+		if (extraPropValues)
+			marker.setPropValues(extraPropValues);
+		//this.setPropStoreFieldValue(markerPropName, marker);
+		this.getUiMarkers().addMarker(marker);
+		if (updateRenderer)
+		{
+			//var updateType = Kekule.Render.ObjectUpdateType.ADD;
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, updateType);
+			this.repaintUiMarker();
+		}
+		return marker;
+	},
+	/**
+	 * Change the shape info of a meta shape based marker, or create a new marker based on shape info.
+	 * @private
+	 */
+	modifyShapeBasedMarker: function(marker, newShapeInfo, drawStyles, updateRenderer)
+	{
+		var updateType = Kekule.Render.ObjectUpdateType.MODIFY;
+		if (newShapeInfo)
+			marker.setShapeInfo(newShapeInfo);
+		if (drawStyles)
+			marker.setDrawStyles(drawStyles);
+		// notify change and update renderer
+		if (updateRenderer)
+		{
+			//this.getUiPainter().redraw();
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, updateType);
+			this.repaintUiMarker();
+		}
+	},
+	/**
+	 * Create a new marker based on shapeInfo.
+	 * @private
+	 */
+	createTextBasedMarker: function(coord, text, drawStyles, extraPropValues, updateRenderer)
+	{
+		var marker = new Kekule.ChemWidget.TextUiMarker();
+		if (coord)
+			marker.setCoord(coord);
+		if (text)
+			marker.setText(text);
+		if (drawStyles)
+			marker.setDrawStyles(drawStyles);
+		if (extraPropValues)
+			marker.setPropValues(extraPropValues);
+		//this.setPropStoreFieldValue(markerPropName, marker);
+		this.getUiMarkers().addMarker(marker);
+		if (updateRenderer)
+		{
+			//var updateType = Kekule.Render.ObjectUpdateType.ADD;
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, updateType);
+			this.repaintUiMarker();
+		}
+		return marker;
+	},
+	/**
+	 * Change the shape info of a meta shape based marker, or create a new marker based on shape info.
+	 * @private
+	 */
+	modifyTextBasedMarker: function(marker, newCoord, newText, drawStyles, updateRenderer)
+	{
+		var updateType = Kekule.Render.ObjectUpdateType.MODIFY;
+		if (newCoord)
+			marker.setCoord(newCoord);
+		if (newText)
+			marker.setText(newText);
+		if (drawStyles)
+			marker.setDrawStyles(drawStyles);
+		// notify change and update renderer
+		if (updateRenderer)
+		{
+			//this.getUiPainter().redraw();
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, updateType);
+			this.repaintUiMarker();
+		}
+	},
+	/**
+	 * Returns the UI markers in a specified group.
+	 * @param {String} group
+	 * @returns {Array} Array of {Kekule.ChemWidget.AbstractMarker}.
+	 */
+	getUiMarkersOfGroup: function(group)
+	{
+		return this.getUiMarkers().getMarkersOfGroup(group);
+	},
+	/**
+	 * Change UI markers with a new set of property values.
+	 * @param {Array} markers
+	 * @param {Hash} propValues
+	 */
+	modifyUiMarkers: function(markers, propValues)
+	{
+		var ms = (markers instanceof Kekule.ChemWidget.UiMarkerCollection)? markers.getMarkers(): AU.toArray(markers);
+		for (var i = 0, l = ms.length; i < l; ++i)
+		{
+			ms[i].setPropValues(propValues);
+		}
+	},
+	/**
+	 * Set the visible property a series of UI markers.
+	 * @param {Array} markers
+	 * @param {Bool} visible
+	 * @param {Bool} updateRenderer
+	 */
+	setVisibleOfUiMarkers: function(markers, visible, updateRenderer)
+	{
+		this.modifyUiMarkers(markers, {'visible': visible});
+		if (updateRenderer)
+		{
+			this.repaintUiMarker();
+		}
+		return this;
+	},
+	/**
+	 * Set the visible properties of a group of UI markers.
+	 * @param {String} markerGroup
+	 * @param {Bool} visible
+	 * @param {Bool} updateRenderer
+	 */
+	setVisibleOfUiMarkerGroup: function(markerGroup, visible, updateRenderer)
+	{
+		var markers = this.getUiMarkersOfGroup(markerGroup);
+		return this.setVisibleOfUiMarkers(markers, visible, updateRenderer);
+	},
+	/**
+	 * Hide a UI marker.
+	 * @param {Kekule.ChemWidget.AbstractMarker} marker
+	 * @param {Bool} updateRenderer
+	 */
+	hideUiMarker: function(marker, updateRenderer)
+	{
+		marker.setVisible(false);
+		// notify change and update renderer
+		if (updateRenderer)
+		{
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, Kekule.Render.ObjectUpdateType.MODIFY);
+			this.repaintUiMarker();
+		}
+	},
+	/**
+	 * Show an UI marker.
+	 * @param {Kekule.ChemWidget.AbstractMarker} marker
+	 * @param {Bool} updateRenderer
+	 */
+	showUiMarker: function(marker, updateRenderer)
+	{
+		marker.setVisible(true);
+		if (updateRenderer)
+		{
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, Kekule.Render.ObjectUpdateType.MODIFY);
+			this.repaintUiMarker();
+		}
+	},
+	/**
+	 * Remove a marker from collection.
+	 * @private
+	 */
+	removeUiMarker: function(marker)
+	{
+		if (marker)
+		{
+			this.getUiMarkers().removeMarker(marker);
+			//this.getUiRenderer().update(this.getUiContext(), this.getUiMarkers(), marker, Kekule.Render.ObjectUpdateType.REMOVE);
+			this.repaintUiMarker();
+		}
+	},
+	/**
+	 * Clear all UI markers.
+	 * @private
+	 */
+	clearUiMarkers: function()
+	{
+		this.getUiMarkers().clearMarkers();
+		//this.getUiRenderer().redraw(this.getUiContext());
+		//this.redraw();
+		this.repaintUiMarker();
+	},
+	/** @private */
+	clearUiContext: function()
+	{
+		if (this.getUiContext() && this.getUiDrawBridge())
+			this.getUiDrawBridge().clearContext(this.getUiContext());
+	},
+
+	////////////////////////////////////////////////////
+	/**
+	 * Returns whether the select interaction is enabled in viewer.
+	 * @returns {Bool}
+	 */
+	getEnableObjectSelect: function()
+	{
+		// TODO: currently only allowed in 2D viewer
+		return this.getRenderType() === Kekule.Render.RendererType.R2D
+			&& this.getViewerConfigs().getInteractionConfigs().getEnableBasicObjectSelect();
+	},
+	/**
+	 * Returns whether the hot track interaction is enabled in viewer.
+	 * @returns {Bool}
+	 */
+	getEnableObjectHotTrack: function()
+	{
+		// TODO: currently only allowed in 2D viewer
+		return this.getRenderType() === Kekule.Render.RendererType.R2D
+			&& this.getViewerConfigs().getInteractionConfigs().getEnableBasicObjectHotTrack();
+	},
+
+	/**
+	 * Add object(s) to selection.
+	 * @param {Variant} objs
+	 */
+	addToSelection: function(objs)
+	{
+		var selection = AU.clone(this.getSelectedObjects());
+		var objects = objs? AU.toArray(objs): [];
+		var changed = false;
+		for (var i = 0, l = objects.length; i < l; ++i)
+		{
+			var obj = objects[i];
+			if (selection.indexOf(obj) >= 0)  // already inside, bypass
+				continue;
+			else
+			{
+				selection.push(obj);
+				changed = true;
+			}
+		}
+		if (changed)
+			this.changeSelectedObjects(selection, true);
+	},
+	/**
+	 * Remove object(s) from selection.
+	 * @param {Variant} objs
+	 */
+	removeFromSelection: function(objs)
+	{
+		var selection = AU.clone(this.getSelectedObjects());
+		var objects = objs? AU.toArray(objs): [];
+		var changed = false;
+		for (var i = 0, l = objects.length; i < l; ++i)
+		{
+			var obj = objects[i];
+			var index = selection.indexOf(obj);
+			if (index >= 0)  // inside, remove it
+			{
+				selection.splice(index, 1);
+				changed = true;
+			}
+		}
+		if (changed)
+			this.changeSelectedObjects(selection, true);
+	},
+	/**
+	 * Toggle selection state of data items.
+	 * @param {Variant} objs
+	 */
+	toggleSelectingState: function(objs)
+	{
+		var selection = AU.clone(this.getSelectedObjects());
+		var objects = AU.toArray(objs);
+		for (var i = 0, l = objects.length; i < l; ++i)
+		{
+			var obj = objects[i];
+			var index = selection.indexOf(obj);
+			if (index >= 0)  // inside, remove it
+			{
+				selection.splice(index, 1);
+			}
+			else  // not inside, add it
+			{
+				selection.push(obj);
+			}
+		}
+		this.changeSelectedObjects(selection, true);
+	},
+	/**
+	 * Select object(s).
+	 * @param {Variant} objs
+	 */
+	select: function(objs)
+	{
+		var objects = objs? AU.toArray(objs): [];
+		this.changeSelectedObjects(objects, true);
+	},
+
+	/**
+	 * Clear all hot track items in viewer and all its child sub views.
+	 * @param {Array} byPassedHosts
+	 * @param {Bool} doRepaint
+	 * @private
+	 */
+	clearHotTrackedItems: function(byPassedHosts, doRepaint)
+	{
+		// subviews
+		this.iterateSubViews(function(subView) {
+			if (!byPassedHosts || byPassedHosts.indexOf(subView) < 0)
+				subView.doClearHotTrackedItems();
+		});
+		// self
+		if (!byPassedHosts || byPassedHosts.indexOf(this) < 0)
+			this.doClearHotTrackedItems();
+		if (doRepaint)
+			this.repaintUiMarker();
+	},
+	/** @private */
+	doClearHotTrackedItems: function(doRepaint)
+	{
+		this.changeHotTrackedObjects([], doRepaint);
+	},
+	/**
+	 * Clear all selected items in viewer and all its child sub views.
+	 * @param {Array} byPassedHosts
+	 * @param {Bool} doRepaint
+	 * @private
+	 */
+	clearSelectedItems: function(byPassedHosts, doRepaint)
+	{
+		// subviews
+		this.iterateSubViews(function(subView) {
+			if (byPassedHosts && byPassedHosts.indexOf(subView) < 0)
+				subView.doClearSelectedItems();
+		});
+		// self
+		if (byPassedHosts && byPassedHosts.indexOf(this) < 0)
+			this.doClearSelectedItems();
+		if (doRepaint)
+			this.repaintUiMarker();
+	},
+	/** @private */
+	doClearSelectedItems: function(doRepaint)
+	{
+		this.changeSelectedObjects([], doRepaint);
+	},
+
+	/** @private */
+	_isSameHotTrackedOrSelectedObjs: function(objs1, objs2)
+	{
+		var o1 = objs1, o2 = objs2;
+		if (o1 && !o1.length)
+			o1 = null;
+		if (o2 && !o2.length)
+			o2 = null;
+		if (o1 == o2)
+			return true;
+		else if (o1 && o2)
+		{
+			return AU.compare(o1, o2, function(a, b) { return (a === b)? 0: -1}) === 0;
+		}
+		else  // !objs1 || !objs2
+			return false;
+	},
+	/** @private */
+	_changeHotTrackOrSelectObjectRenderStyles: function(oldObjs, newObjs, isSelect, doRepaint)
+	{
+		var needRepaintContext =  false;
+		var objRenderStyleFieldName = isSelect? '_selectedObjectRenderStyles': '_hotTrackedObjectRenderStyles';
+		if (oldObjs && oldObjs.length)
+		{
+			var oldRenderStyles = this[objRenderStyleFieldName];
+			if (oldRenderStyles)
+			{
+				for (var i = 0, l = oldObjs.length; i < l; ++i)
+				{
+					var obj = oldObjs[i];
+					if (obj.removeOverrideRenderOptionItem)
+					{
+						obj.removeOverrideRenderOptionItem(oldRenderStyles);
+						needRepaintContext = true;
+					}
+				}
+			}
+		}
+		if (newObjs && newObjs.length)
+		{
+			var renderStyles = isSelect ?
+				this.getViewerConfigs().getUiMarkerConfigs().getSelectedObjectStyles() :
+				this.getViewerConfigs().getUiMarkerConfigs().getHotTrackedObjectStyles();
+			if (renderStyles)
+			{
+				this[objRenderStyleFieldName] = renderStyles;
+				for (var i = 0, l = newObjs.length; i < l; ++i)
+				{
+					var obj = newObjs[i];
+					if (obj.addOverrideRenderOptionItem)
+					{
+						obj.addOverrideRenderOptionItem(renderStyles);
+						needRepaintContext = true;
+					}
+				}
+			}
+		}
+		else
+			this[objRenderStyleFieldName] = null;
+
+		if (doRepaint && needRepaintContext)
+			this.requestRepaint();
+	},
+	/** @private */
+	changeHotTrackedObjects: function(newObjects, doRepaint)
+	{
+		var old = this.getHotTrackedObjects() || [];
+		var newObjs = newObjects? AU.toArray(newObjects): [];
+		//console.log('set hot track', newObjects, old, this._isSameHotTrackedOrSelectedObjs(old, newObjects));
+		//console.log('vewer.changeHotTrackedObjects', this.isUpdatingUiMarkers(), this._uiMarkerUpdateFlag, doRepaint);
+		if (!this._isSameHotTrackedOrSelectedObjs(old, newObjs))
+		{
+			if (doRepaint)
+				this.beginUpdateUiMarkers();
+			try
+			{
+				this._changeHotTrackOrSelectObjectRenderStyles(old, newObjs, false, doRepaint);
+
+				this.setPropStoreFieldValue('hotTrackedObjects', newObjs);
+				if (newObjs && newObjs.length)
+					this.clearHotTrackedItems([this], false);
+				//console.log('new hot track', newObjects, doRepaint);
+				if (doRepaint)
+					this.updateUiMarkers(true);
+
+				this.invokeEvent('hotTrackOnObjects', {'objects': newObjs, 'prevObjects': old});
+			}
+			finally
+			{
+				if (doRepaint)
+					this.endUpdateUiMarkers();
+			}
+		}
+	},
+	/** @private */
+	changeSelectedObjects: function(newObjects, doRepaint)
+	{
+		var old = this.getSelectedObjects();
+		var newObjs = newObjects? AU.toArray(newObjects): [];
+		if (!this._isSameHotTrackedOrSelectedObjs(old, newObjs))
+		{
+			if (doRepaint)
+				this.beginUpdateUiMarkers();
+			try
+			{
+				this._changeHotTrackOrSelectObjectRenderStyles(old, newObjs, true, doRepaint);
+
+				this.setPropStoreFieldValue('selectedObjects', newObjs);
+				if (newObjs && newObjs.length)
+					this.clearSelectedItems([this], false);
+				if (doRepaint)
+					this.updateUiMarkers(true);
+
+				this.invokeEvent('selectionChange', {'objects': newObjs, 'prevObjects': old});
+			}
+			finally
+			{
+				if (doRepaint)
+					this.endUpdateUiMarkers();
+			}
+		}
+	},
+
+	/** @private */
+	_calcBoundsOfObjects: function(objects, boundInflation)
+	{
+		var bounds = [];
+		if (Kekule.ObjUtils.isUnset(boundInflation))
+			boundInflation = this.getViewerConfigs().getInteractionConfigs().getObjBoundTrackInflation();
+		for (var i = 0; i < objects.length; ++i)
+		{
+			var obj = objects[i];
+			var infos = this.getBoundInfoRecorder().getBelongedInfos(this.getDrawContext(), obj);
+			if (infos && infos.length)
+			{
+				for (var j = 0, k = infos.length; j < k; ++j)
+				{
+					var info = infos[j];
+					var bound = info.boundInfo;
+					if (bound)
+					{
+						// inflate
+						bound = Kekule.Render.MetaShapeUtils.inflateShape(bound, boundInflation);
+						Kekule.ArrayUtils.pushUnique(bounds, bound);
+					}
+				}
+			}
+		}
+		return bounds;
+	},
 
 	/// Methods about popup editing ////////////////
 	/**
@@ -2012,6 +3036,55 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	}
 });
 
+/**
+ * Base class for sub view classes for viewer widget.
+ * @class
+ * @augments Kekule.ChemWidget.ChemObjDisplayerSubView
+ *
+ * @param {Kekule.ChemWidget.ChemObjDisplayer} displayer The parent displayer widget.
+ * @param {Kekule.ChemObject} target The target object inside displayer of this sub view.
+ *
+ * @property {Kekule.ChemWidget.ChemObjDisplayer} displayer The parent displayer widget.
+ * @property {Kekule.ChemObject} target The target object inside displayer of this sub view.
+ */
+Kekule.ChemWidget.ViewerSubView = Class.create(Kekule.ChemWidget.ChemObjDisplayerSubView,
+/** @lends Kekule.ChemWidget.ViewerSubView# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ViewerSubView',
+	/** @private */
+	initProperties: function()
+	{
+		this.defineProp('viewer', {
+			'dataType': 'Kekule.ChemWidget.Viewer',
+			'serializable': false,
+			'setter': null,
+			'getter': function ()
+			{
+				return this.getParent();
+			}
+		});
+	},
+	/**
+	 * Clear all hot track items in sub view.
+	 * @param {Bool} doRepaint
+	 * @private
+	 */
+	doClearHotTrackedItems: function(doRepaint)
+	{
+		// do nothing here
+	},
+	/**
+	 * Clear all selected items in viewer and all its child sub views.
+	 * @param {Bool} doRepaint
+	 * @private
+	 */
+	doClearSelectedItems: function(doRepaint)
+	{
+		// do nothing here
+	},
+});
+
 var XEvent = Kekule.X.Event;
 
 /**
@@ -2073,6 +3146,13 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		return result;
 	},
 	/** @private */
+	getEnableGestureManipulation: function()
+	{
+		var v = this.getViewer();
+		var result = !!(v && v.getEnableDirectInteraction() && v.getEnableTouchInteraction() && v.getEnableGesture() && v.getChemObjLoaded());
+		return result;
+	},
+	/** @private */
 	_initTransform: function()
 	{
 		var viewer = this.getViewer();
@@ -2094,7 +3174,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		//info.lastRotateXYZ = {'x': 0, 'y': 0, 'z': 0};
 	},
 	/** @private */
-	zoomViewer: function(delta)
+	zoomViewer: function(delta, zoomCenterCoord)
 	{
 		var v = this.getViewer();
 		if (!v || !v.getChemObj())
@@ -2102,12 +3182,12 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		if (delta > 0)
 		{
 			if (v.zoomIn)
-				v.zoomIn(delta);
+				v.zoomIn(delta, zoomCenterCoord);
 		}
 		else if (delta < 0)
 		{
 			if (v.zoomOut)
-				v.zoomOut(-delta);
+				v.zoomOut(-delta, zoomCenterCoord);
 		}
 	},
 	/** @private */
@@ -2118,16 +3198,24 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		return (target === interactionElem) || Kekule.DomUtils.isDescendantOf(target, interactionElem);
 	},
 	/** @private */
-	_beginInteractTransformAtCoord: function(screenX, screenY, clientX, clientY)
+	_beginInteractTransformAtCoord: function(screenX, screenY, clientX, clientY, htmlEvent, pointerId)
 	{
 		var viewer = this.getViewer();
 		if (viewer && viewer.getChemObj())
 		{
 			//if (viewer.getRenderType() === Kekule.Render.RendererType.R3D)
 			{
+				//this._clearInteractionTransformInfo();
 				var info = this._transformInfo;
 				info.isTransforming = true;
+				info.interactingPointerId = pointerId;
 				info.lastCoord = {'x': screenX, 'y': screenY};
+				info.transformInitCoord = {'x': screenX, 'y': screenY};
+
+				if (this.getViewerRenderType() !== Kekule.Render.RendererType.R3D)
+				{
+					info.initBaseCoordOffset = viewer.getBaseCoordOffset() || {};
+				}
 
 				/*
 				 var minLength = Math.min(viewer.getOffsetWidth(), viewer.getOffsetHeight());
@@ -2143,11 +3231,43 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		}
 	},
 	/** @private */
+	_beginGestureInteractTransform: function(e)
+	{
+		var viewer = this.getViewer();
+		if (viewer && viewer.getChemObj())
+		{
+			//this._clearInteractionTransformInfo();
+			// currently we only react to the zoom gesture
+			var info = this._transformInfo;
+			info.isGestureTransforming = true;
+			info.isTransforming = false;  // disable normal pointer move transform when doing gesture
+			info.initialGestureZoomLevel = viewer.getCurrZoom();
+
+			this._requestInteractiveTransform();
+		}
+	},
+	/** @private */
+	_clearInteractionTransformInfo: function()
+	{
+		this._transformInfo.interactingPointerId = null;
+		this._transformInfo.isTransforming = false;
+		this._transformInfo.lastCoord = null;
+		this._transformInfo.transformInitCoord = null;
+		this._transformInfo.initBaseCoordOffset = null;
+		this._transformInfo.isGestureTransforming = false;
+		this._transformInfo.initialGestureZoomLevel = null;
+	},
+	/** @private */
 	_endInteractTransform: function()
 	{
-		this._transformInfo.isTransforming = false;
+		this._clearInteractionTransformInfo();
 		//this.getViewer().setTouchAction(null);
 		this._doInteractiveTransformEnd();
+	},
+	/** @private */
+	isTransforming: function()
+	{
+		return this._transformInfo.isTransforming;
 	},
 	/** @private */
 	_calcRestraintRotateCoord: function(clientX, clientY)
@@ -2158,7 +3278,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		var restraintRotateEdgeSize = this._getRestraintRotate3DEdgeSize();
 		if (restraintRotateEdgeSize > 0)
 		{
-			var elem = viewer.getInteractionReceiverElem();
+			var elem = viewer.getDrawContextParentElem(true);
 			//var rect = Kekule.HtmlElementUtils.getElemBoundingClientRect(elem, false);
 			var rect = Kekule.HtmlElementUtils.getElemPageRect(elem, true);
 			var x1 = clientX - rect.left;
@@ -2209,8 +3329,10 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		return result;
 	},
 	/** @private */
-	_interactTransformAtCoord: function(screenX, screenY)
+	_interactTransformAtCoord: function(screenX, screenY, pointerId)
 	{
+		if (pointerId !== this._transformInfo.interactingPointerId)  // move with other pointer device other than the one invoking transform, ignore
+			return;
 		var lastCoord = this._transformInfo.lastCoord;
 		if (lastCoord)
 		{
@@ -2232,21 +3354,45 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		*/
 		this._transformInfo.interactScreenCoord = {x: screenX, y: screenY};
 
-		if (!this._interactiveTransformStepId)
-			this._interactiveTransformStepId = window.requestAnimationFrame(this._doInteractiveTransformStepBind);
+		if (!this._interactiveTransformStepId && Kekule.$jsRoot.requestAnimationFrame)
+			this._interactiveTransformStepId = Kekule.$jsRoot.requestAnimationFrame(this._doInteractiveTransformStepBind);
 	},
 	/** @private */
 	_doInteractiveTransformStep: function()
 	{
-		if (this._transformInfo && this._transformInfo.isTransforming)
+		if (this._transformInfo)
 		{
-			var screenCoord = this._transformInfo.interactScreenCoord;
-			if (this.getViewerRenderType() === Kekule.Render.RendererType.R3D)
-				this.rotateByXYDistance(screenCoord.x, screenCoord.y);
-			else
-				this.moveByXYDistance(screenCoord.x, screenCoord.y);
-
+			if (this._transformInfo.isTransforming)
+			{
+				var screenCoord = this._transformInfo.interactScreenCoord;
+				if (this.getViewerRenderType() === Kekule.Render.RendererType.R3D)
+					this.rotateByXYDistance(screenCoord.x, screenCoord.y);
+				else
+					this.moveByXYDistance(screenCoord.x, screenCoord.y);
+			}
+			else if (this._transformInfo.isGestureTransforming)
+			{
+				this._doGestureInteractTransformStep();
+			}
 			this._interactiveTransformStepId = window.requestAnimationFrame(this._doInteractiveTransformStepBind);
+		}
+	},
+	/** @private */
+	_doGestureInteractTransformStep: function()
+	{
+		var viewer = this.getViewer();
+		if (viewer && viewer.getChemObj())
+		{
+			var info = this._transformInfo;
+			if (info.isGestureTransforming && info.pinchScale)
+			{
+				var gestureScale = info.pinchScale;
+				if (gestureScale)
+				{
+					var newZoom = info.initialGestureZoomLevel * gestureScale;
+					viewer.zoomTo(newZoom);
+				}
+			}
 		}
 	},
 	/** @private */
@@ -2254,7 +3400,8 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	{
 		if (this._interactiveTransformStepId)
 		{
-			window.cancelAnimationFrame(this._interactiveTransformStepId);
+			if (Kekule.$jsRoot.cancelAnimationFrame)
+				Kekule.$jsRoot.cancelAnimationFrame(this._interactiveTransformStepId);
 			this._interactiveTransformStepId = null;
 		}
 	},
@@ -2271,6 +3418,46 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		else
 			return 0;
 	},
+
+	/** @private */
+	tryHotTrackBasicObject: function(screenCoord, boundInflation)
+	{
+	  return this.doTryHotTrackBasicObject(screenCoord, boundInflation);
+	},
+	/** @private */
+	doTryHotTrackBasicObject: function(screenCoord, boundInflation)
+	{
+		var viewer = this.getViewer();
+		if (viewer.getEnableObjectHotTrack())
+		{
+			var basicObject = viewer.getTopmostBasicObjectAtCoord(screenCoord, boundInflation);
+			//console.log('basic object', basicObject, screenCoord);
+			viewer.setHotTrackedObjects(basicObject || null);
+		}
+	},
+	/** @private */
+	trySelectBasicObject: function(screenCoord, isToggle, boundInflation)
+	{
+		return this.doTrySelectBasicObject(screenCoord, isToggle, boundInflation);
+	},
+	/** @private */
+	doTrySelectBasicObject: function(screenCoord, isToggle, boundInflation)
+	{
+		var viewer = this.getViewer();
+		if (viewer.getEnableObjectSelect())
+		{
+			var basicObject = viewer.getTopmostBasicObjectAtCoord(screenCoord, boundInflation);
+			//console.log('basic object', basicObject, screenCoord, isToggle);
+			if (isToggle && this.getViewer().getViewerConfigs().getInteractionConfigs().getEnableBasicObjectMultiSelect())
+			{
+				if (basicObject)
+					viewer.toggleSelectingState(basicObject);
+			}
+			else
+				viewer.select(basicObject || null);
+		}
+	},
+
 	/** @private */
 	needReactEvent: function(e)
 	{
@@ -2295,12 +3482,14 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	/** @private */
 	react_mousewheel: function(e)
 	{
+		//console.log('wheel', this.needReactEvent(e));
 		if (this.needReactEvent(e))
 		{
 			var delta = e.wheelDeltaY || e.wheelDelta;
 			if (delta)
 				delta /= 120;
-			this.zoomViewer(delta);
+			var centerCoord = e.getOffsetCoord();
+			this.zoomViewer(delta, centerCoord);
 			e.preventDefault();
 			return true;
 		}
@@ -2314,8 +3503,11 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		{
 			if (e.getPointerType() !== XEvent.PointerType.TOUCH || this.getEnableTouchInteraction())
 			{
+				// record the coord of pointer down, and later compare it in pointerup event, to determinate whether it is a simple click
+				this._pointerLeftButtonDownInitCoord = {'x': e.getScreenX(), 'y': e.getScreenY()};
 				// start mouse drag rotation in 3D render mode
-				this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY(), e.getClientX(), e.getClientY());
+				//console.log('pointer down', e.pointerId);
+				this._beginInteractTransformAtCoord(e.getScreenX(), e.getScreenY(), e.getClientX(), e.getClientY(), e, e.pointerId);
 				//e.preventDefault();
 			}
 		}
@@ -2359,9 +3551,10 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 
 	react_pointerleave: function(e)
 	{
-		//console.log('pointer_leave!', e.getTarget(), e.getCurrentTarget());
 		//this._transformInfo.isTransforming = false;
-		this._endInteractTransform();
+		if (this._transformInfo.isTransforming)
+			this._endInteractTransform();
+		this.getViewer().clearHotTrackedItems(null, true);
 	},
 
 	/** @private */
@@ -2384,7 +3577,24 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		if (e.getButton() === XEvent.MouseButton.LEFT)
 		{
 			//this._transformInfo.isTransforming = false;
-			this._endInteractTransform();
+			if (this._transformInfo.isTransforming)
+				this._endInteractTransform();
+			if (this._pointerLeftButtonDownInitCoord)
+			{
+				var pointerLeftButtonUpCoord = {'x': e.getScreenX(), 'y': e.getScreenY()};
+				var distance = Kekule.CoordUtils.getDistance(pointerLeftButtonUpCoord, this._pointerLeftButtonDownInitCoord);
+				if (distance < 3)  // TODO: currently the allowed move distance is fixed
+				{
+					// no move between down-up, should be a click event, and we may select object in viewer now
+					//if (this.getViewer().getViewerConfigs().getInteractionConfigs().getEnableBasicObjectSelect())
+					{
+						var screenCoord = this._getEventMouseCoord(e);
+						var isToggle = e.getShiftKey() || e.getCtrlKey();
+						this.trySelectBasicObject(screenCoord, isToggle, this.getViewer().getViewerConfigs().getInteractionConfigs().getObjBoundTrackInflation());
+					}
+				}
+				this._pointerLeftButtonDownInitCoord = null;
+			}
 			//e.preventDefault();
 		}
 	},
@@ -2409,7 +3619,8 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		*/
 		if (this._transformInfo.isTransforming)
 		{
-			this._interactTransformAtCoord(e.getScreenX(), e.getScreenY());
+			//console.log('pointer move', e.pointerId);
+			this._interactTransformAtCoord(e.getScreenX(), e.getScreenY(), e.pointerId);
 			try
 			{
 				e.preventDefault();
@@ -2418,6 +3629,11 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			{
 
 			}
+		}
+		//else if (this.getViewer().getViewerConfigs().getInteractionConfigs().getEnableBasicObjectHotTrack())
+		{
+			var screenCoord = this._getEventMouseCoord(e);
+			this.tryHotTrackBasicObject(screenCoord, this.getViewer().getViewerConfigs().getInteractionConfigs().getObjBoundTrackInflation());
 		}
 	},
 	/** @private */
@@ -2450,11 +3666,20 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			try
 			{
 				var currCoord = {'x': currX, 'y': currY};
-				var delta = Kekule.CoordUtils.substract(currCoord, info.lastCoord);
-				var baseCoordOffset = viewer.getBaseCoordOffset() || {};
-				baseCoordOffset = Kekule.CoordUtils.add(baseCoordOffset, delta);
-				viewer.setBaseCoordOffset(baseCoordOffset);
-				info.lastCoord = currCoord;
+				if (info.lastCoord && Kekule.CoordUtils.isEqual(currCoord, info.lastCoord))  // coord has no change bypass
+				{
+					// do nothing
+				}
+				else
+				{
+					//var delta = Kekule.CoordUtils.substract(currCoord, info.lastCoord);
+					//var baseCoordOffset = viewer.getBaseCoordOffset() || {};
+					var delta = Kekule.CoordUtils.substract(currCoord, info.transformInitCoord);
+					var baseCoordOffset = info.initBaseCoordOffset;
+					baseCoordOffset = Kekule.CoordUtils.add(baseCoordOffset, delta);
+					viewer.setBaseCoordOffset(baseCoordOffset);
+					info.lastCoord = currCoord;
+				}
 			}
 			finally
 			{
@@ -2475,40 +3700,47 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			try
 			{
 				var currCoord = {'x': currX, 'y': currY};
-				var delta = Kekule.CoordUtils.substract(currCoord, info.lastCoord);
-				delta.y = -delta.y;
-
-				var dis, rotateAngle, axisVector;
-				if (this._restraintCoord)  // restraint rotation on one axis
+				if (info.lastCoord && Kekule.CoordUtils.isEqual(currCoord, info.lastCoord))  // coord has no change bypass
 				{
-					var rc = this._restraintCoord;
+					// do nothing
+				}
+				else
+				{
+					var delta = Kekule.CoordUtils.substract(currCoord, info.lastCoord);
+					delta.y = -delta.y;
 
-					if (rc === 'x')
+					var dis, rotateAngle, axisVector;
+					if (this._restraintCoord)  // restraint rotation on one axis
 					{
-						dis = delta.y;
-						axisVector = {'x': 1, 'y': 0, 'z': 0};
-					}
-					else
-					{
-						dis = delta.x;
-						if (rc === 'y')
-							axisVector = {'x': 0, 'y': -1, 'z': 0};
+						var rc = this._restraintCoord;
+
+						if (rc === 'x')
+						{
+							dis = delta.y;
+							axisVector = {'x': 1, 'y': 0, 'z': 0};
+						}
 						else
-							axisVector = {'x': 0, 'y': 0, 'z': 1};
+						{
+							dis = delta.x;
+							if (rc === 'y')
+								axisVector = {'x': 0, 'y': -1, 'z': 0};
+							else
+								axisVector = {'x': 0, 'y': 0, 'z': 1};
+						}
+						rotateAngle = -dis * info.angleRatio;
 					}
-					rotateAngle = -dis * info.angleRatio;
-				}
-				else  // normal rotation
-				{
-					dis = Kekule.CoordUtils.getDistance({'x': 0, 'y': 0}, delta);
-					rotateAngle = dis * info.angleRatio;
-					axisVector = {'x': -delta.y, 'y': delta.x, 'z': 0};
-				}
+					else  // normal rotation
+					{
+						dis = Kekule.CoordUtils.getDistance({'x': 0, 'y': 0}, delta);
+						rotateAngle = dis * info.angleRatio;
+						axisVector = {'x': -delta.y, 'y': delta.x, 'z': 0};
+					}
 
-				viewer.rotate3DByAxis(rotateAngle, axisVector);
+					viewer.rotate3DByAxis(rotateAngle, axisVector);
 
-				info.lastCoord = currCoord;
-				info.calculating = false;
+					info.lastCoord = currCoord;
+					info.calculating = false;
+				}
 			}
 			catch(e) {}   // fix IE finally bug
 			finally
@@ -2596,6 +3828,39 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		if (info.isTransforming)
 			result = 'move';  //'grabbing';
 		return result;
+	},
+
+	/** @ignore */
+	react_pinchstart: function(e)
+	{
+		//console.log('pinch start');
+		if (this.getEnableGestureManipulation())
+			this._beginGestureInteractTransform(e);
+	},
+	/** @ignore */
+	react_pinchmove: function(e)
+	{
+		if (this.getEnableGestureManipulation())
+		{
+			var info = this._transformInfo;
+			if (info.isGestureTransforming)
+			{
+				//console.log('pinch move');
+				info.pinchScale = e.scale;
+			}
+		}
+	},
+	/** @ignore */
+	react_pinchend: function(e)
+	{
+		if (this.getEnableGestureManipulation() && this._transformInfo.isGestureTransforming)
+			this._endInteractTransform();
+	},
+	/** @ignore */
+	react_pinchcancel: function(e)
+	{
+		if (this.getEnableGestureManipulation() && this._transformInfo.isGestureTransforming)
+			this._endGestureInteractTransform();
 	}
 });
 
@@ -2731,18 +3996,48 @@ Kekule.ChemWidget.ViewerConfigs = Class.create(Kekule.ChemWidget.ChemObjDisplaye
 	/** @private */
 	initProperties: function()
 	{
+		this.addConfigProp('interactionConfigs', 'Kekule.ChemWidget.ViewerInteractionConfigs');
 		this.addConfigProp('hotKeyConfigs', 'Kekule.ChemWidget.ViewerHotKeyConfigs');
+		this.addConfigProp('uiMarkerConfigs', 'Kekule.ChemWidget.ViewerUiMarkerConfigs');
 	},
 	/** @private */
 	initPropValues: function()
 	{
 		this.tryApplySuper('initPropValues');
+		this.setPropStoreFieldValue('interactionConfigs', new Kekule.ChemWidget.ViewerInteractionConfigs());
 		this.setPropStoreFieldValue('hotKeyConfigs', new Kekule.ChemWidget.ViewerHotKeyConfigs());
+		this.setPropStoreFieldValue('uiMarkerConfigs', new Kekule.ChemWidget.ViewerUiMarkerConfigs());
 	}
 });
 
 /**
- * Configs of hot key settings of editor.
+ * Configs of interaction with viewer.
+ * @class
+ * @augments Kekule.AbstractConfigs
+ *
+ * @property {Bool} enableBasicObjectHotTrack Whether show the hot track marker when the pointer moves over a basic object (e.g., atom, bond) in viewer.
+ * @property {Bool} enableBasicObjectSelect Whether show the selection marker when the pointer click over a basic object (e.g., atom, bond) in viewer.
+ * @property {Bool} enableBasicObjectMultiSelect Whether multiple selection is enabled in viewer.
+ */
+Kekule.ChemWidget.ViewerInteractionConfigs = Class.create(Kekule.AbstractConfigs,
+/** @lends Kekule.ChemWidget.ViewerInteractionConfigs# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ViewerInteractionConfigs',
+	/** @private */
+	initProperties: function ()
+	{
+		this.addBoolConfigProp('enableBasicObjectHotTrack', false);
+		this.addHashConfigProp('enableBasicObjectSelect', false);
+		this.addHashConfigProp('enableBasicObjectMultiSelect', false);
+		this.addBoolConfigProp('enableTrackOnNearest', true);
+
+		this.addIntConfigProp('objBoundTrackInflation', 5);
+	}
+});
+
+/**
+ * Configs of hot key settings of viewer.
  * @class
  * @augments Kekule.AbstractConfigs
  *
@@ -2786,6 +4081,58 @@ Kekule.ChemWidget.ViewerHotKeyConfigs = Class.create(Kekule.AbstractConfigs,
 			{'key': '3', 'action': CWN.molDisplayTypeBallStick, 'coordMode': 3},
 			{'key': '4', 'action': CWN.molDisplayTypeSpaceFill, 'coordMode': 3}
 		]);
+	}
+});
+
+/**
+ * Config of the UI markers in viewer widget.
+ * @class
+ * @augments Kekule.AbstractConfigs
+ *
+ * @property {Number} spectrumDataPointSelectInflation
+ *
+ * @property {Hash} hotTrackMarkerStyles
+ * @property {Hash} selectionMarkerStyles
+ */
+Kekule.ChemWidget.ViewerUiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
+/** @lends Kekule.ChemWidget.ViewerUiMarkerConfigs# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ChemObjDisplayerSpectrumViewConfigs',
+	/** @private */
+	initProperties: function()
+	{
+		this.addHashConfigProp('hotTrackMarkerStyles', undefined);
+		this.addHashConfigProp('selectionMarkerStyles', undefined);
+		this.addHashConfigProp('hotTrackedObjectStyles', undefined);
+		this.addHashConfigProp('selectedObjectStyles', undefined);
+	},
+	/** @ignore */
+	initPropValues: function()
+	{
+		this.tryApplySuper('initPropValues');
+		this.setHotTrackMarkerStyles({
+			//'color': '#0000FF',
+			'strokeColor': '#0000FF',
+			'opacity': 0.2
+		});
+		this.setSelectionMarkerStyles({
+			//'color': '#0000FF',
+			'opacity': 0.35,
+			'strokeColor': '#0000FF',
+			//'fillColor': '#0000FF',
+			'strokeWidth': 2
+		});
+		/*
+		this.setHotTrackedObjectStyles({
+			'color': '#FF0000',
+			'nodeDisplayMode': Kekule.Render.NodeLabelDisplayMode.SHOWN
+		});
+		this.setSelectedObjectStyles({
+			'color': '#FF0000',
+			'nodeDisplayMode': Kekule.Render.NodeLabelDisplayMode.SHOWN
+		});
+		*/
 	}
 });
 

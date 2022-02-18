@@ -643,8 +643,8 @@
 		// new property, decide the 3D render style of a object (node or connector)
 		{'name': 'render3DOptions', 'dataType': DataType.OBJECT},
 
-		{'name': 'overrideRenderOptionItems', 'dataType': DataType.ARRAY, 'scope': Class.PropertyScope.PUBLIC},
-		{'name': 'overrideRender3DOptionItems', 'dataType': DataType.ARRAY, 'scope': Class.PropertyScope.PUBLIC},
+		{'name': 'overrideRenderOptionItems', 'dataType': DataType.ARRAY, 'scope': Class.PropertyScope.PUBLIC, 'serializable': false},
+		{'name': 'overrideRender3DOptionItems', 'dataType': DataType.ARRAY, 'scope': Class.PropertyScope.PUBLIC, 'serializable': false},
 
 		{'name': 'hidden', 'dataType': DataType.BOOL, 'scope': Class.PropertyScope.PRIVATE},  // use this to store the visible value, for backward compatibility
 		{'name': 'visible', 'dataType': DataType.BOOL, 'serializable': false,

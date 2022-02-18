@@ -265,19 +265,46 @@ Kekule.Widget.KeyboardUtils = {
 	/**
 	 * Extract key param values from an event object.
 	 * @param {HTMLEvent} event
+	 * @param {Bool} modifierKeysOnly If true, only modifier key info will be extracted (e.g. for mouse events).
 	 * @returns {Hash}
 	 */
-	getKeyParamsFromEvent: function(event)
+	getKeyParamsFromEvent: function(event, modifierKeysOnly)
 	{
 		var result = {
 			'altKey': event.getAltKey(),
 			'ctrlKey': event.getCtrlKey(),
 			'shiftKey': event.getShiftKey(),
-			'metaKey': event.getMetaKey(),
-			'key': Kekule.Widget.KeyboardUtils._standardizeEventKeyValue(event.getKey()),
-			'code': event.getCode(),
-			'repeat': event.getRepeat()
+			'metaKey': event.getMetaKey()
 		};
+		if (!modifierKeysOnly)
+			result = Object.extend(result,
+				{
+					'key': Kekule.Widget.KeyboardUtils._standardizeEventKeyValue(event.getKey()),
+					'code': event.getCode(),
+					'repeat': event.getRepeat()
+				});
+		return result;
+	},
+	/**
+	 * Create a modifier key param object from an array containing the name of modifier keys (e.g. ['shift', 'ctrl').
+	 * @param {Array} keyArray
+	 * @returns {Hash}
+	 */
+	createModifierKeyParamsFromArray: function(keyArray)
+	{
+		var result = {};
+		for (var i = 0, l = keyArray.length; i < l; ++i)
+		{
+			var key = keyArray[i].toLowerCase();
+			if (key.indexOf('shift') >= 0)
+				result.shiftKey = true;
+			else if (key.indexOf('ctrl') >= 0)
+				result.ctrlKey = true;
+			else if (key.indexOf('meta') >= 0)
+				result.metaKey = true;
+			else if (key.indexOf('alt') >= 0)
+				result.altKey = true;
+		}
 		return result;
 	},
 

@@ -40,14 +40,30 @@ describe('Test of some core data and functions of spectra module', function(){
 			expect(value.d).toEqual(20);
 		});
 
-		expect(sData.getValueAt(0)._extra.extra1).toEqual('extra1Value0');
-		expect(sData.getValueAt(0)._extra.extra2).toEqual('extra2Value0');
+		expect(sData.getExtraInfoAt(0).extra1).toEqual('extra1Value0');
+		expect(sData.getExtraInfoAt(0).extra2).toEqual('extra2Value0');
 		expect(sData.getRawValueAt(0)._extra.extra1).toEqual('extra1Value0');
 		expect(sData.getRawValueAt(0)._extra.extra2).toEqual('extra2Value0');
 		expect(sData.getValueAt(3)._extra.extra1).toEqual('extra1Value3');
 		expect(sData.getRawValueAt(3)._extra.extra1).toEqual('extra1Value3');
-		expect(sData.getValueAt(4)).toEqual({x: 5, y: 5, z: 5, r: -5, d: 20, '_extra': {'extra1': 'extra1Value5'}});
-		expect(sData.getValueAt(5)).toEqual({x: 6, y: 6, z: 6, r: -6, d: 20, '_extra': {'extra1': 'extra1Value5'}});
+		expect(sData.getValueAt(4)).toEqual({x: 5, y: 5, z: 5, r: -5, d: 20/*, '_extra': {'extra1': 'extra1Value5'}*/});
+		/*
+		expect(sData.getValueAt(4).x).toEqual(5);
+		expect(sData.getValueAt(4).y).toEqual(5);
+		expect(sData.getValueAt(4).z).toEqual(5);
+		expect(sData.getValueAt(4).r).toEqual(-5);
+		expect(sData.getValueAt(4).d).toEqual(20);
+		*/
+		expect(sData.getValueAt(4)._extra).toEqual({'extra1': 'extra1Value5'});
+		expect(sData.getValueAt(5)).toEqual({x: 6, y: 6, z: 6, r: -6, d: 20/*, '_extra': {'extra1': 'extra1Value5'}*/});
+		/*
+		expect(sData.getValueAt(5).x).toEqual(6);
+		expect(sData.getValueAt(5).y).toEqual(6);
+		expect(sData.getValueAt(5).z).toEqual(6);
+		expect(sData.getValueAt(5).r).toEqual(-6);
+		expect(sData.getValueAt(5).d).toEqual(20);
+		*/
+		expect(sData.getValueAt(5)._extra).toEqual({'extra1': 'extra1Value5'});
 		expect(sData.getExtraInfoAt(1)).toEqual({'extra2': 'extra2Value1'});
 	});
 

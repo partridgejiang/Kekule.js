@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Spectrum Obj Inserter Test</title>
+
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+  <style>
+    .ExportImage
+    {
+      border: 1px solid red;
+    }
+  </style>
+
+  <script src="../../_libs/raphael-min.2.0.1.js"></script>
+
+  <script src="../../../src/kekule.js?min=false"></script>
+  <!--
+  <script src="../../../src/_compressed/kekule.min.js"></script>
+  -->
+
+  <script>
+    var spectrumObjInserter;
+    Kekule.X.domReady(function(){
+      spectrumObjInserter = Kekule.Widget.getWidgetById('spectrumObjInserter');
+      Kekule.Widget.getWidgetById('objInspector').setObjects(spectrumObjInserter);
+      Kekule.Widget.getWidgetById('btnAdd').addEventListener('execute', function(){
+        spectrumObjInserter.createExportHtmlElementAsync(document, null, null, function(imgElem){
+          imgElem.className += ' ExportImage';
+          //imgElem.setAttribute('data-predefined-setting', 'mini');
+          document.getElementById('stage').appendChild(imgElem);
+        });
+        spectrumObjInserter.createExportHtmlElementAsync(document, null, null, function(imgElem){
+          imgElem.className += ' ExportImage';
+          imgElem.removeAttribute('data-kekule-widget');
+          Kekule.DomUtils.clearChildContent(document.getElementById('imgPanel'));
+          document.getElementById('imgPanel').appendChild(imgElem);
+        });
+      });
+
+      Kekule.Widget.getWidgetById('btnImport').addEventListener('execute', function(){
+        var imgElem = document.getElementById('imgPanel').getElementsByTagName('img')[0];
+        spectrumObjInserter.importFromElem(imgElem);
+      });
+      /*
+      Kekule.Widget.AutoLauncher.enabled = false;
+      Kekule.Widget.AutoLauncher.enableDynamicDomCheck = false;
+      */
+    });
+  </script>
+</head>
+<body>
+  <div id="objInspector" data-widget="Kekule.Widget.ObjectInspector" style="float:right"></div>
+  <div id="spectrumObjInserter" style="width:600px;height:400px"
+       data-widget="Kekule.ChemWidget.SpectrumObjInserter" data-resizable1="true" data-chem-obj="url('../../_chemFiles/spectrum/ISAS_CDX.DX')"></div>
+  <div>
+    <br />
+    <br />
+    <button id="btnAdd" data-widget="Kekule.Widget.Button">Add Image</button>
+    <button id="btnImport" data-widget="Kekule.Widget.Button">Import</button>
+  </div>
+  <div id="imgPanel">
+
+  </div>
+  <div id="stage"></div>
+
+</body>
+</html>

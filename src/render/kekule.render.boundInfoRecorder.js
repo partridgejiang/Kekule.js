@@ -166,7 +166,7 @@ Kekule.Render.BoundInfoRecorder = Class.create(ObjectEx,
 			{
 				var info = infos[i];
 				var currObj = info.obj;
-				if (currObj.isChildOf(objOrParentObj))
+				if (currObj === objOrParentObj || (currObj.isChildOf && currObj.isChildOf(objOrParentObj)))
 				{
 					result.push(info);
 				}

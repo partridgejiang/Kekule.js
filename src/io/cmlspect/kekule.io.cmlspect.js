@@ -669,6 +669,7 @@ Kekule.IO.CmlSpectrumPeakListReader = Class.create(Kekule.IO.CmlElementReader,
 			this._setPeakDetails(peak, values, spectrumDataSection);
 			spectrumDataSection.appendData(values);
 		}
+		spectrumDataSection.setDataSorted(true);
 	},
 	/** @private */
 	_setPeakDetails: function(peak, dataValue, spectrumDataSection)
@@ -1222,6 +1223,7 @@ Kekule.IO.CmlSpectrumDataReader = Class.create(Kekule.IO.CmlElementReader,
 			}
 			spectrumDataSectionObj.appendData(dataItem);
 		}
+		spectrumDataSectionObj.setDataSorted(true);
 	},
 	/** @private */
 	_getAxisVarDefParams: function(axisDataObj, isIndependent)

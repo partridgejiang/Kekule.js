@@ -506,7 +506,7 @@ Kekule.Render.ObjectUpdateType = {
  */
 /**
  * Invoked when whole chem object (molecule, reaction...) is drawn in context.
- *   event param of it has two fields: {context, obj}
+ *   event param of it has fields: {context, obj, renderOptions}
  * @name Kekule.Render.AbstractRenderer#draw
  * @event
  */
@@ -917,7 +917,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 			if (isRoot)
 				this.endDraw(context, baseCoord, ops);
 
-			this.invokeEvent('draw', {'context': context, 'obj': this.getChemObj()});
+			this.invokeEvent('draw', {'context': context, 'obj': this.getChemObj(), 'renderOptions': ops});
 		}
 		finally
 		{
@@ -1949,6 +1949,33 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 		var childRenderers = this.getChildRendererMap().getValues();
 		var result = childRenderers && childRenderers.length;
 		return result;
+	},
+
+	/**
+	 * Returns the renderer that directly rendering childObj.
+	 * @param {Object} context
+	 * @param {Kekule.ChemObject} childObj
+	 * @returns {Kekule.Render.AbstractRenderer}
+	 */
+	getDirectRendererForChildObj: function(context, childObj)
+	{
+		if (this.isChemObjRenderedDirectlyBySelf(context, childObj))
+			return this;
+		var childRenderers = this.getChildRenderers();
+		for (var i = 0, l = childRenderers.length; i < l; ++i)
+		{
+			var r = childRenderers[i];
+			if (r.isChemObjRenderedBySelf(context, childObj))
+			{
+				if (r.isChemObjRenderedDirectlyBySelf(context, childObj))
+					return r;
+				else if (r.getDirectRendererForChildObj)
+					return r.getDirectRendererForChildObj(context, childObj);
+				else
+					return null
+			}
+		}
+		return null;
 	},
 
 	/**

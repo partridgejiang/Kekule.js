@@ -277,10 +277,19 @@ describe('Test of some core data and functions of spectra module', function(){
 			expect(spectrumData.getVarSymbols()).toEqual(['X','Y','M','A']);
 
 			// sections
-			var dataCount = 16;
+			//var dataCount = 16;
+			var dataCount = 14;  // now we do the peak assignment merge, so there are only 14 peaks, two with two assignment objects
 			expect(spectrumData.getSectionCount()).toEqual(1);
 			expect(spectrumData.getSectionAt(0).getMode()).toEqual(Kekule.Spectroscopy.DataMode.PEAK);
 			expect(spectrumData.getDataCount()).toEqual(dataCount);
+
+			// assignments
+			var section = spectrumData.getSectionAt(0);
+			expect(section.getExtraInfoAt(0).getAssignments().length).toEqual(1);
+			expect(section.getExtraInfoAt(3).getAssignments().length).toEqual(1);
+			expect(section.getExtraInfoAt(10).getAssignments().length).toEqual(2);
+			expect(section.getExtraInfoAt(11).getAssignments().length).toEqual(2);
+			expect(section.getExtraInfoAt(13).getAssignments().length).toEqual(1);
 
 			chemObj.finalize();
 

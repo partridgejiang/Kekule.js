@@ -329,9 +329,9 @@ Kekule.Glyph.BaseTwinArc = Class.create(Kekule.Glyph.PathGlyph,
 	},
 
 	/** @ignore */
-	loaded: function(/*$super*/)
+	loaded: function(rootObj)
 	{
-		var result = this.tryApplySuper('loaded')  /* $super() */;
+		var result = this.tryApplySuper('loaded', [rootObj]);
 		// when add new child object, and the two arcs are ready, handle the arc end nodes
 		if (this._isTwinArcSetup())
 		{

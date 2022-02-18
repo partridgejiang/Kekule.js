@@ -2993,7 +2993,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 
 	// custom save / load method
 	/** @private */
-	doSaveProp: function(obj, prop, storageNode, serializer)
+	doSaveProp: function(obj, prop, storageNode, options, serializer, rootObj, rootStorageNode, handledObjs)
 	{
 		var propName = prop.name;
 		switch (propName)
@@ -3008,7 +3008,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 						indexes.push(index);
 					}
 					var subNode = serializer.createChildStorageNode(storageNode, serializer.propNameToStorageName(propName), true); // create sub node for array
-					serializer.save(indexes, subNode);
+					serializer.saveObj(indexes, subNode, options, rootObj, rootStorageNode, handledObjs);
 					return true;  // this property is handled, do not use default save method
 					break;
 				}
@@ -3024,7 +3024,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 							serializer.propNameToStorageName(nodeName), serializer.isArray(item));
 
 						serializer.setStorageNodeExplicitType(itemNode, serializer.getValueExplicitType(item));
-						serializer.save(item, itemNode);
+						serializer.saveObj(item, itemNode, options, rootObj, rootStorageNode, handledObjs);
 						// as connector's connectedObjs property is marked as unserializable, need to be handled here
 						/*
 						var connectedNodes = [];
@@ -3081,7 +3081,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 						if (connectedObjs.length)
 						{
 							var conObjsNode = serializer.createChildStorageNode(itemNode, serializer.propNameToStorageName('connectedObjs'), true); // create sub node for array
-							serializer.save(connectedObjs, conObjsNode);
+							serializer.saveObj(connectedObjs, conObjsNode, options, rootObj, rootStorageNode, handledObjs);
 						}
 					}
 					return true;
@@ -3092,7 +3092,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		}
 	},
 	/** @private */
-	doLoadProp: function(obj, prop, storageNode, serializer)
+	doLoadProp: function(obj, prop, storageNode, serializer, rootObj, rootStorageNode, handledObjs)
 	{
 		var propName = prop.name;
 		switch (propName)
@@ -3101,7 +3101,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 				{
 					var indexes = [];
 					var subNode = serializer.getChildStorageNode(storageNode, serializer.propNameToStorageName(propName)); // get sub node for array
-					serializer.load(indexes, subNode);
+					serializer.loadObj(indexes, subNode, rootObj, rootStorageNode, handledObjs);
 					obj.__load_anchorNodes_indexes = indexes; // save the indexes and handle it after all properties are loaded
 					return true;  // this property is handled, do not use default save method
 					break;
@@ -3118,14 +3118,14 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 					if (valueType)
 					{
 						connector = DataType.createInstance(valueType);
-						serializer.load(connector, itemNode);
+						serializer.loadObj(connector, itemNode, rootObj, rootStorageNode, handledObjs);
 						// then handle connectedObjs array
 						var conObjsNode = serializer.getChildStorageNode(itemNode, serializer.propNameToStorageName('connectedObjs'));
 						// as some object in Ctab may not be loaded, we just mark the indexes and handle it after loading process is done
 						if (conObjsNode)
 						{
 							var connectedObjs = [];
-							serializer.load(connectedObjs, conObjsNode);
+							serializer.loadObj(connectedObjs, conObjsNode, rootObj, rootStorageNode, handledObjs);
 							connector.__load_connectedObj_indexes = connectedObjs;
 						}
 
@@ -3135,14 +3135,14 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 						if (conNodeNode)
 						{
 							var connectedNodes = [];
-							serializer.load(connectedNodes, conNodeNode);
+							serializer.loadObj(connectedNodes, conNodeNode, rootObj, rootStorageNode, handledObjs);
 							connector.__load_connectedNode_indexes = connectedNodes;
 						}
 						var conConnectorNode = serializer.getChildStorageNode(itemNode, serializer.propNameToStorageName('connectedConnectors'));
 						if (conConnectorNode)
 						{
 							var connectedConnectors = [];
-							serializer.load(connectedConnectors, conConnectorNode);
+							serializer.loadObj(connectedConnectors, conConnectorNode, rootObj, rootStorageNode, handledObjs);
 							connector.__load_connectedConnector_indexes = connectedConnectors;
 						}
 
@@ -3157,7 +3157,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		}
 	},
 	/** @private */
-	loaded: function(/*$super*/)
+	loaded: function(rootObj)
 	{
 		// after loaded, set anchorNodes
 		if (this.__load_anchorNodes_indexes)
@@ -3215,7 +3215,7 @@ Kekule.StructureConnectionTable = Class.create(ObjectEx,
 		}
 		this.ownerChanged(this.getOwner());
 		this.parentChanged(this.getParent());  // update owner and parent of child objects
-		this.tryApplySuper('loaded')  /* $super() */;
+		this.tryApplySuper('loaded', [rootObj]);
 	},
 	/**
 	 * Notify {@link Kekule.StructureConnectionTable#nodes} property has been changed

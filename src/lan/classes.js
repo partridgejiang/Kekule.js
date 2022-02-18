@@ -2236,7 +2236,7 @@ var ClassEx = {
 	 * while the old one can be called in first input parameter (usually named $origin) inside new method.
 	 * However, $super can not be called in new method body.
 	 * For example:
-	 *   ClassEx.extend(SomeClass, 'setValue', function($origin, value)
+	 *   ClassEx.extendMethod(SomeClass, 'setValue', function($origin, value)
 	 *     {
 	 *       return $origin(value);
 	 *     }
@@ -2265,6 +2265,38 @@ var ClassEx = {
 		value.toString = method.toString.bind(method);
 	},
 	/**
+	 * Extend methods to an existing class. New method defined in method param will replace the old one,
+	 * while the old one can be called in first input parameter (usually named $origin) inside new method.
+	 * If new method name does not existed in the class (a pure new method), the $origin param will still
+	 * need to be included in param list be will always be undefined.
+	 * For example:
+	 *   ClassEx.extendMethods(SomeClass, [
+	 *     'replaceAnExistingMethod': function($origin, value)
+	 *     {
+	 *       return $origin(value);
+	 *     },
+	 *     'newMethod': function($origin, value)
+	 *     {
+	 *       // origin is undefined
+	 *       return value;
+	 *     }
+	 *   ]);
+	 *
+	 * @param {Class} aClass
+	 * @param {Array} methods
+	 */
+	extendMethods: function(aClass, methods)
+	{
+		var methodNames = Object.keys(methods);
+		for (var i = 0, l = methodNames.length; i < l; ++i)
+		{
+			var name = methodNames[i];
+			var method = methods[name];
+			if (typeof(method) == 'function')
+				ClassEx.extendMethod(aClass, name, method);
+		}
+	},
+	/**
 	 * Extend class with a pack of methods.
 	 * If method already in original class, you may use $origin to mark the original one.
 	 * For exmaple:
@@ -2277,6 +2309,7 @@ var ClassEx = {
 	 *   });
 	 * @param {Class} aClass
 	 * @param {Hash} extension A pack of methods extended.
+	 * @deprecated
 	 */
 	extend: function(aClass, extension)
 	{
@@ -2505,16 +2538,34 @@ ObjectEx = Class.create(
 	},
 
 	/**
-	 * Called after this object is saved through a serialization system. Descendants may override this.
+	 * Called after this object is saved through a serialization system (but others may still pend to save). Descendants may override this.
+	 * @param {Object} rootObj Root object when do the serialization.
 	 */
-	saved: function()
+	saved: function(rootObj)
 	{
 		// do nothing here
 	},
 	/**
-	 * Called after this object is loaded by a serialization system. Descendants may override this.
+	 * Called after this object is saved through a serialization system and the whole serialization process is done. Descendants may override this.
+	 * @param {Object} rootObj Root object when do the serialization.
 	 */
-	loaded: function()
+	allSaved: function(rootObj)
+	{
+		// do nothing here
+	},
+	/**
+	 * Called after this object is loaded by a serialization system (but others may still pend to load). Descendants may override this.
+	 * @param {Object} rootObj Root object when do the serialization.
+	 */
+	loaded: function(rootObj)
+	{
+		// do nothing here
+	},
+	/**
+	 * Called after this object is loaded by a serialization system and the whole serialization process is done. Descendants may override this.
+	 * @param {Object} rootObj Root object when do the serialization.
+	 */
+	allLoaded: function(rootObj)
 	{
 		// do nothing here
 	},

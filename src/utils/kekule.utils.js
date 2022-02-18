@@ -1494,7 +1494,7 @@ Kekule.FactoryUtils = {
 					var r = result._items.get(key);
 					if (!r)
 					{
-						var parent = ClassEx.getSuperClass(key);
+						var parent = key && ClassEx.getSuperClass(key);
 						if (parent)
 							r = result.getClass(parent);
 					}
@@ -4087,6 +4087,8 @@ Kekule.RectUtils = {
 Kekule.ZoomUtils = {
 	/** @private */
 	PREDEFINED_ZOOM_RATIOS: [0.1, 0.3, 0.5, 0.66, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5, 7, 10, 15, 20],
+	/** @private */
+	RATIO_INT_BASE: 100,
 	/**
 	 * Returns nearest zoom level to current ratio.
 	 * @param {Float} currRatio
@@ -4130,11 +4132,14 @@ Kekule.ZoomUtils = {
 			step = 1;
 		var rs = constraintZoomLevels || Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
 		var len = rs.length;
-		if (currRatio < rs[len - 1])  // smaller than one of predefined ones
+		var currRatioInt = Math.round(currRatio * Kekule.ZoomUtils.RATIO_INT_BASE);
+		//if (currRatio < rs[len - 1])  // smaller than one of predefined ones
+		if (currRatioInt < Math.round(rs[len - 1] * Kekule.ZoomUtils.RATIO_INT_BASE))
 		{
 			for (var i = 0; i < len; ++i)
 			{
-				if (rs[i] > currRatio)
+				//if (rs[i] > currRatio)
+				if (Math.round(rs[i] * Kekule.ZoomUtils.RATIO_INT_BASE) > currRatioInt)
 				{
 					return rs[Math.min(i + step, len) - 1];
 				}
@@ -4156,11 +4161,14 @@ Kekule.ZoomUtils = {
 			step = 1;
 		var rs = constraintZoomLevels || Kekule.ZoomUtils.PREDEFINED_ZOOM_RATIOS;
 		var len = rs.length;
-		if (currRatio > rs[0])  // smaller than one of predefined ones
+		var currRatioInt = Math.round(currRatio * Kekule.ZoomUtils.RATIO_INT_BASE);
+		//if (currRatio > rs[0])  // smaller than one of predefined ones
+		if (currRatioInt > Math.round(rs[0] * Kekule.ZoomUtils.RATIO_INT_BASE))
 		{
 			for (var i = len - 1; i >= 0; --i)
 			{
-				if (rs[i] < currRatio)
+				//if (rs[i] < currRatio)
+				if (Math.round(rs[i] * Kekule.ZoomUtils.RATIO_INT_BASE) < currRatioInt)
 					return rs[Math.max(i - step + 1, 0)];
 			}
 		}
