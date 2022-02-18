@@ -1,0 +1,121 @@
+##TITLE= 4a-Phenyladamantan-2-one
+##JCAMP-DX= 4.24   $$ ISAS JCAMP-DX program V1.0
+##DATA TYPE= LINK
+##ORIGIN= unknown origin
+##OWNER= COPYRIGHT (C) 1994 by unknown owner
+##BLOCKS= 2
+##TITLE= Structure: 4a-Phenyladamantan-2-one
+##JCAMP-CS= 3.7   $$ ISAS JCAMP-CS program V1.0
+##ORIGIN= unknown origin
+##OWNER= COPYRIGHT (C) 1994 by unknown owner
+##BLOCK_ID= 1
+##CROSS REFERENCE= NMR PEAK ASSIGNMENTS: BLOCK_ID= 2
+##NAMES= 4a-Phenyladamantan-2-one
+##MOLFORM= C16 H18 O
+##ATOMLIST=
+$$ AN   AS NH
+    1    C  1
+    2    C
+    3    C  1
+    4    C  1
+    5    C
+    6    C  2
+    7    C  1
+    8    C  2
+    9    C  2
+   10    C  2
+   11    O
+   12    C
+   13    C  1
+   14    C  1
+   15    C  1
+   16    C  1
+   17    C  1
+   18    H
+##BONDLIST=
+$$ AN1 AN2 BT
+     2   1  S
+     3   2  S
+     5   4  S
+     5   1  S
+     6   4  S
+     7   8  S
+     8   1  S
+     9   7  S
+    10   7  S
+    11   2  D
+    12   5  S
+    13  12  S
+    14  12  D
+    15  13  D
+    16  14  S
+    17  16  D
+    18   5  S
+    10   4  S
+     3   9  S
+     3   6  S
+    15  17  S
+##MAX_RASTER= 32000
+##XY_RASTER=
+$$ AN     X     Y     Z
+    1 15617 16216
+    2 14850 23401
+    3  8910 25413
+    4  5940 13629    +1
+    5 13605 10323
+    6  5078 20527    +1
+    7  3641 16790
+    8  9485 14922
+    9  3162 22970
+   10     0 11760
+   11 19162 28000
+   12 19545 12479
+   13 22611 17940
+   14 22611  7162
+   15 28838 17940
+   16 28838  7162
+   17 32000 12479
+   18 13892  4000
+##END=   $$ End of the structure block
+##TITLE= NMR data: 4a-Phenyladamantan-2-one
+##JCAMP-DX= 5.00   $$ ISAS JCAMP-DX program V1.0
+##DATA TYPE= NMR PEAK ASSIGNMENTS
+##DATA CLASS= ASSIGNMENTS
+##ORIGIN= unknown origin
+##OWNER= COPYRIGHT (C) 1994 by unknown owner
+##BLOCK_ID= 2
+##.OBSERVE FREQUENCY=   $$ unknown
+##.OBSERVE NUCLEUS= ^13C
+##.SOLVENT REFERENCE= 77.00
+##SOURCE REFERENCE= Rosenbaum, D., Dissertation, Bochum 1990
+##CROSS REFERENCE= STRUCTURE: BLOCK_ID= 1
+##$ORIGINAL NO= BOC0001
+##$SOLVENT= CDCl3
+##$STANDARD= CDCl3
+##$COMMENT= AG NMR Uni Bochum  /Dietrich/Buhl
+##$C-CARD= AG NMR Uni Bochum  /Dietrich/Buhl
+##$R-CARD= Rosenbaum, D., Dissertation, Bochum 1990
+##SPECTROMETER/DATA SYSTEM= Bruker AM 400
+##TEMPERATURE= 26.85
+##XUNITS= PPM
+##YUNITS= ARBITRARY UNITS
+##NPOINTS= 16
+##PEAK ASSIGNMENTS= (XYMA)
+( 27.00, 1.0,, < 7>)
+( 32.10, 1.0,, < 6>)
+( 34.00, 1.0,, < 4>)
+( 37.70, 1.0,, <10>)
+( 40.10, 1.0,, < 9>)
+( 41.00, 1.0,, < 8>)
+( 46.50, 1.0,, < 3>)
+( 49.60, 1.0,, < 1>)
+( 52.60, 1.0,, < 5>)
+(125.70, 1.0,, <17>)
+(126.70, 1.0,, <13>)
+(126.70, 1.0,, <14>)
+(128.00, 1.0,, <16>)
+(128.00, 1.0,, <15>)
+(143.30, 1.0,, <12>)
+(218.40, 1.0,, < 2>)
+##END=   $$ End of the NMR data block
+##END=   $$ End of the compound JCAMP-DX file
