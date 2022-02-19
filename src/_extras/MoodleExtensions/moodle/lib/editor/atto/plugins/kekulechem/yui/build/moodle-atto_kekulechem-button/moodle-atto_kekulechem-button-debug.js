@@ -37,25 +37,38 @@ var KC = Y.namespace('M.atto_kekulechem');
  */
 KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 	BTN_NAME_OBJ_INSERT: 'kekuleChemObjInsert',
+	BTN_NAME_SPECTRUM_INSERT: 'kekuleSpectrumObjInsert',
 	CHEM_OBJ_INSERTER_CLASS: 'KekuleChemObjInserter',
 	CHEM_OBJ_VIEWER_CLASS: 'KekuleChemObjViewer',
+	SPECTRUM_INSPECTOR_CLASS: 'KekuleSpectrumInspector',
 	CHEM_OBJ_TAGNAME: 'img',
 	initializer: function() {
 		this._preparingForSubmit = false;  // a flag
 
-		var iconUrl = this.get('attoKekulePluginPath') + 'pix/icon.png';
-		//console.log('iconUrl', iconUrl);
 		//console.log(this.get('host'));
-		this.addButton({
-				buttonName: this.BTN_NAME_OBJ_INSERT,
-				//exec: 'strikeThrough',
-				//icon: 'icon',
-				iconurl: iconUrl,
-				callback: this._execute,
 
-				// Watch the following tags and add/remove highlighting as appropriate:
-				tags: 'strike'
+		// ChemObjInserter button
+		var iconUrl = this.get('attoKekulePluginPath') + 'pix/icon.png';  // M.cfg.wwwroot
+		//console.log('iconUrl', iconUrl);
+		this.addButton({
+			buttonName: this.BTN_NAME_OBJ_INSERT,
+			title: 'captionKekuleChemObj',
+			//iconurl: iconUrl,
+			icon: 'icons/kekulechem',
+			iconComponent: 'atto_kekulechem',
+			callback: this._executeChemObjInserter
 		});
+		// SpectrumObjInserter button
+		var iconUrl = this.get('attoKekulePluginPath') + 'pix/spctrumInsertIcon.png';  // TODO: need to prepare this png
+		this.addButton({
+			buttonName: this.BTN_NAME_SPECTRUM_INSERT,
+			title: 'captionKekuleSpectrum',
+			icon: 'icons/kekulespectrum',
+			iconComponent: 'atto_kekulechem',
+			callback: this._executeSpectrumObjInserter
+		});
+
+
 		// add essential CSS
 		this._addEssentialFiles();
 
@@ -201,7 +214,7 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 	},
 
 	// return currently selected chem viewer target Y node
-	_getSelectedChemObjTarget: function()
+	_getSelectedInserterTargetNode: function(elemClassName, elemWidgetTypeName)
 	{
 		var editor = this.get('host');
 		var selNodes = editor.getSelectedNodes();
@@ -226,7 +239,8 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 				if (ancestor && (ancestor.className || '').indexOf(self.CHEM_OBJ_VIEWER_CLASS) >= 0)
 					targetElem = ancestor;
 				*/
-				targetElem = self._getParentChemObjElement(domNode, self._getEditorRootElem());
+				//targetElem = self._getParentChemObjElement(domNode, self._getEditorRootElem());
+				targetElem = self._getParentKekuleWidgetPlaceholderElement(domNode, self._getEditorRootElem(), elemClassName, elemWidgetTypeName);
 			}
 
 			if (targetElem)
@@ -236,21 +250,29 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 					return true;
 			}
 		});
-		if (targets.length === 1)  // just select one
+		if (targets.length >= 1)  // just select one
 			return targets[0];
 		else
 			return null;
+	},
+	_getSelectedChemObjTarget: function()
+	{
+		return this._getSelectedInserterTargetNode(this.CHEM_OBJ_VIEWER_CLASS, 'ChemWidget.Viewer');
+	},
+	_getSelectedSpectrumObjTarget: function()
+	{
+		return this._getSelectedInserterTargetNode(this.SPECTRUM_INSPECTOR_CLASS, 'ChemWidget.SpectrumInspector');
 	},
 
 	_getEditorRootElem: function()
 	{
 		return this.get('host').editor.getDOMNode();
 	},
-	_getParentChemObjElement: function(childElem, rootElem)
+	_getParentKekuleWidgetPlaceholderElement: function(childElem, rootElem, elemClassName, elemWidgetTypeName)
 	{
-		if (Kekule.HtmlElementUtils.hasClass(childElem, this.CHEM_OBJ_VIEWER_CLASS)) // has class tag
+		if (Kekule.HtmlElementUtils.hasClass(childElem, elemClassName)) // has class tag
 			return childElem;
-		else if ((childElem.getAttribute('data-kekule-widget') || '').indexOf('ChemWidget.Viewer') >= 0)
+		else if ((childElem.getAttribute('data-kekule-widget') || '').indexOf(elemWidgetTypeName) >= 0)
 		{
 			// some times class may be lost due to cut/paste operations, check data- attribute instead
 			return childElem;
@@ -262,9 +284,17 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 		else
 			return null;
 	},
+	_getParentChemObjElement: function(childElem, rootElem)
+	{
+		return this._getParentKekuleWidgetPlaceholderElement(childElem, rootElem, this.CHEM_OBJ_VIEWER_CLASS, 'ChemWidget.Viewer');
+	},
+	_getParentSpectrumObjElement: function(childElem, rootElem)
+	{
+		return this._getParentKekuleWidgetPlaceholderElement(childElem, rootElem, this.SPECTRUM_INSPECTOR_CLASS, 'ChemWidget.SpectrumInspector');
+	},
 
 	// open ChemObj importer
-	_execute: function()
+	_executeChemObjInserter: function()
 	{
 		var currSelElem = this._getSelectedChemObjTarget();
 		if (currSelElem)
@@ -276,8 +306,24 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 			this._targetElem = null;
 		}
 		//var editor = this.get('host');
+		//console.log('open chemObj inserter dialog');
 		this._setEditorConfigs();
-		this._openDialog();
+		this._openChemObjInserterDialog(currSelElem);
+	},
+
+	// open spectrum obj inserter
+	_executeSpectrumObjInserter: function()
+	{
+		var currSelElem = this._getSelectedSpectrumObjTarget();
+		if (currSelElem)
+		{
+			this._targetElem = currSelElem;
+		}
+		else
+		{
+			this._targetElem = null;
+		}
+		this._openSpectrumObjInserterDialog(currSelElem);
 	},
 	/*
 	_openDialog: function()
@@ -374,16 +420,51 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 		}).hide();
 	}
 	*/
-
-	_openDialog: function()
+	_openInserterDialog: function(targetElem, insertBtnName, dialog, objInserter, executeCallback)
 	{
-		if (!this._inserterDialog)
-			this._inserterDialog = this._createDialog();
-		var dialog = this._inserterDialog;
-		var sCaption = this._targetElem?
+		var btnElem = null;
+		var selfBtn = this.buttons[insertBtnName];
+		if (selfBtn)
+			btnElem = selfBtn.getDOMNode();
+		//console.log(selfBtn, this.buttons);
+
+		var self = this;
+		dialog.openModal(function(dialogResult){
+			if (dialogResult === Kekule.Widget.DialogButtons.OK)
+			{
+				//self._submitChemObj();
+				executeCallback();
+			}
+		}, btnElem);
+
+		//if (this._targetElem)
+		if (targetElem)  // import from element (and set dimension of inserter after the inserter is actually be inserted into DOM)
+		{
+			//console.log('import from element', targetElem);
+			//objInserter.importFromElem(this._targetElem);
+			objInserter.importFromElem(targetElem);
+		}
+		else  // create new
+		{
+			objInserter.setChemObj(null);
+		}
+
+		//this._forceChemObjInserterResize.bind(this).delay();
+		(function(){ objInserter.resized(); }).bind(this).delay();
+		return dialog;
+	},
+
+	_openChemObjInserterDialog: function(targetElem)
+	{
+		if (!this._chemObjInserterDialog)
+			this._chemObjInserterDialog = this._createChemObjInserterDialog();
+		var dialog = this._chemObjInserterDialog;
+		var sCaption = targetElem? // this._targetElem?
 				M.util.get_string('captionEditChemObj', 'atto_kekulechem'):
 				M.util.get_string('captionAddChemObj', 'atto_kekulechem');
 		dialog.setCaption(sCaption);
+
+		/*
 		if (this._targetElem)
 		{
 			this._chemObjInserter.importFromElem(this._targetElem);
@@ -407,14 +488,31 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 			}
 		}, btnElem);
 
-		this._forceInserterResize.bind(this).delay();
+		this._forceChemObjInserterResize.bind(this).delay();
 		return dialog;
+		*/
+		return this._openInserterDialog(targetElem, this.BTN_NAME_OBJ_INSERT, dialog,
+			this._chemObjInserter, this._submitChemObj.bind(this, targetElem));
 	},
-	_forceInserterResize: function()
+	/*
+	_forceChemObjInserterResize: function()
 	{
 		this._chemObjInserter.resized();  // hack, force recalculate inserter children pos
 	},
-	_createDialog: function()
+	*/
+	_openSpectrumObjInserterDialog: function(targetElem)
+	{
+		if (!this._spectrumObjInserterDialog)
+			this._spectrumObjInserterDialog = this._createSpectrumObjInserterDialog();
+		var dialog = this._spectrumObjInserterDialog;
+		var sCaption = targetElem?  //this._targetElem?
+			M.util.get_string('captionModifySpectrum', 'atto_kekulechem'):
+			M.util.get_string('captionAddSpectrum', 'atto_kekulechem');
+		dialog.setCaption(sCaption);
+		return this._openInserterDialog(targetElem, this.BTN_NAME_SPECTRUM_INSERT, dialog, this._spectrumObjInserter,
+			this._submitSpectrumObj.bind(this, targetElem));
+	},
+	_createDialogForInsert: function()
 	{
 		var result = new Kekule.Widget.Dialog(document);
 		result.setButtons([Kekule.Widget.DialogButtons.OK, Kekule.Widget.DialogButtons.CANCEL]);
@@ -425,7 +523,11 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 		result.setStyleProperty('minWidth', '500px');
 		result.setStyleProperty('minHeight', '200px');
 		*/
-
+		return result;
+	},
+	_createChemObjInserterDialog: function()
+	{
+		var result = this._createDialogForInsert();
 		var inserter = new Kekule.ChemWidget.ChemObjInserter(document);
 		inserter.setResizable(true);
 
@@ -440,59 +542,79 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 		this._chemObjInserter = inserter;
 		return result;
 	},
-	_submitChemObj: function()
+	_createSpectrumObjInserterDialog: function()
 	{
+		var result = this._createDialogForInsert();
+		var inserter = new Kekule.ChemWidget.SpectrumObjInserter(document);
+		inserter.setResizable(true);
+
+		inserter.appendToWidget(result);
+		this._spectrumObjInserter = inserter;
+		return result;
+	},
+	_submitChemObj: function(targetElem)
+	{
+		var self = this;
 		var inserter = this._chemObjInserter;
-		var details = inserter.getExportImgElemAttributes();
-		// add viewer class flag to element
-		if (!details['class'])
-			details['class'] = '';
-		details['class'] = ' ' + this.CHEM_OBJ_VIEWER_CLASS + ' K-Transparent-Background';
+		inserter.getExportImgElemAttributesAsync(null, null, function(details){
+			// add viewer class flag to element
+			if (!details['class'])
+				details['class'] = '';
+			details['class'] = ' ' + self.CHEM_OBJ_VIEWER_CLASS + ' K-Transparent-Background';
 
-		//console.log('export detail', details);
+			var editor = self.get('host');
+			editor.focus();   // IMPORTANT: must focus back to editor, otherwise insertion may failed in blured editor
 
-		var editor = this.get('host');
-		editor.focus();   // IMPORTANT: must focus back to editor, otherwise insertion may failed in blured editor
-		//editor.restoreSelection(this._editorSelection);
-		/*
-		if (this._htmlPurifier)
-		{
-			if (!this._targetElem)
+			if (!targetElem)
 			{
-				var htmlCode = this._getPurifierHtmlCode(details);
+				var htmlCode = self._getNormalHtmlCode(details);
 				editor.insertContentAtFocusPoint(htmlCode);
-				//console.log('insert new HTML', htmlCode);
 			}
-		}
-		else  // no purifier, img src attribute and data-attribute can all be preserved
-		{
-			if (!this._targetElem)  // add new, insert new chem obj
+			else  // modify existing chem obj element
 			{
-				var htmlCode = this._getNormalHtmlCode(details);
+				Kekule.DomUtils.setElemAttributes(targetElem, details);
+			}
+
+			// debug
+			//this._prepareForSubmit();
+
+			self.markUpdated();
+		});
+	},
+	_submitSpectrumObj: function(targetElem)
+	{
+		var self = this;
+		var inserter = this._spectrumObjInserter;
+		inserter.getExportImgElemAttributesAsync(null, null, function(details){
+			// add viewer class flag to element
+			if (!details['class'])
+				details['class'] = '';
+			details['class'] = ' ' + self.SPECTRUM_INSPECTOR_CLASS + ' K-Transparent-Background';
+
+			//console.log('export detail', details);
+
+			var editor = self.get('host');
+			editor.focus();   // IMPORTANT: must focus back to editor, otherwise insertion may failed in blured editor
+
+			//if (!self._targetElem)  // add new, insert new chem obj
+			if (!targetElem)
+			{
+				var htmlCode = self._getNormalHtmlCode(details);
 				editor.insertContentAtFocusPoint(htmlCode);
 				//console.log('insert new HTML', htmlCode);
 			}
 			else  // modify existing chem obj element
 			{
-				Kekule.DomUtils.setElemAttributes(this._targetElem, details);
+				//console.log('set attribs', details);
+				//Kekule.DomUtils.setElemAttributes(self._targetElem, details);
+				Kekule.DomUtils.setElemAttributes(targetElem, details);
 			}
-		}
-		*/
-		if (!this._targetElem)  // add new, insert new chem obj
-		{
-			var htmlCode = this._getNormalHtmlCode(details);
-			editor.insertContentAtFocusPoint(htmlCode);
-			//console.log('insert new HTML', htmlCode);
-		}
-		else  // modify existing chem obj element
-		{
-			Kekule.DomUtils.setElemAttributes(this._targetElem, details);
-		}
 
-		// debug
-		//this._prepareForSubmit();
+			// debug
+			//this._prepareForSubmit();
 
-		this.markUpdated();
+			self.markUpdated();
+		});
 	},
 
 	// returns HTML code to insert chemObj when purifier is not used

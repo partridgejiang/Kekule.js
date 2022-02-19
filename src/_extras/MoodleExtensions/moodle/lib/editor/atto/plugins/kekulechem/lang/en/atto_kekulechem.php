@@ -25,8 +25,13 @@
 $string['pluginname'] = 'Kekule Chem';
 $string['kekuleCssUrl'] = '/kekule.js/kekule/themes/default/kekule.css';
 
+$string['captionKekuleChemObj'] = 'Kekule Chem Object';
+$string['captionKekuleSpectrum'] = 'Kekule Spectrum';
+
 $string['captionAddChemObj'] = 'Insert Chem Object';
-$string['captionEditChemObj'] = 'Edit Chem Object';
+$string['captionEditChemObj'] = 'Modify Chem Object';
+$string['captionAddSpectrum'] = 'Insert Spectrum';
+$string['captionModifySpectrum'] = 'Modify Spectrum';
 
 $string['captionKekuleDir'] = 'Kekule.js directory';
 $string['descKekuleDir'] = 'Root directory that contains Kekule.js lib (and its dependant libs)';

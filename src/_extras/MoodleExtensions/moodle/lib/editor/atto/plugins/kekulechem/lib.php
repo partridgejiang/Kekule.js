@@ -77,7 +77,8 @@ function atto_kekulechem_strings_for_js() {
     */
 
     $PAGE->requires->strings_for_js(array(
-        'kekuleCssUrl', 'captionAddChemObj', 'captionEditChemObj'
+        'kekuleCssUrl',
+	    'captionKekuleChemObj', 'captionKekuleSpectrum', 'captionAddChemObj', 'captionEditChemObj', 'captionAddSpectrum', 'captionModifySpectrum'
     ), 'atto_kekulechem');
     $PAGE->requires->strings_for_js(array(
         'ok', 'cancel'
