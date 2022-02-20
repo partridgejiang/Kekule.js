@@ -26,14 +26,21 @@
           float: left;
           min-width: 1440px;
       }
-      #formController
+      #secView, #formController
       {
           float: left;
       }
+			#secView section,
+			#formController section
+			{
+					display: block;
+			}
+			/*
       #formController section
 			{
           float: left;
 			}
+			*/
       #secCode
       {
           clear: left;
@@ -639,7 +646,7 @@
 			<button id="btnGetData" type="button">Spectrum Data</button>
 			<button id="btnGetMeta" type="button">Spectrum Meta</button>
 		</div>
-		<div id="tabviewDisplayer" data-widget="Kekule.Widget.TabView">
+		<section id="tabviewDisplayer" data-widget="Kekule.Widget.TabView">
 			<div id="tabPageViewer" class="TabPage" data-widget="Kekule.Widget.TabPage" data-text="Spectrum">
 				<!--
 				<div id="chemViewer"
@@ -649,10 +656,10 @@
 						 data-widget="Kekule.ChemWidget.SpectrumInspector" data-enable-toolbar="true" data-auto-size="false" data-padding="20"></div>
 			</div>
 			<div id="tabPageSource" class="TabPage" data-widget="Kekule.Widget.TabPage" data-text="Source">
-                    <textarea id="editorSrc">
-                    </textarea>
+				<textarea id="editorSrc">
+				</textarea>
 			</div>
-		</div>
+		</section>
 		<section id="secCode" data-widget="Kekule.Widget.Panel" data-caption="Code Snippet">
 			<textarea id="editorCode" wrap="off"></textarea>
 		</section>
