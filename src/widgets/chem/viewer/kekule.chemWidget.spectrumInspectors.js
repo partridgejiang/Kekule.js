@@ -766,7 +766,7 @@ Kekule.ChemWidget.SpectrumInspector = Class.create(Kekule.ChemWidget.AbstractWid
 		return spectrumViewer;
 	},
 	/** @private */
-	_overwriteSubSpectrumViewerMethods(spectrumViewer)
+	_overwriteSubSpectrumViewerMethods: function(spectrumViewer)
 	{
 		spectrumViewer.overwriteMethod('doSetChemObj', this._spectrumViewerSetChemObjOverwriteBind);
 		spectrumViewer.overwriteMethod('createToolButton', this._spectrumViewerCreateToolButtonOverwriteBind);

@@ -1168,6 +1168,11 @@ if (!Math.sign)
       (x < 0)? -1:
         0;
   };
+/** @ignore */
+if (!Math.log10)
+	Math.log10 = function(x) {
+		return Math.log(x) * Math.LOG10E;
+	};
 
 // Add Node.XXXX support in IE
 //if (!window.Node) var Node = { };

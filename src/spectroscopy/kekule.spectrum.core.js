@@ -268,7 +268,7 @@ Kekule.Spectroscopy.MetaPropNamespace = {
 	 * @param {String} coreName
 	 * @returns {string}
 	 */
-	createPropertyName(namespace, coreName)
+	createPropertyName: function(namespace, coreName)
 	{
 		return (namespace || '') + MetaPropNamespace.DELIMITER + coreName;
 	},

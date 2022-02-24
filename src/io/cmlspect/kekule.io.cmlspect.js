@@ -1177,7 +1177,7 @@ Kekule.IO.CmlSpectrumDataReader = Class.create(Kekule.IO.CmlElementReader,
 			this._fillSpectrumData(axisDataObjs, spectrumDataSectionObj);
 	},
 	/** @private */
-	_fillSpectrumData(axisDataObjs, spectrumDataSectionObj)
+	_fillSpectrumData: function(axisDataObjs, spectrumDataSectionObj)
 	{
 		var spectrumObj = spectrumDataSectionObj.getParentSpectrum();
 		var spectrumDataObj = spectrumObj.getData();
