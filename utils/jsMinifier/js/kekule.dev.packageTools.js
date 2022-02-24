@@ -112,7 +112,7 @@ Kekule.Dev.PackageUtils = {
 		return result;
 	},
 
-	getCompressFileDetails: function(targetModuleNames, ignoreAutoCompressFlag)
+	getCompressFileDetails: function(targetModuleNames, excludeModuleNames, ignoreAutoCompressFlag)
 	{
 		var	targetFileName = 'kekule.min.js'; //'_compressed/kekule.compressed.js';
 		/*
@@ -121,6 +121,7 @@ Kekule.Dev.PackageUtils = {
 		*/
 		var moduleInfos = PU.getSrcFileModuleInfos();
 		var actualModuleNames = null;
+
 		if (targetModuleNames)  // limited to these modules
 		{
 			actualModuleNames = PU.getEssentialModuleNames(targetModuleNames);
@@ -132,6 +133,8 @@ Kekule.Dev.PackageUtils = {
 		{
 			var m = moduleInfos[i];
 			if (actualModuleNames && actualModuleNames.indexOf(m.name) < 0)
+				continue;
+			if (excludeModuleNames && excludeModuleNames.indexOf(m.name) >= 0)
 				continue;
 			var targetMinFileName = m.minFile || (m.name + '.min.js');
 			var srcFiles = m.files;

@@ -6,7 +6,7 @@ It is helpful to build custom JS/CSS min files of the whole toolkit.
 You may run the application in the following command line:
 
 ```
-node run.js -m module1,module2,... -d destinationPath --minifier=minifierName
+node run.js -m module1,module2,... -e excludeModule1,excludeModule2,... -d destinationPath --minifier=minifierName
 ```
 
 where the -d arg appoint the output path and the -m arg limits the modules needed to be outputted.
