@@ -403,6 +403,20 @@ var kekuleFiles = {
 		'category': 'render'
 	},
 
+	'spectroscopy': {
+		'requires': ['root', 'common', 'io'],
+		'files': [
+			'spectroscopy/kekule.spectrum.core.js',
+			'io/jcamp/kekule.io.jcamp.base.js',
+			'io/jcamp/kekule.io.jcamp.labels.js',
+			'io/jcamp/kekule.io.jcamp.dx.js',
+			'io/jcamp/kekule.io.jcamp.cs.js',
+			'io/jcamp/kekule.io.jcampIO.js',
+			'io/cmlspect/kekule.io.cmlspect.js',
+			'spectroscopy/kekule.spectrum.render.js'
+		]
+	},
+
 	'widget': {
 		'requires': ['lan', 'root', 'common', 'html'],
 		'files': [
@@ -463,6 +477,8 @@ var kekuleFiles = {
 			'widgets/chem/structureTreeView/kekule.chemWidget.structureTreeViews.js',
 			'widgets/chem/uiMarker/kekule.chemWidget.uiMarkers.js',
 			'widgets/chem/viewer/kekule.chemWidget.viewers.js',
+			'widgets/chem/viewer/kekule.chemWidget.spectrumViewers.js',
+			'widgets/chem/viewer/kekule.chemWidget.spectrumInspectors.js',
 			'widgets/chem/viewer/kekule.chemWidget.viewerGrids.js',
 			'widgets/chem/viewer/kekule.chemWidget.chemObjInserters.js',
 
@@ -536,19 +552,6 @@ var kekuleFiles = {
 			'data/kekule.dataUtils.js'
 		]
 	},
-
-	'spectroscopy': {
-		'requires': ['root', 'common', 'io'],
-		'files': [
-			'spectroscopy/kekule.spectrum.core.js',
-			'spectroscopy/kekule.spectrum.render.js',
-			'io/jcamp/kekule.io.jcamp.base.js',
-			'io/jcamp/kekule.io.jcamp.dx.js',
-			'io/jcamp/kekule.io.jcampIO.js',
-			'io/cmlspect/kekule.io.cmlspect.js'
-		]
-	},
-
 
 	'emscripten': {
 		'requires': ['root', 'common'],
