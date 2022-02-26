@@ -22,6 +22,7 @@ Contents:
    content/widgetIntro
    content/chemViewer
    content/composer
+   content/spectra
    content/webComponent
 
 

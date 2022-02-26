@@ -1,7 +1,7 @@
 Web Component Wrapper of Widgets
 ========================================
 
-`Web Component <https://developer.mozilla.org/en-US/docs/Web/Web_Components>`_. is
+`Web Component <https://developer.mozilla.org/en-US/docs/Web/Web_Components>`_ is
 a fashion solution to encapsulate custom elements and functions away from
 other context of the web applications. In the recent version of Kekule.js, web component technology is
 introduced and all widgets can be used in a web component way.
@@ -57,7 +57,8 @@ can be used to set the widget properties directly:
   </script>
 
 In the web component module, three often used chemical widgets are already be wrapped：
-the Viewer (``<kekule-viewer>``), Composer (``<kekule-composer>``) and PeriodicTable (``<kekule-periodic-table>``).
+the :doc:`Viewer<./chemViewer>` (``<kekule-viewer>``), :doc:`Composer<./composer>` (``<kekule-composer>``),
+:doc:`SpectrumInspector<./spectra>` (``<kekule-spectrum-inspector>``) and PeriodicTable (``<kekule-periodic-table>``).
 Users can use those custom elements directly in their HTML codes, e.g.:
 
 .. code-block:: html
