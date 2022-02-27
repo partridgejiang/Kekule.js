@@ -1,75 +1,173 @@
 
-<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8" />
-    <title>Chem Viewer Widget &#8212; Kekule Tutorial 2020.2 documentation</title>
-    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Chem Viewer Widget &mdash; Kekule Tutorial 2022.02 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Composer Widget" href="composer.html" />
     <link rel="prev" title="Introduction to Widget" href="widgetIntro.html" /> 
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="composer.html" title="Composer Widget"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="widgetIntro.html" title="Introduction to Widget"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2020.2 documentation</a> &#187;</li> 
-      </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Chem Viewer Widget</a><ul>
-<li><a class="reference internal" href="#creating-viewer">Creating Viewer</a></li>
-<li><a class="reference internal" href="#setting-and-retrieving-object-in-viewer">Setting and Retrieving Object in Viewer</a></li>
-<li><a class="reference internal" href="#changing-display-type-of-viewer">Changing Display Type of Viewer</a></li>
-<li><a class="reference internal" href="#changing-zoom-level-and-rotation-of-object">Changing Zoom Level and Rotation of Object</a></li>
-<li><a class="reference internal" href="#customizing-toolbar">Customizing Toolbar</a></li>
-<li><a class="reference internal" href="#presets">Presets</a></li>
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Kekule Tutorial
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2022.02
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="objSys.html">Object and Class System of Kekule.js</a></li>
+<li class="toctree-l1"><a class="reference internal" href="atomAndBond.html">Atom and Bond</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molCreation.html">Creating Molecule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molIO.html">Loading and Saving Molecule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getMolInfo.html">Get Molecule Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molCompareAndSearch.html">Molecule Comparison and Searching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="renderMol.html">Drawing Molecule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="widgetIntro.html">Introduction to Widget</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Chem Viewer Widget</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-viewer">Creating Viewer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-and-retrieving-object-in-viewer">Setting and Retrieving Object in Viewer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changing-display-type-of-viewer">Changing Display Type of Viewer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changing-zoom-level-and-rotation-of-object">Changing Zoom Level and Rotation of Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changing-the-default-render-color">Changing the Default Render Color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#customizing-toolbar">Customizing Toolbar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#presets">Presets</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="composer.html">Composer Widget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spectra.html">Spectra in Kekule.js</a></li>
+<li class="toctree-l1"><a class="reference internal" href="webComponent.html">Web Component Wrapper of Widgets</a></li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="widgetIntro.html"
-                        title="previous chapter">Introduction to Widget</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="composer.html"
-                        title="next chapter">Composer Widget</a></p>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+            
+          
         </div>
       </div>
+    </nav>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Kekule Tutorial</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Chem Viewer Widget</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="chem-viewer-widget">
 <h1>Chem Viewer Widget<a class="headerlink" href="#chem-viewer-widget" title="Permalink to this headline">¶</a></h1>
@@ -77,13 +175,13 @@
 It provides the ability to easily display molecule and other chemistry
 objects. User can interacts with displayed objects directly with mouse
 or touch or through an optional toolbar.</p>
-<div class="figure align-center" id="id10">
-<img alt="../_images/ChemViewer2DUI.png" src="../_images/ChemViewer2DUI.png" />
-<p class="caption"><span class="caption-text">&lt; Chem Viewer UI in 2D mode, displaying a reaction &gt;</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
-</div>
 <div class="figure align-center" id="id11">
+<img alt="../_images/ChemViewer2DUI.png" src="../_images/ChemViewer2DUI.png" />
+<p class="caption"><span class="caption-text">&lt; Chem Viewer UI in 2D mode, displaying a reaction &gt;</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-center" id="id12">
 <img alt="../_images/ChemViewer3DUI.png" src="../_images/ChemViewer3DUI.png" />
-<p class="caption"><span class="caption-text">&lt; Chem Viewer UI in 3D mode, displaying a molecule model &gt;</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">&lt; Chem Viewer UI in 3D mode, displaying a molecule model &gt;</span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
 </div>
 <p>Developers are able to customize many features of the widget by a
 series of properties:</p>
@@ -239,9 +337,55 @@ currently supported.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="changing-the-default-render-color">
+<h2>Changing the Default Render Color<a class="headerlink" href="#changing-the-default-render-color" title="Permalink to this headline">¶</a></h2>
+<p>By default, the viewer widget renders chemical object with color configured in <em>renderConfigs</em> property of viewer:<a class="footnote-reference brackets" href="#example" id="id5">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// 2D Viewer</span>
+<span class="kd">var</span> <span class="nx">color2DConfigs</span> <span class="o">=</span> <span class="nx">chemViewer</span><span class="p">.</span><span class="nx">getRenderConfigs</span><span class="p">().</span><span class="nx">getColorConfigs</span><span class="p">();</span>
+<span class="nx">color2DConfigs</span><span class="p">.</span><span class="nx">setAtomColor</span><span class="p">(</span><span class="s1">&#39;#A00000&#39;</span><span class="p">).</span><span class="nx">setBondColor</span><span class="p">(</span><span class="s1">&#39;#A0A000&#39;</span><span class="p">);</span>  <span class="c1">// set the default color for atoms and bonds</span>
+<span class="nx">color2DConfigs</span><span class="p">.</span><span class="nx">setGlyphStrokeColor</span><span class="p">(</span><span class="s1">&#39;#C0C0C0&#39;</span><span class="p">);</span>   <span class="c1">// default color of glyph stroke, e.g. the arrows</span>
+<span class="nx">color2DConfigs</span><span class="p">.</span><span class="nx">setLabelColor</span><span class="p">(</span><span class="s1">&#39;#C0C0C0&#39;</span><span class="p">);</span>   <span class="c1">// default color of text labels</span>
+<span class="nx">chemViewer</span><span class="p">.</span><span class="nx">requestRepaint</span><span class="p">();</span>    <span class="c1">// repaint</span>
+
+<span class="c1">// 3D Viewer</span>
+<span class="kd">var</span> <span class="nx">display3DConfigs</span> <span class="o">=</span> <span class="nx">chemViewer</span><span class="p">.</span><span class="nx">getRenderConfigs</span><span class="p">().</span><span class="nx">getMoleculeDisplayConfigs</span><span class="p">();</span>
+<span class="nx">display3DConfigs</span><span class="p">.</span><span class="nx">setDefAtomColor</span><span class="p">(</span><span class="s1">&#39;#000099&#39;</span><span class="p">).</span><span class="nx">setDefBondColor</span><span class="p">(</span><span class="s1">&#39;#FFFFFF&#39;</span><span class="p">);</span>
+<span class="nx">display3DConfigs</span><span class="p">.</span><span class="nx">setUseAtomSpecifiedColor</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>  <span class="c1">// turn off this to take the color to effect</span>
+<span class="nx">chemViewer</span><span class="p">.</span><span class="nx">requestRepaint</span><span class="p">();</span>    <span class="c1">// repaint</span>
+</pre></div>
+</div>
+<p>Besides the JavaScript code above, custom CSS properties can also be used here to control the render options
+(including color and others):</p>
+<div class="highlight-css notranslate"><div class="highlight"><pre><span></span>#chemViewer
+{
+  --atom-color:#A00000;
+  --bond-color:#A0A000;
+  /* render options other than color */
+  --bond-line-width:4;
+  --font-size:20
+  /* Note the bond width and font size are simply numbers without units */
+}
+</pre></div>
+</div>
+<p>Some times, user may want to the embedded viewer widget in a paragraph like a inline image.
+In that case, the render color of viewer is better for following the color of the paragraph.
+For that purpose, you can set the inheritedRenderColor property to true:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">chemViewer</span><span class="p">.</span><span class="nx">setInheritedRenderColor</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>or in the HTML code:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;chemViewer&quot;</span> <span class="na">data-widget</span><span class="o">=</span><span class="s">&quot;Kekule.ChemWidget.Viewer&quot;</span> <span class="na">data-chem-obj</span><span class="o">=</span><span class="s">&quot;url(#molecule)&quot;</span> <span class="na">data-inherited-render-color</span><span class="o">=</span><span class="s">&quot;true&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The approaches introduced above can actually be applied to
+<a class="reference internal" href="composer.html"><span class="doc">Composer</span></a> widget too, although not so useful as to Viewer widget.</p>
+</div>
+</div>
 <div class="section" id="customizing-toolbar">
 <h2>Customizing Toolbar<a class="headerlink" href="#customizing-toolbar" title="Permalink to this headline">¶</a></h2>
-<p>The toolbar can be enabled or removed by setting the <code class="docutils literal notranslate"><span class="pre">enableToolbar</span></code> property:<a class="footnote-reference brackets" href="#example" id="id5">1</a></p>
+<p>The toolbar can be enabled or removed by setting the <code class="docutils literal notranslate"><span class="pre">enableToolbar</span></code> property:<a class="footnote-reference brackets" href="#example" id="id6">1</a></p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">chemViewer</span><span class="p">.</span><span class="nx">setEnableToolbar</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>  <span class="c1">// enable the toolbar</span>
 <span class="nx">chemViewer</span><span class="p">.</span><span class="nx">setEnableToolbar</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>  <span class="c1">// disable and hide the toolbar</span>
 </pre></div>
@@ -249,7 +393,7 @@ currently supported.</p>
 <p>The toolbar is automatically displayed and hidden with certain interactions of user.
 For example, the following code will let toolbar be shown when user move mouse inside
 or click/touch in viewer and hidden when mouse leave the viewer or after a period of
-time (timeout):<a class="footnote-reference brackets" href="#example" id="id6">1</a></p>
+time (timeout):<a class="footnote-reference brackets" href="#example" id="id7">1</a></p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">chemViewer</span><span class="p">.</span><span class="nx">setToolbarEvokeModes</span><span class="p">([</span>
   <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Widget</span><span class="p">.</span><span class="nx">EvokeMode</span><span class="p">.</span><span class="nx">EVOKEE_CLICK</span><span class="p">,</span>
   <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Widget</span><span class="p">.</span><span class="nx">EvokeMode</span><span class="p">.</span><span class="nx">EVOKEE_MOUSE_ENTER</span><span class="p">,</span>
@@ -347,12 +491,12 @@ listed in the following table:</p>
 </tr>
 </tbody>
 </table>
-<p>The following code will show only <em>saveData</em>, <em>zoomIn</em> and <em>zoomOut</em> buttons in toolbar:<a class="footnote-reference brackets" href="#example" id="id7">1</a></p>
+<p>The following code will show only <em>saveData</em>, <em>zoomIn</em> and <em>zoomOut</em> buttons in toolbar:<a class="footnote-reference brackets" href="#example" id="id8">1</a></p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">chemViewer</span><span class="p">.</span><span class="nx">setToolButtons</span><span class="p">([</span><span class="s1">&#39;saveData&#39;</span><span class="p">,</span> <span class="s1">&#39;zoomIn&#39;</span><span class="p">,</span> <span class="s1">&#39;zoomOut&#39;</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Other buttons can also be inserted into the toolbar. For example, the following codes will
-add a new custom button with caption while clicking on it shows a alert dialog:<a class="footnote-reference brackets" href="#example" id="id8">1</a></p>
+add a new custom button with caption while clicking on it shows a alert dialog:<a class="footnote-reference brackets" href="#example" id="id9">1</a></p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">chemViewer</span><span class="p">.</span><span class="nx">setToolButtons</span><span class="p">([</span>
   <span class="s1">&#39;saveData&#39;</span><span class="p">,</span> <span class="s1">&#39;zoomIn&#39;</span><span class="p">,</span> <span class="s1">&#39;zoomOut&#39;</span>
   <span class="p">{</span>
@@ -368,7 +512,7 @@ add a new custom button with caption while clicking on it shows a alert dialog:<
 <div class="section" id="presets">
 <h2>Presets<a class="headerlink" href="#presets" title="Permalink to this headline">¶</a></h2>
 <p>Some typical presets of viewer are also provided as a shortcut of setting varies of properties.
-Change to a preset by method <code class="docutils literal notranslate"><span class="pre">setPredefinedSetting</span></code>:<a class="footnote-reference brackets" href="#example" id="id9">1</a></p>
+Change to a preset by method <code class="docutils literal notranslate"><span class="pre">setPredefinedSetting</span></code>:<a class="footnote-reference brackets" href="#example" id="id10">1</a></p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// change to preset fullFunc</span>
 <span class="nx">chemViewer</span><span class="p">.</span><span class="nx">setPredefinedSetting</span><span class="p">(</span><span class="s1">&#39;fullFunc&#39;</span><span class="p">);</span>
 </pre></div>
@@ -444,7 +588,7 @@ used as a replacement of traditional HTML <code class="docutils literal notransl
 </pre></div>
 </div>
 <dl class="footnote brackets">
-<dt class="label" id="example"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>,<a href="#id3">3</a>,<a href="#id4">4</a>,<a href="#id5">5</a>,<a href="#id6">6</a>,<a href="#id7">7</a>,<a href="#id8">8</a>,<a href="#id9">9</a>)</span></dt>
+<dt class="label" id="example"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>,<a href="#id3">3</a>,<a href="#id4">4</a>,<a href="#id5">5</a>,<a href="#id6">6</a>,<a href="#id7">7</a>,<a href="#id8">8</a>,<a href="#id9">9</a>,<a href="#id10">10</a>)</span></dt>
 <dd><p>Example of this chapter can be found and run at <a class="reference external" href="../examples/chemViewer.html">here</a>.
 Some Kekule.js demos (<a class="reference external" href="http://partridgejiang.github.io/Kekule.js/demos/demoLauncher.html?id=chemViewer2D">Chem Viewer 2D</a>,
 <a class="reference external" href="http://partridgejiang.github.io/Kekule.js/demos/demoLauncher.html?id=chemViewer3D">Chem Viewer 3D</a>,
@@ -457,29 +601,52 @@ and <a class="reference external" href="http://partridgejiang.github.io/Kekule.j
 </div>
 
 
+           </div>
+           
           </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="composer.html" class="btn btn-neutral float-right" title="Composer Widget" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="widgetIntro.html" class="btn btn-neutral float-left" title="Introduction to Widget" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright Partridge Jiang
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="composer.html" title="Composer Widget"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="widgetIntro.html" title="Introduction to Widget"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2020.2 documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright Partridge Jiang.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
-    </div>
-  </body>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
 </html>

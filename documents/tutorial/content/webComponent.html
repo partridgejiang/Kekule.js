@@ -1,59 +1,167 @@
 
-<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8" />
-    <title>Web Component Wrapper of Widgets &#8212; Kekule Tutorial 2020.2 documentation</title>
-    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Web Component Wrapper of Widgets &mdash; Kekule Tutorial 2022.02 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="Composer Widget" href="composer.html" /> 
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="composer.html" title="Composer Widget"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2020.2 documentation</a> &#187;</li> 
-      </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="composer.html"
-                        title="previous chapter">Composer Widget</a></p>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
+    <link rel="prev" title="Spectra in Kekule.js" href="spectra.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Kekule Tutorial
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2022.02
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="objSys.html">Object and Class System of Kekule.js</a></li>
+<li class="toctree-l1"><a class="reference internal" href="atomAndBond.html">Atom and Bond</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molCreation.html">Creating Molecule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molIO.html">Loading and Saving Molecule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getMolInfo.html">Get Molecule Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molCompareAndSearch.html">Molecule Comparison and Searching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="renderMol.html">Drawing Molecule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="widgetIntro.html">Introduction to Widget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chemViewer.html">Chem Viewer Widget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="composer.html">Composer Widget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spectra.html">Spectra in Kekule.js</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Web Component Wrapper of Widgets</a></li>
+</ul>
+
+            
+          
         </div>
       </div>
+    </nav>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Kekule Tutorial</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Web Component Wrapper of Widgets</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="web-component-wrapper-of-widgets">
 <h1>Web Component Wrapper of Widgets<a class="headerlink" href="#web-component-wrapper-of-widgets" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/Web_Components">Web Component</a>. is
+<p><a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/Web_Components">Web Component</a> is
 a fashion solution to encapsulate custom elements and functions away from
 other context of the web applications. In the recent version of Kekule.js, web component technology is
 introduced and all widgets can be used in a web component way.</p>
@@ -97,13 +205,14 @@ can be used to set the widget properties directly:</p>
 </pre></div>
 </div>
 <p>In the web component module, three often used chemical widgets are already be wrapped：
-the Viewer (<code class="docutils literal notranslate"><span class="pre">&lt;kekule-viewer&gt;</span></code>), Composer (<code class="docutils literal notranslate"><span class="pre">&lt;kekule-composer&gt;</span></code>) and PeriodicTable (<code class="docutils literal notranslate"><span class="pre">&lt;kekule-periodic-table&gt;</span></code>).
+the <a class="reference internal" href="chemViewer.html"><span class="doc">Viewer</span></a> (<code class="docutils literal notranslate"><span class="pre">&lt;kekule-viewer&gt;</span></code>), <a class="reference internal" href="composer.html"><span class="doc">Composer</span></a> (<code class="docutils literal notranslate"><span class="pre">&lt;kekule-composer&gt;</span></code>),
+<a class="reference internal" href="spectra.html"><span class="doc">SpectrumInspector</span></a> (<code class="docutils literal notranslate"><span class="pre">&lt;kekule-spectrum-inspector&gt;</span></code>) and PeriodicTable (<code class="docutils literal notranslate"><span class="pre">&lt;kekule-periodic-table&gt;</span></code>).
 Users can use those custom elements directly in their HTML codes, e.g.:</p>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span>&lt;kekule-viewer id=&quot;viewer&quot; style=&quot;width:500px;height:500px&quot; chem-obj=&quot;url(molecule.mol)&quot; render-type=&quot;3&quot;&gt;&lt;/kekule-viewer&gt;
-&lt;script&gt;
-  var viewer = document.getElementById(&#39;viewer).widget;
-  viewer.predefinedSetting = &#39;fullFunc&#39;;
-&lt;/script&gt;
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">kekule-viewer</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;viewer&quot;</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;width:500px;height:500px&quot;</span> <span class="na">chem-obj</span><span class="o">=</span><span class="s">&quot;url(molecule.mol)&quot;</span> <span class="na">render-type</span><span class="o">=</span><span class="s">&quot;3&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">kekule-viewer</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+  <span class="kd">var</span> <span class="nx">viewer</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;viewer&#39;</span><span class="p">).</span><span class="nx">widget</span><span class="p">;</span>
+  <span class="nx">viewer</span><span class="p">.</span><span class="nx">predefinedSetting</span> <span class="o">=</span> <span class="s1">&#39;fullFunc&#39;</span><span class="p">;</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
 <p>The demo of web component wrapper can be found on
@@ -111,26 +220,50 @@ Users can use those custom elements directly in their HTML codes, e.g.:</p>
 </div>
 
 
+           </div>
+           
           </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="spectra.html" class="btn btn-neutral float-left" title="Spectra in Kekule.js" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright Partridge Jiang
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="composer.html" title="Composer Widget"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Kekule Tutorial 2020.2 documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright Partridge Jiang.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
-    </div>
-  </body>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
 </html>

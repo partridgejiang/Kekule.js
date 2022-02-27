@@ -1,0 +1,560 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Spectra in Kekule.js &mdash; Kekule Tutorial 2022.02 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Web Component Wrapper of Widgets" href="webComponent.html" />
+    <link rel="prev" title="Composer Widget" href="composer.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Kekule Tutorial
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2022.02
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="objSys.html">Object and Class System of Kekule.js</a></li>
+<li class="toctree-l1"><a class="reference internal" href="atomAndBond.html">Atom and Bond</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molCreation.html">Creating Molecule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molIO.html">Loading and Saving Molecule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getMolInfo.html">Get Molecule Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molCompareAndSearch.html">Molecule Comparison and Searching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="renderMol.html">Drawing Molecule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="widgetIntro.html">Introduction to Widget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chemViewer.html">Chem Viewer Widget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="composer.html">Composer Widget</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Spectra in Kekule.js</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#i-o-of-spectra-data">I/O of Spectra Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#access-data-inside-spectrum">Access Data inside Spectrum</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#meta-data">Meta Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#spectrum-data">Spectrum Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#molecule-correlation">Molecule Correlation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#displaying-spectrum">Displaying Spectrum</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="webComponent.html">Web Component Wrapper of Widgets</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Kekule Tutorial</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Spectra in Kekule.js</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="spectra-in-kekule-js">
+<h1>Spectra in Kekule.js<a class="headerlink" href="#spectra-in-kekule-js" title="Permalink to this headline">¶</a></h1>
+<p>From version 0.9.9, Kekule.js provides some basic support for spectroscopy, including the input/ouput/display of
+spectra data. The core class of the spectra system is <code class="docutils literal notranslate"><span class="pre">Kekule.Spectroscopy.Spectrum</span></code>.</p>
+<div class="section" id="i-o-of-spectra-data">
+<h2>I/O of Spectra Data<a class="headerlink" href="#i-o-of-spectra-data" title="Permalink to this headline">¶</a></h2>
+<p>Currently, the <a class="reference external" href="http://jcamp-dx.org/">JCAMP-DX</a> and <a class="reference external" href="https://pubs.acs.org/doi/abs/10.1021/ci600531a/">CMLSpect</a> formats
+are supported in Kekule.js. The ordinary I/O API can be used to access or save those formats of data.
+For example, to load the spectrum from data string:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cmlData</span> <span class="o">=</span> <span class="s1">&#39;&lt;cml xmlns=&quot;http://www.xml-cml.org/schema&quot; ...&gt;&lt;spectrum id=&quot;UV_VIS&quot; title=&quot;Holmium Oxide Wavelength Standard&quot; convention=&quot;JSpecView&quot; type=&quot;UV/VIS&quot;&gt; ... &lt;/spectrum&gt;&lt;/cml&gt;&#39;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">spectrum1</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadFormatData</span><span class="p">(</span><span class="nx">cmlData</span><span class="p">,</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">DataFormat</span><span class="p">.</span><span class="nx">CML</span><span class="p">);</span>  <span class="c1">// an instance of Kekule.Spectroscopy.Spectrum will be returned</span>
+<span class="kd">var</span> <span class="nx">jcampData</span> <span class="o">=</span> <span class="s1">&#39;##TITLE=CCH-4\n##JCAMP-DX=4.24\n##DATA TYPE=INFRARED SPECTRUM ... ##END=&#39;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">spectrum2</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadMimeData</span><span class="p">(</span><span class="nx">cmlData</span><span class="p">,</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">MimeType</span><span class="p">.</span><span class="nx">JCAMP_DX</span><span class="p">);</span>  <span class="c1">// an instance of Kekule.Spectroscopy.Spectrum will be returned too</span>
+</pre></div>
+</div>
+<p>Other sources of input data (external file or resource identifier) are also applicable, e.g.:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s1">&#39;data/spectra/sample.jdx&#39;</span><span class="p">;</span>
+<span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadUrlData</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">,</span> <span class="nx">success</span><span class="p">){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">success</span><span class="p">)</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Spectrum successfully loaded&#39;</span><span class="p">,</span> <span class="nx">spectrum</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>It is notable that the structures of CML-spect or JCAMP data are flexible, multiple spectra and even molecules can be encapsulated
+in one source file, so the returning value of those load functions may be a <code class="docutils literal notranslate"><span class="pre">Kekule.ChemObjList</span></code> rather than a simple <code class="docutils literal notranslate"><span class="pre">Kekule.Spectroscopy.Spectrum</span></code>.
+For example, suppose we have a JCAMP format file recording a NMR peak table and its reference molecule
+(<a class="reference external" href="http://partridgejiang.github.io/Kekule.js/demos/chemFiles/spectrum/ISAS_CDX_with_mol_correlation.DX">ISAS_CDX_with_mol_correlation.DX</a>):</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span>##TITLE= 4a-Phenyladamantan-2-one
+##JCAMP-DX= 4.24
+##DATA TYPE= LINK
+##BLOCKS= 2
+##TITLE= Structure: 4a-Phenyladamantan-2-one
+##JCAMP-CS= 3.7
+##BLOCK_ID= 1
+##CROSS REFERENCE= NMR PEAK ASSIGNMENTS: BLOCK_ID= 2
+##NAMES= 4a-Phenyladamantan-2-one
+##MOLFORM= C16 H18 O
+##ATOMLIST=
+$$ AN   AS NH
+    1    C  1
+    2    C
+    ...
+##BONDLIST=
+$$ AN1 AN2 BT
+     2   1  S
+     3   2  S
+     ...
+##END=   $$ End of the structure block
+##TITLE= NMR data: 4a-Phenyladamantan-2-one
+##JCAMP-DX= 5.00
+##DATA TYPE= NMR PEAK ASSIGNMENTS
+##DATA CLASS= ASSIGNMENTS
+##BLOCK_ID= 2
+##.OBSERVE NUCLEUS= ^13C
+##CROSS REFERENCE= STRUCTURE: BLOCK_ID= 1
+##SPECTROMETER/DATA SYSTEM= Bruker AM 400
+##TEMPERATURE= 26.85
+##XUNITS= PPM
+##YUNITS= ARBITRARY UNITS
+##NPOINTS= 16
+##PEAK ASSIGNMENTS= (XYMA)
+( 27.00, 1.0,, &lt; 7&gt;)
+( 32.10, 1.0,, &lt; 6&gt;)
+...
+##END=   $$ End of the NMR data block
+##END=   $$ End of the compound JCAMP-DX file
+</pre></div>
+</div>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s1">&#39;fileAbove.jdx&#39;</span><span class="p">;</span>
+<span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadUrlData</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">chemObjList</span><span class="p">,</span> <span class="nx">success</span><span class="p">){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">success</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">molecule</span> <span class="o">=</span> <span class="nx">chemObjList</span><span class="p">.</span><span class="nx">getChildAt</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>  <span class="c1">// instanceof Kekule.Molecule</span>
+        <span class="kd">var</span> <span class="nx">spectrum</span> <span class="o">=</span> <span class="nx">chemObjList</span><span class="p">.</span><span class="nx">getChildAt</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>  <span class="c1">// instanceof Kekule.Spectroscopy.Spectrum</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>Similar to the loading, the ordinary <code class="docutils literal notranslate"><span class="pre">Kekule.IO.saveXXXX</span></code> series functions can be used to write spectrum into string:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cmlData</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">saveMimeData</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">,</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">MimeType</span><span class="p">.</span><span class="nx">CML</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">jcampData</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">saveFormatData</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">,</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">DataFormat</span><span class="p">.</span><span class="nx">JCAMP_DX</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">complexJcampData</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">saveFormatData</span><span class="p">(</span><span class="nx">chemObjListWithSpectrum</span><span class="p">,</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">DataFormat</span><span class="p">.</span><span class="nx">JCAMP_DX</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="access-data-inside-spectrum">
+<h2>Access Data inside Spectrum<a class="headerlink" href="#access-data-inside-spectrum" title="Permalink to this headline">¶</a></h2>
+<p>After loading the spectrum, we can access the detailed spectrum data inside it.</p>
+<div class="section" id="meta-data">
+<h3>Meta Data<a class="headerlink" href="#meta-data" title="Permalink to this headline">¶</a></h3>
+<p>Following the CMLSpect conventions, the meta data stored in spectrum file are categorized into several groups
+(<em>condition</em>, <em>parameter</em>, <em>metaData</em> and <em>annotations</em>) in Kekule.js.Corresponding <code class="docutils literal notranslate"><span class="pre">getXXXX</span></code> and <code class="docutils literal notranslate"><span class="pre">`setXXXX</span></code> methods
+can be used to read or write those values. The <code class="docutils literal notranslate"><span class="pre">getXXXXKeys</span></code> method will returns all keys of this category.
+Regardless of the category, method <code class="docutils literal notranslate"><span class="pre">getSpectrumInfoValue</span></code> can also be used to retrieve any type of values.
+For example, after reading out the following JCAMP-DX file
+(<a class="reference external" href="http://partridgejiang.github.io/Kekule.js/demos/chemFiles/spectrum/BRUKPAC.DX">BRUKPAC.DX</a>),
+those get/set methods can be used as following:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span>##TITLE= test32
+##JCAMPDX= 5.0
+##DATA TYPE= NMR Spectrum
+##DATA CLASS= XYDATA
+##ORIGIN= uk
+##OWNER= uk
+##.OBSERVE FREQUENCY= 100.4
+##.OBSERVE NUCLEUS= ^13C
+##.ACQUISITION MODE= SIMULTANEOUS
+##.AVERAGES= 32
+##.DIGITISER RES= 16
+##SPECTROMETER/DATA SYSTEM= JEOL GX 400
+...
+</pre></div>
+</div>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// suppose we have read the file into spectrum object</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">.</span><span class="nx">getParameterKeys</span><span class="p">());</span>  <span class="c1">// [ &quot;NMR.ObserveFrequency&quot;, &quot;NMR.ObserveNucleus&quot;, &quot;NMR.AcquisitionMode&quot; ]</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">.</span><span class="nx">getParameter</span><span class="p">(</span><span class="s1">&#39;NMR.ObserveNucleus));  // &#39;</span><span class="nx">C13</span><span class="s1">&#39;</span>
+<span class="s1">var freq = spectrum.getParameter(&#39;</span><span class="nx">NMR</span><span class="p">.</span><span class="nx">ObserveFrequency</span><span class="p">);</span>  <span class="c1">// freq is an instance of Kekule.Scalar</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">freq</span><span class="p">.</span><span class="nx">getValue</span><span class="p">(),</span> <span class="nx">freq</span><span class="p">.</span><span class="nx">getUnit</span><span class="p">());</span>  <span class="c1">// 100.4, &quot;MHz&quot;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">.</span><span class="nx">getMetaKeys</span><span class="p">());</span>  <span class="c1">// [ &quot;Origin&quot;, &quot;Owner&quot;, &quot;SpectrometerDataSystem&quot; ]</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">.</span><span class="nx">getMeta</span><span class="p">(</span><span class="s1">&#39;Origin&#39;</span><span class="p">));</span>  <span class="c1">// &quot;uk&quot;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">.</span><span class="nx">getAnnotationKeys</span><span class="p">());</span>  <span class="c1">// [ &quot;JcampDxVersion&quot;, &quot;NMR.Averages&quot;, &quot;NMR.DigitiserRes&quot;, … ]</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">.</span><span class="nx">getAnnotation</span><span class="p">(</span><span class="s1">&#39;JcampDxVersion&#39;</span><span class="p">));</span>   <span class="c1">// &quot;5.0&quot;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">.</span><span class="nx">getAnnotation</span><span class="p">(</span><span class="s1">&#39;NMR.Averages&#39;</span><span class="p">));</span>  <span class="c1">// &quot;32&quot;</span>
+<span class="c1">// use the getSpectrumInfoValue method to retrieve meta data</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">.</span><span class="nx">getSpectrumInfoValue</span><span class="p">(</span><span class="s1">&#39;Origin&#39;</span><span class="p">)));</span>   <span class="c1">// &quot;uk&quot;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">.</span><span class="nx">getSpectrumInfoValue</span><span class="p">(</span><span class="s1">&#39;NMR.ObserveNucleus&#39;</span><span class="p">)));</span>   <span class="c1">// &quot;C13&quot;</span>
+<span class="c1">// change the origin and owner of spectrum</span>
+<span class="nx">spectrum</span><span class="p">.</span><span class="nx">setMeta</span><span class="p">(</span><span class="s1">&#39;Origin&#39;</span><span class="p">,</span> <span class="s1">&#39;self&#39;</span><span class="p">);</span>
+<span class="nx">spectrum</span><span class="p">.</span><span class="nx">setMeta</span><span class="p">(</span><span class="s1">&#39;Owner&#39;</span><span class="p">,</span> <span class="s1">&#39;self&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When loading spectrum data, some important meta key names will be converted. For example, in the JCAMP-DX file above,
+line <code class="docutils literal notranslate"><span class="pre">##.OBSERVE</span> <span class="pre">FREQUENCY=</span> <span class="pre">100.4</span></code> records the frequency of NMR spectrum. When loading the spectrum,
+the key will be converted into <code class="docutils literal notranslate"><span class="pre">'NMR.ObserveFrequency'</span></code>, a more clear and user-friendly name.
+The value of the frequency is also converted into an instance of <code class="docutils literal notranslate"><span class="pre">Kekule.Scalar</span></code>, with value 100.4 and unit ‘MHz’.</p>
+</div>
+</div>
+<div class="section" id="spectrum-data">
+<h3>Spectrum Data<a class="headerlink" href="#spectrum-data" title="Permalink to this headline">¶</a></h3>
+<p>In CMLSpect, JCAMP-DX (and many other format), several different data sections may be wrapped in one spectrum.
+So in Kekule.js, multiple instances of <code class="docutils literal notranslate"><span class="pre">Kekule.Spectroscopy.DataSection</span></code>, in which the concrete data are stored,
+are held in spectrum object. For example, the following code can be used to iterate data sections inside a spectrum:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">l</span> <span class="o">=</span> <span class="nx">spectrum</span><span class="p">.</span><span class="nx">getSectionCount</span><span class="p">();</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">l</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">dataSection</span> <span class="o">=</span> <span class="nx">spectrum</span><span class="p">.</span><span class="nx">getDataSectionAt</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Kekule.Spectroscopy.DataSection</span></code> provide a series of method to access its detailed data and other information.
+Suppose we have a NTuple format JCAMP-DX file here
+(<a class="reference external" href="http://partridgejiang.github.io/Kekule.js/demos/chemFiles/spectrum/BRUKNTUP.DX">BRUKNTUP.DX</a>):</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span>##TITLE= testntup
+##JCAMPDX= 5.0
+##DATA TYPE= NMR Spectrum
+##DATA CLASS= NTUPLES
+##.OBSERVE FREQUENCY= 100.4
+##.OBSERVE NUCLEUS= ^13C
+##NTUPLES=NMR SPECTRUM
+##VAR_NAME=  FREQUENCY,     SPECTRUM/REAL,   SPECTRUM/IMAG,   PAGE NUMBER
+##SYMBOL=    X,             R,               I,               N
+##VAR_TYPE=  INDEPENDENT,   DEPENDENT,       DEPENDENT,       PAGE
+##VAR_FORM=  AFFN,          ASDF,            ASDF,            AFFN
+##VAR_DIM=   16384,         16384,           16384,           2
+##UNITS=     HZ,            ARBITRARY UNITS, ARBITRARY UNITS,
+##FIRST=     24038.5 ,      2254931 ,        -6966283 ,       1
+##LAST=      0 ,            1513177 ,        -7303022 ,       2
+##MIN=       0 ,            -27593239 ,      -680128135 ,     1
+##MAX=       24038.5 ,      972201806 ,      689619959 ,      2
+##FACTOR=    1.46728315937252 , 1 ,          1 ,              1
+$$ Real data points
+##PAGE= N=1
+##DATA TABLE=(X++(R..R)), XYDATA
+16383 B254931p506547j928560N577988J2253771o290071q010940N785678N934030
+16375 H070280o319742J809880k462623o675783N340627q60434l560418J18681
+16367 d539532K551632l441737j691199N043926M658213J48350J127466k640643
+16359 A216476J513177J186806q752693N874689O82413M717554j4033980j424167
+...
+$$ Imaginary data points
+##PAGE= N=2
+##DATA TABLE=(X++(I..I)), XYDATA
+16383 f966283o52431R849608Q439515p660807j0965055L556803R933793n977112
+16375 d41969o503268M63016J915202k651818Q313238r449731M882712J957294
+16367 a515324K10462J578462O94523M840620j115447n808743M314465r365546
+16359 f166528N366774m714343J220678R04986L683079n030034p871269R112993
+16351 c493664P702898m630157o482221k546587N008989J0375762k209848k31508
+...
+##END NTUPLES=NMR SPECTRUM
+##END=
+</pre></div>
+</div>
+<p>This file contains two NTuple pages, so after loading it, there should be two data sections inside the spectrum.
+The following code demonstrates the manipulation of the data sections:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">section1</span> <span class="o">=</span> <span class="nx">spectrum</span><span class="p">.</span><span class="nx">getDataSectionAt</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>  <span class="c1">// the first data section, DATA TABLE=(X++(R..R))</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">section1</span><span class="p">.</span><span class="nx">getLocalVarSymbols</span><span class="p">());</span>   <span class="c1">// [ &quot;X&quot;, &quot;R&quot; ]</span>
+<span class="nx">section1</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">section1</span><span class="p">.</span><span class="nx">getLocalVarInfo</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>    <span class="c1">// { symbol: &quot;X&quot;, continuousRange: { fromValue: 24038.499999999996, toValue: 0 } }</span>
+<span class="nx">section1</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">section1</span><span class="p">.</span><span class="nx">getLocalVarInfo</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">));</span>  <span class="c1">// { symbol: &quot;X&quot;, continuousRange: { fromValue: 24038.499999999996, toValue: 0 } }, same to above</span>
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">l</span> <span class="o">=</span> <span class="nx">section1</span><span class="p">.</span><span class="nx">getDataCount</span><span class="p">();</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">l</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">dataValue</span> <span class="o">=</span> <span class="nx">section1</span><span class="p">.</span><span class="nx">getDataValue</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">dataValue</span><span class="p">);</span>    <span class="c1">// 0, { X: 24038.499999999996, R: 2254931 }  ...</span>
+    <span class="nx">section1</span><span class="p">.</span><span class="nx">setValueAt</span><span class="p">({</span><span class="s1">&#39;X&#39;</span><span class="o">:</span> <span class="nx">dataValue</span><span class="p">.</span><span class="nx">X</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="o">:</span> <span class="nx">dataValue</span><span class="p">.</span><span class="nx">R</span><span class="p">});</span>  <span class="c1">// double the X value of each data item</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">section2</span> <span class="o">=</span> <span class="nx">spectrum</span><span class="p">.</span><span class="nx">getDataSectionAt</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>  <span class="c1">// the second data section, DATA TABLE=(X++(I..I))</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">section2</span><span class="p">.</span><span class="nx">getLocalVarSymbols</span><span class="p">());</span>   <span class="c1">// [ &quot;X&quot;, &quot;I&quot; ]</span>
+<span class="nx">section2</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">section2</span><span class="p">.</span><span class="nx">getLocalVarInfo</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>    <span class="c1">// { symbol: &quot;I&quot; }</span>
+<span class="nx">section2</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">index</span><span class="p">){</span>      <span class="c1">// Another way to iterate data values</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">index</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>                <span class="c1">// 0, { X: 24038.499999999996, I: -6966283 } ...</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="molecule-correlation">
+<h3>Molecule Correlation<a class="headerlink" href="#molecule-correlation" title="Permalink to this headline">¶</a></h3>
+<p>The spectrum are often related with molecule structure. In Kekule.js, such information is stored
+in the <code class="docutils literal notranslate"><span class="pre">refMolecules</span></code> property of <code class="docutils literal notranslate"><span class="pre">Kekule.Spectroscopy.Spectrum</span></code>. In the spectrum peak table,
+peaks may also be mapped to certain atoms/bonds of molecule. The <code class="docutils literal notranslate"><span class="pre">Kekule.Spectroscopy.SpectrumDataDetails</span></code> class
+and <code class="docutils literal notranslate"><span class="pre">get/setExtraInfoOf</span></code> and <code class="docutils literal notranslate"><span class="pre">get/setExtraInfoAt</span></code> methods in class <code class="docutils literal notranslate"><span class="pre">Kekule.Spectroscopy.SpectrumDataSection</span></code>
+can be used to read or write the those peak assignments.</p>
+<p>Suppose we have a JCAMP-DX file with molecule correlation and peak assignment information as following
+(<a class="reference external" href="http://partridgejiang.github.io/Kekule.js/demos/chemFiles/spectrum/ISAS_CDX_with_mol_correlation.DX">ISAS_CDX_with_mol_correlation.DX</a>):</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span>##TITLE= 4a-Phenyladamantan-2-one
+##JCAMP-DX= 5.0
+##DATA TYPE= LINK
+##BLOCKS= 2
+##TITLE= Structure: 4a-Phenyladamantan-2-one
+##JCAMP-CS= 3.7
+##BLOCK_ID= 1
+##CROSS REFERENCE= NMR PEAK ASSIGNMENTS: BLOCK_ID= 2
+##NAMES= 4a-Phenyladamantan-2-one
+##MOLFORM= C16 H18 O
+##ATOMLIST=
+$$ AN   AS NH
+    1    C  1
+    2    C
+    3    C  1
+    4    C  1
+...
+##BONDLIST=
+$$ AN1 AN2 BT
+     2   1  S
+     3   2  S
+     5   4  S
+...
+##END=   $$ End of the structure block
+##TITLE= NMR data: 4a-Phenyladamantan-2-one
+##JCAMP-DX= 5.0
+##DATA TYPE= NMR PEAK ASSIGNMENTS
+##DATA CLASS= ASSIGNMENTS
+##BLOCK_ID= 2
+##.OBSERVE NUCLEUS= ^13C
+##CROSS REFERENCE= STRUCTURE: BLOCK_ID= 1
+##XUNITS= PPM
+##YUNITS= ARBITRARY UNITS
+##NPOINTS= 16
+##PEAK ASSIGNMENTS= (XYMA)
+( 27.00, 1.0,, &lt; 7&gt;)
+( 32.10, 1.0,, &lt; 6&gt;)
+( 34.00, 1.0,, &lt; 4&gt;)
+( 37.70, 1.0,, &lt;10&gt;)
+...
+##END=   $$ End of the NMR data block
+##END=   $$ End of the compound JCAMP-DX file
+</pre></div>
+</div>
+<p>Since this file containing both molecule block and spectrum block, a instance of <code class="docutils literal notranslate"><span class="pre">Kekule.ChemObjList</span></code>
+will be created after loading it. The following code may be used to iterate all the peak assignments:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">molecule</span> <span class="o">=</span> <span class="nx">chemObjList</span><span class="p">.</span><span class="nx">getChildAt</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">spectrum</span> <span class="o">=</span> <span class="nx">chemObjList</span><span class="p">.</span><span class="nx">getChildAt</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">.</span><span class="nx">getRefMolecules</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">===</span> <span class="nx">molecule</span><span class="p">);</span>   <span class="c1">// true</span>
+
+<span class="kd">var</span> <span class="nx">dataSection</span> <span class="o">=</span> <span class="nx">spectrum</span><span class="p">.</span><span class="nx">getDataSectionAt</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">l</span><span class="p">;</span> <span class="o">=</span> <span class="nx">dataSection</span><span class="p">.</span><span class="nx">getDataCount</span><span class="p">();</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">l</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">dataValue</span> <span class="o">=</span> <span class="nx">dataSection</span><span class="p">.</span><span class="nx">getValueAt</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">extraInfo</span> <span class="o">=</span> <span class="nx">dataSection</span><span class="p">.</span><span class="nx">getExtraInfoOf</span><span class="p">(</span><span class="nx">value</span><span class="p">);</span> <span class="c1">// or dataSection.getExtraInfoAt(i);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">extraInfo</span> <span class="k">instanceof</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Spectroscopy</span><span class="p">.</span><span class="nx">SpectrumDataDetails</span><span class="p">)</span>  <span class="c1">// true</span>
+    <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">atom</span> <span class="o">=</span> <span class="nx">extraInfo</span><span class="p">.</span><span class="nx">getAssignment</span><span class="p">();</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">molecule</span><span class="p">.</span><span class="nx">indexOfNode</span><span class="p">(</span><span class="nx">atom</span><span class="p">));</span>   <span class="c1">// 6, 5, 3, ...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="displaying-spectrum">
+<h2>Displaying Spectrum<a class="headerlink" href="#displaying-spectrum" title="Permalink to this headline">¶</a></h2>
+<p>Similar to other chemical objects, the <a class="reference internal" href="chemViewer.html"><span class="doc">viewer</span></a> widget can always be used to display a simple spectrum.
+For example, the following JavaScript codes load spectrum from
+(<a class="reference external" href="http://partridgejiang.github.io/Kekule.js/demos/chemFiles/spectrum/BRUKPAC.DX">BRUKPAC.DX</a>) and display the spectrum
+in a existing viewer widget:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadUrlData</span><span class="p">(</span><span class="s1">&#39;BRUKPAC.DX&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">,</span> <span class="nx">success</span><span class="p">){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">success</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">viewer</span><span class="p">.</span><span class="nx">setChemObj</span><span class="p">(</span><span class="nx">spectrum</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<div class="figure align-default" id="id3">
+<img alt="../_images/spectrumViewer.png" src="../_images/spectrumViewer.png" />
+<p class="caption"><span class="caption-text">Displaying spectrum in viewer widget</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+<p>If you want to show both spectrum and its correlated molecule together, the new spectrum inspector widget can be utilized.
+It shares the same API to viewer and displays molecule automatically when there is a correlation.
+The following code create a spectrum inspector by code and load a new spectrum inside it:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">spectrumInspector</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">ChemWidget</span><span class="p">.</span><span class="nx">spectrumInspector</span><span class="p">(</span><span class="nb">document</span><span class="p">);</span>
+<span class="nx">spectrumInspector</span><span class="p">.</span><span class="nx">appendToElem</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+<span class="nx">spectrumInspector</span>
+    <span class="p">.</span><span class="nx">setAssocViewerPosition</span><span class="p">(</span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Widget</span><span class="p">.</span><span class="nx">Position</span><span class="p">.</span><span class="nx">LEFT</span><span class="p">)</span> <span class="c1">// display molecule to the left of spectrum</span>
+    <span class="p">.</span><span class="nx">setAssocViewerSize</span><span class="p">(</span><span class="s1">&#39;25%&#39;</span><span class="p">);</span>   <span class="c1">// the molecule view occupies 1/4 of the total width of widget</span>
+
+<span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s1">&#39;MultiSpectraWithCorrelations.jdx&#39;</span><span class="p">;</span>  <span class="c1">// a JCAMP-DX file with several spectrums and correlated molecule inside</span>
+<span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadUrlData</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">chemObjList</span><span class="p">,</span> <span class="nx">success</span><span class="p">){</span>   <span class="c1">// so a chem object list is created after loading the file</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">success</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">spectrumInspector</span><span class="p">.</span><span class="nx">setChemObj</span><span class="p">(</span><span class="nx">chemObjList</span><span class="p">);</span>   <span class="c1">// load the list directly in the inspector</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<div class="figure align-default" id="id4">
+<img alt="../_images/spectrumInspector.png" src="../_images/spectrumInspector.png" />
+<p class="caption"><span class="caption-text">Displaying spectrum and its correlated molecule in spectrum inspector widget</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As the above image illustrates, when a peak is selected, its assignments are automatically highlighted as well by default.</p>
+</div>
+<p>In both viewer and spectrum inspector, the interaction mode and display styles can be customized.
+You may check the demo <a class="reference external" href="http://partridgejiang.github.io/Kekule.js/demos/demoLauncher.html?id=spectrumInspector">SpectrumInspector</a>
+for details.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="webComponent.html" class="btn btn-neutral float-right" title="Web Component Wrapper of Widgets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="composer.html" class="btn btn-neutral float-left" title="Composer Widget" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright Partridge Jiang
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
