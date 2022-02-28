@@ -41,7 +41,9 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			TITLE_lengthConfigs: 'Lengths settings',
 			DES_lengthConfigs: 'Lengths to display molecule/chem object',
 			TITLE_colorConfigs: 'Color settings',
-			DES_colorConfigs: 'Color settings to display molecule/chem object'
+			DES_colorConfigs: 'Color settings to display molecule/chem object',
+			TITLE_spectrumDisplayConfigs: 'Spectrum display settings',
+			DES_spectrumDisplayConfigs: 'Settings for displaying spectrum object',
 		},
 		MoleculeDisplayConfigs: {
 			TITLE_defMoleculeDisplayType: 'Default molecule display mode',
@@ -161,6 +163,9 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			TITLE_glyphFillColor: 'Glyph fill color',
 			DES_glyphFillColor: 'Default fill color of glyph'
 		},
+		spectrumDisplayConfigs: {
+			// TODO: unfinished
+		},
 
 		Render3DConfigs: {
 			TITLE_generalConfigs: 'General render settings',
@@ -230,7 +235,9 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			TITLE_environment2DConfigs: '2D environment settings',
 			DES_environment2DConfigs: 'Settings of 2D drawing environment',
 			TITLE_environment3DConfigs: '3D environment settings',
-			DES_environment3DConfigs: 'Settings of 3D drawing environment'
+			DES_environment3DConfigs: 'Settings of 3D drawing environment',
+			TITLE_spectrumViewConfigs: 'Spectrum view settings',
+			DES_spectrumViewConfigs: 'Display and interaction settings of spectrum sub view',
 		},
 		ChemObjDisplayerIOConfigs: {
 			TITLE_canonicalizeBeforeSave: 'Canonicalize before save',
@@ -245,6 +252,9 @@ Kekule.Localization.addResource('en', 'OBJDEF_TEXTS',
 			DES_antialiasBlurRatio: 'Antialias blur ratio', // TODO: need a more precisely description
 			TITLE_overSamplingRatio: 'Over sampling ratio',
 			DES_overSamplingRatio: 'Over sampling ratio of the drawing context'
+		},
+		ChemObjDisplayerSpectrumViewConfigs: {
+			// TODO: unfinished
 		},
 
 		Viewer:	{
