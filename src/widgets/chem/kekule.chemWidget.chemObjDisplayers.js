@@ -710,7 +710,11 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		this.setPropStoreFieldValue('backgroundColor', newBgColor);
 		this.backgroundColorChanged(true);  // notify back color change but not repaint, as painter currently is still old one
 		//if (chemObj)  // repaint
-		this.setChemObj(chemObj || null);
+		//this.setChemObj(chemObj || null);
+		// clear old draw options if oldObj is set
+
+		this._doLoadOnObj(chemObj, {refreshOnly: true});
+		this.resetDisplay();
 	},
 	/**
 	 * Force to recreate drawing context and repaint.
@@ -1147,8 +1151,14 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	 * @param {Kekule.ChemObject} chemObj
 	 * @ignore
 	 */
-	doLoad: function(chemObj)
+	doLoad: function(chemObj, options)
 	{
+		this._doLoadOnObj(chemObj);
+	},
+	/** @private */
+	_doLoadOnObj: function(chemObj, options)
+	{
+		var refreshOnly = options && options.refreshOnly;
 		this.clearSubViews();   // clear all old subviews when loading a new chem object
 		//console.log('doLoad', chemObj);
 		this.refitDrawContext(true);  // ensure the context size is correct, but not force repaint.
@@ -1202,12 +1212,16 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				 */
 				this.repaint();
 				this.setPropStoreFieldValue('chemObjLoaded', true);  // indicate obj loaded successful
-				this.invokeEvent('load', {'obj': chemObj});
+				if (!refreshOnly)
+				{
+					this.invokeEvent('load', {'obj': chemObj});
+				}
 			}
 			else  // no object, clear
 			{
 				this.clearContext();
-				this.invokeEvent('load', {'obj': chemObj});  // even chemObj is null, this event should also be invoked
+				if (!refreshOnly)
+					this.invokeEvent('load', {'obj': chemObj});  // even chemObj is null, this event should also be invoked
 			}
 		}
 		catch(e)
