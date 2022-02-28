@@ -633,10 +633,20 @@ Kekule.Calculator.Services = {
 };
 
 /**
+ * Check if a certain service can be executed with calculator.
+ * @param {String} serviceName
+ * @returns {Bool}
+ */
+Kekule.Calculator.hasService = function(serviceName)
+{
+	return !!CS.getServiceClass(serviceName);
+};
+
+/**
  * Generate 2D or 3D structure based on sourceMol.
  * This method seek for registered calculation service with genSeviceName.
  * @param {Kekule.StructureFragment} sourceMol
- * @param {String} genSeviceName
+ * @param {String} genServiceName
  * @param {Hash} options
  * @param {Func} callback Callback function when the calculation job is done. Callback(generatedMol, childObjMap).
  * @param {Func} errCallback Callback function when error occurs in calculation. Callback(err).
