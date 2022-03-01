@@ -29,9 +29,14 @@ IO              * Read/write different format of chemical data. Now including:
                   * Kekule JSON/XML format
                   * CML
                   * MDL MOL2000/3000
+                  * JCAMP-DX/CS
                   * SMILES (for output)
 
 Render          * Provides low-level cross-browser render methods to draw molecule (and other chemical objects) in web browser context..
+
+Spectroscopy    * Representation of molecule spectra.
+                * Rendering of spectrum.
+
 Widget          * Small components to be used in web applications, including button, text box, combo box, dialog, tree view, tab view, text editor, color picker, object inspector and so on.
                 * Animation system to show/hide those widgets.
                 * Actions associated with those widgets.
