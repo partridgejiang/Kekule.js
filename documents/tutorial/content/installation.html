@@ -162,9 +162,8 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>As a JavaScript toolkit, usually Kekule.js should
-be <a class="reference external" href="http://partridgejiang.github.io/Kekule.js/download/">downloaded</a> and
-be referred in HTML page by &lt;script&gt; tag. You can use the compressed script file to
+<p>As a JavaScript toolkit, Kekule.js can be <a class="reference external" href="http://partridgejiang.github.io/Kekule.js/download/">downloaded</a>
+and be referred in HTML page by &lt;script&gt; tag. You can use the compressed script file to
 reduce the net traffic:</p>
 <div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
@@ -174,6 +173,22 @@ reduce the net traffic:</p>
 </pre></div>
 </div>
 <p>Note the module parameter after “?”. In the example above, module chemWidget and algorithm, as well as other prerequisite modules will be loaded.</p>
+<p>The whole package can also be installed by npm and included with <code class="docutils literal notranslate"><span class="pre">require</span></code> function:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ npm install kekule
+</pre></div>
+</div>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kr">const</span> <span class="nx">Kekule</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;kekule&#39;</span><span class="p">).</span><span class="nx">Kekule</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Additional modules can also be dynamicly loaded:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">modules</span><span class="p">([</span><span class="s1">&#39;algorithm&#39;</span><span class="p">,</span> <span class="s1">&#39;calculation&#39;</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">error</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">// algorithm and calculation modules loaded successfully, functions can be used now.</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
 <p>The following table is a brief introduction of major modules in current toolkit:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -199,6 +214,7 @@ reduce the net traffic:</p>
 <li><p>Kekule JSON/XML format</p></li>
 <li><p>CML</p></li>
 <li><p>MDL MOL2000/3000</p></li>
+<li><p>JCAMP-DX/CS</p></li>
 <li><p>SMILES (for output)</p></li>
 </ul>
 </li>
@@ -211,7 +227,14 @@ reduce the net traffic:</p>
 </ul>
 </td>
 </tr>
-<tr class="row-odd"><td><p>Widget</p></td>
+<tr class="row-odd"><td><p>Spectroscopy</p></td>
+<td><ul class="simple">
+<li><p>Representation of molecule spectra.</p></li>
+<li><p>Rendering of spectrum.</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>Widget</p></td>
 <td><ul class="simple">
 <li><p>Small components to be used in web applications, including button, text box, combo box, dialog, tree view, tab view, text editor, color picker, object inspector and so on.</p></li>
 <li><p>Animation system to show/hide those widgets.</p></li>
@@ -219,7 +242,7 @@ reduce the net traffic:</p>
 </ul>
 </td>
 </tr>
-<tr class="row-even"><td><p>Chem Widget</p></td>
+<tr class="row-odd"><td><p>Chem Widget</p></td>
 <td><ul class="simple">
 <li><p>Widgets related to chemistry, including:</p>
 <ul>
@@ -231,7 +254,7 @@ reduce the net traffic:</p>
 </ul>
 </td>
 </tr>
-<tr class="row-odd"><td><p>Algorithm</p></td>
+<tr class="row-even"><td><p>Algorithm</p></td>
 <td><ul class="simple">
 <li><p>Algorithms for chemical graph theory, including:</p>
 <ul>
@@ -262,6 +285,16 @@ reduce the net traffic:</p>
 <div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;raphael.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 <span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;Three.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 <span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=chemWidget&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>When using Raphael.js or three.js with <code class="docutils literal notranslate"><span class="pre">import</span></code>/<code class="docutils literal notranslate"><span class="pre">require</span></code> or <code class="docutils literal notranslate"><span class="pre">AMD</span></code> style, additional code need to be used to let Kekule.js be aware of its existence:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kr">import</span> <span class="o">*</span> <span class="nx">as</span> <span class="nx">THREE</span> <span class="nx">from</span> <span class="s1">&#39;three&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="p">{</span><span class="nx">Kekule</span><span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;kekule&#39;</span><span class="p">;</span>
+<span class="nx">Kekule</span><span class="p">.</span><span class="nx">externalResourceManager</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="s1">&#39;three.js&#39;</span><span class="p">,</span> <span class="nx">THREE</span><span class="p">);</span>
+
+<span class="nx">define</span><span class="p">([</span> <span class="s2">&quot;path/to/raphael&quot;</span> <span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">Raphael</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">Kekule</span><span class="p">.</span><span class="nx">externalResourceManager</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="s1">&#39;Raphael.js&#39;</span><span class="p">,</span> <span class="nx">Raphael</span><span class="p">);</span>
+<span class="p">});</span>
 </pre></div>
 </div>
 </div>
