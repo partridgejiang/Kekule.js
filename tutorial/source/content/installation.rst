@@ -1,9 +1,8 @@
 Installation
 ============
 
-As a JavaScript toolkit, usually Kekule.js should
-be `downloaded <http://partridgejiang.github.io/Kekule.js/download/>`_ and
-be referred in HTML page by <script> tag. You can use the compressed script file to
+As a JavaScript toolkit, Kekule.js can be `downloaded <http://partridgejiang.github.io/Kekule.js/download/>`_
+and be referred in HTML page by <script> tag. You can use the compressed script file to
 reduce the net traffic:
 
 .. code-block:: html
@@ -17,6 +16,28 @@ By using kekule.min.js, all modules (exclude module Extra) are loaded into HTML 
 	<script src="kekule.js?module=chemWidget,algorithm"></script>
 
 Note the module parameter after "?". In the example above, module chemWidget and algorithm, as well as other prerequisite modules will be loaded.
+
+The whole package can also be installed by npm and included with ``require`` function:
+
+.. code-block:: shell
+
+    $ npm install kekule
+
+::
+
+    const Kekule = require('kekule').Kekule;
+
+Additional modules can also be dynamicly loaded:
+
+::
+
+    Kekule.modules(['algorithm', 'calculation'], function(error) {
+        if (!error)
+        {
+            // algorithm and calculation modules loaded successfully, functions can be used now.
+        }
+    });
+
 
 The following table is a brief introduction of major modules in current toolkit:
 
@@ -78,3 +99,15 @@ If Raphael.js and three.js are used, don't forget to put them ahead of Kekule.js
 	<script src="raphael.min.js"></script>
 	<script src="Three.js"></script>
 	<script src="kekule.js?module=chemWidget"></script>
+
+When using Raphael.js or three.js with ``import``/``require`` or ``AMD`` style, additional code need to be used to let Kekule.js be aware of its existence:
+
+::
+
+    import * as THREE from 'three';
+    import {Kekule} from 'kekule';
+    Kekule.externalResourceManager.register('three.js', THREE);
+
+    define([ "path/to/raphael" ], function(Raphael) {
+      Kekule.externalResourceManager.register('Raphael.js', Raphael);
+    });
