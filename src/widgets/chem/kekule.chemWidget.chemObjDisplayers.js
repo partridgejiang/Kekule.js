@@ -1249,6 +1249,12 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	},
 
 	/** @private */
+	_molNeedCoordGeneration: function(mol, coordMode)
+	{
+		var hasCoords = (mol.getNodeCount() <= 0) || mol.nodesHasCoordOfMode(this.getCoordMode(), this.getAllowCoordBorrow(), true);
+		return !hasCoords;
+	},
+	/** @private */
 	_tryAutoGenerateChemObjCoords: function(chemObj, callback)
 	{
 		// check if child nodes has coord and can be displayed
@@ -1256,23 +1262,31 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			&& this.getDisplayerConfigs().getIoConfigs().getAutoGenerateCoordsAfterLoad()
 			&& Kekule.Calculator && Kekule.Calculator.generateStructure)  // can auto generate coords
 		{
-			//console.log('generate coords');
 			var is3D = this.getCoordMode() === Kekule.CoordMode.COORD3D;
-			var hasCoords = (chemObj.getNodeCount() <= 0) || chemObj.nodesHasCoordOfMode(this.getCoordMode(), this.getAllowCoordBorrow(), true);
-			if (!hasCoords)  // auto generate
+			//var hasCoords = (chemObj.getNodeCount() <= 0) || chemObj.nodesHasCoordOfMode(this.getCoordMode(), this.getAllowCoordBorrow(), true);
+			var needGeneration = this._molNeedCoordGeneration(chemObj, this.getCoordMode());
+			//if (!hasCoords)  // auto generate
+			if (needGeneration)  // auto generate
 			{
 				var serviceName = is3D? Kekule.Calculator.Services.GEN3D: Kekule.Calculator.Services.GEN2D;
-				Kekule.Calculator.generateStructure(chemObj, serviceName, {modifySource: true},
-					function (generatedMol)
-					{
-						callback(generatedMol);
-					},
-					function (err)
-					{
-						callback(chemObj);
-						Kekule.error(err);
-					}
-				);
+				try
+				{
+					Kekule.Calculator.generateStructure(chemObj, serviceName, {modifySource: true},
+						function (generatedMol)
+						{
+							callback(generatedMol);
+						},
+						function (err)
+						{
+							callback(chemObj);
+							Kekule.error(err);
+						}
+					);
+				}
+				catch(e)
+				{
+					callback(chemObj);
+				}
 			}
 			else
 				callback(chemObj);
