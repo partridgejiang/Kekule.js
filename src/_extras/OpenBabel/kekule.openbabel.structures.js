@@ -263,16 +263,25 @@ if (Kekule.Calculator)
 			}
 			return result;
 		},
+		/** @private */
+		_requestImportingObScriptInWorker: function()
+		{
+			var url = Kekule.OpenBabel.getObScriptUrl();
+			this.importWorkerScriptFile(url);
+		},
 		/** @ignore */
 		createWorker: function(/*$super*/)
 		{
 			var w = this.tryApplySuper('createWorker')  /* $super() */;
 			if (w)
 			{
+				/*
 				//var url = Kekule.getScriptPath() + '_extras/OpenBabel/openbabel.js.O1';
 				var url = Kekule.OpenBabel.getObScriptUrl();
 				//console.log('create worker', url);
 				this.importWorkerScriptFile(url);
+				*/
+				this._requestImportingObScriptInWorker();
 				var initOps = this.getObInitOptions();
 				this.postWorkerMessage({
 					'type': 'obInit',
@@ -323,6 +332,7 @@ if (Kekule.Calculator)
 		/** @ignore */
 		workerStartCalc: function(worker)
 		{
+			this._requestImportingObScriptInWorker();  // ensure the OB script is loaded in worker
 			var mol = this.getSourceMol();
 			var flattenMol = mol.getFlattenedShadowFragment(true);
 			//var molData = Kekule.IO.saveMimeData(mol, 'chemical/x-mdl-molfile');
