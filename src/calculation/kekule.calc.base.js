@@ -221,9 +221,13 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	 */
 	error: function(err)
 	{
-		Kekule.error(err);
 		if (this._errCallback)
 			this._errCallback(err);
+		else
+		{
+			//Kekule.error(err);
+			throw err;
+		}
 	},
 	/**
 	 * Called when the calculation job is done.
@@ -366,7 +370,7 @@ Kekule.Calculator.Base = Class.create(ObjectEx,
 	 */
 	reactWorkerError: function(e)
 	{
-		Kekule.error(e.message);
+		//Kekule.error(e.message);
 		//this.done(e.message);
 		this.error(e.message);
 	},
