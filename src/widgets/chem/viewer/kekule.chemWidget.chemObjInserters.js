@@ -22,6 +22,7 @@
  * requires /widgets/chem/viewer/kekule.chemWidget.spectrumInspectors.js
  * requires /widgets/advCtrls/kekule.widget.widgetGrids.js
  * requires /widgets/chem/kekule.chemWidget.dialogs.js
+ * requires /calculation/kekule.calc.base.js
  *
  * requires /localization/kekule.localize.widget.js
  */
@@ -45,6 +46,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	CHEMOBJSETTER_VIEWER: 'K-Chem-Obj-Setter-Viewer',
 	CHEMOBJSETTER_TABGROUP: 'K-Chem-Obj-Setter-TabGroup',
 	CHEMOBJSETTER_INFOLABEL: 'K-Chem-Obj-Setter-InfoLabel',
+	CHEMOBJSETTER_STATUSLABEL: 'K-Chem-Obj-Setter-StatusLabel',
 	CHEMOBJSETTER_REGION: 'K-Chem-Obj-Setter-Region',
 	CHEMOBJSETTER_REGION_LABEL: 'K-Chem-Obj-Setter-Region-Label',
 	CHEMOBJSETTER_LINE: 'K-Chem-Obj-Setter-Line',
@@ -69,7 +71,8 @@ var CCNS = Kekule.ChemWidget.HtmlClassNames;
 Kekule.globalOptions.add('chemWidget.ChemObjInserter', {
 	'autoSizeExport': true,
 	'backgroundColor3D': '#000000',
-	'exportViewerPredefinedSetting': 'basic'
+	'exportViewerPredefinedSetting': 'basic',
+	'enable3DStructureAutoGeneration': false
 });
 
 
@@ -83,6 +86,8 @@ Kekule.globalOptions.add('chemWidget.ChemObjInserter', {
  * @property {Int} renderType Display in 2D or 3D. Value from {@link Kekule.Render.RendererType}.
  * @property {Kekule.ChemObject} chemObj The root object in viewer.
  * @property {Bool} showInfo Whether info label is shown.
+ * //@property {Bool} enable3DStructureGeneration Whether show an extra button to convert 2D structures to 3D.
+ * @property {Bool} enable3DStructureAutoGeneration Whether generate the 3D structure from 2D automatically when the 3D tab is empty.
  */
 Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidget,
 /** @lends Kekule.ChemWidget.ChemObjInserter# */
@@ -100,6 +105,8 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		this._toolbarParentElem = null;
 		this._infoLabel = null;
 		this._infoLabelTemplate = Kekule.$L('ChemWidgetTexts.CAPTION_WIDTH_HEIGHT');
+		//this.setPropStoreFieldValue('enable3DStructureGeneration', true);
+		//this.setPropStoreFieldValue('enable3DStructureAutoGeneration', true);
 		this.tryApplySuper('initialize', [parentOrElementOrDocument])  /* $super(parentOrElementOrDocument) */;
 		var viewer = this.getViewer();
 		if (renderType)
@@ -138,8 +145,11 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		this.defineProp('chemObj', {'dataType': 'Kekule.ChemObject', 'serializable': false, 'scope': PS.PUBLIC,
 			'getter': function()
 			{
+				/*
 				var viewer = this.getPropStoreFieldValue('viewer');
 				return viewer? viewer.getChemObj(): this.getPropStoreFieldValue('chemObj');
+				*/
+				return this.getPropStoreFieldValue('chemObj');
 			},
 			'setter': function(value)
 			{
@@ -152,6 +162,32 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 				}
 			}
 		});
+		// 3D structure generated from chemObj, private property
+		this.defineProp('assoc3DChemObj', {'dataType': 'Kekule.ChemObject', 'serializable': false, 'scope': PS.PRIVATE,
+			'setter': function(value)
+			{
+				var old = this.getAssoc3DChemObj();
+				if (value !== old)
+				{
+					this.setPropStoreFieldValue('assoc3DChemObj', value);
+					if (this.getRenderType() === Kekule.Render.RendererType.R3D)
+					{
+						var newDisplayedChemObj = this._getDisplayedChemObjForRenderType(this.getRenderType());
+						this._changeDisplayedChemObj(newDisplayedChemObj);
+					}
+				}
+			}
+		});
+		// Current displayed object in viewer, may not same to chemObj property, private
+		this.defineProp('currDisplayedChemObj', {'dataType': 'Kekule.ChemObject', 'serializable': false, 'scope': PS.PRIVATE,
+			'setter': null,
+			'getter': function()
+			{
+				var viewer = this.getPropStoreFieldValue('viewer');
+				return viewer && viewer.getChemObj();
+			}
+		});
+
 		this.defineProp('renderType', {'dataType': DataType.INT, 'serializable': false, 'scope': PS.PUBLIC,
 			'setter': function(value)
 			{
@@ -159,7 +195,13 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 				if (value !== oldValue)
 				{
 					this.setPropStoreFieldValue('renderType', value);
+					var oldDisplayedChemObj = this._getDisplayedChemObjForRenderType(oldValue);
+					var newDisplayedChemObj = this._getDisplayedChemObjForRenderType(value);
 					this.getViewer().setRenderType(value);
+					if (oldDisplayedChemObj !== newDisplayedChemObj)
+					{
+						this._changeDisplayedChemObj(newDisplayedChemObj);
+					}
 					var tabs = this.getTabs();
 					if (tabs)
 					{
@@ -173,6 +215,9 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			'getter': function() { return this.getRenderType() === Kekule.Render.RendererType.R3D; },
 			'setter': function(value) { this.setRenderType(value? Kekule.Render.RendererType.R3D: Kekule.Render.RendererType.R2D); }
 		});
+		//this.defineProp('enable3DStructureGeneration', {'dataType': DataType.BOOL});
+		this.defineProp('enable3DStructureAutoGeneration', {'dataType': DataType.BOOL});
+
 		this.defineProp('showInfo', {'dataType': DataType.BOOL, 'serializable': false,
 			'getter': function()
 			{
@@ -183,6 +228,10 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 				if (this._infoLabel)
 					Kekule.StyleUtils.setDisplay(this._infoLabel, value);
 			}
+		});
+		this.defineProp('statusMessage', {'dataType': DataType.STRING, 'serializable': false, 'scope': PS.PUBLIC,
+			'getter': function() { var elem = this._statusLabel; return elem && elem.innerHTML; },
+			'setter': function(value) { this._updateStatusLabel(value); }
 		});
 		this.defineProp('autoSizeExport', {'dataType': DataType.BOOL});
 		this.defineProp('backgroundColor2D', {'dataType': DataType.STRING,
@@ -233,7 +282,8 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		var options = Object.extend({
 			'autoSizeExport': true,
 			'backgroundColor3D': this.DEF_BGCOLOR_3D,
-			'exportViewerPredefinedSetting': 'basic'
+			'exportViewerPredefinedSetting': 'basic',
+			'enable3DStructureAutoGeneration': false,
 		}, Kekule.globalOptions.get('chemWidget.ChemObjInserter'), {});
 
 		this.setAutoSizeExport(options.autoSizeExport);
@@ -326,6 +376,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		this.createViewer(clientPanel.getCoreElement());
 		//this.createOptionPanel(clientPanel.getCoreElement());
 		this.createInfoLabel(rootElem, this.getViewer());
+		this.createStatusLabel(rootElem, this.getViewer());
 		// tab
 		this.createTabs(rootElem);
 
@@ -464,6 +515,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		result.setToolbarEvokeModes([EM.ALWAYS]);
 
 		result.addEventListener('resize', this.updateInfoLabel, this);
+		result.addEventListener('load', this._reactViewerLoad, this);
 
 		result.appendToElem(rootElem);
 		//result.setToolbarEvokeModes([EM.ALWAYS]);
@@ -474,6 +526,19 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		this.backgroundColorChange();  // force change background color
 
 		return result;
+	},
+	/** @private */
+	_reactViewerLoad: function(e)
+	{
+		//console.log('load', e);
+		// when loading a new object, empty the assoc3DChemObj
+		if (this._changingDisplayedChemObjFlag <= 0)
+		{
+			var chemObj = e.obj || null;
+			this.setPropStoreFieldValue('chemObj', chemObj);
+			this.setAssoc3DChemObj(null);
+			this.tryAutoGenerate3DCoordsForChemObjInViewer();
+		}
 	},
 	/** @private */
 	createToolbarParent: function(rootElem)
@@ -507,6 +572,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			var rType = (index === 1)? Kekule.Render.RendererType.R3D: Kekule.Render.RendererType.R2D;
 			this.setRenderType(rType);
 			this.backgroundColorChange();  // force change background color
+			this.tryAutoGenerate3DCoordsForChemObjInViewer();
 		}, this);
 		result.appendToElem(rootElem);
 		this.setPropStoreFieldValue('tabs', result);
@@ -533,7 +599,6 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		this._infoLabel = result;
 		return result;
 	},
-
 	/** @private */
 	updateInfoLabel: function()
 	{
@@ -545,6 +610,24 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			Kekule.DomUtils.setElementText(this._infoLabel, s);
 		}
 	},
+	/** @private */
+	createStatusLabel: function(rootElem, viewer)
+	{
+		var result = this.getDocument().createElement('div');
+		result.className = CNS.DYN_CREATED + ' ' + CCNS.CHEMOBJSETTER_STATUSLABEL;
+		//result.innerHTML = 'status';
+		viewer.getElement().appendChild(result);
+		this._statusLabel = result;
+		return result;
+	},
+	/** @private */
+	_updateStatusLabel: function(message)
+	{
+		if (this._statusLabel)
+		{
+			this._statusLabel.innerHTML = message;
+		}
+	},
 
 	/**
 	 * Returns dimension of viewer context.
@@ -554,6 +637,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	{
 		return this.getViewer().getContextDimension();
 	},
+
 	/**
 	 * Resize self to make viewer context at dimension.
 	 * @param {Hash} dimension
@@ -569,6 +653,196 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		var selfNewDim = {'width': selfOldDim.width + deltaW, 'height': selfOldDim.height + deltaH};
 		this.setDimension(selfNewDim.width, selfNewDim.height);
 		return this;
+	},
+
+	/** @private */
+	_getDisplayedChemObjForRenderType: function(renderType)
+	{
+		if (renderType === Kekule.Render.RendererType.R3D)
+			return this.getAssoc3DChemObj() || this.getChemObj();
+		else
+			return this.getChemObj();
+	},
+	/** @private */
+	_changeDisplayedChemObj: function(chemObj)
+	{
+		if (!this._changingDisplayedChemObjFlag)
+			this._changingDisplayedChemObjFlag = 0
+		++this._changingDisplayedChemObjFlag;
+		try
+		{
+			this.getViewer().setChemObj(chemObj);
+		}
+		finally
+		{
+			--this._changingDisplayedChemObjFlag;
+		}
+	},
+
+	// methods about 3D structure generation
+	/**
+	 * Returns the child object of chemObj that containing ctab.
+	 * @returns {Bool}
+	 * @private
+	 */
+	_getContainingMoleculesWithCtab: function(chemObj)
+	{
+		if (!chemObj)
+			chemObj = this.getChemObj();
+		if (chemObj instanceof Kekule.StructureFragment)
+			return chemObj.hasCtab()? [chemObj]: [];
+		else
+		{
+			var result = [];
+			var structFragments = Kekule.ChemStructureUtils.getAllStructFragments(chemObj);
+			for (var i = 0, l = structFragments.length; i < l; ++i)
+			{
+				var mol = structFragments[i];
+				if (mol.hasCtab && mol.hasCtab())
+					result.push(mol);
+			}
+			return result;
+		}
+	},
+	/**
+	 * Check if the chemObj is a single molecule without 3D coordinate and can do the 3D generation, if true, returns the generation target.
+	 * @returns {Kekule.StructureFragment}
+	 * @private
+	 */
+	_get3DCoordGenerationTargetForChemObj: function(chemObj)
+	{
+		if (!chemObj)
+			chemObj = this.getChemObj();
+
+		var mols = this._getContainingMoleculesWithCtab(chemObj);
+		if (mols && mols.length === 1)
+		{
+			var mol = mols[0];
+			return mol.nodesHasCoord3D(false)? null: mol;
+		}
+		else
+			return null;
+	},
+
+	/** @private */
+	_isCoordGeneratorAvailable: function(coordMode)
+	{
+		return this.getViewer()._isCoordGeneratorAvailable(coordMode);
+		/*
+		if ( Kekule.Calculator && Kekule.Calculator.Services)
+		{
+			var serviceName = (coordMode === Kekule.CoordMode.COORD3D) ? Kekule.Calculator.Services.GEN3D : Kekule.Calculator.Services.GEN2D;
+			return Kekule.Calculator.hasService(serviceName)
+		}
+		else
+			return false;
+		*/
+	},
+	/*
+	 * Returns whether a 3D coordinates generation can be done to current loaded chem object.
+	 * @private
+	 */
+	/*
+	canGenerate3DCoordForChemObj: function(chemObj)
+	{
+		if (!chemObj)
+			chemObj = this.getChemObj();
+		var result = !!(this._isCoordGeneratorAvailable(Kekule.CoordMode.COORD3D) && chemObj && this._get3DCoordGenerationTargetForChemObj(chemObj));
+		return result;
+	},
+	*/
+	/**
+	 * Automatically generate 3D coordinates for loaded chem object.
+	 * @param {Func} callback Callback of the 3D generation, has params (err, generatedMol);
+	 * @private
+	 */
+	doGenerate3DCoordsForChemObjInViewer: function(callback)
+	{
+		var chemObj = this.getChemObj();
+		var self = this;
+		var done = function(err, generatedMol)
+		{
+			self.setStatusMessage('');  // calculation done, clear status
+			if (callback)
+				callback(err, generatedMol);
+		};
+		if (chemObj)
+		{
+			//if (Kekule.Calculator && Kekule.Calculator.hasService(Kekule.Calculator.Services.GEN3D))
+			if (this._isCoordGeneratorAvailable(Kekule.CoordMode.COORD3D))
+			{
+				var targetMol = this._get3DCoordGenerationTargetForChemObj(chemObj);
+				if (targetMol)  // we really can do the generation
+				{
+					self.setStatusMessage(Kekule.$L('ChemWidgetTexts.CAPTION_CHEMOBJINSERTER_GENERATING_3D_STRUCTURE'));
+					/*
+					Kekule.Calculator.generate3D(targetMol, null,
+						function(generatedMol){
+							done(null, generatedMol);
+						},
+						function(err){
+							//console.log('error', err);
+							done(err, null);
+						});
+					*/
+					try
+					{
+						this.getViewer().autoGenerateChemObjCoords(done.bind(this, null), targetMol, Kekule.CoordMode.COORD3D);
+					}
+					catch(e)
+					{
+						done(e, chemObj);
+					}
+					return this;
+				}
+			}
+		}
+		// default, can not do the generation, return chemObj directly
+		done(null, chemObj);
+		return this;
+	},
+	/**
+	 * Automatically generate 3D coordinates for loaded chem object.
+	 * @param {Func} callback Callback of the 3D generation, has params (err, generatedMol);
+	 * @private
+	 */
+	generate3DCoordsForChemObjInViewer: function(callback)
+	{
+		var self = this;
+		this.doGenerate3DCoordsForChemObjInViewer(function(err, generatedMol){
+			if (!err && generatedMol)  // the generation is done, show generatedMol in 3D viewer
+			{
+				self.setAssoc3DChemObj(generatedMol);
+			}
+		});
+	},
+
+	/** @private */
+	_isMolContainingCoordsOfMode: function(mol, coordMode)
+	{
+		var hasCoords = (mol.getNodeCount() <= 0) || mol.nodesHasCoordOfMode(coordMode, false, true);
+		return hasCoords;
+	},
+	/**
+	 * If property enable3DStructureAutoGeneration is true, this function will automatically generate the 3D structure when switching to or loading mol in 3D viewer.
+	 * @param {Func} callback Callback of the 3D generation, has params (err, generatedMol);
+	 * @private
+	 */
+	tryAutoGenerate3DCoordsForChemObjInViewer: function(callback)
+	{
+		if (this.getEnable3DStructureAutoGeneration())
+		{
+			var renderType = this.getRenderType();
+			if (renderType === Kekule.Render.RendererType.R3D && !this.getAssoc3DChemObj())
+			{
+				var chemObj = this.getChemObj();
+				var targetObj = this._get3DCoordGenerationTargetForChemObj(chemObj);
+				if (targetObj && !this._isMolContainingCoordsOfMode(targetObj, Kekule.CoordMode.COORD3D))  // need to auto generate
+				{
+					this.generate3DCoordsForChemObjInViewer(callback);
+				}
+			}
+		}
 	},
 
 	// methods of export
@@ -612,12 +886,13 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			this.setAutoSize(true);
 		var ops = this.getViewer().getActualDrawOptions();
 		var dim = this.getViewer().getContextDimension();
+		var currDisplayedObj = this.getCurrDisplayedChemObj();
 		var result = {
 			'dataUri': this.exportToDataUri(dataType, options),
 			'drawOptions': ops,
 			'drawOptionsJson': JSON.stringify(ops),
-			'chemObj': this.getChemObj(),
-			'chemObjJson': Kekule.IO.saveMimeData(this.getChemObj(), 'chemical/x-kekule-json'),
+			'chemObj': currDisplayedObj, //this.getChemObj(),
+			'chemObjJson': Kekule.IO.saveMimeData(currDisplayedObj, 'chemical/x-kekule-json'),
 			'autoSize': this.getAutoSizeExport(),
 			'autofit': this.getAutofit(),
 			'width': Math.round(dim.width),
@@ -974,6 +1249,7 @@ Kekule.ChemWidget.ChemObjInserter.Configurator = Class.create(Kekule.Widget.Conf
 		}
 	}
 });
+
 
 Kekule._registerAfterLoadSysProc(function(){
 
