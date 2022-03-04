@@ -24,7 +24,7 @@
 <script src="../../../src/_extras/Indigo/indigoAdapter.js"></script>
 -->
 
-<script src="../../../src/kekule.js?locals=en,zh&language1=en_us&modules=algorithm,spectroscopy,chemWidget,openbabel,inchi,indigo&min=false"></script>
+<script src="../../../src/kekule.js?locals=en,zh&language1=en_us&modules=algorithm,calculation,spectroscopy,chemWidget,openbabel,inchi,indigo&min=false"></script>
 
 	<script src="../../_libs/three_new/three.min.js"></script>
 	<script src="../../_libs/three_new/CSS3DRenderer.js"></script>
@@ -342,7 +342,8 @@ M  END
       -->
     </div>
 	<div id="chemViewer2" data-widget="Kekule.ChemWidget.Viewer" data-chem-obj="url('#(2E,4E,6E,8E)-deca-2,4,6,8-tetraene')"
-			 data-predefined-setting="mini"
+			 data-predefined-setting1="mini" data-enable-toolbar="true" data-tool-buttons='["molDisplayType", "menu"]'
+			 data-molecule-display-type="2" data-allowed-mol-display-types="[2]"
 			 style="width:100px;height:100px;border:1px solid #666"></div>
 	<div id="chemViewer3" data-widget="Kekule.ChemWidget.Viewer" data-chem-obj="url('#(2E,4E,6E,8E)-deca-2,4,6,8-tetraene')"
 			 data-predefined-setting="mini"
