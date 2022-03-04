@@ -119,6 +119,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	CAPTION_BALLSTICK: 'Ball Stick',
 	CAPTION_SPACEFILL: 'Space Fill',
 	CAPTION_HIDEHYDROGENS: 'Show/hide hydrogens',
+	CAPTION_AUTO_COORD_GENERATION: 'Auto Coordinates Generation',
 	CAPTION_OPENEDITOR: 'Edit...',
 	CAPTION_CHANGE_SPECTRUM_SECTION: 'Switch Spectrum/Section',
 	CAPTION_SET_SPECTRUM_DATA_ASSIGNMENT: 'Set Spectrum Data Assignments',
@@ -149,6 +150,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	HINT_BALLSTICK: 'Show molecule in ball-stick style',
 	HINT_SPACEFILL: 'Show molecule in space-fill style',
 	HINT_HIDEHYDROGENS: 'Show/hide hydrogen atoms in model',
+	HINT_AUTO_COORD_GENERATION: 'Generate coordinates for molecule atoms',
 	HINT_OPENEDITOR: 'Open an editor to modify displayed object',
 	HINT_CHANGE_SPECTRUM_SECTION: 'Switch spectrum or data section',
 	HINT_SET_SPECTRUM_DATA_ASSIGNMENT: 'Link chem object to spectrum data as assignment',
@@ -546,6 +548,7 @@ Kekule.Localization.addResource('en', 'ChemWidgetTexts', {
 	PLACEHOLDER_HEIGHT: 'height',
 	HINT_AUTOSIZE: 'Whether graph size is determined by object automatically',
 	HINT_AUTOFIT: 'Whether object is zoomed to fullfill the whole graph',
+	CAPTION_CHEMOBJINSERTER_GENERATING_3D_STRUCTURE: 'Generating molecule 3D structure...',
 
 	// SpectrumInspector
 	CAPTION_SPECTRUM_WITH_INDEX: 'Spectrum {0}',

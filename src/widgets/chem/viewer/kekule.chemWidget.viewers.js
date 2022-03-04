@@ -44,6 +44,7 @@ Kekule.globalOptions.add('chemWidget.viewer', {
 		//BNS.clearObjs,
 		BNS.molDisplayType,
 		BNS.molHideHydrogens,
+		//BNS.molAutoGenerateCoords,
 		BNS.zoomIn, BNS.zoomOut,
 		BNS.rotateX, BNS.rotateY, BNS.rotateZ,
 		BNS.rotateLeft, BNS.rotateRight,
@@ -4502,6 +4503,7 @@ Kekule._registerAfterLoadSysProc(function(){
 	reg(BNS.rotateZ, CW.ActionViewerRotateZ, widgetClass);
 	reg(BNS.reset, CW.ActionDisplayerReset, widgetClass);
 	reg(BNS.molHideHydrogens, CW.ActionDisplayerHideHydrogens, widgetClass);
+	reg(BNS.molAutoGenerateCoords, CW.ActionDisplayerAutoGenerateCoordsForMolecule, widgetClass);
 	reg(BNS.molDisplayType, CW.ActionViewerChangeMolDisplayTypeStub, widgetClass);
 
 	reg(BNS.copy, CW.ActionDisplayerCopy, widgetClass);

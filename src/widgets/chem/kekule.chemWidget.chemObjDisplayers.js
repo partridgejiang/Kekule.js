@@ -47,6 +47,7 @@ Kekule.ChemWidget.HtmlClassNames = Object.extend(Kekule.ChemWidget.HtmlClassName
 	ACTION_MOL_DISPLAY_STICKS: 'K-Chem-MolDisplaySticks',
 	ACTION_MOL_DISPLAY_SPACEFILL: 'K-Chem-MolDisplaySpaceFill',
 	ACTION_MOL_HIDE_HYDROGENS: 'K-Chem-MolHideHydrogens',
+	ACTION_MOL_AUTO_COORD_GENERATION: 'K-Chem-MolAutoCoordGeneration',
 	ACTION_ZOOMIN: 'K-Chem-ZoomIn',
 	ACTION_ZOOMOUT: 'K-Chem-ZoomOut',
 	ACTION_RESET: 'K-Chem-Reset',
@@ -1248,63 +1249,6 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		// do nothing here
 	},
 
-	/** @private */
-	_molNeedCoordGeneration: function(mol, coordMode)
-	{
-		var hasCoords = (mol.getNodeCount() <= 0) || mol.nodesHasCoordOfMode(this.getCoordMode(), this.getAllowCoordBorrow(), true);
-		return !hasCoords;
-	},
-	/** @private */
-	_tryAutoGenerateChemObjCoords: function(chemObj, callback)
-	{
-		// check if child nodes has coord and can be displayed
-		if (chemObj instanceof Kekule.Molecule
-			&& this.getDisplayerConfigs().getIoConfigs().getAutoGenerateCoordsAfterLoad()
-			&& Kekule.Calculator && Kekule.Calculator.generateStructure)  // can auto generate coords
-		{
-			var is3D = this.getCoordMode() === Kekule.CoordMode.COORD3D;
-			//var hasCoords = (chemObj.getNodeCount() <= 0) || chemObj.nodesHasCoordOfMode(this.getCoordMode(), this.getAllowCoordBorrow(), true);
-			var needGeneration = this._molNeedCoordGeneration(chemObj, this.getCoordMode());
-			//if (!hasCoords)  // auto generate
-			if (needGeneration)  // auto generate
-			{
-				var serviceName = is3D? Kekule.Calculator.Services.GEN3D: Kekule.Calculator.Services.GEN2D;
-				try
-				{
-					Kekule.Calculator.generateStructure(chemObj, serviceName, {modifySource: true},
-						function (generatedMol)
-						{
-							callback(generatedMol);
-						},
-						function (err)
-						{
-							callback(chemObj);
-							Kekule.error(err);
-						}
-					);
-				}
-				catch(e)
-				{
-					callback(chemObj);
-				}
-			}
-			else
-				callback(chemObj);
-		}
-		else  // can not generate coords, callback immediately
-		{
-			callback(chemObj);
-		}
-	},
-	/** @private */
-	_tryAutoGenerateChemObjCoordsAndLoad: function(chemObj)
-	{
-		var self = this;
-		//console.log('here');
-		var done = function(chemObj) { self.setChemObj(chemObj); };
-		this._tryAutoGenerateChemObjCoords(chemObj, done);
-	},
-
 	/**
 	 * Load chem object from data of special MIME type or file format.
 	 * @param {Variant} data Usually text content.
@@ -1333,7 +1277,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				{
 					//this.setChemObj(chemObj);
 					if (objAfterLoadCallback)
-						this._tryAutoGenerateChemObjCoords(chemObj, objAfterLoadCallback);
+						this._tryAutoGenerateChemObjCoordsForLoading(chemObj, objAfterLoadCallback);
 					else
 						this._tryAutoGenerateChemObjCoordsAndLoad(chemObj);
 				}
@@ -1447,6 +1391,126 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	prepareSaveData: function(obj)
 	{
 		// do nothing here
+	},
+
+	/** @private */
+	_molNeedAutoCoordGeneration: function(mol, coordMode)
+	{
+		var result = (mol instanceof Kekule.StructureFragment) && (mol.getNodeCount() > 0) && !mol.nodesHasCoordOfMode(this.getCoordMode(), this.getAllowCoordBorrow(), true);
+		return result;
+	},
+	/** @private */
+	_isCoordGeneratorAvailable: function(coordMode)
+	{
+		if ( Kekule.Calculator && Kekule.Calculator.Services)
+		{
+			var serviceName = (coordMode === Kekule.CoordMode.COORD3D) ? Kekule.Calculator.Services.GEN3D : Kekule.Calculator.Services.GEN2D;
+			return Kekule.Calculator.hasService(serviceName)
+		}
+		else
+			return false;
+	},
+	/**
+	 * Returns whether the coord auto generation can be done in current displayer.
+	 * @returns {Bool}
+	 */
+	canAutoGenerateCoordForChemObj: function(chemObj, coordMode)
+	{
+		if (!chemObj)
+			chemObj = this.getChemObj();
+		if (Kekule.ObjUtils.isUnset(coordMode))
+			coordMode = this.getCoordMode();
+		var result = (chemObj && chemObj instanceof Kekule.StructureFragment
+			&& chemObj.hasCtab()
+			&& Kekule.Calculator && Kekule.Calculator.generateStructure
+			&& this._isCoordGeneratorAvailable(coordMode));
+		return result;
+	},
+	/** @private */
+	_tryAutoGenerateChemObjCoords: function(chemObj, coordMode, callback)
+	{
+		if (Kekule.ObjUtils.isUnset(coordMode))
+			coordMode = this.getCoordMode();
+		/*
+		if (chemObj instanceof Kekule.Molecule
+			&& this.getDisplayerConfigs().getIoConfigs().getAutoGenerateCoordsAfterLoad()
+			&& Kekule.Calculator && Kekule.Calculator.generateStructure)  // can auto generate coords
+		*/
+		if (this.canAutoGenerateCoordForChemObj(chemObj, coordMode))
+		{
+			var is3D = coordMode === Kekule.CoordMode.COORD3D;
+			//var hasCoords = (chemObj.getNodeCount() <= 0) || chemObj.nodesHasCoordOfMode(this.getCoordMode(), this.getAllowCoordBorrow(), true);
+			//if (needGeneration)  // auto generate
+			{
+				var serviceName = is3D? Kekule.Calculator.Services.GEN3D: Kekule.Calculator.Services.GEN2D;
+				try
+				{
+					Kekule.Calculator.generateStructure(chemObj, serviceName, {modifySource: true},
+						function (generatedMol)
+						{
+							callback(generatedMol);
+						},
+						function (err)
+						{
+							callback(chemObj);
+							Kekule.error(err);
+						}
+					);
+				}
+				catch(e)
+				{
+					callback(chemObj);
+				}
+			}
+			//else
+			//	callback(chemObj);
+		}
+		else  // can not generate coords, callback immediately
+		{
+			callback(chemObj);
+		}
+	},
+	/** @private */
+	_tryAutoGenerateChemObjCoordsForLoading: function(chemObj, callback)
+	{
+		if (this.getDisplayerConfigs().getIoConfigs().getAutoGenerateCoordsAfterLoad())
+		{
+			var needGeneration = this._molNeedAutoCoordGeneration(chemObj, this.getCoordMode());
+			if (needGeneration)
+				this._tryAutoGenerateChemObjCoords(chemObj, null, callback);
+			else
+				callback(chemObj);
+		}
+	},
+	/** @private */
+	_tryAutoGenerateChemObjCoordsAndLoad: function(chemObj)
+	{
+		var self = this;
+		//console.log('here');
+		var done = function(chemObj) { self.setChemObj(chemObj); };
+		this._tryAutoGenerateChemObjCoordsForLoading(chemObj, done);
+	},
+
+	/**
+	 * Automatically create coords for chemObj loaded in displayer.
+	 * @param {Func} callback
+	 */
+	autoGenerateChemObjCoords: function(callback, chemObj, coordMode)
+	{
+		var replaceCurrent = !chemObj && Kekule.ObjUtils.isUnset(coordMode);
+		if (!chemObj)
+			chemObj = this.getChemObj();
+		if (Kekule.ObjUtils.isUnset(coordMode))
+			coordMode = this.getCoordMode();
+		var self = this;
+		var done = function(generatedObj) {
+			if (replaceCurrent)
+				self.load(generatedObj);
+			if (callback)
+				callback(generatedObj);
+		};
+		this._tryAutoGenerateChemObjCoords(chemObj, coordMode, done);
+		return this;
 	},
 
 	/** @private */
@@ -3615,6 +3679,47 @@ Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill = Class.create(Ke
 });
 /** @Ignore */
 Kekule.ChemWidget.ActionDisplayerChangeMolDisplayTypeSpaceFill.TYPE = Kekule.Render.Molecule3DDisplayType.SPACE_FILL;
+
+/**
+ * Action to automatically generate coordinates and layout atoms in 2D or 3D mode displayer.
+ * @class
+ * @augments Kekule.ChemWidget.ActionOnDisplayer
+ */
+Kekule.ChemWidget.ActionDisplayerAutoGenerateCoordsForMolecule = Class.create(Kekule.ChemWidget.ActionOnDisplayer,
+/** @lends Kekule.ChemWidget.ActionDisplayerAutoGenerateCoordsForMolecule# */
+{
+	/** @private */
+	CLASS_NAME: 'Kekule.ChemWidget.ActionDisplayerAutoGenerateCoordsForMolecule',
+	/** @private */
+	HTML_CLASSNAME: CCNS.ACTION_MOL_AUTO_COORD_GENERATION,
+	/** @constructs */
+	initialize: function(displayer)
+	{
+		this.tryApplySuper('initialize', [displayer, Kekule.$L('ChemWidgetTexts.CAPTION_AUTO_COORD_GENERATION'), Kekule.$L('ChemWidgetTexts.HINT_AUTO_COORD_GENERATION')]);
+	},
+	/** @private */
+	getCoordMode: function()
+	{
+		/*
+		var displayer = this.getDisplayer();
+		return displayer && displayer.getCoordMode();
+		*/
+		return null;
+	},
+	/** @private */
+	doUpdate: function()
+	{
+		this.tryApplySuper('doUpdate');
+		var displayer = this.getDisplayer();
+		var flag = this.getEnabled() && !!(displayer.canAutoGenerateCoordForChemObj(displayer.getChemObj(), Kekule.oneOf(this.getCoordMode(), displayer.getCoordMode())));
+		this.setDisplayed(flag).setEnabled(flag);
+	},
+	/** @private */
+	doExecute: function()
+	{
+		this.getDisplayer().autoGenerateChemObjCoords();
+	}
+});
 
 
 })();

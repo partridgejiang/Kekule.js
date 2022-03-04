@@ -50,6 +50,7 @@ Kekule.ChemWidget.ComponentWidgetNames =
 	molDisplayTypeBallStick: 'molDisplayTypeBallStick',
 	molDisplayTypeSpaceFill: 'molDisplayTypeSpaceFill',
 	molHideHydrogens: 'molHideHydrogens',
+	molAutoGenerateCoords: 'molAutoGenerateCoords',
 	openEditor: 'openEditor',
 	config: 'config',
 

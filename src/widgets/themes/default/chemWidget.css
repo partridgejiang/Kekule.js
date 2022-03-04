@@ -1166,11 +1166,20 @@
     width: auto;
     height: auto;
 }
-.K-Chem-Obj-Setter .K-Chem-Obj-Setter-InfoLabel
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-InfoLabel,
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-StatusLabel
 {
     position: absolute;
+}
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-InfoLabel
+{
     top: 5px;
     left: 5px;
+}
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-StatusLabel
+{
+    right: 5px;
+    bottom: 5px;
 }
 .K-Chem-Obj-Setter .K-Chem-Obj-Setter-TabGroup
 {

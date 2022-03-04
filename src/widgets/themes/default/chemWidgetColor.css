@@ -145,6 +145,7 @@
 }
 
 .K-Chem-Obj-Setter .K-Chem-Obj-Setter-InfoLabel,
+.K-Chem-Obj-Setter .K-Chem-Obj-Setter-StatusLabel,
 .K-SpectrumObjInserter .K-SpectrumObjInserter-InfoLabel
 {
     color: #aaa;
@@ -183,6 +184,10 @@
 .K-Chem-MolHideHydrogens > .K-Pri-Glyph-Content
 {
     background-image: url("images/slice/icons/hideHydrogens.png");
+}
+.K-Chem-MolAutoCoordGeneration > .K-Pri-Glyph-Content
+{
+    background-image: url("images/slice/icons/coordGeneration.png");
 }
 
 .K-Chem-RotateLeft > .K-Pri-Glyph-Content
