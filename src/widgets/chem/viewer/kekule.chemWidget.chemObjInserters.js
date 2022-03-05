@@ -921,7 +921,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		var ops = this.getViewer().getActualDrawOptions();
 		var dim = this.getViewer().getContextDimension();
 		var currDisplayedObj = this.getCurrDisplayedChemObj();
-		var result = {
+		var result = currDisplayedObj? {
 			'dataUri': this.exportToDataUri(dataType, options),
 			'drawOptions': ops,
 			'drawOptionsJson': JSON.stringify(ops),
@@ -934,7 +934,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			'renderType': this.getRenderType() || Kekule.Render.RendererType.R2D,
 			'backgroundColor': this.getBackgroundColor(this.getRenderType()),
 			'predefinedSetting': this.getExportViewerPredefinedSetting()
-		};
+		}: null;
 		if (this.getAutoSizeExport())  // restore
 		{
 			this.setAutoSize(false);
@@ -968,6 +968,8 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	getExportImgElemAttributes: function(dataType, options)
 	{
 		var detail = this.exportDetails(dataType, options);
+		if (!detail)
+			return null;
 		var style = 'width:' + detail.width + 'px; height:' + detail.height + 'px';
 		/*
 		if (detail.backgroundColor)
@@ -1015,11 +1017,16 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	 */
 	createExportImgElement: function(doc, dataType, options)
 	{
-		//var detail = this.exportDetails(dataType, options);
-		var result = doc.createElement('img');
-		var attribs = this.getExportImgElemAttributes(dataType, options);
-		Kekule.DomUtils.setElemAttributes(result, attribs);
-		return result;
+		var attribs = this.getExportImgElemAttributes(dataType, options) || {};
+		if (attribs)
+		{
+			//var detail = this.exportDetails(dataType, options);
+			var result = doc.createElement('img');
+			Kekule.DomUtils.setElemAttributes(result, attribs);
+			return result;
+		}
+		else
+			return null;
 	},
 	/**
 	 * Export viewer to a new created HTML element.
@@ -1635,31 +1642,40 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 		try
 		{
 			var spectrumInspector = this.getSpectrumInspector();
-			var details = {
-				'backgroundColor': spectrumInspector.getBackgroundColor(),
-				'enableHotTrack': spectrumInspector.getEnableHotTrack(),
-				'enableSelect': spectrumInspector.getEnableSelect(),
-				'enableMultiSelect': spectrumInspector.getEnableMultiSelect(),
-				'spectrumViewerDrawOptions': spectrumInspector.getSpectrumViewerDrawOptions(), //spectrumInspector.getSpectrumViewer().getActualDrawOptions(),
-				'spectrumViewerDrawOptionsJson': spectrumInspector.getSpectrumViewerDrawOptions()?
-					JSON.stringify(spectrumInspector.getSpectrumViewerDrawOptions()): '',
-				'spectrumViewportRanges': spectrumInspector.getSpectrumViewportRanges(),
-				'spectrumViewportRangesJson': spectrumInspector.getSpectrumViewportRanges()?
-					JSON.stringify(spectrumInspector.getSpectrumViewportRanges()): '',
-				'assocViewerDrawOptions': spectrumInspector.getAssocViewerDrawOptions(), // spectrumInspector.getAssocViewer().getActualDrawOptions(),
-				'assocViewerDrawOptionsJson': spectrumInspector.getAssocViewerDrawOptions()?
-					JSON.stringify(spectrumInspector.getAssocViewerDrawOptions()): '',
-				'assocViewerVisualMode': spectrumInspector.getAssocViewerVisualMode(),
-				'assocViewerSize': spectrumInspector.getAssocViewerSize(),
-				'chemObj': spectrumInspector.getChemObj(),
-				'chemObjJson': Kekule.IO.saveMimeData(this.getChemObj(), Kekule.IO.MimeType.KEKULE_JSON)
-			};
-			spectrumInspector.exportToDataUriAsync(imgDataType, options, function(dataUri, dimension){
-				details.dataUri = dataUri;
-				details.width = Math.round(dimension.width);
-				details.height = Math.round(dimension.height);
-				callback(details);
-			});
+			var chemObj = spectrumInspector.getChemObj();
+			if (chemObj)
+			{
+				var details = {
+					'backgroundColor': spectrumInspector.getBackgroundColor(),
+					'enableHotTrack': spectrumInspector.getEnableHotTrack(),
+					'enableSelect': spectrumInspector.getEnableSelect(),
+					'enableMultiSelect': spectrumInspector.getEnableMultiSelect(),
+					'spectrumViewerDrawOptions': spectrumInspector.getSpectrumViewerDrawOptions(), //spectrumInspector.getSpectrumViewer().getActualDrawOptions(),
+					'spectrumViewerDrawOptionsJson': spectrumInspector.getSpectrumViewerDrawOptions() ?
+						JSON.stringify(spectrumInspector.getSpectrumViewerDrawOptions()) : '',
+					'spectrumViewportRanges': spectrumInspector.getSpectrumViewportRanges(),
+					'spectrumViewportRangesJson': spectrumInspector.getSpectrumViewportRanges() ?
+						JSON.stringify(spectrumInspector.getSpectrumViewportRanges()) : '',
+					'assocViewerDrawOptions': spectrumInspector.getAssocViewerDrawOptions(), // spectrumInspector.getAssocViewer().getActualDrawOptions(),
+					'assocViewerDrawOptionsJson': spectrumInspector.getAssocViewerDrawOptions() ?
+						JSON.stringify(spectrumInspector.getAssocViewerDrawOptions()) : '',
+					'assocViewerVisualMode': spectrumInspector.getAssocViewerVisualMode(),
+					'assocViewerSize': spectrumInspector.getAssocViewerSize(),
+					'chemObj': chemObj,
+					'chemObjJson': Kekule.IO.saveMimeData(this.getChemObj(), Kekule.IO.MimeType.KEKULE_JSON)
+				};
+				spectrumInspector.exportToDataUriAsync(imgDataType, options, function (dataUri, dimension)
+				{
+					details.dataUri = dataUri;
+					details.width = Math.round(dimension.width);
+					details.height = Math.round(dimension.height);
+					callback(details);
+				});
+			}
+			else
+			{
+				callback(null);
+			}
 		}
 		catch(e)
 		{
@@ -1677,32 +1693,37 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 	getExportImgElemAttributesAsync: function(dataType, options, callback)
 	{
 		this.getImgExportDetailsAsync(dataType, options, function(detail){
-			var style = 'width:' + detail.width + 'px; height:' + detail.height + 'px';
-			var attribs = {
-				'src': detail.dataUri,
-				'style': style,
-				'width': detail.width,
-				'height': detail.height,
-				'data-kekule-widget': 'Kekule.ChemWidget.SpectrumInspector',
-				'data-chem-obj': detail.chemObjJson,
-				'data-spectrum-viewer-draw-options': detail.spectrumViewerDrawOptionsJson,
-				'data-assoc-viewer-draw-options': detail.assocViewerDrawOptionsJson
-			};
-			if (Kekule.ObjUtils.notUnset(detail.assocViewerVisualMode))
-				attribs['data-assoc-viewer-visual-mode'] = JSON.stringify(detail.assocViewerVisualMode);
-			if (Kekule.ObjUtils.notUnset(detail.assocViewerSize))
-				attribs['data-assoc-viewer-size'] = detail.assocViewerSize;
-			if (detail.spectrumViewportRangesJson)
-				attribs['data-spectrum-viewport-ranges'] = detail.spectrumViewportRangesJson;
-			if (OU.notUnset(detail.enableHotTrack))
-				attribs['data-enable-hot-track'] = detail.enableHotTrack;
-			if (OU.notUnset(detail.enableSelect))
-				attribs['data-enable-select'] = detail.enableSelect;
-			if (OU.notUnset(detail.enableMultiSelect))
-				attribs['data-enable-multi-select'] = detail.enableMultiSelect;
-			if (Kekule.ObjUtils.notUnset(detail.backgroundColor))
-				attribs['data-background-color'] = detail.backgroundColor;
-			callback(attribs);
+			if (detail)
+			{
+				var style = 'width:' + detail.width + 'px; height:' + detail.height + 'px';
+				var attribs = {
+					'src': detail.dataUri,
+					'style': style,
+					'width': detail.width,
+					'height': detail.height,
+					'data-kekule-widget': 'Kekule.ChemWidget.SpectrumInspector',
+					'data-chem-obj': detail.chemObjJson,
+					'data-spectrum-viewer-draw-options': detail.spectrumViewerDrawOptionsJson,
+					'data-assoc-viewer-draw-options': detail.assocViewerDrawOptionsJson
+				};
+				if (Kekule.ObjUtils.notUnset(detail.assocViewerVisualMode))
+					attribs['data-assoc-viewer-visual-mode'] = JSON.stringify(detail.assocViewerVisualMode);
+				if (Kekule.ObjUtils.notUnset(detail.assocViewerSize))
+					attribs['data-assoc-viewer-size'] = detail.assocViewerSize;
+				if (detail.spectrumViewportRangesJson)
+					attribs['data-spectrum-viewport-ranges'] = detail.spectrumViewportRangesJson;
+				if (OU.notUnset(detail.enableHotTrack))
+					attribs['data-enable-hot-track'] = detail.enableHotTrack;
+				if (OU.notUnset(detail.enableSelect))
+					attribs['data-enable-select'] = detail.enableSelect;
+				if (OU.notUnset(detail.enableMultiSelect))
+					attribs['data-enable-multi-select'] = detail.enableMultiSelect;
+				if (Kekule.ObjUtils.notUnset(detail.backgroundColor))
+					attribs['data-background-color'] = detail.backgroundColor;
+				callback(attribs);
+			}
+			else
+				callback(null);
 		});
 
 		/*
