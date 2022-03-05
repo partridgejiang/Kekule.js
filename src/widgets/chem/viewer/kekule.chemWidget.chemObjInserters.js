@@ -35,6 +35,7 @@ var OU = Kekule.ObjUtils;
 var DU = Kekule.DomUtils;
 var AU = Kekule.ArrayUtils;
 var CW = Kekule.ChemWidget;
+var BNS = Kekule.ChemWidget.ComponentWidgetNames;
 //var CWT = Kekule.ChemWidgetTexts;
 
 /** @ignore */
@@ -68,11 +69,27 @@ var CNS = Kekule.Widget.HtmlClassNames;
 var CCNS = Kekule.ChemWidget.HtmlClassNames;
 
 /** @ignore */
-Kekule.globalOptions.add('chemWidget.ChemObjInserter', {
+Kekule.globalOptions.add('chemWidget.chemObjInserter', {
 	'autoSizeExport': true,
 	'backgroundColor3D': '#000000',
 	'exportViewerPredefinedSetting': 'basic',
-	'enable3DStructureAutoGeneration': false
+	'enable3DStructureAutoGeneration': false,
+
+	toolButtons: [
+		BNS.loadData,
+		BNS.saveData,
+		BNS.clearObjs,
+		BNS.molDisplayType,
+		BNS.molHideHydrogens,
+		BNS.molAutoGenerateCoords,
+		BNS.zoomIn, BNS.zoomOut,
+		BNS.rotateX, BNS.rotateY, BNS.rotateZ,
+		BNS.rotateLeft, BNS.rotateRight,
+		BNS.reset,
+		BNS.copy,
+		BNS.openEditor,
+		BNS.config
+	]
 });
 
 
@@ -284,7 +301,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 			'backgroundColor3D': this.DEF_BGCOLOR_3D,
 			'exportViewerPredefinedSetting': 'basic',
 			'enable3DStructureAutoGeneration': false,
-		}, Kekule.globalOptions.get('chemWidget.ChemObjInserter'), {});
+		}, Kekule.globalOptions.get('chemWidget.chemObjInserter'), {});
 
 		this.setAutoSizeExport(options.autoSizeExport);
 		this.setBackgroundColor3D(options.backgroundColor3D);
@@ -503,11 +520,28 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 		result.setRestrainEditorWithCurrObj(false);  // can edit anything defaultly
 		result.setEnableToolbar(true);
 		result.setPredefinedSetting('fullFunc');  // enable all functions of composer
+
+		var self = this;
+		result.overwriteMethod('createToolButton', function($origin, btnName, parentGroup){
+			if (btnName === BNS.config)
+			{
+				var result = new Kekule.Widget.Button(parentGroup);
+				var action = self._configAction
+				if (action)
+					result.setAction(action);
+				return result;
+			}
+			else
+				return $origin(btnName, parentGroup);
+		});
+		/*
 		var buttons = AU.exclude(result.getDefaultToolBarButtons(), BNS.config);
 		buttons.push({
 			'action': this._configAction
 		});
 		buttons.splice(2, 0, BNS.clearObjs);
+		*/
+		var buttons = Kekule.globalOptions.chemWidget.chemObjInserter.toolButtons;
 		result.setToolbarParentElem(this._toolbarParentElem);
 		result.setToolButtons(buttons); //.concat([{'text': 'MyButton', 'hint': 'Custom'}]));
 		result.setToolbarPos(Kekule.Widget.Position.BOTTOM);
@@ -1257,6 +1291,20 @@ Kekule._registerAfterLoadSysProc(function(){
 if (!Kekule.ChemWidget || !Kekule.Spectroscopy)
 	return;
 
+/** @ignore */
+Kekule.globalOptions.add('chemWidget.spectrumObjInserter', {
+	toolButtons: [
+		BNS.loadData,
+		BNS.saveData,
+		BNS.clearObjs,
+		BNS.changeSpectrumSection,
+		BNS.zoomIn, BNS.zoomOut,
+		BNS.reset,
+		BNS.copy,
+		BNS.config
+	]
+});
+
 /**
  * A widget to insert spectrum elements to HTML document.
  * This widget is mainly designed for extra web editor plugins or browser addons.
@@ -1485,11 +1533,28 @@ Kekule.ChemWidget.SpectrumObjInserter = Class.create(Kekule.ChemWidget.AbstractW
 		result.addClassName([CNS.DYN_CREATED, CCNS.SPECTRUMOBJ_INSERTER_SPECTRUM_INSPECTOR]);
 
 		// set default value
+		/*
 		var buttons = AU.exclude(result.getToolButtons(), BNS.config);
 		buttons.push({
 			'action': this._configAction
 		});
 		buttons.splice(2, 0, BNS.clearObjs);
+		*/
+		var self = this;
+		result.getSpectrumViewer().overwriteMethod('createToolButton', function($origin, btnName, parentGroup){
+			if (btnName === BNS.config)
+			{
+				var result = new Kekule.Widget.Button(parentGroup);
+				var action = self._configAction
+				if (action)
+					result.setAction(action);
+				return result;
+			}
+			else
+				return $origin(btnName, parentGroup);
+		});
+
+		var buttons = Kekule.globalOptions.chemWidget.spectrumObjInserter.toolButtons;
 		result.setToolbarParentElem(this._toolbarParentElem);
 		result.setToolButtons(buttons);
 		result.setToolbarPos(Kekule.Widget.Position.BOTTOM);
