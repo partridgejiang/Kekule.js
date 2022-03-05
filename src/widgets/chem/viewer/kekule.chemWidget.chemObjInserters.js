@@ -86,7 +86,7 @@ Kekule.globalOptions.add('chemWidget.chemObjInserter', {
 		BNS.rotateX, BNS.rotateY, BNS.rotateZ,
 		BNS.rotateLeft, BNS.rotateRight,
 		BNS.reset,
-		BNS.copy,
+		//BNS.copy,
 		BNS.openEditor,
 		BNS.config
 	]
@@ -566,7 +566,7 @@ Kekule.ChemWidget.ChemObjInserter = Class.create(Kekule.ChemWidget.AbstractWidge
 	{
 		//console.log('load', e);
 		// when loading a new object, empty the assoc3DChemObj
-		if (this._changingDisplayedChemObjFlag <= 0)
+		if (!this._changingDisplayedChemObjFlag || this._changingDisplayedChemObjFlag <= 0)
 		{
 			var chemObj = e.obj || null;
 			this.setPropStoreFieldValue('chemObj', chemObj);
