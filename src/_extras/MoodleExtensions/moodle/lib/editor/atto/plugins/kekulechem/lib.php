@@ -32,6 +32,35 @@ class atto_kekulechem_configs
 {
     const DEF_KEKULE_DIR = '/local/kekulejs/';
 
+    const DEF_CHEM_OBJ_INSERTER_AUTO_3D_GENERATION = false;
+    const DEF_CHEM_OBJ_INSERTER_BUTTONS = <<<'STR1'
+loadData
+saveData
+clearObjs
+molDisplayType
+molHideHydrogens
+molAutoGenerateCoords
+zoomIn
+zoomOut
+rotateX
+rotateY
+rotateZ
+rotateLeft
+rotateRight
+reset
+openEditor
+config
+STR1;
+    const DEF_SPECTRUM_INSERTER_BUTTONS = <<<'STR2'
+loadData
+saveData
+clearObjs
+zoomIn
+zoomOut
+reset
+config
+STR2;
+
     static public function getKekuleDir()
     {
         /*
@@ -103,11 +132,35 @@ function atto_kekulechem_params_for_js($elementid, $options, $foptions) {
             $purifyHtml = 'true';
     }
 
+	$enableChemObjInserterAuto3DGeneration = get_config('atto_kekulechem', 'chem_obj_inserter_auto_3d_generation');
+    if (!isset($enableChemObjInserterAuto3DGeneration))
+	    $enableChemObjInserterAuto3DGeneration = atto_kekulechem_configs::DEF_CHEM_OBJ_INSERTER_AUTO_3D_GENERATION;
+    $chemObjInserterToolButtons = get_config('atto_kekulechem', 'chem_obj_inserter_toolbuttons');
+    if (empty($chemObjInserterToolButtons))
+    	$chemObjInserterToolButtons = atto_kekulechem_configs::DEF_CHEM_OBJ_INSERTER_BUTTONS;
+	$spectrumInserterToolButtons = get_config('atto_kekulechem', 'spectrum_inserter_toolbuttons');
+	if (empty($spectrumInserterToolButtons))
+		$spectrumInserterToolButtons = atto_kekulechem_configs::DEF_SPECTRUM_INSERTER_BUTTONS;
+
     $params = array(
         'kekuleCssUrl' => $CFG->httpswwwroot . kekulejs_configs::getKekuleScriptDir() . 'themes/default/kekule.css',
         'kekuleMoodleCssUrl' => $CFG->httpswwwroot . kekulejs_configs::getAdapterDir() . 'kekuleMoodle.css',
         'attoKekulePluginPath' => $CFG->httpswwwroot . '/lib/editor/atto/plugins/kekulechem/',
-        'purifyHtml' => $purifyHtml
+        'purifyHtml' => $purifyHtml,
+	    'enableChemObjInserterAuto3DGeneration' => boolval($enableChemObjInserterAuto3DGeneration),
+	    'chemObjInserterToolButtons' => $chemObjInserterToolButtons,  // _splitToolButtonNames($chemObjInserterToolButtons),
+	    'spectrumInserterToolButtons' => $spectrumInserterToolButtons  //_splitToolButtonNames($spectrumInserterToolButtons)
     );
     return $params;
 }
+
+/*
+function _splitToolButtonNames($toolButtonNames)
+{
+	$names = explode('\n', $toolButtonNames);
+	$result = [];
+	foreach($names as $name)
+		array_push($result, trim($name));
+	return $result;
+}
+*/

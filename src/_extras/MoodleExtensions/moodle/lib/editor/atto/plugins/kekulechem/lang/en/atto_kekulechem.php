@@ -33,5 +33,14 @@ $string['captionEditChemObj'] = 'Modify Chem Object';
 $string['captionAddSpectrum'] = 'Insert Spectrum';
 $string['captionModifySpectrum'] = 'Modify Spectrum';
 
+// strings for settings
+
 $string['captionKekuleDir'] = 'Kekule.js directory';
 $string['descKekuleDir'] = 'Root directory that contains Kekule.js lib (and its dependant libs)';
+
+$string['captionEnableChemObjInserterAuto3DGeneration'] = 'Enable Auto 3D Generation in Chem Object Inserter';
+$string['descEnableChemObjInserterAuto3DGeneration'] = 'When loading molecule in 3D tab, whether coordinates of atoms should be automatically calculated';
+$string['captionChemObjInserterButtons'] = 'Chem Object Inserter Buttons';
+$string['descChemObjInserterButtons'] = 'Displayed toolbar buttons in chem object inserter, one button name per line';
+$string['captionSpectrumInserterButtons'] = 'Spectrum Inserter Buttons';
+$string['descSpectrumInserterButtons'] = 'Displayed toolbar buttons in spectrum inserter, one button name per line';

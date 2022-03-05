@@ -23,13 +23,26 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/*
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/lib/editor/atto/plugins/kekulechem/lib.php');
 
+/*
 $settings->add(new admin_setting_configtext('mod_kekule/kekule_dir',
     get_string('captionKekuleDir', 'atto_kekulechem'), get_string('descKekuleDir', 'atto_kekulechem'),
     atto_kekulechem_configs::DEF_KEKULE_DIR, PARAM_TEXT));
-
 */
+
+$settings->add(new admin_setting_configcheckbox('atto_kekulechem/chem_obj_inserter_auto_3d_generation',
+	get_string('captionEnableChemObjInserterAuto3DGeneration', 'atto_kekulechem'), get_string('descEnableChemObjInserterAuto3DGeneration', 'atto_kekulechem'),
+	atto_kekulechem_configs::DEF_CHEM_OBJ_INSERTER_AUTO_3D_GENERATION));
+
+$settings->add(new admin_setting_configtextarea('atto_kekulechem/chem_obj_inserter_toolbuttons',
+	get_string('captionChemObjInserterButtons', 'atto_kekulechem'), get_string('descChemObjInserterButtons', 'atto_kekulechem'),
+	atto_kekulechem_configs::DEF_CHEM_OBJ_INSERTER_BUTTONS, PARAM_TEXT));
+
+$settings->add(new admin_setting_configtextarea('atto_kekulechem/spectrum_inserter_toolbuttons',
+	get_string('captionSpectrumInserterButtons', 'atto_kekulechem'), get_string('descSpectrumInserterButtons', 'atto_kekulechem'),
+	atto_kekulechem_configs::DEF_SPECTRUM_INSERTER_BUTTONS, PARAM_TEXT));
+

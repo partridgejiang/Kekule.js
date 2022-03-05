@@ -529,12 +529,19 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 		var inserter = new Kekule.ChemWidget.ChemObjInserter(document);
 		inserter.setResizable(true);
 
+		var toolButtons = this._extractInserterToolButtons(this.get('chemObjInserterToolButtons'));
+		//console.log('ChemObjInserter toolbuttons', toolButtons);
+		if (toolButtons)
+			inserter.setToolButtons(toolButtons);
+
 		inserter.getViewer().setEditorProperties({
 			'predefinedSetting': 'fullFunc',
 			'commonToolButtons': null,
 			'chemToolButtons': null,
 			'allowCreateNewChild': true
 		});
+
+		inserter.setEnable3DStructureAutoGeneration(!!this.get('enableChemObjInserterAuto3DGeneration') || false);
 
 		inserter.appendToWidget(result);
 		this._chemObjInserter = inserter;
@@ -546,8 +553,24 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 		var inserter = new Kekule.ChemWidget.SpectrumObjInserter(document);
 		inserter.setResizable(true);
 
+		var toolButtons = this._extractInserterToolButtons(this.get('chemObjInserterToolButtons'));
+		//console.log('SpectrumObjInserter toolbuttons', toolButtons);
+		if (toolButtons)
+			inserter.setToolButtons(toolButtons);
+
 		inserter.appendToWidget(result);
 		this._spectrumObjInserter = inserter;
+		return result;
+	},
+	_extractInserterToolButtons: function(btnNameLines)
+	{
+		if (!btnNameLines)
+			return null;
+		var result = btnNameLines.split('\n');
+		for (var i = 0, l = result.length; i < l; ++i)
+		{
+			result[i] = result[i].trim();
+		}
 		return result;
 	},
 	_submitChemObj: function(targetElem)
@@ -723,6 +746,15 @@ KC.Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 		},
 		purifyHtml: {
 			value: false
+		},
+		enableChemObjInserterAuto3DGeneration: {
+			value: false
+		},
+		chemObjInserterToolButtons: {
+			value: null
+		},
+		spectrumInserterToolButtons: {
+			value: null
 		}
 	}
 });
