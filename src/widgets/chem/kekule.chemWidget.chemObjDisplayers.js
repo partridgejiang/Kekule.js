@@ -1537,7 +1537,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		var painter = this.getPainter();
 		var newDimension;
 		// note in continuous repainting phase (such as periodical rotation), we disable auto size
-		if ((!this._isContinuousRepainting) && applyAutoSize && this.getAutoSize() && this.allowAutoSize())  // need to resize widget dimension
+		if ((!this._isContinuousRepainting) && applyAutoSize && /*this.getAutoSize() && this.allowAutoSize() */ this.getActualAutoSize())  // need to resize widget dimension
 		{
 			var padding = this.getPadding() || 0;
 			var renderBox = painter.estimateScreenBox(context, baseCoord, drawOptions, this.getAllowCoordBorrow());
@@ -1600,6 +1600,12 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 	getActualDrawOptions: function()
 	{
 		return this.getDrawOptions();
+	},
+	/** @private */
+	getActualAutoSize: function()
+	{
+		// when autofit, the autosize should be be applied
+		return this.getAutoSize() && this.allowAutoSize() && !this.getAutofit();
 	},
 
 	/** @private */
