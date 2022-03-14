@@ -481,6 +481,19 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 				return this;
 			}
 		});
+		this.defineProp('hideHydrogens', {'dataType': DataType.BOOL, 'serializable': false,
+			'getter': function()
+			{
+				var op = this.getDrawOptions() || {};
+				return op.hideHydrogens;
+			},
+			'setter': function(value)
+			{
+				this.getDrawOptions().hideHydrogens = !!value;
+				this.drawOptionChanged();
+				return this;
+			}
+		});
 		this.defineProp('allowCoordBorrow', {'dataType': DataType.BOOL, 'serializable': false, 'scope': PS.PUBLIC,
 			'getter': function()
 			{
@@ -2036,6 +2049,7 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			var context = this.getDrawContext();
 			painter.changeGeometryOptions(context, drawOptions.baseCoord || this._lastBaseCoord, drawOptions);
 			this._savePainterInitialRenderTransformOptions(context, painter);
+			this.invokeEvent('repaint', {'obj': this.getChemObj()});
 		}
 		else
 			this.drawOptionChanged();
@@ -2164,16 +2178,18 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		return this;
 	},
 	*/
-	/**
+	/*
 	 * Hide or show all hydrogen atoms in 3D model.
 	 * @param {Int} newType Value from {@link Kekule.Render.Molecule2DDisplayType} or {@link Kekule.Render.Molecule3DDisplayType}.
 	 */
+	/*
 	setHideHydrogens: function(newValue)
 	{
 		this.getDrawOptions().hideHydrogens = newValue;
 		this.drawOptionChanged();
 		return this;
 	},
+	*/
 
 	/**
 	 * Export drawing content in viewer to a data URL for <img> tag to use.
@@ -3454,6 +3470,7 @@ Kekule.ChemWidget.ActionDisplayerHideHydrogens = Class.create(Kekule.ChemWidget.
 		var displayer = this.getDisplayer();
 		var flag = displayer && (displayer.getRenderType() === Kekule.Render.RendererType.R3D);
 		this.setDisplayed(/*this.getDisplayed() &&*/ flag).setEnabled(this.getEnabled() && flag);
+		this.setChecked(displayer && displayer.getHideHydrogens());
 	},
 	/** @private */
 	doExecute: function()
