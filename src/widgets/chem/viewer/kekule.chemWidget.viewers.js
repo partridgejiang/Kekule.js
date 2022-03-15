@@ -304,7 +304,8 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 
 		var gOptions = Kekule.globalOptions.get('chemWidget.viewer') || {};
-		this.setEnableGesture(oneOf(gOptions.enableGestureInteraction, false));  // the hammer event reactor need to be installed after element is bind
+		if (Kekule.ObjUtils.isUnset(this.getEnableGesture()))
+			this.setEnableGesture(oneOf(gOptions.enableGestureInteraction, false));  // the hammer event reactor need to be installed after element is bind
 		this.addIaController('default', new Kekule.ChemWidget.ViewerBasicInteractionController(this), true);
 	},
 	/** @private */

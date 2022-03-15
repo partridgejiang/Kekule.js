@@ -287,7 +287,8 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setPropStoreFieldValue('editorConfigs', editorConfigs || this.createDefaultConfigs());
 		//this.setPropStoreFieldValue('uiMarkers', []);
 		//this.setEnableGesture(true);
-		this.setEnableGesture(getOptionValue('chemWidget.editor.enableGesture', true));
+		if (Kekule.ObjUtils.isUnset(this.getEnableGesture()))
+			this.setEnableGesture(getOptionValue('chemWidget.editor.enableGesture', true));
 	},
 	/** @private */
 	initProperties: function()
