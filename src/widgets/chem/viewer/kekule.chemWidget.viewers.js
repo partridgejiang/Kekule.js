@@ -743,7 +743,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					}
 					else
 					{
-						this.startObservingGestureEvents(this.OBSERVING_GESTURES);
+						this.stopObservingGestureEvents(this.OBSERVING_GESTURES);
 					}
 				}
 			}
@@ -3363,17 +3363,17 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	{
 		if (this._transformInfo)
 		{
-			if (this._transformInfo.isTransforming)
+			if (this._transformInfo.isGestureTransforming)
+			{
+				this._doGestureInteractTransformStep();
+			}
+			else if (this._transformInfo.isTransforming)
 			{
 				var screenCoord = this._transformInfo.interactScreenCoord;
 				if (this.getViewerRenderType() === Kekule.Render.RendererType.R3D)
 					this.rotateByXYDistance(screenCoord.x, screenCoord.y);
 				else
 					this.moveByXYDistance(screenCoord.x, screenCoord.y);
-			}
-			else if (this._transformInfo.isGestureTransforming)
-			{
-				this._doGestureInteractTransformStep();
 			}
 			this._interactiveTransformStepId = window.requestAnimationFrame(this._doInteractiveTransformStepBind);
 		}
@@ -3846,7 +3846,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			var info = this._transformInfo;
 			if (info.isGestureTransforming)
 			{
-				//console.log('pinch move');
+				//console.log('pinch move', e.scale);
 				info.pinchScale = e.scale;
 			}
 		}

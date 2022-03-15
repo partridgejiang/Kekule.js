@@ -566,7 +566,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 					}
 					else
 					{
-						this.startObservingGestureEvents(this.OBSERVING_GESTURES);
+						this.stopObservingGestureEvents(this.OBSERVING_GESTURES);
 					}
 				}
 			}
