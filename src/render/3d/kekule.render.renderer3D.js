@@ -26,6 +26,10 @@ var BSM = Kekule.Render.Bond3DSpliceMode;
 var NRM = Kekule.Render.Node3DRenderMode;
 var oneOf = Kekule.oneOf;
 
+Kekule.globalOptions.add('render.render3D', {
+	autofitOnPrimaryDirection: false
+});
+
 /**
  * Different renderer should provide different methods to draw element on context.
  * Those different implementations are wrapped in draw bridge classes.
@@ -755,10 +759,16 @@ Kekule.Render.ChemObj3DRenderer = Class.create(Kekule.Render.Base3DRenderer,
 				var obox = Kekule.BoxUtils.inflateBox(objBox, inflation.x, inflation.y, inflation.z);
 				//var obox = objBox;
 				//calculate camera position
-				var w = Math.max(obox.x2 - obox.x1, obox.y2 - obox.y1);
+				var w = Math.max(Math.abs(obox.x2 - obox.x1), Math.abs(obox.y2 - obox.y1));
 				var cameraInfo = this.getCameraProps(context);
 
-				var l = w / 2 / Math.tan(cameraInfo.fov / 2);
+				var fov;
+				if (Kekule.globalOptions.render.render3D.autofitOnPrimaryDirection)  // original implementation, only auto fit on primary direction
+					fov = cameraInfo.fov;
+				else  // new implementation, consider both direction, and use the fovMin value
+					fov = cameraInfo.fovMin || cameraInfo.fov;
+
+				var l = w / 2 / Math.tan(fov / 2);
 				var dis = Math.sqrt(Math.sqr(l) - Math.sqr(w / 2));
 
 				//var doCameraRotation = false;

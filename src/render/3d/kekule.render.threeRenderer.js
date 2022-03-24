@@ -762,9 +762,19 @@ Kekule.Render.ThreeRendererBridge = Class.create(Kekule.Render.Abstract3DDrawBri
 	getCameraProps: function(context)
 	{
 		var c = context.getCamera();
+		// the fov of Three is based on height (vertical), so we need to calc and report fov of other directions
+		var fovVertical = c.fov * Math.PI / 180;
+		var fovHorizontal = fovVertical * (c.aspect || 1);
+		var fovMin = Math.min(fovVertical, fovHorizontal);
+		return {'position': c.position,	'fov': fovVertical,	'aspect': c.aspect,
+			'fovVertical': fovVertical, 'fovHorizontal': fovHorizontal, 'fovMin': fovMin,
+			'left': c.left, 'right': c.right, 'top': c.top, 'bottom': c.bottom,
+			'lookAtVector': c.lookAtVector, 'upVector': c.up};
+		/*
 		return {'position': c.position,	'fov': c.fov * Math.PI / 180,	'aspect': c.aspect,
 			'left': c.left, 'right': c.right, 'top': c.top, 'bottom': c.bottom,
 			'lookAtVector': c.lookAtVector, 'upVector': c.up};
+		*/
 	},
 	/**
 	 * Set properties of current camera, including position(coord), fov, aspect, lookAtVector and so on.
@@ -789,7 +799,7 @@ Kekule.Render.ThreeRendererBridge = Class.create(Kekule.Render.Abstract3DDrawBri
 		if (notUnset(props.near))
 			c.near = props.near;
 		if (notUnset(props.far))
-			c.near = props.far;
+			c.far = props.far;
 
 		// for perspective projection
 		if (props.fov)
