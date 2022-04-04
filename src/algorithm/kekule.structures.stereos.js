@@ -41,7 +41,7 @@ Kekule.globalOptions.add('algorithm.stereoPerception', {
 	perceiveChiralNodes: true,
 	calcParity: true,
 	strictStereoBondGeometry: false,
-	strictStereoAtomGemoetry: false,
+	strictStereoAtomGeometry: false,
 	wedgeBondPrior: true
 });
 
@@ -811,8 +811,8 @@ Kekule.MolStereoUtils = {
 	 */
 	_getFischerProjectionInfo: function(node, siblings, options) {
 		var ops = Object.create(options || null);
-		ops.allowExplicitVerticalHydrogen = true;  // TODO: now fixed to true, since the C-H bond may be removed in the standardize process
-		ops.allowExplicitHydrogen = true;
+		//ops.allowExplicitVerticalHydrogen = true;  // /* TODO: now fixed to true, since the C-H bond may be removed in the standardize process */
+		//ops.allowExplicitHydrogen = true;
 		if (siblings.length < 3 || siblings.length > 4)
 			return null;
 		if (siblings.length === 3 && !ops.allowExplicitHydrogen)
@@ -826,6 +826,11 @@ Kekule.MolStereoUtils = {
 			var isCenterLegal = (node instanceof Kekule.Atom) && (node.getAtomicNumber() === 6);
 			if (isCenterLegal && node.getRenderOption)
 				isCenterLegal = node.getRenderOption('nodeDisplayMode') !== Kekule.Render.NodeLabelDisplayMode.SHOWN;
+			if (isCenterLegal)
+			{
+				var explicitHCount = node.getExplicitHydrogenCount();
+				isCenterLegal = !explicitHCount;
+			}
 			if (!isCenterLegal)
 				return null;
 		}
@@ -947,7 +952,9 @@ Kekule.MolStereoUtils = {
 	 *   }
 	 * @returns {Hash} {direction: Int} Value from {@link Kekule.RotationDir}, clockwise, anti-clockwise or unknown and additional information (e.g. FischerInfo).
 	 */
-	calcTetrahedronChiralCenterRotationDirectionEx: function(centerNode, refSibling, siblings, options) {
+	calcTetrahedronChiralCenterRotationDirectionEx: function(centerNode, refSibling, siblings, options)
+	{
+		//console.log(refSibling, siblings);
 		var ops = Object.extend({
 			implicitFischerProjection: true,
 			allowExplicitHydrogenInFischer: true
@@ -981,14 +988,111 @@ Kekule.MolStereoUtils = {
 		if (totalSiblingCount < 4)  // not a tetrahedron
 			return {direction: RD.UNKNOWN};
 
-		var getNodeCoord = function(node, centerNode, centerCoord, coordMode, fischerInfo) {
-			/*
-			 var is2D = coordMode === Kekule.CoordMode.COORD2D;
-			 if (is2D && !node.hasCoord2D())
-			 coordMode = Kekule.CoordMode.COORD3D;
-			 if (!is2D && !node.hasCoord3D())
-			 coordMode = Kekule.CoordMode.COORD2D;
-			 */
+		var calcNodeCoords = function(centerNode, siblings, coordMode, fischerInfo, allowCoordBorrow)
+		{
+			var isUnset = Kekule.ObjUtils.isUnset;
+			//var nodes = [].concat(siblings).unshift(centerNode);
+			var is3D = coordMode !== Kekule.CoordMode.COORD2D;
+			var centerCoord = centerNode && centerNode.getAbsCoordOfMode(coordMode, allowCoordBorrow);
+			if (centerCoord && isUnset(centerCoord.z))
+			{
+				if (is3D)
+					centerCoord.z = 0;
+				else  // determinate the center z by z index in 2D mode
+				{
+					if (centerNode.getZIndex2D)  // check zIndex2D property of node
+						centerCoord.z = centerNode.getZIndex2D() || 0;
+					else
+						centerCoord.z = 0;
+				}
+			}
+			var siblingCoords = [];
+			var siblingCoord2DZInfo = {
+				'count': 0,
+				'sum': 0
+			};
+			for (var i = 0, l = siblings.length; i < l; ++i)
+			{
+				var coord;
+				var node = siblings[i];
+				if (is3D)  // 3D, get 3D absolute coord directly
+					coord = node.getAbsCoordOfMode(coordMode, allowCoordBorrow);
+				else
+				{
+					coord = node.getAbsCoordOfMode(coordMode, allowCoordBorrow);
+					if (isUnset(coord.z))
+					{
+						var connector = node.getConnectorTo(centerNode);
+						if (connector.getStereo && (centerNode && centerCoord))
+						{
+							var connDirection = connector.indexOfConnectedObj(node) - connector.indexOfConnectedObj(centerNode);
+							var BS = Kekule.BondStereo;
+							var bondStereo = connector.getStereo() || BS.NONE;
+							if (bondStereo === BS.NONE && fischerInfo)  // with fischer projection info, there is implicit bond stereo
+							{
+								if (fischerInfo.towardSiblings.indexOf(node) >= 0)
+									bondStereo = (connDirection < 0) ? BS.UP_INVERTED : BS.UP;
+								else if (fischerInfo.awaySiblings.indexOf(node) >= 0)
+									bondStereo = (connDirection < 0) ? BS.DOWN_INVERTED : BS.DOWN;
+							}
+							var wedgeDirs = [BS.UP, BS.UP_INVERTED, BS.DOWN, BS.DOWN_INVERTED];
+							if (wedgeDirs.indexOf(bondStereo) >= 0)
+							{
+								if (connDirection < 0)
+									bondStereo = BS.getInvertedDirection(bondStereo);
+
+								// use a larger factor for wedge bond than the dashes one when wedge is considered prior in chiral calculation
+								var zFactors = ops.wedgeBondPrior ? [2, -2, -1, 1] : [1, -1, -1, 1];
+
+								var distance = CU.getDistance(coord, /*centerNode.getAbsCoordOfMode(coordMode)*/centerCoord);
+								coord.z = distance * zFactors[wedgeDirs.indexOf(bondStereo)] + centerCoord.z;
+							}
+							else if ([BS.UP_OR_DOWN, BS.UP_OR_DOWN_INVERTED].indexOf(bondStereo) >= 0)  // direction not certain
+								coord = null; //coord.z = false;  // return a special mark, can determinate angle calculation
+						}
+					}
+					if (coord && isUnset(coord.z) && node.getZIndex2D)  // check zIndex2D property of node
+					{
+						coord.z = node.getZIndex2D();
+					}
+
+					if (coord && !isUnset(coord.z) && coord.z !== false)
+					{
+						siblingCoord2DZInfo.sum += (coord.z - centerCoord.z);
+						++siblingCoord2DZInfo.count;
+					}
+				}
+				siblingCoords.push(coord);
+			}
+			// fill missing z coord in 2D mode
+			if (!is3D && centerCoord)
+			{
+				var defCoord2DZ = -siblingCoord2DZInfo.sum / (siblings.length - siblingCoord2DZInfo.count) + centerCoord.z;
+				//console.log('defCoord2DZ', defCoord2DZ);
+				for (var i = 0, l = siblings.length; i < l; ++i)
+				{
+					var coord = siblingCoords[i];
+					if (coord && isUnset(coord.z))
+						coord.z = defCoord2DZ;
+				}
+			}
+
+			//console.log('coords', siblingCoords, fischerInfo);
+
+			var result = new Kekule.MapEx();
+			if (centerNode)
+				result.set(centerNode, centerCoord);
+			for (var i = 0, l = siblings.length; i < l; ++i)
+			{
+				result.set(siblings[i], siblingCoords[i]);
+			}
+
+			//console.log('result', result);
+
+			return result;
+		};
+		/*
+		var getNodeCoord_OLD = function(node, centerNode, centerCoord, coordMode, fischerInfo) {
 			if (coordMode !== Kekule.CoordMode.COORD2D)  // 3D, get 3D absolute coord directly
 				return node.getAbsCoordOfMode(coordMode, true);  // allow borrow
 			else  // coord 2D, add z value, consider wedge bonds and special "zIndex2D" property expliciting z stack of 2D sketch
@@ -1020,7 +1124,7 @@ Kekule.MolStereoUtils = {
 							// use a larger factor for wedge bond than the dashes one when wedge is considered prior in chiral calculation
 							var zFactors = ops.wedgeBondPrior ? [2, -2, -1, 1] : [1, -1, -1, 1];
 
-							var distance = CU.getDistance(result, /*centerNode.getAbsCoordOfMode(coordMode)*/centerCoord);
+							var distance = CU.getDistance(result, centerCoord);
 							result.z = distance * zFactors[wedgeDirs.indexOf(bondStereo)];
 						}
 						else if ([BS.UP_OR_DOWN, BS.UP_OR_DOWN_INVERTED].indexOf(bondStereo) >= 0)  // direction not certain
@@ -1040,6 +1144,7 @@ Kekule.MolStereoUtils = {
 
 		// calc all essetianl coords: centerCoord, coords of rotation siblings, coord of implict node
 		var centerCoord = centerNode ? getNodeCoord(centerNode, null, null, coordMode) : null;
+		*/
 		/*
 		var fischerOptions = {
 			'allowedError': ops.fischerAllowedError,
@@ -1054,19 +1159,35 @@ Kekule.MolStereoUtils = {
 			Kekule.ArrayUtils.pushUnique(allAroundSiblings, refSibling);
 		var fischerInfo = (centerNode && ops.implicitFischerProjection) ? Kekule.MolStereoUtils._getFischerProjectionInfo(centerNode, allAroundSiblings, fischerOptions) : null;
 
+		var _allCalcSibilings = AU.clone(siblings);
+		if (refSibling)
+			AU.pushUnique(_allCalcSibilings, refSibling);
+		var _calculatedNodeCoordMap = calcNodeCoords(centerNode, _allCalcSibilings, coordMode, fischerInfo, true);
+		var centerCoord = _calculatedNodeCoordMap.get(centerNode);
+		var getNodeCoord = function(node, centerNode, centerCoord, coordMode, fischerInfo) {
+			var result = _calculatedNodeCoordMap.get(node);
+			/*
+			var oldResult = getNodeCoord_OLD(node, centerNode, centerCoord, coordMode, fischerInfo);
+			console.log('compare coord', node.getSymbol(), node.getId(), result, oldResult);
+			*/
+			return result;
+		};
+
 		var coords = [];
 		for (var i = 0; i < explicitSiblingCount; ++i)
 		{
 			var coord = getNodeCoord(siblings[i], centerNode, centerCoord, coordMode, fischerInfo);
 			coords.push(coord);
 		}
+		//console.log('coords', coords);
+
 		var allExplicitSiblingCoords = AU.clone(coords);
 		var refCoord = refSibling ? getNodeCoord(refSibling, centerNode, centerCoord, coordMode, fischerInfo) : null;
 		if (refCoord)
 			allExplicitSiblingCoords.push(refCoord);
 
 		if (allExplicitSiblingCoords.indexOf(null) >= 0)  // coords has null value (special mark returned by function getNodeCoord, can not calculate
-			return {direction: RD.UNKNOWN, fisherInfo: fischerInfo};
+			return {direction: RD.UNKNOWN, fischerInfo: fischerInfo};
 
 		if (!centerCoord)
 		{
@@ -1091,7 +1212,7 @@ Kekule.MolStereoUtils = {
 				++wedgeNodeCount;
 		}
 		if (is2D && wedgeNodeCount <= 0)  // in 2D mode but with no wedge bond, can not determine
-			return {direction: RD.UNKNOWN, fisherInfo: fischerInfo};
+			return {direction: RD.UNKNOWN, fischerInfo: fischerInfo};
 
 		centerCoord = {'x': 0, 'y': 0, 'z': 0};
 
@@ -1120,14 +1241,16 @@ Kekule.MolStereoUtils = {
 				coords.push(implicitCoord);
 		}
 
+		//console.log(centerCoord, refCoord, coords, refSiblingBehind, fischerInfo);
+
 		// now we have all essential coords, begin the calculation
 		if (coords.length === 3 && coords.indexOf(null) < 0)
 			return {
 				direction: Kekule.MolStereoUtils.calcRotationDirection(centerCoord, refCoord, coords[0], coords[1], coords[2], refSiblingBehind),
-				fisherInfo: fischerInfo
+				fischerInfo: fischerInfo
 			};
 		else
-			return {direction: RD.UNKNOWN, fisherInfo: fischerInfo};
+			return {direction: RD.UNKNOWN, fischerInfo: fischerInfo};
 	},
 	/**
 	 * Returns rotation direction of a tetrahedron chiral center. Rotation follows the sequence of param siblings.
