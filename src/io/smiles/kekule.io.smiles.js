@@ -507,10 +507,9 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 					schiralRot = '';
 				else
 				{
-
 					// looking from prev node, calc rotation of nextNodes, if implicit H exists, it should be considered as first or last next node (result are same)
-					var dir = Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirection(null, node, prevNode, nextNodes, !!hcount, false, {allowExplicitVerticalHydrogen: true});
-					var schiralRot = (dir === Kekule.RotationDir.CLOCKWISE) ? SMI.ROTATION_DIR_CLOCKWISE :
+					var dir = Kekule.MolStereoUtils.calcTetrahedronChiralCenterRotationDirection(null, node, prevNode, nextNodes, !!hcount, false, {allowExplicitHydrogen: true, allowExplicitVerticalHydrogen: true});
+					schiralRot = (dir === Kekule.RotationDir.CLOCKWISE) ? SMI.ROTATION_DIR_CLOCKWISE :
 							(dir === Kekule.RotationDir.ANTICLOCKWISE) ? SMI.ROTATION_DIR_ANTICLOCKWISE :
 									'';
 				}
