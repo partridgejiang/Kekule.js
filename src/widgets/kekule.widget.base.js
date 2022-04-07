@@ -5428,8 +5428,26 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 		// private, record current active and focused widget
 		// at one time, only one widget can be in those states
 		this.defineProp('currHoverWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
-		this.defineProp('currActiveWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
-		this.defineProp('currFocusedWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
+		this.defineProp('currActiveWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('currFocusedWidget');
+				if (result && result.isShown && result.isShown())
+					return result;
+				else
+					return null;
+			}
+		});
+		this.defineProp('currFocusedWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false,
+			'getter': function()
+			{
+				var result = this.getPropStoreFieldValue('currFocusedWidget');
+				if (result && result.isShown && result.isShown())
+					return result;
+				else
+					return null;
+			}
+		});
 		//this.defineProp('currHoverWidget', {'dataType': 'Kekule.Widget.BaseWidget', 'serializable': false});
 
 
@@ -6157,7 +6175,8 @@ Kekule.Widget.GlobalManager = Class.create(Kekule.Widget.BaseEventsReceiver,
 			targetWidget = this.getBelongedResponsiveWidget(elem);
 
 			// if target widget is not set and the event is related to key, then send it to current focused widget
-			if (!targetWidget && this.isKeyEvent(evType))
+			if (!targetWidget && this.isKeyEvent(evType)
+				&& elem === elem.ownerDocument.body)  // no other HTML inputtable element receives the key event
 			{
 				targetWidget = this.getCurrFocusedWidget() || null;
 			}
