@@ -60,7 +60,7 @@ Kekule.globalOptions.add('IO.jcamp', {
  */
 Kekule.IO.Jcamp.DxConsts = {
 	CANDIDATE_INDEPENDENT_VAR_SYMBOLS: ['X', 'R', 'U', 'V', 'K', 'P'],
-	CANDIDATE_DEPENDENT_VAR_SYMBOLS: ['Y', 'Z', 'A', 'B', 'C', 'D'],
+	CANDIDATE_DEPENDENT_VAR_SYMBOLS: ['Y', 'Z', 'A', 'B', 'C', 'D']
 };
 
 /**
