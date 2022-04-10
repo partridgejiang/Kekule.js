@@ -43,7 +43,8 @@ Kekule.IO.Jcamp.SpectrumDataStorageStyle = {
 Kekule.globalOptions.add('IO.jcamp', {
 	outputDxVersion: '5.00',
 	dxDataStorageStyle: Kekule.IO.Jcamp.SpectrumDataStorageStyle.SMART,
-	dxDataAllowedSavingErrorRatio: 0.0001,  // allow 0.1% error when saving data to JCAMP-DX format
+	dxDataAllowedLoadingErrorRatio: 0.001,  // allow 0.1% error when loading data from JCAMP-DX format
+	dxDataAllowedSavingErrorRatio: 0.0001,  // allow 0.01% error when saving data to JCAMP-DX format
 	dxDataPreferredOrdinateScaledRange: {min: -32767, max: 32767},
 	dxDataAsdfTableOutputForm: Jcamp.AsdfForm.DIF_DUP,  // default output form of ASDF data table
 	useDxMinMaxValueAsDisplayRange: false,   // whether regard the MINX/Y-MAXX/Y as the display range of all spectrum in file
@@ -841,7 +842,7 @@ Kekule.IO.Jcamp.DxDataBlockReader = Class.create(Kekule.IO.Jcamp.DataBlockReader
 			}
 			// check first/lastX
 			// console.log('var first/last compare', varIncValueRange.firstValue, varInfos._bySymbol[varSymbolInc].firstValue, varIncValueRange.lastValue, varInfos._bySymbol[varSymbolInc].lastValue);
-			var allowedError = Math.abs(varIncValueRange.lastValue - varIncValueRange.firstValue) * options.dxDataAllowedSavingErrorRatio;
+			var allowedError = Math.abs(varIncValueRange.lastValue - varIncValueRange.firstValue) * options.dxDataAllowedLoadingErrorRatio;
 			if (Jcamp.Utils.compareFloat(varIncValueRange.firstValue, varInfos._bySymbol[varSymbolInc].firstValue, allowedError) !== 0
 				|| Jcamp.Utils.compareFloat(varIncValueRange.lastValue, varInfos._bySymbol[varSymbolInc].lastValue, allowedError) !== 0)
 			{
