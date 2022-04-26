@@ -133,9 +133,13 @@ Kekule.Editor.ObjModifier.Atom = Class.create(Kekule.Editor.ObjModifier.ChemStru
 		// react to value change of setter
 		var self = this;
 		result.addEventListener('valueChange', function(e){
-			if (e.value)  // ensure there is actual changes
-				self.applyToTargets();
-			result.dismiss();
+			var widget = self.getAtomSetter();
+			if (widget && widget.isShown())
+			{
+				if (e.value)  // ensure there is actual changes
+					self.applyToTargets();
+				result.dismiss();
+			}
 		});
 		/*
 		var self = this;
