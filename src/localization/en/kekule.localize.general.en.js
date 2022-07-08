@@ -130,7 +130,7 @@ Kekule.Localization.addResource('en', 'ErrorMsg', {
 
 	// io/jcamp/kekule.io.jcamp.base.js
 	JCAMP_DATA_WITHOUT_TITLE_LINE: 'Malformed JCAMP format data, not started with TITLE label',
-	JCAMP_OTHER_LABEL_BEFORE_TITLE_LINE: 'Malformed JCAMP format data, not started with TITLE label',
+	JCAMP_OTHER_LABEL_BEFORE_TITLE_LINE: 'Malformed JCAMP format data, other labels before the TITLE label',
 	JCAMP_MORE_THAN_ONE_ROOT_BLOCK: 'Malformed JCAMP format data, root block not unique',
 	JCAMP_MORE_THAN_TWO_NEST_LEVEL: 'Malformed JCAMP format data, block nested level should not exceed 2',
 	JCAMP_ASDF_FORMAT_ERROR_WITH_STR: 'Malformed JCAMP ASDF String: {0}',
