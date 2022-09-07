@@ -100,6 +100,13 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 			}
 		});
 		//this.defineProp('fileFilters', {'dataType': DataType.ARRAY});
+		this.defineProp('defaultFormatId', {'dataType': DataType.STRING,
+			'setter': function(value)
+			{
+				this.setPropStoreFieldValue('defaultFormatId', value);
+				this.updateFormatItems();
+			}
+		});
 		this.defineProp('dataDetails', {'dataType': DataType.HASH, 'setter': null, 'serializable': false});
 	},
 	/** @ignore */
@@ -166,6 +173,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		//var formatIds = [];
 		var formatIds = this.getAllowedFormatIds() || Kekule.IO.ChemDataReaderManager.getAllReadableFormatIds();
 		//console.log(formatIds);
+		var defFormatId = this.getDefaultFormatId();
 
 		/*
 		for (var i = 0, l = readerInfos.length; i < l; ++i)
@@ -193,13 +201,14 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 				 */
 				if (sFileExt)
 					text += ' (' + sFileExt + ')';
+				var selected = defFormatId && defFormatId === idInfo.id;
 				result.push({
 					'value': idInfo.id,
 					'formatId': idInfo.id,
 					'text': text,
 					'title': idInfo.mimeType,
-					'data': idInfo
-					//'selected': selected
+					'data': idInfo,
+					'selected': selected
 				});
 			}
 		}

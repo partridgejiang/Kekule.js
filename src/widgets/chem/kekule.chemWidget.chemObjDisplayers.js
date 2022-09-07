@@ -170,6 +170,8 @@ Kekule.ChemWidget.ChemObjDisplayerEnvironmentConfigs = Class.create(Kekule.Abstr
  * @property {Bool} enableLoadNewFile Whether open a external file to displayer is allowed.
  * @property {Array} allowedInputFormatIds Formats that shown in input file dialog. Default is null, means accept all available formats.
  * @property {Array} allowedOutputFormatIds Formats that shown in output file dialog. Default is null, means accept all available formats.
+ * @property {String} defaultInputFormatId
+ * @property {String} defaultOutputFormatId
  * @property {Hash} standardizationOptions Possible options when do standardization on molecule before saving.
  */
 /**
@@ -244,6 +246,9 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 		this.defineProp('enableLoadNewFile', {'dataType': DataType.BOOL});
 		this.defineProp('allowedInputFormatIds', {'dataType': DataType.ARRAY});
 		this.defineProp('allowedOutputFormatIds', {'dataType': DataType.ARRAY});
+
+		this.defineProp('defaultInputFormatId', {'dataType': DataType.STRING, 'serializable': false});
+		this.defineProp('defaultOutputFormatId', {'dataType': DataType.STRING, 'serializable': false});
 
 		this.defineProp('standardizationOptions', {'dataType': DataType.HASH});
 
@@ -2928,6 +2933,7 @@ Kekule.ChemWidget.ActionDisplayerLoadData = Class.create(Kekule.ChemWidget.Actio
 	{
 		var self = this;
 		var dialog = this.getDataDialog();
+		dialog.setPropStoreFieldValue('defaultFormatId', this.getDisplayer().getDefaultInputFormatId());
 		dialog.setAllowedFormatIds(this.getDisplayer().getAllowedInputFormatIds() || Kekule.IO.ChemDataReaderManager.getAllReadableFormatIds());
 
 		var formatSelector = dialog._formatSelector;
@@ -3141,6 +3147,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 				if (sFileExt)
 					text += ' (' + sFileExt + ')';
 				var selected = srcFormat? (formatIds[i] === srcFormat):
+					this.getDisplayer().getDefaultOutputFormatId()? (formatIds[i] === this.getDisplayer().getDefaultOutputFormatId()):
 					this.getLastFormat()? (this.getLastFormat() === formatIds[i]):
 					i === 0;
 				result.push({
