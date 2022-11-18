@@ -2,7 +2,7 @@ var path = require('path');
 var argv = require('minimist')(process.argv.slice(2));
 
 // process args
-var moduleNames = null, excludeModuleNames = null;
+var moduleNames = null, excludeModuleNames = null, singleBundleMinModuleNames = null;
 if (argv.modules || argv.m)
 {
 	moduleNames = (argv.modules || argv.m).split(',');
@@ -10,6 +10,10 @@ if (argv.modules || argv.m)
 if (argv.excludemodules || argv.e)
 {
 	excludeModuleNames = (argv.excludemodules || argv.e).split(',');
+}
+if (argv.singlebundlemodules || argv.s)
+{
+	singleBundleMinModuleNames = (argv.singlebundlemodules || argv.s).split(',');
 }
 var destPath = '../../dist/';  // default path
 if (argv.dest || argv.d)
@@ -26,7 +30,7 @@ cssCompressor.execute();
 // JS compressor
 const Compressor = require('./js/compressors.js').Compressor;
 var compress = new Compressor(destPath, minifierName);
-compress.execute(moduleNames, excludeModuleNames);
+compress.execute(moduleNames, excludeModuleNames, singleBundleMinModuleNames);
 
 
 

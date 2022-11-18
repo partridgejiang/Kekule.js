@@ -112,7 +112,7 @@ Kekule.Dev.PackageUtils = {
 		return result;
 	},
 
-	getCompressFileDetails: function(targetModuleNames, excludeModuleNames, ignoreAutoCompressFlag)
+	getCompressFileDetails: function(targetModuleNames, excludeModuleNames, singleBundleModuleNames, ignoreAutoCompressFlag)
 	{
 		var	targetFileName = 'kekule.min.js'; //'_compressed/kekule.compressed.js';
 		/*
@@ -120,38 +120,55 @@ Kekule.Dev.PackageUtils = {
 			srcFiles = Kekule.Dev.PackageUtils.getSrcFiles();
 		*/
 		var moduleInfos = PU.getSrcFileModuleInfos();
-		var actualModuleNames = null;
+		var actualModuleNames = null, actualSingleBundleModuleNames = null;
 
 		if (targetModuleNames)  // limited to these modules
 		{
 			actualModuleNames = PU.getEssentialModuleNames(targetModuleNames);
 		}
+		if (singleBundleModuleNames)
+			actualSingleBundleModuleNames = PU.getEssentialModuleNames(singleBundleModuleNames);
+		else
+			actualSingleBundleModuleNames = actualModuleNames;
 		var targetMinFileNames = [];
 		var compressFileMap = {};
-		var allSrcFiles = [];
+		var allSrcFiles = [], singleBundleSrcFiles = [];
 		for (var i = 0, l = moduleInfos.length; i < l; ++i)
 		{
 			var m = moduleInfos[i];
-			if (actualModuleNames && actualModuleNames.indexOf(m.name) < 0)
+			var inInclude = !(actualModuleNames && actualModuleNames.indexOf(m.name) < 0);
+			var inExclude = (excludeModuleNames && excludeModuleNames.indexOf(m.name) >= 0);
+			var inSingleBundle = !(actualSingleBundleModuleNames && actualSingleBundleModuleNames.indexOf(m.name) < 0);
+
+			if (!inInclude && !inSingleBundle)
 				continue;
-			if (excludeModuleNames && excludeModuleNames.indexOf(m.name) >= 0)
+			if (inExclude && !inSingleBundle)
 				continue;
+
 			var targetMinFileName = m.minFile || (m.name + '.min.js');
 			var srcFiles = m.files;
 			if (m.autoCompress !== false || ignoreAutoCompressFlag)
 			{
-				Kekule.ArrayUtils.pushUnique(targetMinFileNames, targetMinFileName);
-				if (!compressFileMap[targetMinFileName])
+				if (inInclude)
 				{
-					compressFileMap[targetMinFileName] = [];
+					Kekule.ArrayUtils.pushUnique(targetMinFileNames, targetMinFileName);
+					if (!compressFileMap[targetMinFileName])
+					{
+						compressFileMap[targetMinFileName] = [];
+					}
+					compressFileMap[targetMinFileName] = compressFileMap[targetMinFileName].concat(srcFiles);
+					allSrcFiles = allSrcFiles.concat(srcFiles);
 				}
-				compressFileMap[targetMinFileName] = compressFileMap[targetMinFileName].concat(srcFiles);
-				allSrcFiles = allSrcFiles.concat(srcFiles);
+				if (inSingleBundle)
+				{
+					singleBundleSrcFiles = singleBundleSrcFiles.concat(srcFiles);
+				}
 			}
 		}
 		// add a total compression file
 		Kekule.ArrayUtils.pushUnique(targetMinFileNames, targetFileName);
-		compressFileMap[targetFileName] = allSrcFiles.concat(PU.STANDALONE_ATTACH_FILES);
+		//compressFileMap[targetFileName] = allSrcFiles.concat(PU.STANDALONE_ATTACH_FILES);
+		compressFileMap[targetFileName] = singleBundleSrcFiles.concat(PU.STANDALONE_ATTACH_FILES);
 		compressFileMap[targetFileName].unshift('kekule.js');  // put the entrance js at the beginning of single kekule.min.js, for analysis script params
 		compressFileMap[targetFileName] = PU.SINGLE_BUNDLE_FLAG_FILES.concat(compressFileMap[targetFileName]);  // put the single bundle flag file at beginning
 		return {targetStandaloneFileName: targetFileName, targetMinFileNames: targetMinFileNames, compressFileMap: compressFileMap};

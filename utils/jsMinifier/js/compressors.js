@@ -159,7 +159,7 @@ var Compressor = class {
 		console.log('Webpack wrapper generated.');
 	}
 
-	execute(targetModuleNames, excludeModuleNames, destPath)
+	execute(targetModuleNames, excludeModuleNames, singleBundleModuleNames, destPath)
 	{
 		if (!destPath)
 			destPath = this.destPath;
@@ -168,7 +168,7 @@ var Compressor = class {
 			if (!fs.existsSync(destPath)){
 				fs.mkdirSync(destPath, {recursive: true});
 			}
-			var compressFileDetails = Kekule.Dev.PackageUtils.getCompressFileDetails(targetModuleNames, excludeModuleNames, true);
+			var compressFileDetails = Kekule.Dev.PackageUtils.getCompressFileDetails(targetModuleNames, excludeModuleNames, singleBundleModuleNames, true);
 			this._compress(compressFileDetails, destPath);
 			this._copyAdditionalJsFiles(targetModuleNames, destPath);
 			this._generateWebpackWrapperFiles(compressFileDetails, destPath);
