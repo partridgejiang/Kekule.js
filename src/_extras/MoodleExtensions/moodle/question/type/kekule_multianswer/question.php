@@ -498,6 +498,15 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
         return $maxFraction * $this->defaultmark;
     }
 
+
+    /**
+     * Returns a suitable string to delimiter used in method summarise_response and un_summarise_response.
+     * Descendants may override this method.
+     * @return string
+     */
+    protected function get_summarise_response_delimiter() {
+        return '; ';
+    }
     public function summarise_response(array $response) {
         $answers = $this->getResponseAnswerData($response);
         //var_dump($answers);
@@ -507,9 +516,18 @@ class qtype_kekule_multianswer_question extends question_graded_automatically_wi
             if (is_object($ans))
                 $result[] = $ans->answer;
             else  // $ans is string
-                $resut[] = $ans;
+                $result[] = $ans;
         }
-        return implode('; ', $result);
+        return implode($this->get_summarise_response_delimiter(), $result);
+    }
+
+    public function un_summarise_response(string $summary) {
+        if (!empty($summary)) {
+            $answers = explode($this->get_summarise_response_delimiter(), $summary);
+            return ['answer' => $answers];
+        } else {
+            return [];
+        }
     }
 
     public function classify_response(array $response) {
