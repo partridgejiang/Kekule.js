@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var Kekule = require('kekule').Kekule;
+var MolDupChecker = require('../lib/molDuplicationCheck').MolDupChecker;
 
 function extractReqData(req)
 {
@@ -72,6 +73,29 @@ router.post('/contain', function(req, res, next) {
   // returns result as JSON
   res.json(result);
 });
+
+// Check the dup rate of two molecules
+router.post('/dupcalc', function(req, res, next) {
+  var result = {};
+  try
+  {
+    var reqData = extractReqData(req);
+    if (!reqData.error)
+    {
+      result.result = MolDupChecker.calcDupRate(reqData.srcMol, reqData.targetMol, reqData.coordMode);
+    }
+    else
+      result.error = reqData.error;
+  }
+  catch(e)
+  {
+    result.error = e.message;
+  }
+  console.log((new Date()).toLocaleString(), 'Molecule duplication check result', result);
+  // returns result as JSON
+  res.json(result);
+});
+
 
 router.get('/compare', function(req, res, next) {
   res.render('index', { title: 'Mol Comparer' });
