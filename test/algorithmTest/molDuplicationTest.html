@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Molecule Duplication Test</title>
+
+  <script src="../../libs/raphael-min.2.0.1.js"></script>
+  <script src="../../src/kekule.js?min=false"></script>
+  <!--
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/default.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/defaultColor.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidget.css" />
+	<link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/chemWidgetColor.css" />
+	-->
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
+
+  <script  id="compareMol1" type="chemical/x-mdl-molfile">
+
+  Kekule  02071512262D
+
+ 12 12  0  0  0  0  0  0  0  0999 V2000
+    9.1791   35.1338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.8719   34.7338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.1791   35.9338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    8.4863   34.7338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.8719   33.9338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    8.4863   36.3338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    8.4863   33.9338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.1791   33.5338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   10.5648   33.5338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    8.4863   37.1338    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    7.7935   35.9338    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+   11.2576   33.9338    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1  3  1  0  0  0  0
+  1  4  2  0  0  0  0
+  2  5  2  0  0  0  0
+  3  6  1  0  0  0  0
+  4  7  1  0  0  0  0
+  5  8  1  0  0  0  0
+  5  9  1  0  0  0  0
+  6 10  2  0  0  0  0
+  6 11  1  0  0  0  0
+  7  8  2  0  0  0  0
+  9 12  2  0  0  0  0
+M  END
+	</script>
+
+  <script  id="compareMol2" type="chemical/x-mdl-molfile">
+
+  Kekule  02071512292D
+
+ 12 12  0  0  0  0  0  0  0  0999 V2000
+    8.3706   31.4804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    7.6778   31.0804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.0634   31.0804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    8.3706   32.2804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    6.9850   31.4804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.7562   31.4804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    7.6778   32.6804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    6.9850   32.2804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    6.2921   31.0804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    9.7562   32.2804    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+   10.4491   31.0804    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    5.5993   31.4804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0  0  0  0
+  1  3  1  0  0  0  0
+  1  4  1  0  0  0  0
+  2  5  1  0  0  0  0
+  3  6  1  0  0  0  0
+  4  7  2  0  0  0  0
+  5  8  2  0  0  0  0
+  5  9  1  0  0  0  0
+  6 10  2  0  0  0  0
+  6 11  1  0  0  0  0
+  7  8  1  0  0  0  0
+  9 12  2  0  0  0  0
+M  END
+	</script>
+
+  <script>
+    function $(id)
+    {
+      return document.getElementById(id);
+    }
+
+    var chemEditors = [];
+    var chemComposers = [];
+    function init()
+    {
+      for (var i = 0; i < 2; ++i)
+      {
+        var id = 'chemComposer' + i;
+        var composer = Kekule.Widget.getWidgetById(id);
+        chemComposers[i] = composer;
+      }
+
+      // adjust size
+      adjustSize();
+
+      window.onresize = adjustSize;
+      Kekule.X.Event.addListener(document.getElementById('btnCompare'), 'click', function(e)
+          {
+            dupcheck();
+          }
+      );
+    }
+
+    function calcDupRate(mol1, mol2)
+    {
+      var isSame = mol1 && mol2 && mol1.equalStructure(mol2);
+      if (!isSame)
+        return 0;
+
+      var compareObjs1 = _getMolChildObjs(mol1);
+      var compareObjs2 = _getMolChildObjs(mol2);
+      var centerCoords1 = [], centerCoords2 = [];
+      //var coordModes = [2, 3];
+      var coordModes = [2, 3];
+      for (var i = 0, l = coordModes.length; i < l; ++i)
+      {
+        centerCoords1[coordModes[i]] = _getMolCenterCoord(mol1, coordModes[i]);
+        centerCoords2[coordModes[i]] = _getMolCenterCoord(mol2, coordModes[i]);
+      }
+
+      mol1.canonicalize();
+      mol2.canonicalize();
+
+      var dupRates = [];
+      //for (var i = 0, l = Math.max(mol1.getChildCount(), mol2.getChildCount()); i < l; ++i)
+      for (var i = 0, l = Math.max(compareObjs1.length, compareObjs2.length); i < l; ++i)
+      {
+        //var obj1 = mol1.getChildAt(i);
+        //var obj2 = mol2.getChildAt(i);
+        var obj1 = compareObjs1[i];
+        var obj2 = compareObjs2[i];
+
+        /*
+        if (obj1 instanceof Kekule.ChemStructureNode)
+        {
+          console.log('check ', obj1.getSymbol(), obj2.getSymbol());
+        }
+        */
+        if (!obj1 || !obj2)
+        {
+          dupRates.push(0);
+          //break;
+          continue;
+        }
+        else
+        {
+          if (!obj1.equalStructure(obj2))  // node or bond not in same order, no duplication
+          {
+            dupRates.push(0);
+            //break;
+            continue;
+          }
+          else
+          {
+            if (obj1 instanceof Kekule.ChemStructureNode)
+            {
+              //console.log(obj1.canonicalizationIndex, obj2.canonicalizationIndex, obj1.getSymbol(), obj2.getSymbol());
+              if (obj1.canonicalizationIndex !== obj2.canonicalizationIndex)
+              {
+                dupRates.push(0);
+                //break;
+                continue;
+              }
+              var coordDupRate = 0;
+              var coordDupRateCalcCount = 0;
+              for (var j = 0, jj = coordModes.length; j < jj; ++j)
+              {
+                var cmode = coordModes[j];
+                var rate = _calcCoordDupRate(obj1, obj2, centerCoords1[cmode], centerCoords2[cmode], cmode);
+                //console.log(i, cmode, rate);
+                if (!isNaN(rate))  // not NaN
+                {
+                  coordDupRate += rate;
+                  ++coordDupRateCalcCount;
+                }
+              }
+              if (coordDupRateCalcCount > 0)
+                dupRates.push(coordDupRate / coordDupRateCalcCount);
+            }
+          }
+        }
+      }
+      if (!dupRates.length)
+        return 0;
+      else
+      {
+        var result = 0;
+        for (var i = 0, l = dupRates.length; i < l; ++i)
+        {
+          result += dupRates[i];
+        }
+        return result / dupRates.length;
+      }
+    }
+    function _getMolChildObjs(mol)
+    {
+      var result = [];
+      for (var i = 0, l = mol.getChildCount(); i < l; ++i)
+      {
+        result.push(mol.getChildAt(i));
+      }
+      return result;
+    }
+    function _getMolCenterCoord(mol, coordMode)
+    {
+      var coordSum = {};
+      var nodeCount = mol.getNodeCount();
+      var count = 0;
+      for (var i = 0; i < nodeCount; ++i)
+      {
+        var coord = mol.getNodeAt(i).getCoordOfMode(coordMode);
+        if (coord)
+        {
+          coordSum = Kekule.CoordUtils.add(coord, coordSum);
+          ++count;
+        }
+      }
+      return Kekule.CoordUtils.divide(coordSum, count);
+    }
+    function _calcCoordDupRate(node1, node2, coordCenter1, coordCenter2, coordMode)
+    {
+      var coord1 = node1.getCoordOfMode(coordMode) || {};
+      var coord2 = node2.getCoordOfMode(coordMode) || {};
+      if (coordCenter1 && coordCenter2)
+      {
+        coord1 = Kekule.CoordUtils.substract(coord1, coordCenter1);
+        coord2 = Kekule.CoordUtils.substract(coord2, coordCenter2);
+      }
+      /*
+      var fields = (coordMode === Kekule.CoordMode.COORD3D)? ['x', 'y', 'z']: ['x', 'y'];
+      for (var i = 0, l = fields.length; i < l; ++i)
+      {
+
+      }
+      */
+      var distanceDelta = Kekule.CoordUtils.getDistance(coord1, coord2);
+      var length = (Kekule.CoordUtils.getDistance(coord1, null) + Kekule.CoordUtils.getDistance(coord2, null)) / 2;
+      var diffRate = distanceDelta / length;
+
+      //console.log('_calcCoordDupRate', diffRate);
+
+      var result = (diffRate < 1e-6)? 1:
+          (diffRate > 0.999999)? 0: (1 - diffRate);
+      result = Math.max(result, 0);
+      //console.log(coord1, coord2, coordMode, length, diffRate);
+      //var result = Math.max(1 - diffRate, 0);
+      return result;
+    }
+
+
+    function dupcheck()
+    {
+      var ops = {};
+
+      var mol1 = chemComposers[0].exportObj(Kekule.StructureFragment);
+      var mol2 = chemComposers[1].exportObj(Kekule.StructureFragment);
+      //var isSame = mol1 && mol2 && mol1.isSameStructureWith(mol2);
+      //var options = {'lonePair': true, 'strictStereoBondGeometry': true};
+
+      var dupRate = calcDupRate(mol1, mol2);
+
+      var sResult = 'DupRate: ' + dupRate;
+      //var sClass = isSame? 'Same': 'Diff';
+      var elem = document.getElementById('labelResult');
+      //elem.className = sClass;
+      elem.innerHTML = sResult;
+    }
+    function adjustSize()
+    {
+      var minWidth = 650;
+      var minHeight = 300;
+      var dim = Kekule.HtmlElementUtils.getViewportDimension(document);
+      var w = (dim.width - 50) / chemComposers.length;
+      var h = dim.height - 100;
+      if (w < minWidth)
+      {
+        w = minWidth;
+        h = h / 2;
+      }
+      if (h < minHeight)
+        h = minHeight;
+      /*
+			var w = Math.max((dim.width - 50) / chemComposers.length, minWidth);
+			var h = Math.max(dim.height - 100, minHeight);
+			*/
+      for (var i = 0, l = chemComposers.length; i < l; ++i)
+      {
+        chemComposers[i].setWidth(w + 'px').setHeight(h + 'px');
+      }
+    }
+
+    Kekule.X.domReady(init);
+  </script>
+  <style>
+    .Editor { width: 650px; height: 400px; }
+    .Same { color: green; }
+    .Diff { color: red; }
+  </style>
+</head>
+<body>
+<p>Draw or load molecules in both editors and click on "compare" button to check whether molecules are same.</p>
+<div>
+  <button id="btnOptions" data-widget="Kekule.Widget.DropDownButton" data-drop-down-widget="#compareOptionPanel">Options</button>
+  <button id="btnCompare" data-widget="Kekule.Widget.Button">Check Dup</button>
+  <span id="labelResult"></span>
+</div>
+<div id="compareOptionPanel" data-widget="Kekule.Widget.Panel">
+  <label for="listCompareLevel">Comparation Level: </label>
+  <select id="listCompareLevel">
+    <option value="Skeletal">Skeletal</option>
+    <option value="Constitution">Constitution</option>
+    <option value="Configuration" selected="selected">Configuration</option>
+  </select><br />
+  <input type="checkbox" id="checkboxIgnoreMass" checked="true" /><label for="checkboxIgnoreMass">Ignore mass number</label><br />
+  <input type="checkbox" id="checkboxStrictBondGeometry" /><label for="checkboxStrictBondGeometry">Strict bond geometry</label><br />
+  <input type="checkbox" id="checkboxStrictAtomGeometry" /><label for="checkboxStrictAtomGeometry">Strict atom geometry</label><br />
+</div>
+<div class="Editor" id="chemComposer0" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly,singleObj" data-chem-obj="url(#compareMol1)"></div>
+<div class="Editor" id="chemComposer1" data-widget="Kekule.Editor.Composer" data-predefined-setting="molOnly,singleObj" data-chem-obj="url(#compareMol2)"></div>
+</body>
+</html>
