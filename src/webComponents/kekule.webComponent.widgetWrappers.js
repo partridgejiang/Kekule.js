@@ -30,17 +30,20 @@ var wrapWidgetConfigs = [
 
 function wrapWidgets()
 {
-	var compNamespace = Kekule.WebComponent;
-	for (var i = 0, l = wrapWidgetConfigs.length; i < l; ++i)
+	if (Kekule.WebComponent && Kekule.WebComponent.Utils)
 	{
-		var config = wrapWidgetConfigs[i];
-		var widgetClass = Object.getCascadeFieldValue(config.widgetClassName, Kekule.$jsRoot);
-		var htmlTagName = config.htmlTagName;
-		if (widgetClass && htmlTagName)  // do wrap
+		var compNamespace = Kekule.WebComponent;
+		for (var i = 0, l = wrapWidgetConfigs.length; i < l; ++i)
 		{
-			var widgetShortName = Kekule.ClassUtils.getLastClassName(config.widgetClassName);
-			var wrapper = Kekule.WebComponent.Utils.wrapWidget(widgetClass, htmlTagName);
-			compNamespace[widgetShortName] = wrapper;  // add to namespace
+			var config = wrapWidgetConfigs[i];
+			var widgetClass = Object.getCascadeFieldValue(config.widgetClassName, Kekule.$jsRoot);
+			var htmlTagName = config.htmlTagName;
+			if (widgetClass && htmlTagName)  // do wrap
+			{
+				var widgetShortName = Kekule.ClassUtils.getLastClassName(config.widgetClassName);
+				var wrapper = Kekule.WebComponent.Utils.wrapWidget(widgetClass, htmlTagName);
+				compNamespace[widgetShortName] = wrapper;  // add to namespace
+			}
 		}
 	}
 }

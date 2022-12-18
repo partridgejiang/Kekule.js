@@ -16,6 +16,9 @@
 (function(){
 "use strict";
 
+if (typeof(HTMLElement) === 'undefined')    // avoid exceptions in Node environment
+	return;
+
 /**
  * Base namespace of web component functions and classes.
  * @namespace
@@ -35,6 +38,7 @@ Kekule.globalOptions.add('webComponent.widgetWrapper', {
 		'invokeEvent',
 	]
 });
+
 
 
 /** @ignore */
