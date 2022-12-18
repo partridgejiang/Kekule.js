@@ -659,10 +659,10 @@ function analysisEntranceScriptSrc(doc)
 	var paramLanguage = /^language\=(.+)$/;
 
 	var matchResult;
+
 	if (!loadedByImportOrRequire)
 	{
-		// try get current script info by document.currentScript
-		if (doc && doc.currentScript && doc.currentScript.src)
+		if (doc && doc.currentScript && doc.currentScript.src)  // try get current script info by document.currentScript
 		{
 			var scriptSrc = decodeURIComponent(doc.currentScript.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
 			if (scriptSrc)
@@ -791,7 +791,7 @@ function analysisEntranceScriptSrc(doc)
 		return result;
 	}
 
-	//return null;
+	// no info found, returns the default settings
 	return {
 		'src': '',
 		'path': '',
@@ -850,52 +850,69 @@ function init()
 {
 	var scriptInfo, files, path;
 
-	// some times there are both browser and node environment (e.g. Electron)
-	if (isInBrowser)   // try get info from <script> tag first
+	if (typeof(_kekule_environment_) === 'object')  // if manually set the load info, use it directly
 	{
-		scriptInfo = analysisEntranceScriptSrc(document);
-		var findScriptTag = scriptInfo.src && scriptInfo.path;
-
-		if (findScriptTag)  // explicitly use script tag, load files in traditional way
+		scriptInfo = _kekule_environment_.scriptInfo;
+		if (!scriptInfo && _kekule_environment_.scriptPath)
 		{
-			isNode = false;
+			scriptInfo = {
+				'src': _kekule_environment_.scriptSrc,
+				'path': _kekule_environment_.scriptPath,
+				'modules': _kekule_environment_.scriptModules,
+				'useMinFile': _kekule_environment_.scriptUseMinFile,
+			};
 		}
-		if (!findScriptTag && hasNodeEnv)  // dual env
-		{
-			scriptInfo.src = this.__filename || '';
-			scriptInfo.path = (__dirname || '.') + '/';
-			isNode = true;
-		}
+		console.log(scriptInfo);
 	}
-	else if (isNode)
+	if (!scriptInfo)  // auto determination
 	{
-		scriptInfo = {
-			'src': this.__filename || '',
-			'path': __dirname + '/',
-			'modules': isInBrowser? usualModules: nodeModules,  // if there is browser env (e.g. electron, load normal modules including widget)
-			//'useMinFile': false  // for debug
-			'useMinFile': true,
-			'nodeModule': typeof(module !== 'undefined')? module: this.module,  // record the node module, for using the module methods (e.g. require) later
-			'nodeRequire': typeof(require !== 'undefined')? require: this.require,
-		};
-	}
+		// sometimes there are both browser and node environment (e.g. Electron)
+		if (isInBrowser)   // try get info from <script> tag first
+		{
+			scriptInfo = analysisEntranceScriptSrc(document);
+			var findScriptTag = scriptInfo.src && scriptInfo.path;
 
-	if (isNode)
-	{
-		// if min files not found, use dev files instead
-		var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
-		var minFileExisted = false;
-		try
-		{
-			minFileExisted = fs.existsSync(testFileName);
+			if (findScriptTag)  // explicitly use script tag, load files in traditional way
+			{
+				isNode = false;
+			}
+			if (!findScriptTag && hasNodeEnv)  // dual env
+			{
+				scriptInfo.src = this.__filename || '';
+				scriptInfo.path = (__dirname || '.') + '/';
+				isNode = true;
+			}
 		}
-		catch(e)
+		else if (isNode)
 		{
-			//scriptInfo.path += 'src/'
-			minFileExisted = false;
+			scriptInfo = {
+				'src': this.__filename || '',
+				'path': __dirname + '/',
+				'modules': isInBrowser? usualModules: nodeModules,  // if there is browser env (e.g. electron, load normal modules including widget)
+				//'useMinFile': false  // for debug
+				'useMinFile': true,
+				'nodeModule': typeof(module !== 'undefined')? module: this.module,  // record the node module, for using the module methods (e.g. require) later
+				'nodeRequire': typeof(require !== 'undefined')? require: this.require,
+			};
 		}
-		if (!minFileExisted)
-			scriptInfo.useMinFile = false;
+
+		if (isNode)
+		{
+			// if min files not found, use dev files instead
+			var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
+			var minFileExisted = false;
+			try
+			{
+				minFileExisted = fs.existsSync(testFileName);
+			}
+			catch(e)
+			{
+				//scriptInfo.path += 'src/'
+				minFileExisted = false;
+			}
+			if (!minFileExisted)
+				scriptInfo.useMinFile = false;
+		}
 	}
 
 	scriptInfo.singleMinBundle = $root && $root.__$kekule_single_min_bundle__;  // a special flag bundled into kekule.min.js
