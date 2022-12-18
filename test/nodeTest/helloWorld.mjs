@@ -32,7 +32,7 @@ console.log('MOL 2000: \n', mol2k);
 //let hasNodeEnv = (typeof process === 'object') && (typeof process.versions === 'object') && (typeof process.versions.node !== 'undefined');
 //console.log('hasNodeEnv', hasNodeEnv);
 
-console.log(Kekule.OpenBabel);
+//console.log(Kekule.OpenBabel);
 
 var r = Kekule.modules(['openbabel'], err => {
     if (err)

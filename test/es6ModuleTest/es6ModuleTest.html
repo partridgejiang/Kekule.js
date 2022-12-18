@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>ES6 Module Test</title>
+  <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
+	<script>
+		_kekule_environment_ = {
+			/*
+			'scriptInfo': {
+				'path': '../../dist/',
+				'useMinFile': true
+			},
+			*/
+			'scriptPath': '../../src/',
+			'scriptUseMinFile': false
+		}
+	</script>
+  <script type="module">
+		import "../../src/kekule.js";
+		//console.log(Kekule.Molecule);
+	</script>
+</head>
+<body>
+	<h1>ES6 Module Test</h1>
+	<div id="composer" data-widget="Kekule.Editor.Composer"
+			 data-chem-obj="url(#initialMol)" data-resizable="true"></div>
+</body>
+</html>
