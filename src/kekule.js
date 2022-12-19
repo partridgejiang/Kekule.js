@@ -849,21 +849,24 @@ function loadModuleScriptFiles(modules, useMinFile, rootPath, kekuleScriptInfo, 
 function init()
 {
 	var scriptInfo, files, path;
+	var kekule_env_ops = (typeof(_kekule_environment_) === 'object')? _kekule_environment_:
+		(typeof($root._kekule_environment_) === 'object')? $root._kekule_environment_:
+			null;
 
-	if (typeof(_kekule_environment_) === 'object')  // if manually set the load info, use it directly
+	if (kekule_env_ops)  // if manually set the load info, use it directly
 	{
-		scriptInfo = _kekule_environment_.scriptInfo;
-		if (!scriptInfo && _kekule_environment_.scriptPath)
+		scriptInfo = kekule_env_ops.scriptInfo;
+		if (!scriptInfo && kekule_env_ops.scriptPath)
 		{
 			scriptInfo = {
-				'src': _kekule_environment_.scriptSrc,
-				'path': _kekule_environment_.scriptPath,
-				'modules': _kekule_environment_.scriptModules,
-				'useMinFile': _kekule_environment_.scriptUseMinFile,
+				'src': kekule_env_ops.scriptSrc,
+				'path': kekule_env_ops.scriptPath,
+				'modules': kekule_env_ops.scriptModules,
+				'useMinFile': kekule_env_ops.scriptUseMinFile,
 			};
 		}
-		console.log(scriptInfo);
 	}
+
 	if (!scriptInfo)  // auto determination
 	{
 		// sometimes there are both browser and node environment (e.g. Electron)
@@ -879,7 +882,7 @@ function init()
 			if (!findScriptTag && hasNodeEnv)  // dual env
 			{
 				scriptInfo.src = this.__filename || '';
-				scriptInfo.path = (__dirname || '.') + '/';
+				scriptInfo.path = (((typeof(__dirname) !== 'undefined')?__dirname: '') || '.') + '/';
 				isNode = true;
 			}
 		}
@@ -887,12 +890,12 @@ function init()
 		{
 			scriptInfo = {
 				'src': this.__filename || '',
-				'path': __dirname + '/',
+				'path': ((typeof(__dirname) !== 'undefined')?__dirname: '') + '/',
 				'modules': isInBrowser? usualModules: nodeModules,  // if there is browser env (e.g. electron, load normal modules including widget)
 				//'useMinFile': false  // for debug
 				'useMinFile': true,
-				'nodeModule': typeof(module !== 'undefined')? module: this.module,  // record the node module, for using the module methods (e.g. require) later
-				'nodeRequire': typeof(require !== 'undefined')? require: this.require,
+				'nodeModule': (typeof(module) !== 'undefined')? module: this.module,  // record the node module, for using the module methods (e.g. require) later
+				'nodeRequire': (typeof(require) !== 'undefined')? require: this.require,
 			};
 		}
 
@@ -915,6 +918,12 @@ function init()
 		}
 	}
 
+	// if some fields of scriptInfo is still missed
+	if (!scriptInfo.modules)
+		scriptInfo.modules = isInBrowser? usualModules: nodeModules;
+	if (scriptInfo.useMinFile === undefined)
+		scriptInfo.useMinFile = true;
+
 	scriptInfo.singleMinBundle = $root && $root.__$kekule_single_min_bundle__;  // a special flag bundled into kekule.min.js
 
 	scriptInfo.explicitModules = scriptInfo.modules;
@@ -933,7 +942,8 @@ function init()
 		'loadModuleScriptFiles': loadModuleScriptFiles
 	};
 
-	if (!scriptInfo.singleMinBundle || typeof(scriptInfo.singleMinBundle) === 'undefined')   // when loading with a single bundle, no need to load modules
+	// when loading with a single bundle, or with a manual load flag (e.g., in ES6 module), no need to load modules
+	if ((!scriptInfo.singleMinBundle || typeof(scriptInfo.singleMinBundle) === 'undefined') && !kekule_env_ops.manualLoadScriptFiles)
 	{
 		loadModuleScriptFiles(modules, scriptInfo.useMinFile, scriptInfo.path, scriptInfo, function(error){
 			if (/*isNode*/typeof(exports) !== 'undefined')  // export Kekule namespace

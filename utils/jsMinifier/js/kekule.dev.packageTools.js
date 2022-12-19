@@ -40,6 +40,8 @@ Kekule.Dev.PackageUtils = {
 	/** @private */
 	SINGLE_BUNDLE_FLAG_FILES: ['kekule.singleBundleFlag.js'],
 	/** @private */
+	ES6_MODULE_ENV_SETTER_FILES: ['kekule.esModuleEnvSetter.js'],
+	/** @private */
 	RELEASE_WORKER_DIR: 'workers',
 
 	getModuleStructures: function()
@@ -180,7 +182,8 @@ Kekule.Dev.PackageUtils = {
 		var allStandaloneJsFilePairInfo = {
 			common: [
 				['kekule.js', 'kekule.js'],
-				['kekule.loaded.js', 'kekule.loaded.js']
+				['kekule.loaded.js', 'kekule.loaded.js'],
+				['kekule.esModuleEnvSetter.js', 'kekule.esModuleEnvSetter.js']
 			],
 			openbabel: [
 				['_extras/OpenBabel/openbabel.js.dev', 'extra/openbabel.js'],
