@@ -3,9 +3,16 @@
  */
 
 //var Kekule = require('../../src/kekule.js').Kekule;
-import {Kekule} from '../../utils/jsMinifier/dist/kekule.min.js';
+//import {Kekule} from '../../utils/jsMinifier/dist/kekule.min.js';
 //import {Kekule} from '../../utils/jsMinifier/dist/kekule.js';
 //var Kekule = require('../../utils/jsMinifier/dist/kekule.min.js').Kekule;
+//import K from '../../dist/kekule.esm.mjs';
+import K from '../../src/kekule.esm.dev.mjs';
+let Kekule = K.Kekule;
+
+//console.log(_kekule_environment_);
+
+console.log(Kekule.scriptSrcInfo);
 
 // Create a simple CO2 molecule
 var mol = new Kekule.Molecule();
@@ -34,6 +41,8 @@ console.log('MOL 2000: \n', mol2k);
 
 //console.log(Kekule.OpenBabel);
 
+
+//if (false)
 var r = Kekule.modules(['openbabel'], err => {
     if (err)
         console.error(err);
@@ -43,4 +52,3 @@ var r = Kekule.modules(['openbabel'], err => {
         setTimeout(() => console.log('after', Kekule.OpenBabel), 1500);
     }
 });
-

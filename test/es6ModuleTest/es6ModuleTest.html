@@ -4,6 +4,7 @@
 	<meta charset="UTF-8">
 	<title>ES6 Module Test</title>
   <link rel="stylesheet" type="text/css" href="../../src/widgets/themes/default/kekule.css" />
+	<!--
 	<script>
 		_kekule_environment_ = {
 			/*
@@ -18,7 +19,17 @@
 	</script>
   <script type="module">
 		import "../../src/kekule.js";
+		console.log('import type', typeof(import.meta));
+		console.log(import.meta);
 		//console.log(Kekule.Molecule);
+	</script>
+	-->
+	<script type="module">
+		//import K from "../../src/kekule.esm.dev.mjs";
+		import K from "../../dist/kekule.esm.mjs";
+		Kekule = K.Kekule;
+		console.log(K);
+		//import "../../dist/kekule.esm.mjs";
 	</script>
 </head>
 <body>
