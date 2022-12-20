@@ -3,6 +3,16 @@
   "version": "0.9.9",
   "description": "Open source JavaScript toolkit for chemoinformatics",
   "main": "dist/kekule.js",
+  "exports": {
+    ".": {
+      "import": "./dist/kekule.esm.mjs",
+      "require": "./dist/kekule.cm.js"
+    },
+    "./dev": {
+      "import": "./src/kekule.esm.dev.mjs",
+      "require": "./src/kekule.cm.dev.js"
+    }
+  },
   "author": {
     "name": "Chen Jiang",
     "email": "partridge@cpu.edu.cn"

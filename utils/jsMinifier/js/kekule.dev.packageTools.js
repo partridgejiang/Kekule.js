@@ -42,6 +42,18 @@ Kekule.Dev.PackageUtils = {
 	/** @private */
 	ES6_MODULE_ENV_SETTER_FILES: ['kekule.esModuleEnvSetter.js'],
 	/** @private */
+	MODULE_ENV_INIT_SRC_FILES: ['kekule.moduleEnvInits.js'],
+	/** @private */
+	COMMON_JS_MODULE_ENV_INIT_DEST_FILE_CORE_NAME: 'kekule.moduleEnvInits.cm',
+	/** @private */
+	ES_MODULE_ENV_INIT_DEST_FILE_CORE_NAME: 'kekule.moduleEnvInits.esm',
+	/** @private */
+	COMMON_JS_ENTRANCE_FILE_CORE_NAME: 'kekule.cm',
+	/** @private */
+	ES_MODULE_ENTRANCE_FILE_CORE_NAME: 'kekule.esm',
+	/** @private */
+	MODULE_EXPORT_VARS: ['Kekule', 'Class', 'ClassEx', 'ObjectEx', 'DataType'],
+	/** @private */
 	RELEASE_WORKER_DIR: 'workers',
 
 	getModuleStructures: function()
@@ -135,6 +147,7 @@ Kekule.Dev.PackageUtils = {
 		var targetMinFileNames = [];
 		var compressFileMap = {};
 		var allSrcFiles = [], singleBundleSrcFiles = [];
+		var handledModuleNames = [];
 		for (var i = 0, l = moduleInfos.length; i < l; ++i)
 		{
 			var m = moduleInfos[i];
@@ -165,6 +178,7 @@ Kekule.Dev.PackageUtils = {
 				{
 					singleBundleSrcFiles = singleBundleSrcFiles.concat(srcFiles);
 				}
+				handledModuleNames.push(m.name);
 			}
 		}
 		// add a total compression file
@@ -173,7 +187,7 @@ Kekule.Dev.PackageUtils = {
 		compressFileMap[targetFileName] = singleBundleSrcFiles.concat(PU.STANDALONE_ATTACH_FILES);
 		compressFileMap[targetFileName].unshift('kekule.js');  // put the entrance js at the beginning of single kekule.min.js, for analysis script params
 		compressFileMap[targetFileName] = PU.SINGLE_BUNDLE_FLAG_FILES.concat(compressFileMap[targetFileName]);  // put the single bundle flag file at beginning
-		return {targetStandaloneFileName: targetFileName, targetMinFileNames: targetMinFileNames, compressFileMap: compressFileMap};
+		return {targetStandaloneFileName: targetFileName, targetMinFileNames: targetMinFileNames, compressFileMap: compressFileMap, handledModules: handledModuleNames};
 	},
 
 	getStandaloneJsFileDetails: function(targetModuleNames)
@@ -183,7 +197,7 @@ Kekule.Dev.PackageUtils = {
 			common: [
 				['kekule.js', 'kekule.js'],
 				['kekule.loaded.js', 'kekule.loaded.js'],
-				['kekule.esModuleEnvSetter.js', 'kekule.esModuleEnvSetter.js']
+				//['kekule.esModuleEnvSetter.js', 'kekule.esModuleEnvSetter.js']
 			],
 			openbabel: [
 				['_extras/OpenBabel/openbabel.js.dev', 'extra/openbabel.js'],

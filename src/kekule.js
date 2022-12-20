@@ -1,13 +1,15 @@
-(function($root){
+(function($init_root){
 
-if (!$root)
+var $root;
 {
-	if (typeof(self) === 'object')
-		$root = self;
-	else if (typeof(window) === 'object' && window && window.document)
+	if (typeof(window) === 'object' && window && window.document)
 		$root = window;
 	else if (typeof(global) === 'object')  // node env
 		$root = global;
+	else if (typeof(self) === 'object')
+		$root = self;
+	else
+		$root = $init_root || {};
 }
 
 // IE8 does not support array.indexOf
@@ -90,7 +92,8 @@ function nodeAppend(url)
 	{
 		try
 		{
-			var data = fs.readFileSync(url, 'utf8');
+			var fileName = (url.indexOf('file:///') === 0)? url.substr(8): url; // remove possible file:/// protocal mark first
+			var data = fs.readFileSync(fileName, 'utf8');
 			vm.runInThisContext(data, {'filename': url});
 			//vm.runInNewContext(data, __nodeContext, {'filename': url});
 			//eval(data);
@@ -814,30 +817,39 @@ function loadModuleScriptFiles(modules, useMinFile, rootPath, kekuleScriptInfo, 
 			essentialModules.push(modules[i]);
 	}
 
-	var files = getEssentialFiles(essentialModules, useMinFile);
-	var essentialFiles = [];
-	var path = rootPath;
-
-	var loadedScriptUrls = kekuleScriptInfo.fileUrls || [];
-	var essentialUrls = [];
-	for (var i = 0, l = files.length; i < l; ++i)
+	if (!essentialModules.length)  // no need to load additional modules
 	{
-		var url = path + files[i];
-		if (loadedScriptUrls.indexOf(url) < 0)
-		{
-			essentialUrls.push(url);
-			essentialFiles.push(files[i]);
-		}
+		// do nothing here
+		callback();
 	}
-	essentialUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading
+	else
+	{
+		var files = getEssentialFiles(essentialModules, useMinFile);
+		var essentialFiles = [];
+		var path = rootPath;
 
-	loadChildScriptFiles(essentialUrls, null, function(error){
-		kekuleScriptInfo.modules = kekuleScriptInfo.modules.concat(essentialModules);
-		kekuleScriptInfo.files = kekuleScriptInfo.files.concat(essentialFiles);
-		kekuleScriptInfo.fileUrls = kekuleScriptInfo.fileUrls.concat(essentialUrls);
-		if (callback)
-			callback(error);
-	});
+		var loadedScriptUrls = kekuleScriptInfo.fileUrls || [];
+		var essentialUrls = [];
+		for (var i = 0, l = files.length; i < l; ++i)
+		{
+			var url = path + files[i];
+			if (loadedScriptUrls.indexOf(url) < 0)
+			{
+				essentialUrls.push(url);
+				essentialFiles.push(files[i]);
+			}
+		}
+		essentialUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading
+
+		loadChildScriptFiles(essentialUrls, null, function (error)
+		{
+			kekuleScriptInfo.modules = kekuleScriptInfo.modules.concat(essentialModules);
+			kekuleScriptInfo.files = kekuleScriptInfo.files.concat(essentialFiles);
+			kekuleScriptInfo.fileUrls = kekuleScriptInfo.fileUrls.concat(essentialUrls);
+			if (callback)
+				callback(error);
+		});
+	}
 
 	return {
 		'modules': essentialModules,
@@ -942,10 +954,10 @@ function init()
 		'loadModuleScriptFiles': loadModuleScriptFiles
 	};
 
-	// when loading with a single bundle, or with a manual load flag (e.g., in ES6 module), no need to load modules
-	if ((!scriptInfo.singleMinBundle || typeof(scriptInfo.singleMinBundle) === 'undefined') && !kekule_env_ops.manualLoadScriptFiles)
+		// when loading with a single bundle, or with a manual load flag (e.g., in ES6 module), no need to load modules
+	if ((!scriptInfo.singleMinBundle || typeof(scriptInfo.singleMinBundle) === 'undefined') && (!kekule_env_ops || !kekule_env_ops.manualLoadScriptFiles))
 	{
-		loadModuleScriptFiles(modules, scriptInfo.useMinFile, scriptInfo.path, scriptInfo, function(error){
+		loadModuleScriptFiles(modules, scriptInfo.useMinFile, scriptInfo.path || '', scriptInfo, function(error){
 			if (/*isNode*/typeof(exports) !== 'undefined')  // export Kekule namespace
 			{
 				// export Kekule in module
@@ -959,12 +971,12 @@ function init()
 				this.ClassEx = exports.ClassEx;
 				this.ObjectEx = exports.ObjectEx;
 				this.DataType = exports.DataType;
+
 				// then store script info of Kekule
 				this.Kekule.scriptSrcInfo = scriptInfo;
 			}
 		});
 	}
-	//console.log('ROOT', $root);
 
 	/*
 	files = getEssentialFiles(scriptInfo.modules, scriptInfo.useMinFile);
@@ -1010,7 +1022,8 @@ function init()
 
 if (isWebpack)
 {
-	module.exports = require('./kekule.webpack.prod.js');
+	// now the import clause are all moved out to kekule.esm.js or kekule.cm.js, no need to exports here
+	//module.exports = require('./kekule.webpack.prod.js');
 }
 else
 	init();

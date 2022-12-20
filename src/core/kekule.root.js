@@ -9,7 +9,7 @@
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.9.9.22090700',
+	VERSION: '0.9.9.22122000',
 	/**
 	 * A flag that indicate whether all essential Kekule modules are loaded into document.
 	 * @ignore
@@ -114,12 +114,12 @@ Kekule._registerAfterLoadProc = Kekule._ready;  // for backward
  */
 Kekule.$jsRoot = this;
 
-if (typeof(self) === 'object')
-	Kekule.$jsRoot = self;
-else if (typeof(window) === 'object' && window && window.document)
+if (typeof(window) === 'object' && window && window.document)
 	Kekule.$jsRoot = window;
 else if (typeof(global) === 'object')  // node env
 	Kekule.$jsRoot = global;
+else if (typeof(self) === 'object')
+	Kekule.$jsRoot = self;
 
 Kekule.$jsRoot.Kekule = Kekule;
 
@@ -205,7 +205,10 @@ Kekule.environment = {
 	variables: {},
 	getEnvVar: function(key)
 	{
-		return Kekule.environment.variables[key] || (Kekule.$jsRoot['_kekule_environment_'] && Kekule.$jsRoot['_kekule_environment_'][key]);
+		var result = Kekule.environment.variables[key];
+		if (result === undefined)
+			result = (Kekule.$jsRoot['_kekule_environment_'] && Kekule.$jsRoot['_kekule_environment_'][key]);
+		return result;
 	},
 	setEnvVar: function(key, value)
 	{
@@ -276,7 +279,10 @@ Kekule.getScriptSrc = function()
 };
 Kekule.isUsingMinJs = function()
 {
-	return Kekule.environment.getEnvVar('kekule.useMinJs') || Kekule.scriptSrcInfo.useMinFile;
+	var result = Kekule.environment.getEnvVar('kekule.useMinJs');
+	if (result === undefined)
+		result = Kekule.scriptSrcInfo.useMinFile;
+	return result;
 };
 Kekule.getLanguage = function()
 {
