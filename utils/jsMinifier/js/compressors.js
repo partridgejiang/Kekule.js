@@ -37,10 +37,15 @@ var Compressor = class {
 
 	_doMinify(minifierName, minifierOptions, srcFileNames, destPath, minFileName, callbackFunc)
 	{
+		var outputFileName = path.resolve(destPath, minFileName);
+		var outputPath = path.dirname(outputFileName);
+		if (!fs.existsSync(outputPath)){
+			fs.mkdirSync(outputPath);
+		}
 		minify.minify({
 			compressor: minifierName,
 			input: srcFileNames,
-			output: path.resolve(destPath, minFileName),
+			output: outputFileName,
 			sync: true,
 			options: minifierOptions || {},
 			callback: callbackFunc

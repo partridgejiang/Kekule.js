@@ -9,7 +9,7 @@
 var Kekule = {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.9.9.22122000',
+	VERSION: '0.9.9.22122100',
 	/**
 	 * A flag that indicate whether all essential Kekule modules are loaded into document.
 	 * @ignore
@@ -277,6 +277,10 @@ Kekule.getScriptSrc = function()
 {
 	return Kekule.environment.getEnvVar('kekule.scriptSrc') || Kekule.scriptSrcInfo.src;
 };
+Kekule.getDividedMinSubPath = function()
+{
+	return Kekule.environment.getEnvVar('kekule.dividedMinSubPath') || Kekule.scriptSrcInfo.dividedMinSubPath;
+}
 Kekule.isUsingMinJs = function()
 {
 	var result = Kekule.environment.getEnvVar('kekule.useMinJs');

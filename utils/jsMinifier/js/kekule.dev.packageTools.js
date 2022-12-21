@@ -148,6 +148,7 @@ Kekule.Dev.PackageUtils = {
 		var compressFileMap = {};
 		var allSrcFiles = [], singleBundleSrcFiles = [];
 		var handledModuleNames = [];
+		var dividedMinSubPath = Kekule.scriptSrcInfo.dividedMinSubPath || '';
 		for (var i = 0, l = moduleInfos.length; i < l; ++i)
 		{
 			var m = moduleInfos[i];
@@ -160,7 +161,7 @@ Kekule.Dev.PackageUtils = {
 			if (inExclude && !inSingleBundle)
 				continue;
 
-			var targetMinFileName = m.minFile || (m.name + '.min.js');
+			var targetMinFileName = dividedMinSubPath + (m.minFile || (m.name + '.min.js'));
 			var srcFiles = m.files;
 			if (m.autoCompress !== false || ignoreAutoCompressFlag)
 			{

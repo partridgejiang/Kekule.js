@@ -628,7 +628,7 @@ function getEssentialModules(modules)
 	return result;
 }
 
-function getEssentialFiles(modules, useMinFile)
+function getEssentialFiles(modules, useMinFile, minFileSubPath)
 {
 	var ms = getEssentialModules(modules);
 	var result = [];
@@ -641,6 +641,8 @@ function getEssentialFiles(modules, useMinFile)
 			if (useMinFile)
 			{
 				var minFileName = m.minFile || (moduleName + '.min.js');
+				if (minFileSubPath)
+					minFileName = minFileSubPath + minFileName;
 				if (result.indexOf(minFileName) < 0)
 					result.push(minFileName);
 			}
@@ -824,7 +826,7 @@ function loadModuleScriptFiles(modules, useMinFile, rootPath, kekuleScriptInfo, 
 	}
 	else
 	{
-		var files = getEssentialFiles(essentialModules, useMinFile);
+		var files = getEssentialFiles(essentialModules, useMinFile, kekuleScriptInfo.dividedMinSubPath);
 		var essentialFiles = [];
 		var path = rootPath;
 
@@ -873,6 +875,7 @@ function init()
 			scriptInfo = {
 				'src': kekule_env_ops.scriptSrc,
 				'path': kekule_env_ops.scriptPath,
+				'dividedMinSubPath': kekule_env_ops.ScriptdividedMinSubPath,
 				'modules': kekule_env_ops.scriptModules,
 				'useMinFile': kekule_env_ops.scriptUseMinFile,
 			};
@@ -931,6 +934,8 @@ function init()
 	}
 
 	// if some fields of scriptInfo is still missed
+	if (!scriptInfo.dividedMinSubPath)
+		scriptInfo.dividedMinSubPath = 'dividedMin/';
 	if (!scriptInfo.modules)
 		scriptInfo.modules = isInBrowser? usualModules: nodeModules;
 	if (scriptInfo.useMinFile === undefined)
