@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Divided K-Module Load Test</title>
+	<script type="module">
+		import K1 from "./importKekule1.js";
+		import K2 from "./importKekule2.js";
+		Kekule = K1.Kekule;
+		console.log(Kekule.VERSION, K1.Kekule === K2.Kekule);
+		//import "../../dist/kekule.esm.mjs";
+	</script>
+</head>
+<body>
+
+</body>
+</html>
