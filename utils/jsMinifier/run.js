@@ -15,12 +15,22 @@ if (argv.singlebundlemodules || argv.s)
 {
 	singleBundleMinModuleNames = (argv.singlebundlemodules || argv.s).split(',');
 }
-var destPath = '../../dist/';  // default path
+
+var destPath;
+var defDestPath = '../../dist/';  // default path
 if (argv.dest || argv.d)
 {
 	destPath = argv.dest || argv.d;
 }
 var minifierName = argv.minifier || null;
+
+var compressOptions = {};
+if (argv.keepsrcdir || !destPath)  // when use a non-default dest path, we keep src dir intact
+{
+	compressOptions.doNotUpdateSrcDir = true;
+}
+if (!destPath)
+	destPath = defDestPath;
 
 // CSS compressor
 const CssCompressor = require('./js/cssCompressors.js').CssCompressor;
@@ -30,7 +40,7 @@ cssCompressor.execute();
 // JS compressor
 const Compressor = require('./js/compressors.js').Compressor;
 var compress = new Compressor(destPath, minifierName);
-compress.execute(moduleNames, excludeModuleNames, singleBundleMinModuleNames);
+compress.execute(moduleNames, excludeModuleNames, singleBundleMinModuleNames, destPath, compressOptions);
 
 
 

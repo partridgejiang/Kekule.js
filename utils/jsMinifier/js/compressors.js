@@ -201,7 +201,7 @@ var Compressor = class {
 		fs.writeFileSync(path.resolve(srcRootPath, destFileName), content)
 		return destFileName;
 	}
-	_generateModuleExportJsFiles(kekuleModuleNames, compressFileDetails, destPath, moduleType)  // moduleType: 'es' or 'commonjs'
+	_generateModuleExportJsFiles(kekuleModuleNames, compressFileDetails, destPath, moduleType, options)  // moduleType: 'es' or 'commonjs'
 	{
 		function generateImportLine(srcFileName, importExpression, moduleType, useImportFunc)
 		{
@@ -260,40 +260,44 @@ var Compressor = class {
 		fs.writeFileSync(path.resolve(destPath, destEntranceFileCoreName + destFileExt), lines.join('\n'));
 
 		// dev pack
-		var srcCssPath = this._normalizePath(path.relative(destPath, path.resolve(srcRootPath, 'widgets/themes/default/kekule.css')));
-		lines = [];
-		//lines.push(sIsWebpackCheck + generateImportLine(srcCssPath, null, moduleType, true));  // TODO: CSS file, currently path is fixed
-		lines.push(generateImportLine(this._normalizePath(path.relative(destPath, path.resolve(srcRootPath, moduleEnvInitDestFileName))), 'exporter', moduleType));  // module env init file
-		var srcFiles = compressFileDetails.compressFileMap[compressFileDetails.targetStandaloneFileName];
-		var ignoredSrcFiles = Kekule.Dev.PackageUtils.SINGLE_BUNDLE_FLAG_FILES.map(s => path.resolve(srcRootPath, s));
-		srcFiles.forEach((srcFileName) => {
-			if (ignoredSrcFiles.indexOf(srcFileName) >= 0)
+		if (!options || !options.doNotUpdateSrcDir)
+		{
+			var srcCssPath = this._normalizePath(path.relative(destPath, path.resolve(srcRootPath, 'widgets/themes/default/kekule.css')));
+			lines = [];
+			//lines.push(sIsWebpackCheck + generateImportLine(srcCssPath, null, moduleType, true));  // TODO: CSS file, currently path is fixed
+			lines.push(generateImportLine(this._normalizePath(path.relative(destPath, path.resolve(srcRootPath, moduleEnvInitDestFileName))), 'exporter', moduleType));  // module env init file
+			var srcFiles = compressFileDetails.compressFileMap[compressFileDetails.targetStandaloneFileName];
+			var ignoredSrcFiles = Kekule.Dev.PackageUtils.SINGLE_BUNDLE_FLAG_FILES.map(s => path.resolve(srcRootPath, s));
+			srcFiles.forEach((srcFileName) =>
 			{
-				//console.log('bypass', srcFileName);
-				return;
-			}
-			else
-			{
-				lines.push(generateImportLine(this._normalizePath(path.relative(destPath, path.resolve(srcRootPath, srcFileName))), null, moduleType));
-				//console.log('wrap into ', srcFileName);
-			}
-		});
-		// mark not using min js files
-		lines.push(sKekuleModuleLine);  // manually set loaded modules
-		lines.push('Kekule.scriptSrcInfo.useMinFile = false;');
-		lines.push('Kekule.environment.setEnvVar(\'kekule.useMinJs\', false);');
-		lines.push(sSetScriptSrcLine.replaceAll('{}', 'kekule.esm.dev.js'));
-		lines.push(moduleExportLine);
-		//lines.push('export { Kekule };');
-		// TODO: NOTE: also put the module env init file at the src directory
-		fs.writeFileSync(path.resolve(srcRootPath, destEntranceFileCoreName + '.dev' + destFileExt), lines.join('\n'));
+				if (ignoredSrcFiles.indexOf(srcFileName) >= 0)
+				{
+					//console.log('bypass', srcFileName);
+					return;
+				}
+				else
+				{
+					lines.push(generateImportLine(this._normalizePath(path.relative(destPath, path.resolve(srcRootPath, srcFileName))), null, moduleType));
+					//console.log('wrap into ', srcFileName);
+				}
+			});
+			// mark not using min js files
+			lines.push(sKekuleModuleLine);  // manually set loaded modules
+			lines.push('Kekule.scriptSrcInfo.useMinFile = false;');
+			lines.push('Kekule.environment.setEnvVar(\'kekule.useMinJs\', false);');
+			lines.push(sSetScriptSrcLine.replaceAll('{}', 'kekule.esm.dev.js'));
+			lines.push(moduleExportLine);
+			//lines.push('export { Kekule };');
+			// TODO: NOTE: also put the module env init file at the src directory
+			fs.writeFileSync(path.resolve(srcRootPath, destEntranceFileCoreName + '.dev' + destFileExt), lines.join('\n'));
+		}
 	}
 
-	_generateModuleWrapperJsFiles(kekuleModuleNames, compressFileDetails, destPath)
+	_generateModuleWrapperJsFiles(kekuleModuleNames, compressFileDetails, destPath, options)
 	{
-		this._generateModuleExportJsFiles(kekuleModuleNames, compressFileDetails, destPath, 'commonjs');
+		this._generateModuleExportJsFiles(kekuleModuleNames, compressFileDetails, destPath, 'commonjs', options);
 		console.log('CommonJS Module wrapper generated.');
-		this._generateModuleExportJsFiles(kekuleModuleNames, compressFileDetails, destPath, 'es');
+		this._generateModuleExportJsFiles(kekuleModuleNames, compressFileDetails, destPath, 'es', options);
 		console.log('ES Module wrapper generated.');
 	}
 
@@ -371,7 +375,7 @@ var Compressor = class {
 	}
 	*/
 
-	execute(targetModuleNames, excludeModuleNames, singleBundleModuleNames, destPath)
+	execute(targetModuleNames, excludeModuleNames, singleBundleModuleNames, destPath, compressOptions)
 	{
 		if (!destPath)
 			destPath = this.destPath;
@@ -387,7 +391,7 @@ var Compressor = class {
 			this._generateMinEs6ModuleWrapperJsFiles(compressFileDetails, destPath);
 			this._generateWebpackWrapperFiles(compressFileDetails, destPath);
 			*/
-			this._generateModuleWrapperJsFiles(compressFileDetails.handledModules, compressFileDetails, destPath);
+			this._generateModuleWrapperJsFiles(compressFileDetails.handledModules, compressFileDetails, destPath, compressOptions);
 		}
 	}
 };
