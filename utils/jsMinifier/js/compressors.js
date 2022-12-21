@@ -246,7 +246,7 @@ var Compressor = class {
 
 		// prod pack
 		var lines = [];
-		lines.push(sIsWebpackCheck + generateImportLine('./themes/default/kekule.css', null, moduleType, true));  // TODO: CSS file, currently path is fixed
+		//lines.push(sIsWebpackCheck + generateImportLine('./themes/default/kekule.css', null, moduleType, true));  // TODO: CSS file, currently path is fixed
 		lines.push(generateImportLine('./' + moduleEnvInitDestFileName, 'exporter', moduleType));  // module env init file
 		lines.push(generateImportLine('./' + compressFileDetails.targetStandaloneFileName, null, moduleType));  // kekule.min.js
 		lines.push(sKekuleModuleLine);  // manually set loaded modules
@@ -257,7 +257,7 @@ var Compressor = class {
 		// dev pack
 		var srcCssPath = this._normalizePath(path.relative(destPath, path.resolve(srcRootPath, 'widgets/themes/default/kekule.css')));
 		lines = [];
-		lines.push(sIsWebpackCheck + generateImportLine(srcCssPath, null, moduleType, true));  // TODO: CSS file, currently path is fixed
+		//lines.push(sIsWebpackCheck + generateImportLine(srcCssPath, null, moduleType, true));  // TODO: CSS file, currently path is fixed
 		lines.push(generateImportLine(this._normalizePath(path.relative(destPath, path.resolve(srcRootPath, moduleEnvInitDestFileName))), 'exporter', moduleType));  // module env init file
 		var srcFiles = compressFileDetails.compressFileMap[compressFileDetails.targetStandaloneFileName];
 		var ignoredSrcFiles = Kekule.Dev.PackageUtils.SINGLE_BUNDLE_FLAG_FILES.map(s => path.resolve(srcRootPath, s));
