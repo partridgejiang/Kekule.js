@@ -1,4 +1,3 @@
-if (typeof(__webpack_require__) === "function") require("../src/widgets/themes/default/kekule.css");
 var exporter = require("../src/kekule.moduleEnvInits.cm.js");
 require("../src/kekule.js");
 require("../src/lan/classes.js");

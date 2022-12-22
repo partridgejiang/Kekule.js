@@ -1,4 +1,3 @@
-if (typeof(__webpack_require__) === "function") import("../src/widgets/themes/default/kekule.css");
 import exporter from "../src/kekule.moduleEnvInits.esm.mjs";
 import "../src/kekule.js";
 import "../src/lan/classes.js";

@@ -1,13 +1,15 @@
-(function($root){
+(function($init_root){
 
-if (!$root)
+var $root;
 {
-	if (typeof(self) === 'object')
-		$root = self;
-	else if (typeof(window) === 'object' && window && window.document)
+	if (typeof(window) === 'object' && window && window.document)
 		$root = window;
 	else if (typeof(global) === 'object')  // node env
 		$root = global;
+	else if (typeof(self) === 'object')
+		$root = self;
+	else
+		$root = $init_root || {};
 }
 
 // IE8 does not support array.indexOf
@@ -90,7 +92,8 @@ function nodeAppend(url)
 	{
 		try
 		{
-			var data = fs.readFileSync(url, 'utf8');
+			var fileName = (url.indexOf('file:///') === 0)? url.substr(8): url; // remove possible file:/// protocal mark first
+			var data = fs.readFileSync(fileName, 'utf8');
 			vm.runInThisContext(data, {'filename': url});
 			//vm.runInNewContext(data, __nodeContext, {'filename': url});
 			//eval(data);
@@ -367,7 +370,7 @@ var kekuleFiles = {
 	},
 
 	'io': {
-		'requires': ['lan', 'root', 'common', 'core'],
+		'requires': ['lan', 'root', 'common', 'core', 'algorithm'],
 		'files': [
 			'utils/kekule.textHelper.js',
 			'io/kekule.io.js',
@@ -625,25 +628,50 @@ function getEssentialModules(modules)
 	return result;
 }
 
-function getEssentialFiles(modules, useMinFile)
+function getModuleJsFiles(moduleName, useMinFile, minFileSubPath)
+{
+	var result = [];
+	var m = kekuleFiles[moduleName];
+	if (m && m.files)
+	{
+		if (useMinFile)
+		{
+			var minFileName = m.minFile || (moduleName + '.min.js');
+			if (minFileSubPath)
+				minFileName = minFileSubPath + minFileName;
+			if (result.indexOf(minFileName) < 0)
+				result.push(minFileName);
+		}
+		else
+			result = result.concat(m.files);
+	}
+	return result;
+}
+
+function getEssentialFiles(modules, useMinFile, minFileSubPath)
 {
 	var ms = getEssentialModules(modules);
 	var result = [];
 	for (var i = 0, l = ms.length; i < l; ++i)
 	{
 		var moduleName = ms[i];
+		/*
 		var m = kekuleFiles[moduleName];
 		if (m && m.files)
 		{
 			if (useMinFile)
 			{
 				var minFileName = m.minFile || (moduleName + '.min.js');
+				if (minFileSubPath)
+					minFileName = minFileSubPath + minFileName;
 				if (result.indexOf(minFileName) < 0)
 					result.push(minFileName);
 			}
 			else
 				result = result.concat(m.files);
 		}
+		*/
+		result = result.concat(getModuleJsFiles(moduleName, useMinFile, minFileSubPath));
 	}
 	return result;
 }
@@ -659,10 +687,10 @@ function analysisEntranceScriptSrc(doc)
 	var paramLanguage = /^language\=(.+)$/;
 
 	var matchResult;
+
 	if (!loadedByImportOrRequire)
 	{
-		// try get current script info by document.currentScript
-		if (doc && doc.currentScript && doc.currentScript.src)
+		if (doc && doc.currentScript && doc.currentScript.src)  // try get current script info by document.currentScript
 		{
 			var scriptSrc = decodeURIComponent(doc.currentScript.src);  // sometimes the URL is escaped, ',' becomes '%2C'(e.g. in Moodle)
 			if (scriptSrc)
@@ -791,7 +819,7 @@ function analysisEntranceScriptSrc(doc)
 		return result;
 	}
 
-	//return null;
+	// no info found, returns the default settings
 	return {
 		'src': '',
 		'path': '',
@@ -807,37 +835,60 @@ function loadModuleScriptFiles(modules, useMinFile, rootPath, kekuleScriptInfo, 
 		Kekule.LOADED = false;   // a flag, indicating now are loading script files
 
 	var loadedModules = kekuleScriptInfo.modules || [];
+	/*
 	var essentialModules = [];
 	for (var i = 0, l = modules.length; i < l; ++i)
 	{
 		if (loadedModules.indexOf(modules[i]) < 0)
 			essentialModules.push(modules[i]);
 	}
-
-	var files = getEssentialFiles(essentialModules, useMinFile);
-	var essentialFiles = [];
-	var path = rootPath;
-
-	var loadedScriptUrls = kekuleScriptInfo.fileUrls || [];
-	var essentialUrls = [];
-	for (var i = 0, l = files.length; i < l; ++i)
+	*/
+	var essentialModules = [];
+	var requiredModules = getEssentialModules(modules);  // retrieve all required modules
+	for (var i = 0, l = requiredModules.length; i < l; ++i)
 	{
-		var url = path + files[i];
-		if (loadedScriptUrls.indexOf(url) < 0)
-		{
-			essentialUrls.push(url);
-			essentialFiles.push(files[i]);
-		}
+		if (loadedModules.indexOf(requiredModules[i]) < 0)
+			essentialModules.push(requiredModules[i]);
 	}
-	essentialUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading
 
-	loadChildScriptFiles(essentialUrls, null, function(error){
-		kekuleScriptInfo.modules = kekuleScriptInfo.modules.concat(essentialModules);
-		kekuleScriptInfo.files = kekuleScriptInfo.files.concat(essentialFiles);
-		kekuleScriptInfo.fileUrls = kekuleScriptInfo.fileUrls.concat(essentialUrls);
-		if (callback)
-			callback(error);
-	});
+	if (!essentialModules.length)  // no need to load additional modules
+	{
+		// do nothing here
+		callback();
+	}
+	else
+	{
+		//var files = getEssentialFiles(essentialModules, useMinFile, kekuleScriptInfo.dividedMinSubPath);
+		var files = [];
+		for (var i = 0, l = requiredModules.length; i < l; ++i)
+		{
+			files = files.concat(getModuleJsFiles(essentialModules[i], useMinFile, kekuleScriptInfo.dividedMinSubPath));
+		}
+		var essentialFiles = [];
+		var path = rootPath;
+
+		var loadedScriptUrls = kekuleScriptInfo.fileUrls || [];
+		var essentialUrls = [];
+		for (var i = 0, l = files.length; i < l; ++i)
+		{
+			var url = path + files[i];
+			if (loadedScriptUrls.indexOf(url) < 0)
+			{
+				essentialUrls.push(url);
+				essentialFiles.push(files[i]);
+			}
+		}
+		essentialUrls.push(path + 'kekule.loaded.js');  // manually add small file to indicate the end of Kekule loading
+
+		loadChildScriptFiles(essentialUrls, null, function (error)
+		{
+			kekuleScriptInfo.modules = kekuleScriptInfo.modules.concat(essentialModules);
+			kekuleScriptInfo.files = kekuleScriptInfo.files.concat(essentialFiles);
+			kekuleScriptInfo.fileUrls = kekuleScriptInfo.fileUrls.concat(essentialUrls);
+			if (callback)
+				callback(error);
+		});
+	}
 
 	return {
 		'modules': essentialModules,
@@ -849,54 +900,85 @@ function loadModuleScriptFiles(modules, useMinFile, rootPath, kekuleScriptInfo, 
 function init()
 {
 	var scriptInfo, files, path;
+	var kekule_env_ops = (typeof(_kekule_environment_) === 'object')? _kekule_environment_:
+		(typeof($root._kekule_environment_) === 'object')? $root._kekule_environment_:
+			null;
 
-	// some times there are both browser and node environment (e.g. Electron)
-	if (isInBrowser)   // try get info from <script> tag first
+	if (kekule_env_ops)  // if manually set the load info, use it directly
 	{
-		scriptInfo = analysisEntranceScriptSrc(document);
-		var findScriptTag = scriptInfo.src && scriptInfo.path;
-
-		if (findScriptTag)  // explicitly use script tag, load files in traditional way
+		scriptInfo = kekule_env_ops.scriptInfo;
+		if (!scriptInfo && kekule_env_ops.scriptPath)
 		{
-			isNode = false;
-		}
-		if (!findScriptTag && hasNodeEnv)  // dual env
-		{
-			scriptInfo.src = this.__filename || '';
-			scriptInfo.path = (__dirname || '.') + '/';
-			isNode = true;
+			scriptInfo = {
+				'src': kekule_env_ops.scriptSrc,
+				'path': kekule_env_ops.scriptPath,
+				'dividedMinSubPath': kekule_env_ops.ScriptdividedMinSubPath,
+				'modules': kekule_env_ops.scriptModules,
+				'useMinFile': kekule_env_ops.scriptUseMinFile,
+			};
 		}
 	}
-	else if (isNode)
+
+	if (!scriptInfo)  // auto determination
 	{
-		scriptInfo = {
-			'src': this.__filename || '',
-			'path': __dirname + '/',
-			'modules': isInBrowser? usualModules: nodeModules,  // if there is browser env (e.g. electron, load normal modules including widget)
-			//'useMinFile': false  // for debug
-			'useMinFile': true,
-			'nodeModule': typeof(module !== 'undefined')? module: this.module,  // record the node module, for using the module methods (e.g. require) later
-			'nodeRequire': typeof(require !== 'undefined')? require: this.require,
-		};
+		// sometimes there are both browser and node environment (e.g. Electron)
+		if (isInBrowser)   // try get info from <script> tag first
+		{
+			scriptInfo = analysisEntranceScriptSrc(document);
+			var findScriptTag = scriptInfo.src && scriptInfo.path;
+
+			if (findScriptTag)  // explicitly use script tag, load files in traditional way
+			{
+				isNode = false;
+			}
+			if (!findScriptTag && hasNodeEnv)  // dual env
+			{
+				scriptInfo.src = this.__filename || '';
+				scriptInfo.path = (((typeof(__dirname) !== 'undefined')?__dirname: '') || '.') + '/';
+				isNode = true;
+			}
+		}
+		else if (isNode)
+		{
+			scriptInfo = {
+				'src': this.__filename || '',
+				'path': ((typeof(__dirname) !== 'undefined')?__dirname: '') + '/',
+				'modules': isInBrowser? usualModules: nodeModules,  // if there is browser env (e.g. electron, load normal modules including widget)
+				//'useMinFile': false  // for debug
+				'useMinFile': true,
+				'nodeModule': (typeof(module) !== 'undefined')? module: this.module,  // record the node module, for using the module methods (e.g. require) later
+				'nodeRequire': (typeof(require) !== 'undefined')? require: this.require,
+			};
+		}
+
+		if (isNode)
+		{
+			// if min files not found, use dev files instead
+			var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
+			var minFileExisted = false;
+			try
+			{
+				minFileExisted = fs.existsSync(testFileName);
+			}
+			catch(e)
+			{
+				//scriptInfo.path += 'src/'
+				minFileExisted = false;
+			}
+			if (!minFileExisted)
+				scriptInfo.useMinFile = false;
+		}
 	}
 
-	if (isNode)
-	{
-		// if min files not found, use dev files instead
-		var testFileName = scriptInfo.path + kekuleFiles.root.minFile;
-		var minFileExisted = false;
-		try
-		{
-			minFileExisted = fs.existsSync(testFileName);
-		}
-		catch(e)
-		{
-			//scriptInfo.path += 'src/'
-			minFileExisted = false;
-		}
-		if (!minFileExisted)
-			scriptInfo.useMinFile = false;
-	}
+	// if some fields of scriptInfo is still missed
+	if (!scriptInfo.dividedMinSubPath)
+		scriptInfo.dividedMinSubPath = 'mins/';
+	if (!scriptInfo.dividedModuleExporterSubPath)
+		scriptInfo.dividedModuleExporterSubPath = 'jsmods/';
+	if (!scriptInfo.modules)
+		scriptInfo.modules = isInBrowser? usualModules: nodeModules;
+	if (scriptInfo.useMinFile === undefined)
+		scriptInfo.useMinFile = true;
 
 	scriptInfo.singleMinBundle = $root && $root.__$kekule_single_min_bundle__;  // a special flag bundled into kekule.min.js
 
@@ -913,12 +995,17 @@ function init()
 	$root['__$kekule_scriptfile_utils__'] = {
 		'appendScriptFile': appendScriptFile,
 		'appendScriptFiles': appendScriptFiles,
-		'loadModuleScriptFiles': loadModuleScriptFiles
+		'loadModuleScriptFiles': loadModuleScriptFiles,
+		'getModuleJsFiles': getModuleJsFiles,
+		'getEssentialFiles': getEssentialFiles,
+		'getEssentialModules': getEssentialModules
 	};
 
-	if (!scriptInfo.singleMinBundle || typeof(scriptInfo.singleMinBundle) === 'undefined')   // when loading with a single bundle, no need to load modules
+	scriptInfo.manualLoadScriptFiles = kekule_env_ops && kekule_env_ops.manualLoadScriptFiles;
+	// when loading with a single bundle, or with a manual load flag (e.g., in ES6 module), no need to load modules
+	if ((!scriptInfo.singleMinBundle || typeof(scriptInfo.singleMinBundle) === 'undefined') && (!kekule_env_ops || !kekule_env_ops.manualLoadScriptFiles))
 	{
-		loadModuleScriptFiles(modules, scriptInfo.useMinFile, scriptInfo.path, scriptInfo, function(error){
+		loadModuleScriptFiles(modules, scriptInfo.useMinFile, scriptInfo.path || '', scriptInfo, function(error){
 			if (/*isNode*/typeof(exports) !== 'undefined')  // export Kekule namespace
 			{
 				// export Kekule in module
@@ -932,12 +1019,12 @@ function init()
 				this.ClassEx = exports.ClassEx;
 				this.ObjectEx = exports.ObjectEx;
 				this.DataType = exports.DataType;
+
 				// then store script info of Kekule
 				this.Kekule.scriptSrcInfo = scriptInfo;
 			}
 		});
 	}
-	//console.log('ROOT', $root);
 
 	/*
 	files = getEssentialFiles(scriptInfo.modules, scriptInfo.useMinFile);
@@ -983,7 +1070,8 @@ function init()
 
 if (isWebpack)
 {
-	module.exports = require('./kekule.webpack.prod.js');
+	// now the import clause are all moved out to kekule.esm.js or kekule.cm.js, no need to exports here
+	//module.exports = require('./kekule.webpack.prod.js');
 }
 else
 	init();

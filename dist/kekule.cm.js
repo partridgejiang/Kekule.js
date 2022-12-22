@@ -1,0 +1,24 @@
+var exporter = require("./kekule.moduleEnvInits.cm.js");
+require("./kekule.js");
+require("./mins/root.min.js");
+require("./mins/localization.min.js");
+require("./mins/localizationData.zh.min.js");
+require("./mins/common.min.js");
+require("./mins/core.min.js");
+require("./mins/html.min.js");
+require("./mins/io.min.js");
+require("./mins/render.min.js");
+require("./mins/spectroscopy.min.js");
+require("./mins/widget.min.js");
+require("./mins/chemWidget.min.js");
+require("./mins/webComponent.min.js");
+require("./mins/algorithm.min.js");
+require("./mins/calculation.min.js");
+require("./mins/data.min.js");
+require("./mins/emscripten.min.js");
+require("./mins/openbabel.min.js");
+require("./mins/indigo.min.js");
+require("./mins/inchi.min.js");
+Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "localizationData.zh", "common", "core", "html", "io", "render", "spectroscopy", "widget", "chemWidget", "webComponent", "algorithm", "calculation", "data", "emscripten", "openbabel", "indigo", "inchi"]);
+if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }
+module.exports = exporter();
