@@ -9,6 +9,7 @@ import "../mins/emscripten.min.js";
 import "../mins/algorithm.min.js";
 import "../mins/io.min.js";
 import "../mins/inchi.min.js";
+let { Kekule, Class, ClassEx, ObjectEx, DataType} = exporter();
+export { Kekule, Class, ClassEx, ObjectEx, DataType};
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "common", "data", "core", "emscripten", "algorithm", "io", "inchi"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }
-export default exporter();

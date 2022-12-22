@@ -8,6 +8,7 @@ import "../mins/core.min.js";
 import "../mins/algorithm.min.js";
 import "../mins/io.min.js";
 import "../mins/spectroscopy.min.js";
+let { Kekule, Class, ClassEx, ObjectEx, DataType} = exporter();
+export { Kekule, Class, ClassEx, ObjectEx, DataType};
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "common", "data", "core", "algorithm", "io", "spectroscopy"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }
-export default exporter();

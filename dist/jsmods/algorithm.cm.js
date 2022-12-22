@@ -6,6 +6,6 @@ require("../mins/common.min.js");
 require("../mins/data.min.js");
 require("../mins/core.min.js");
 require("../mins/algorithm.min.js");
+module.exports = exporter();
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "common", "data", "core", "algorithm"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }
-module.exports = exporter();

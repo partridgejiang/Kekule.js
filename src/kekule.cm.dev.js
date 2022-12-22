@@ -166,8 +166,9 @@ require("../src/_extras/Indigo/kekule.indigo.io.js");
 require("../src/_extras/Indigo/kekule.indigo.structures.js");
 require("../src/_extras/InChI/kekule.inchi.js");
 require("../src/kekule.loaded.js");
-Kekule.scriptSrcInfo.modules = ["lan", "root", "localization", "localizationData", "localizationData.zh", "common", "core", "html", "io", "render", "spectroscopy", "widget", "chemWidget", "webComponent", "algorithm", "calculation", "data", "emscripten", "openbabel", "indigo", "inchi"];
+module.exports = exporter();
+Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "localizationData.zh", "common", "core", "html", "io", "render", "spectroscopy", "widget", "chemWidget", "webComponent", "algorithm", "calculation", "data", "emscripten", "openbabel", "indigo", "inchi"]);
+if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }
 Kekule.scriptSrcInfo.useMinFile = false;
 Kekule.environment.setEnvVar('kekule.useMinJs', false);
 let _scriptSrc = (Kekule.scriptSrcInfo.path || "") + "kekule.esm.dev.js"; Kekule.scriptSrcInfo.src = _scriptSrc; Kekule.environment.setEnvVar("kekule.scriptSrc", _scriptSrc);
-module.exports = exporter();

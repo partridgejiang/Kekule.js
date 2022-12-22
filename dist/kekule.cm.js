@@ -19,6 +19,6 @@ require("./mins/emscripten.min.js");
 require("./mins/openbabel.min.js");
 require("./mins/indigo.min.js");
 require("./mins/inchi.min.js");
+module.exports = exporter();
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "localizationData.zh", "common", "core", "html", "io", "render", "spectroscopy", "widget", "chemWidget", "webComponent", "algorithm", "calculation", "data", "emscripten", "openbabel", "indigo", "inchi"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }
-module.exports = exporter();

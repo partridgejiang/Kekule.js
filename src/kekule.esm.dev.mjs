@@ -166,8 +166,10 @@ import "../src/_extras/Indigo/kekule.indigo.io.js";
 import "../src/_extras/Indigo/kekule.indigo.structures.js";
 import "../src/_extras/InChI/kekule.inchi.js";
 import "../src/kekule.loaded.js";
-Kekule.scriptSrcInfo.modules = ["lan", "root", "localization", "localizationData", "localizationData.zh", "common", "core", "html", "io", "render", "spectroscopy", "widget", "chemWidget", "webComponent", "algorithm", "calculation", "data", "emscripten", "openbabel", "indigo", "inchi"];
+let { Kekule, Class, ClassEx, ObjectEx, DataType} = exporter();
+export { Kekule, Class, ClassEx, ObjectEx, DataType};
+Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "localizationData.zh", "common", "core", "html", "io", "render", "spectroscopy", "widget", "chemWidget", "webComponent", "algorithm", "calculation", "data", "emscripten", "openbabel", "indigo", "inchi"]);
+if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }
 Kekule.scriptSrcInfo.useMinFile = false;
 Kekule.environment.setEnvVar('kekule.useMinJs', false);
 let _scriptSrc = (Kekule.scriptSrcInfo.path || "") + "kekule.esm.dev.js"; Kekule.scriptSrcInfo.src = _scriptSrc; Kekule.environment.setEnvVar("kekule.scriptSrc", _scriptSrc);
-export default exporter();

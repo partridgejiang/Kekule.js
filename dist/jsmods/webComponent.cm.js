@@ -12,6 +12,6 @@ require("../mins/render.min.js");
 require("../mins/widget.min.js");
 require("../mins/chemWidget.min.js");
 require("../mins/webComponent.min.js");
+module.exports = exporter();
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "common", "data", "core", "html", "algorithm", "io", "render", "widget", "chemWidget", "webComponent"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }
-module.exports = exporter();

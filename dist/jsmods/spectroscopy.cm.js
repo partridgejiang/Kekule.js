@@ -8,6 +8,6 @@ require("../mins/core.min.js");
 require("../mins/algorithm.min.js");
 require("../mins/io.min.js");
 require("../mins/spectroscopy.min.js");
+module.exports = exporter();
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "common", "data", "core", "algorithm", "io", "spectroscopy"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }
-module.exports = exporter();

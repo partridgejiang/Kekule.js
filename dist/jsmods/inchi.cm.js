@@ -9,6 +9,6 @@ require("../mins/emscripten.min.js");
 require("../mins/algorithm.min.js");
 require("../mins/io.min.js");
 require("../mins/inchi.min.js");
+module.exports = exporter();
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "common", "data", "core", "emscripten", "algorithm", "io", "inchi"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }
-module.exports = exporter();
