@@ -133,6 +133,11 @@ Kekule.Dev.PackageUtils = {
 		if (!srcFiles)
 			srcFiles = Kekule.Dev.PackageUtils.getSrcFiles();
 		*/
+		var subPaths = {
+			'min': Kekule.scriptSrcInfo.dividedMinSubPath,
+			'jsmodule': Kekule.scriptSrcInfo.dividedModuleExporterSubPath
+		}
+
 		var moduleInfos = PU.getSrcFileModuleInfos();
 		var actualModuleNames = null, actualSingleBundleModuleNames = null;
 
@@ -146,8 +151,10 @@ Kekule.Dev.PackageUtils = {
 			actualSingleBundleModuleNames = actualModuleNames;
 		var targetMinFileNames = [];
 		var compressFileMap = {};
+		var defaultMinFileNames = [];
 		var allSrcFiles = [], singleBundleSrcFiles = [];
 		var handledModuleNames = [];
+		var handledModuleDependencies = {};
 		var dividedMinSubPath = Kekule.scriptSrcInfo.dividedMinSubPath || '';
 		for (var i = 0, l = moduleInfos.length; i < l; ++i)
 		{
@@ -178,17 +185,41 @@ Kekule.Dev.PackageUtils = {
 				if (inSingleBundle)
 				{
 					singleBundleSrcFiles = singleBundleSrcFiles.concat(srcFiles);
+					Kekule.ArrayUtils.pushUnique(defaultMinFileNames, targetMinFileName);
 				}
 				handledModuleNames.push(m.name);
+				handledModuleDependencies[m.name] = {
+					minFile: targetMinFileName,
+					requiredModules: Kekule.Dev.PackageUtils.getEssentialModuleNames(m.requires || [])
+				};
 			}
 		}
+
+		for (var i = 0, ii = handledModuleNames.length; i < ii; ++i)
+		{
+			var modName = handledModuleNames[i];
+			var requiredMods = handledModuleDependencies[modName].requiredModules;
+			handledModuleDependencies[modName].requiredMinFiles = [];
+			for (var j = 0, jj = requiredMods.length; j < jj; ++j)
+			{
+				var currMinFile = handledModuleDependencies[requiredMods[j]].minFile;
+
+				if (handledModuleDependencies[modName].requiredMinFiles.indexOf(currMinFile) < 0)
+					handledModuleDependencies[modName].requiredMinFiles.push(currMinFile);
+			}
+			//console.log('mod info', modName, requiredMods, handledModuleDependencies[modName].requiredMinFiles);
+			//handledModuleDependencies[modName]
+		}
+
 		// add a total compression file
 		Kekule.ArrayUtils.pushUnique(targetMinFileNames, targetFileName);
 		//compressFileMap[targetFileName] = allSrcFiles.concat(PU.STANDALONE_ATTACH_FILES);
 		compressFileMap[targetFileName] = singleBundleSrcFiles.concat(PU.STANDALONE_ATTACH_FILES);
 		compressFileMap[targetFileName].unshift('kekule.js');  // put the entrance js at the beginning of single kekule.min.js, for analysis script params
 		compressFileMap[targetFileName] = PU.SINGLE_BUNDLE_FLAG_FILES.concat(compressFileMap[targetFileName]);  // put the single bundle flag file at beginning
-		return {targetStandaloneFileName: targetFileName, targetMinFileNames: targetMinFileNames, compressFileMap: compressFileMap, handledModules: handledModuleNames};
+		return {targetStandaloneFileName: targetFileName, targetMinFileNames: targetMinFileNames, compressFileMap: compressFileMap,
+			'defaultModuleNames': actualSingleBundleModuleNames, 'defaultMinFileNames': defaultMinFileNames,  // default Kekule modules and min files to loading in usual settings
+			handledModules: handledModuleNames, handledModuleDependencies: handledModuleDependencies, subPaths: subPaths};
 	},
 
 	getStandaloneJsFileDetails: function(targetModuleNames)
