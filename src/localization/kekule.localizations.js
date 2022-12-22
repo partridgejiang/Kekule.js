@@ -8,7 +8,7 @@
  * requires /localization
  */
 
-(function($root){
+(function($defRoot){
 "use strict";
 
 	function analysisLanguage(lanName)
@@ -17,8 +17,7 @@
 		return {'language': parts[0], 'local': parts[1]};
 	}
 
-	if (!$root)
-		$root = {};
+	var $root = Kekule.$jsRoot || $defRoot || {};
 
 	var rootObj = Kekule;
 	var DEF_LANGUAGE = 'en-US';
@@ -94,7 +93,9 @@
 			var lanName = lanNames[j];
 			var value = getLocalizationValueOfLan(cascadeName, lanName, localRoot);
 			if (value !== undefined)
+			{
 				return value;
+			}
 		}
 		// not found
 		return undefined;

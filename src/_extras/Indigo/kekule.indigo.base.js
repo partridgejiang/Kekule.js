@@ -10,8 +10,10 @@
  * requires /localization/
  */
 
-(function($root){
+(function($defRoot){
 "use strict";
+
+var $root = Kekule.$jsRoot || $defRoot || {};
 
 /** @ignore */
 var EU = Kekule.EmscriptenUtils;
