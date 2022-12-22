@@ -7,6 +7,7 @@
 //var Kekule = require('../../dist/kekule.min.js').Kekule;
 //var Kekule = require('../../src/kekule.cm.dev.js').Kekule;
 var Kekule = require('../../dist/kekule.cm.js').Kekule;
+// var Kekule = require('../../src/kekule.cm.dev.js').Kekule;
 //var Kekule = require('../../').Kekule;
 
 /*

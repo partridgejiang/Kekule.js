@@ -26,14 +26,20 @@
 	-->
 	<script type="module">
 		//import K from "../../src/kekule.esm.dev.mjs";
-		import K from "../../dist/kekule.esm.mjs";
-		import K from "../../dist/jsmods/chemWidget.esm.mjs";
+		//import K from "../../dist/kekule.esm.mjs";
+		// import K from "../../dist/jsmods/chemWidget.esm.mjs";
 		//import "../../dist/jsmods/spectroscopy.esm.mjs";
 		//import K from "./importKekuleFromSrc.js";
 
-		Kekule = K.Kekule;
-		console.log(K);
+		// Kekule = K.Kekule;
+		// console.log(K);
 		//import "../../dist/kekule.esm.mjs";
+
+		// import { Kekule, ClassEx } from "../../dist/kekule.esm.mjs";
+		import {Kekule, ClassEx} from "../../dist/jsmods/chemWidget.esm.mjs";
+		import {Kekule as K1, ClassEx as C1} from "../../dist/jsmods/spectroscopy.esm.mjs";
+		console.log(ClassEx.getClassName(Kekule.ChemObject));
+		console.log(Kekule === K1);
 	</script>
 </head>
 <body>

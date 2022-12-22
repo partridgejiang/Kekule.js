@@ -7,8 +7,8 @@
 //import {Kekule} from '../../utils/jsMinifier/dist/kekule.js';
 //var Kekule = require('../../utils/jsMinifier/dist/kekule.min.js').Kekule;
 //import K from '../../dist/kekule.esm.mjs';
-import K from '../../src/kekule.esm.dev.mjs';
-let Kekule = K.Kekule;
+import {Kekule, ClassEx} from '../../src/kekule.esm.dev.mjs';
+// let Kekule = K.Kekule;
 
 //console.log(_kekule_environment_);
 
