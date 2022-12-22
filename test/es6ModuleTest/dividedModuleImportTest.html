@@ -6,8 +6,9 @@
 	<script type="module">
 		import K1 from "./importKekule1.js";
 		import K2 from "./importKekule2.js";
-		Kekule = K1.Kekule;
-		console.log(Kekule.VERSION, K1.Kekule === K2.Kekule);
+		let Kekule = K1.Kekule;
+		let ChemObject = Kekule.ChemObject;
+		console.log(Kekule.VERSION, Kekule === K2.Kekule, ChemObject === K2.Kekule.ChemObject);
 		//import "../../dist/kekule.esm.mjs";
 	</script>
 </head>
