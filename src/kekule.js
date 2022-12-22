@@ -370,7 +370,7 @@ var kekuleFiles = {
 	},
 
 	'io': {
-		'requires': ['lan', 'root', 'common', 'core'],
+		'requires': ['lan', 'root', 'common', 'core', 'algorithm'],
 		'files': [
 			'utils/kekule.textHelper.js',
 			'io/kekule.io.js',
@@ -628,6 +628,26 @@ function getEssentialModules(modules)
 	return result;
 }
 
+function getModuleJsFiles(moduleName, useMinFile, minFileSubPath)
+{
+	var result = [];
+	var m = kekuleFiles[moduleName];
+	if (m && m.files)
+	{
+		if (useMinFile)
+		{
+			var minFileName = m.minFile || (moduleName + '.min.js');
+			if (minFileSubPath)
+				minFileName = minFileSubPath + minFileName;
+			if (result.indexOf(minFileName) < 0)
+				result.push(minFileName);
+		}
+		else
+			result = result.concat(m.files);
+	}
+	return result;
+}
+
 function getEssentialFiles(modules, useMinFile, minFileSubPath)
 {
 	var ms = getEssentialModules(modules);
@@ -635,6 +655,7 @@ function getEssentialFiles(modules, useMinFile, minFileSubPath)
 	for (var i = 0, l = ms.length; i < l; ++i)
 	{
 		var moduleName = ms[i];
+		/*
 		var m = kekuleFiles[moduleName];
 		if (m && m.files)
 		{
@@ -649,6 +670,8 @@ function getEssentialFiles(modules, useMinFile, minFileSubPath)
 			else
 				result = result.concat(m.files);
 		}
+		*/
+		result = result.concat(getModuleJsFiles(moduleName, useMinFile, minFileSubPath));
 	}
 	return result;
 }
@@ -812,11 +835,20 @@ function loadModuleScriptFiles(modules, useMinFile, rootPath, kekuleScriptInfo, 
 		Kekule.LOADED = false;   // a flag, indicating now are loading script files
 
 	var loadedModules = kekuleScriptInfo.modules || [];
+	/*
 	var essentialModules = [];
 	for (var i = 0, l = modules.length; i < l; ++i)
 	{
 		if (loadedModules.indexOf(modules[i]) < 0)
 			essentialModules.push(modules[i]);
+	}
+	*/
+	var essentialModules = [];
+	var requiredModules = getEssentialModules(modules);  // retrieve all required modules
+	for (var i = 0, l = requiredModules.length; i < l; ++i)
+	{
+		if (loadedModules.indexOf(requiredModules[i]) < 0)
+			essentialModules.push(requiredModules[i]);
 	}
 
 	if (!essentialModules.length)  // no need to load additional modules
@@ -826,7 +858,12 @@ function loadModuleScriptFiles(modules, useMinFile, rootPath, kekuleScriptInfo, 
 	}
 	else
 	{
-		var files = getEssentialFiles(essentialModules, useMinFile, kekuleScriptInfo.dividedMinSubPath);
+		//var files = getEssentialFiles(essentialModules, useMinFile, kekuleScriptInfo.dividedMinSubPath);
+		var files = [];
+		for (var i = 0, l = requiredModules.length; i < l; ++i)
+		{
+			files = files.concat(getModuleJsFiles(essentialModules[i], useMinFile, kekuleScriptInfo.dividedMinSubPath));
+		}
 		var essentialFiles = [];
 		var path = rootPath;
 
@@ -935,7 +972,9 @@ function init()
 
 	// if some fields of scriptInfo is still missed
 	if (!scriptInfo.dividedMinSubPath)
-		scriptInfo.dividedMinSubPath = 'dividedMin/';
+		scriptInfo.dividedMinSubPath = 'mins/';
+	if (!scriptInfo.dividedModuleExporterSubPath)
+		scriptInfo.dividedModuleExporterSubPath = 'jsmods/';
 	if (!scriptInfo.modules)
 		scriptInfo.modules = isInBrowser? usualModules: nodeModules;
 	if (scriptInfo.useMinFile === undefined)
@@ -956,10 +995,14 @@ function init()
 	$root['__$kekule_scriptfile_utils__'] = {
 		'appendScriptFile': appendScriptFile,
 		'appendScriptFiles': appendScriptFiles,
-		'loadModuleScriptFiles': loadModuleScriptFiles
+		'loadModuleScriptFiles': loadModuleScriptFiles,
+		'getModuleJsFiles': getModuleJsFiles,
+		'getEssentialFiles': getEssentialFiles,
+		'getEssentialModules': getEssentialModules
 	};
 
-		// when loading with a single bundle, or with a manual load flag (e.g., in ES6 module), no need to load modules
+	scriptInfo.manualLoadScriptFiles = kekule_env_ops && kekule_env_ops.manualLoadScriptFiles;
+	// when loading with a single bundle, or with a manual load flag (e.g., in ES6 module), no need to load modules
 	if ((!scriptInfo.singleMinBundle || typeof(scriptInfo.singleMinBundle) === 'undefined') && (!kekule_env_ops || !kekule_env_ops.manualLoadScriptFiles))
 	{
 		loadModuleScriptFiles(modules, scriptInfo.useMinFile, scriptInfo.path || '', scriptInfo, function(error){

@@ -6,7 +6,9 @@
  * @namespace
  * @description Root namespace of Kekule library.
  */
-var Kekule = {
+var Kekule = (typeof(Kekule) === 'object')? Kekule: {};
+
+var Kekule = Object.extend(Kekule, {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
 	VERSION: '0.9.9.22122100',
@@ -28,7 +30,7 @@ var Kekule = {
 	// Whether auto find title and description text for object property
 	/** @ignore */
 	PROP_AUTO_TITLE: true
-};
+});
 
 /**
  * Called when all essential modules is loaded.
@@ -251,7 +253,11 @@ if (Kekule.$jsRoot['__$kekule_scriptfile_utils__'])  // script file util methods
 			return this;
 		}
 		else
+		{
+			if (callback)
+				callback(new Error('Kekule script src info not found, can not load modules dynamicly.'));
 			return this;
+		}
 	};
 	Kekule.loadModules = Kekule.modules;  // alias of function Kekule.modules
 }
