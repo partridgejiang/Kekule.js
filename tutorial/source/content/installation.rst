@@ -184,7 +184,7 @@ When using Raphael.js or three.js with ``import``/``require``, additional code n
 ::
 
     import * as THREE from 'three';
-    import {Kekule} from 'kekule';
+    import { Kekule } from 'Kekule';
     Kekule.externalResourceManager.register('three.js', THREE);
 
     define([ "path/to/raphael" ], function(Raphael) {
