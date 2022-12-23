@@ -11,7 +11,9 @@
     "./dev": {
       "import": "./src/kekule.esm.dev.mjs",
       "require": "./src/kekule.cm.dev.js"
-    }
+    },
+    "./theme": "./dist/themes/default/kekule.css",
+    "./theme/default": "./dist/themes/default/kekule.css"
   },
   "author": {
     "name": "Chen Jiang",
