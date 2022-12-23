@@ -25,6 +25,10 @@ if (argv.dest || argv.d)
 var minifierName = argv.minifier || null;
 
 var compressOptions = {};
+if (argv.sourceMap)
+{
+	compressOptions.withSourceMap = true;
+}
 if (argv.keepsrcdir || !!destPath)  // when use a non-default dest path, we keep src dir intact
 {
 	compressOptions.doNotUpdateSrcDir = true;

@@ -17,13 +17,15 @@ const defMinifierOptions = {
 	'gcc': {
 		//compilationLevel: 'ADVANCED'
 		//warningLevel: 'VERBOSE'
-		compilationLevel: 'SIMPLE'
+		compilationLevel: 'SIMPLE',
+		//createSourceMap: true
 	},
 	'uglifyES': {
 		mangle: { reserved: ['$super', '$origin'] }
 	},
 	'terser': {
-		mangle: { reserved: ['$super', '$origin'] }
+		mangle: { reserved: ['$super', '$origin'] },
+		//sourceMap: url
 	}
 };
 
@@ -35,21 +37,42 @@ var Compressor = class {
 		this.minifierOptions = minifierOptions || defMinifierOptions[this.minifierName];
 	}
 
-	_doMinify(minifierName, minifierOptions, srcFileNames, destPath, minFileName, callbackFunc)
+	_pushMinifySourceMapParams(minifierName, outputFileName, minifyParams)
+	{
+		if (minifierName === 'gcc')
+			minifyParams.options.createSourceMap = true;
+		else if (minifierName === 'terser')
+		{
+			// TODO: found bug in node-minify/lib/compressors/terser.js line 38,
+			//  should write to settings.options.sourceMap.filename rather than settings.options.sourceMap.url.
+			//  The source map can not be generated properly unless this bug is fixed.
+			//  btw, seems same issue in node-minify/lib/compressors/yglifyjs.js
+			var sourceMapFileName = outputFileName + '.map';
+			var pathParseResult = path.parse(sourceMapFileName);
+			var sourceMapUrl = pathParseResult.base;
+			sourceMapFileName = path.resolve(pathParseResult.dir, pathParseResult.name + '.map');
+			// sourceMapFileName = path.resolve('./', pathParseResult.name + '.map');
+			minifyParams.options.sourceMap = { url: sourceMapUrl, filename: sourceMapFileName };
+		}
+	}
+	_doMinify(minifierName, minifierOptions, srcFileNames, destPath, minFileName, withSourceMap, callbackFunc)
 	{
 		var outputFileName = path.resolve(destPath, minFileName);
 		var outputPath = path.dirname(outputFileName);
 		if (!fs.existsSync(outputPath)){
 			fs.mkdirSync(outputPath);
 		}
-		minify.minify({
+		var minifyParams = {
 			compressor: minifierName,
 			input: srcFileNames,
 			output: outputFileName,
 			sync: true,
 			options: minifierOptions || {},
 			callback: callbackFunc
-		});
+		};
+		if (withSourceMap)
+			this._pushMinifySourceMapParams(minifierName, outputFileName, minifyParams);
+		minify.minify(minifyParams);
 	}
 
 	_getActualMinifyOptions()
@@ -57,7 +80,7 @@ var Compressor = class {
 		return this.minifierOptions? JSON.parse(JSON.stringify(this.minifierOptions)) : {};  // some minifier seems to modify this object, so clone it first
 	}
 
-	_compress(compressFileDetails, destPath)
+	_compress(compressFileDetails, destPath, compressOptions)
 	{
 		if (destPath)
 		{
@@ -91,7 +114,7 @@ var Compressor = class {
 				});
 				*/
 				self._doMinify(
-					minifierName, minifierOptions, srcFileNames, destPath, minFileName,
+					minifierName, minifierOptions, srcFileNames, destPath, minFileName, compressOptions.withSourceMap,
 					function(err, min)
 					{
 						if (err)
@@ -144,7 +167,7 @@ var Compressor = class {
 		}
 	}
 
-	_copyAdditionalJsFiles(targetModuleNames, destPath)
+	_copyAdditionalJsFiles(targetModuleNames, destPath, compressOptions)
 	{
 		// copy extra js files
 		var extraJsFilePairs = Kekule.Dev.PackageUtils.getStandaloneJsFileDetails(targetModuleNames);
@@ -539,8 +562,8 @@ var Compressor = class {
 			//console.log(compressFileDetails);
 			//return;
 
-			this._compress(compressFileDetails, destPath);
-			this._copyAdditionalJsFiles(targetModuleNames, destPath);
+			this._compress(compressFileDetails, destPath, compressOptions);
+			this._copyAdditionalJsFiles(targetModuleNames, destPath, compressOptions);
 			/*
 			this._generateMinEs6ModuleWrapperJsFiles(compressFileDetails, destPath);
 			this._generateWebpackWrapperFiles(compressFileDetails, destPath);
