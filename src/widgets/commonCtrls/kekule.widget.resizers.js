@@ -83,6 +83,11 @@ Kekule.Widget.ResizeGripper = Class.create(Kekule.Widget.BaseWidget,
 		return this.tryApplySuper('doGetWidgetClassName')  /* $super() */ + ' ' + CNS.RESIZEGRIPPER;
 	},
 	/** @ignore */
+	doGetDefaultTabIndex: function()
+	{
+		return null;
+	},
+	/** @ignore */
 	doCreateRootElement: function(doc)
 	{
 		var result = doc.createElement('span');
