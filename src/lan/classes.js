@@ -3702,6 +3702,7 @@ ObjectEx = Class.create(
     if (!event.preventDefault)
       event.preventDefault = this._eventPreventDefault;
   	this.dispatchEvent(eventName, event);
+		this.dispatchEvent('eventInvoke', {'event': event, 'target': this, 'name': 'eventInvoke'});
   },
 	/** @private */
 	_eventStopImmediatePropagation: function()
