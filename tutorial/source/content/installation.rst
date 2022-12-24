@@ -14,14 +14,14 @@ Afterwards, the package can be imported to your project with ES6 module ``import
 
 .. code-block:: javascript
 
-    import { Kekule } from 'Kekule';
-    import 'Kekule/theme/default';       // if Kekule widgets is used in browser, the theme CSS should be imported as well
+    import { Kekule } from 'kekule';
+    import 'kekule/theme/default';       // if Kekule widgets is used in browser, the theme CSS should be imported as well
     console.log(Kekule.VERSION);
 
 .. code-block:: javascript
 
-    let Kekule = require('Kekule').Kekule;
-    require('Kekule/theme/default');    // if Kekule widgets is used in browser, the theme CSS should be imported as well
+    let Kekule = require('kekule').Kekule;
+    require('kekule/theme/default');    // if Kekule widgets is used in browser, the theme CSS should be imported as well
     console.log(Kekule.VERSION);
 
 The default import approaches above include all modules of Kekule.js.
@@ -184,7 +184,7 @@ When using Raphael.js or three.js with ``import``/``require``, additional code n
 ::
 
     import * as THREE from 'three';
-    import { Kekule } from 'Kekule';
+    import { Kekule } from 'kekule';
     Kekule.externalResourceManager.register('three.js', THREE);
 
     define([ "path/to/raphael" ], function(Raphael) {
