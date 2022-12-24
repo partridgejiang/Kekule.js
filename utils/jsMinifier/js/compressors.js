@@ -502,8 +502,8 @@ var Compressor = class {
 		for (var modName in dividedModFileMap)
 		{
 			packageJson.exports['./mod/' + modName] = {
-				'import': './' + this._normalizePath(path.relative(prjRootPath, dividedModFileMap[modName].cm)),
-				'require': './' + this._normalizePath(path.relative(prjRootPath, dividedModFileMap[modName].esm))
+				'import': './' + this._normalizePath(path.relative(prjRootPath, dividedModFileMap[modName].esm)),
+				'require': './' + this._normalizePath(path.relative(prjRootPath, dividedModFileMap[modName].cm))
 			}
 		}
 
