@@ -484,7 +484,7 @@ var Compressor = class {
 		for (var modName in dividedMapCm)
 			dividedFileMap[modName] = { 'cm': dividedMapCm[modName] };
 		for (var modName in dividedMapEsm)
-			dividedFileMap[modName]['esm'] = dividedMapCm[modName];
+			dividedFileMap[modName]['esm'] = dividedMapEsm[modName];
 
 		if (!options || !options.doNotUpdateSrcDir)
 		{

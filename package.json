@@ -16,87 +16,87 @@
     "./theme/default": "./dist/themes/default/kekule.css",
     "./mod/lan": {
       "import": "./dist/jsmods/lan.cm.js",
-      "require": "./dist/jsmods/lan.cm.js"
+      "require": "./dist/jsmods/lan.esm.mjs"
     },
     "./mod/root": {
       "import": "./dist/jsmods/root.cm.js",
-      "require": "./dist/jsmods/root.cm.js"
+      "require": "./dist/jsmods/root.esm.mjs"
     },
     "./mod/localization": {
       "import": "./dist/jsmods/localization.cm.js",
-      "require": "./dist/jsmods/localization.cm.js"
+      "require": "./dist/jsmods/localization.esm.mjs"
     },
     "./mod/localizationData": {
       "import": "./dist/jsmods/localizationData.cm.js",
-      "require": "./dist/jsmods/localizationData.cm.js"
+      "require": "./dist/jsmods/localizationData.esm.mjs"
     },
     "./mod/localizationData.zh": {
       "import": "./dist/jsmods/localizationData.zh.cm.js",
-      "require": "./dist/jsmods/localizationData.zh.cm.js"
+      "require": "./dist/jsmods/localizationData.zh.esm.mjs"
     },
     "./mod/common": {
       "import": "./dist/jsmods/common.cm.js",
-      "require": "./dist/jsmods/common.cm.js"
+      "require": "./dist/jsmods/common.esm.mjs"
     },
     "./mod/core": {
       "import": "./dist/jsmods/core.cm.js",
-      "require": "./dist/jsmods/core.cm.js"
+      "require": "./dist/jsmods/core.esm.mjs"
     },
     "./mod/html": {
       "import": "./dist/jsmods/html.cm.js",
-      "require": "./dist/jsmods/html.cm.js"
+      "require": "./dist/jsmods/html.esm.mjs"
     },
     "./mod/io": {
       "import": "./dist/jsmods/io.cm.js",
-      "require": "./dist/jsmods/io.cm.js"
+      "require": "./dist/jsmods/io.esm.mjs"
     },
     "./mod/render": {
       "import": "./dist/jsmods/render.cm.js",
-      "require": "./dist/jsmods/render.cm.js"
+      "require": "./dist/jsmods/render.esm.mjs"
     },
     "./mod/spectroscopy": {
       "import": "./dist/jsmods/spectroscopy.cm.js",
-      "require": "./dist/jsmods/spectroscopy.cm.js"
+      "require": "./dist/jsmods/spectroscopy.esm.mjs"
     },
     "./mod/widget": {
       "import": "./dist/jsmods/widget.cm.js",
-      "require": "./dist/jsmods/widget.cm.js"
+      "require": "./dist/jsmods/widget.esm.mjs"
     },
     "./mod/chemWidget": {
       "import": "./dist/jsmods/chemWidget.cm.js",
-      "require": "./dist/jsmods/chemWidget.cm.js"
+      "require": "./dist/jsmods/chemWidget.esm.mjs"
     },
     "./mod/webComponent": {
       "import": "./dist/jsmods/webComponent.cm.js",
-      "require": "./dist/jsmods/webComponent.cm.js"
+      "require": "./dist/jsmods/webComponent.esm.mjs"
     },
     "./mod/algorithm": {
       "import": "./dist/jsmods/algorithm.cm.js",
-      "require": "./dist/jsmods/algorithm.cm.js"
+      "require": "./dist/jsmods/algorithm.esm.mjs"
     },
     "./mod/calculation": {
       "import": "./dist/jsmods/calculation.cm.js",
-      "require": "./dist/jsmods/calculation.cm.js"
+      "require": "./dist/jsmods/calculation.esm.mjs"
     },
     "./mod/data": {
       "import": "./dist/jsmods/data.cm.js",
-      "require": "./dist/jsmods/data.cm.js"
+      "require": "./dist/jsmods/data.esm.mjs"
     },
     "./mod/emscripten": {
       "import": "./dist/jsmods/emscripten.cm.js",
-      "require": "./dist/jsmods/emscripten.cm.js"
+      "require": "./dist/jsmods/emscripten.esm.mjs"
     },
     "./mod/openbabel": {
       "import": "./dist/jsmods/openbabel.cm.js",
-      "require": "./dist/jsmods/openbabel.cm.js"
+      "require": "./dist/jsmods/openbabel.esm.mjs"
     },
     "./mod/indigo": {
       "import": "./dist/jsmods/indigo.cm.js",
-      "require": "./dist/jsmods/indigo.cm.js"
+      "require": "./dist/jsmods/indigo.esm.mjs"
     },
     "./mod/inchi": {
       "import": "./dist/jsmods/inchi.cm.js",
-      "require": "./dist/jsmods/inchi.cm.js"
+      "require": "./dist/jsmods/inchi.esm.mjs"
     }
   },
   "author": {
