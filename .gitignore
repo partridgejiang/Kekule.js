@@ -79,6 +79,7 @@ _myLogs
 /test/misc
 test/misc/touchEventTest.html
 /test/_libs
+/package.base.json
 /src/kekule.moduleEnvInits.js
 /src/_extras/browserAddOns/firefox
 /src/_extras/browserAddOns/chrome

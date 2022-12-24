@@ -1,3 +1,4 @@
+var prjRootPath = __dirname +  '/../../../';
 var srcRootPath = __dirname +  '/../../../src/';
 var Kekule = require(srcRootPath + 'kekule.js').Kekule;
 require('./kekule.dev.packageTools.js');
@@ -424,6 +425,7 @@ var Compressor = class {
 		var destFileTypeMark = (jsModuleType === 'commonjs')? '.cm': '.esm';
 		var destFileExt = (jsModuleType === 'commonjs')? '.js': '.mjs';
 
+		var result = {};
 		moduleNames.forEach(modName => {
 			var modMinFileName = moduleDependencies[modName].minFile;
 			var wrappedKModules = [].concat(moduleDependencies[modName].requiredModules);
@@ -461,18 +463,51 @@ var Compressor = class {
 			lines.push(moduleExportLine);
 			*/
 			var destFileName = modName + destFileTypeMark + destFileExt;
-			fs.writeFileSync(path.resolve(targetPath, destFileName), lines.join('\n'));
+			var destFileAbsName = path.resolve(targetPath, destFileName);
+			fs.writeFileSync(destFileAbsName, lines.join('\n'));
+
+			result[modName] = destFileAbsName;
 		});
+		return result;
 	}
 
 	_generateModuleWrapperJsFiles(kekuleModuleNames, compressFileDetails, destPath, options)
 	{
 		var r1 = this._generateModuleExportJsFiles(kekuleModuleNames, compressFileDetails, destPath, 'commonjs', options);
-		this._generateDividedModuleWrapperJsFiles(compressFileDetails, destPath, r1.prodModuleInitFileName, compressFileDetails.subPaths.jsmodule, 'commonjs');
+		var dividedMapCm = this._generateDividedModuleWrapperJsFiles(compressFileDetails, destPath, r1.prodModuleInitFileName, compressFileDetails.subPaths.jsmodule, 'commonjs');
 		console.log('CommonJS Module wrapper generated.');
 		var r2 = this._generateModuleExportJsFiles(kekuleModuleNames, compressFileDetails, destPath, 'es', options);
-		this._generateDividedModuleWrapperJsFiles(compressFileDetails, destPath, r2.prodModuleInitFileName, compressFileDetails.subPaths.jsmodule, 'es');
+		var dividedMapEsm = this._generateDividedModuleWrapperJsFiles(compressFileDetails, destPath, r2.prodModuleInitFileName, compressFileDetails.subPaths.jsmodule, 'es');
 		console.log('ES Module wrapper generated.');
+
+		var dividedFileMap = {};
+		for (var modName in dividedMapCm)
+			dividedFileMap[modName] = { 'cm': dividedMapCm[modName] };
+		for (var modName in dividedMapEsm)
+			dividedFileMap[modName]['esm'] = dividedMapCm[modName];
+
+		if (!options || !options.doNotUpdateSrcDir)
+		{
+			this._updatePackageJsonFile(kekuleModuleNames, compressFileDetails, destPath, dividedFileMap, options)
+			console.log('package.json updated');
+		}
+	}
+
+	_updatePackageJsonFile(kekuleModuleNames, compressFileDetails, destPath, dividedModFileMap, options)
+	{
+		var baseContent = fs.readFileSync(path.resolve(prjRootPath, 'package.base.json'));
+		var packageJson = JSON.parse(baseContent);
+
+		//console.log(dividedModFileMap);
+		for (var modName in dividedModFileMap)
+		{
+			packageJson.exports['./mod/' + modName] = {
+				'import': './' + this._normalizePath(path.relative(prjRootPath, dividedModFileMap[modName].cm)),
+				'require': './' + this._normalizePath(path.relative(prjRootPath, dividedModFileMap[modName].esm))
+			}
+		}
+
+		fs.writeFileSync(path.resolve(prjRootPath, 'package.json'), JSON.stringify(packageJson, null, '  '));
 	}
 
 	/*
