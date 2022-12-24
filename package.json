@@ -13,7 +13,91 @@
       "require": "./src/kekule.cm.dev.js"
     },
     "./theme": "./dist/themes/default/kekule.css",
-    "./theme/default": "./dist/themes/default/kekule.css"
+    "./theme/default": "./dist/themes/default/kekule.css",
+    "./mod/lan": {
+      "import": "./dist/jsmods/lan.cm.js",
+      "require": "./dist/jsmods/lan.cm.js"
+    },
+    "./mod/root": {
+      "import": "./dist/jsmods/root.cm.js",
+      "require": "./dist/jsmods/root.cm.js"
+    },
+    "./mod/localization": {
+      "import": "./dist/jsmods/localization.cm.js",
+      "require": "./dist/jsmods/localization.cm.js"
+    },
+    "./mod/localizationData": {
+      "import": "./dist/jsmods/localizationData.cm.js",
+      "require": "./dist/jsmods/localizationData.cm.js"
+    },
+    "./mod/localizationData.zh": {
+      "import": "./dist/jsmods/localizationData.zh.cm.js",
+      "require": "./dist/jsmods/localizationData.zh.cm.js"
+    },
+    "./mod/common": {
+      "import": "./dist/jsmods/common.cm.js",
+      "require": "./dist/jsmods/common.cm.js"
+    },
+    "./mod/core": {
+      "import": "./dist/jsmods/core.cm.js",
+      "require": "./dist/jsmods/core.cm.js"
+    },
+    "./mod/html": {
+      "import": "./dist/jsmods/html.cm.js",
+      "require": "./dist/jsmods/html.cm.js"
+    },
+    "./mod/io": {
+      "import": "./dist/jsmods/io.cm.js",
+      "require": "./dist/jsmods/io.cm.js"
+    },
+    "./mod/render": {
+      "import": "./dist/jsmods/render.cm.js",
+      "require": "./dist/jsmods/render.cm.js"
+    },
+    "./mod/spectroscopy": {
+      "import": "./dist/jsmods/spectroscopy.cm.js",
+      "require": "./dist/jsmods/spectroscopy.cm.js"
+    },
+    "./mod/widget": {
+      "import": "./dist/jsmods/widget.cm.js",
+      "require": "./dist/jsmods/widget.cm.js"
+    },
+    "./mod/chemWidget": {
+      "import": "./dist/jsmods/chemWidget.cm.js",
+      "require": "./dist/jsmods/chemWidget.cm.js"
+    },
+    "./mod/webComponent": {
+      "import": "./dist/jsmods/webComponent.cm.js",
+      "require": "./dist/jsmods/webComponent.cm.js"
+    },
+    "./mod/algorithm": {
+      "import": "./dist/jsmods/algorithm.cm.js",
+      "require": "./dist/jsmods/algorithm.cm.js"
+    },
+    "./mod/calculation": {
+      "import": "./dist/jsmods/calculation.cm.js",
+      "require": "./dist/jsmods/calculation.cm.js"
+    },
+    "./mod/data": {
+      "import": "./dist/jsmods/data.cm.js",
+      "require": "./dist/jsmods/data.cm.js"
+    },
+    "./mod/emscripten": {
+      "import": "./dist/jsmods/emscripten.cm.js",
+      "require": "./dist/jsmods/emscripten.cm.js"
+    },
+    "./mod/openbabel": {
+      "import": "./dist/jsmods/openbabel.cm.js",
+      "require": "./dist/jsmods/openbabel.cm.js"
+    },
+    "./mod/indigo": {
+      "import": "./dist/jsmods/indigo.cm.js",
+      "require": "./dist/jsmods/indigo.cm.js"
+    },
+    "./mod/inchi": {
+      "import": "./dist/jsmods/inchi.cm.js",
+      "require": "./dist/jsmods/inchi.cm.js"
+    }
   },
   "author": {
     "name": "Chen Jiang",
