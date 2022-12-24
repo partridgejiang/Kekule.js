@@ -394,6 +394,8 @@ Kekule.WebComponent.BaseWidgetWrapper = class extends HTMLElement {
 		for (var i = 0, l = props.getLength(); i < l; ++i)
 		{
 			var propInfo = props.getPropInfoAt(i);
+			if (propInfo.scope < Class.PropertyScope.PUBLIC)
+				continue;
 			if (exposedProps && exposedProps.indexOf(propInfo.name) < 0)
 				continue;
 			if (ignoredProps && ignoredProps.indexOf(propInfo.name) >= 0)
