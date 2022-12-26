@@ -5759,6 +5759,8 @@ Kekule.Editor.RepositoryIaController = Class.create(Kekule.Editor.StructureInser
 						this.startDirectManipulate(insertResult.manipulateType, allObjs,
 							insertResult.coord, insertResult.box, insertResult.rotateCenter);
 						this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge to all inserted objects
+						this.notifyEditorEndManipulateObjects();  // important, end prev manipulate (but do not push the operations), otherwise the editor._objectManipulateFlag will not be reset to 0
+
 						this.startDirectManipulate(insertResult.manipulateType, directObjs,
 							insertResult.coord, insertResult.box, insertResult.rotateCenter);  // directly manipulate on suitable objects
 						this.moveManipulatedObjs(coord);  // force a "move" action, to apply possible merge to direct manipulatd objs
@@ -7003,6 +7005,7 @@ Kekule.Editor.PathGlyphIaController = Class.create(Kekule.Editor.RepositoryIaCon
 	getDirectManipulateObjs: function(/*$super, */insertedObjs, repInsertionResult)
 	{
 		//return insertedObjs;
+		var result;
 		if (insertedObjs.length === 1)
 		{
 			var parent = insertedObjs[0];
@@ -7013,11 +7016,13 @@ Kekule.Editor.PathGlyphIaController = Class.create(Kekule.Editor.RepositoryIaCon
 				//if (nodeCount === 2)
 				//  return [parent.getNodeAt(nodeCount - 1)];
 				if (parent.getDirectManipulationTarget)
-					return parent.getDirectManipulationTarget();
+					result = parent.getDirectManipulationTarget();
 			}
 		}
 		// default
-		return this.tryApplySuper('getDirectManipulateObjs', [insertedObjs, repInsertionResult])  /* $super(insertedObjs, repInsertionResult) */;
+		if (!result)
+			result = this.tryApplySuper('getDirectManipulateObjs', [insertedObjs, repInsertionResult])  /* $super(insertedObjs, repInsertionResult) */;
+		return result;
 	},
 	/** @ignore */
 	getInsertedObjs: function(/*$super*/)
