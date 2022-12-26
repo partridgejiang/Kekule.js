@@ -11,7 +11,7 @@ var Kekule = (typeof(Kekule) === 'object')? Kekule: {};
 var Kekule = Object.extend(Kekule, {
 	LIBNAME: 'Kekule.js',
 	LIBNAME_CORE: 'Kekule',
-	VERSION: '0.9.9.22122100',
+	VERSION: '0.9.10.22122600',
 	/**
 	 * A flag that indicate whether all essential Kekule modules are loaded into document.
 	 * @ignore
