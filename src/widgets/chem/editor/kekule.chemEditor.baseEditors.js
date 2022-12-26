@@ -196,9 +196,20 @@ Kekule.globalOptions.add('chemWidget.editor.issueChecker', {
  * @name Kekule.Editor.BaseEditor#hoverOnObjs
  * @event
  */
-	/**
+/**
  * Invoked when the selection in editor has been changed.
  * @name Kekule.Editor.BaseEditor#selectionChange
+ * @event
+ */
+/**
+ * Invoked when user begin to do manipulation in the editor.
+ * @name Kekule.Editor.BaseEditor#beginManipulateObject
+ * @event
+ */
+/**
+ * Invoked when the user manipulation ends in the editor.
+ * This event is a safe and effective opportunity to retrieve the changes in editor.
+ * @name Kekule.Editor.BaseEditor#endManipulateObject
  * @event
  */
 /**
