@@ -2049,7 +2049,7 @@ ClassEx.defineProp(ObjectEx, 'predefinedSetting', {'dataType': DataType.STRING,
 				{
 					var cname = ClassEx.getClassName(currClass);
 					var sname = cname + '.' + v;
-					var setting = Kekule.ObjPropSettingManager.getSetting(sname);
+					setting = Kekule.ObjPropSettingManager.getSetting(sname);
 					currClass = ClassEx.getSuperClass(currClass);
 				}
 
