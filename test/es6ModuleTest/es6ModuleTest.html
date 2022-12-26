@@ -24,7 +24,11 @@
 		//console.log(Kekule.Molecule);
 	</script>
 	-->
+
 	<script type="module">
+		var _kekule_environment_ = {
+			'kekule.language': 'en-US'//'zh-CN'
+		}
 		//import K from "../../src/kekule.esm.dev.mjs";
 		//import K from "../../dist/kekule.esm.mjs";
 		// import K from "../../dist/jsmods/chemWidget.esm.mjs";
@@ -37,14 +41,36 @@
 
 		// import { Kekule, ClassEx } from "../../dist/kekule.esm.mjs";
 		import {Kekule, ClassEx} from "../../dist/jsmods/chemWidget.esm.mjs";
+		// import "../../dist/jsmods/chemWidget.esm.mjs";
 		import {Kekule as K1, ClassEx as C1} from "../../dist/jsmods/spectroscopy.esm.mjs";
+		// import {Kekule, ClassEx} from "../../dist/jsmods/localizationData.zh.esm.mjs";
+		import "../../dist/jsmods/localizationData.zh.esm.mjs";
+
+		// import { Kekule, ClassEx } from "../../src/kekule.esm.dev.mjs";
 		console.log(ClassEx.getClassName(Kekule.ChemObject));
-		console.log(Kekule === K1);
+		//console.log(Kekule === K1);
+
+		Kekule.X.domReady(()=>{
+			new Kekule.Editor.Composer(document.getElementById('composer2'));
+		})
+	</script>
+	<script>
+		function loaded()
+		{
+			console.log('Page loaded!', Kekule.LocalizationRes);
+		}
+		/*
+		Kekule.X.domReady(() => {
+			console.log('domReady!', Kekule.LocalizationRes);
+		});
+
+		 */
 	</script>
 </head>
-<body>
+<body onload="loaded()">
 	<h1>ES6 Module Test</h1>
 	<div id="composer" data-widget="Kekule.Editor.Composer"
 			 data-chem-obj="url(#initialMol)" data-resizable="true"></div>
+	<div id="composer2"></div>
 </body>
 </html>

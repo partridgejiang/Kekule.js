@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Sync Editor and Viewer Test</title>
+  <script src="../../../src/kekule.js?min=false&modules=chemWidget,spectroscopy,algorithm,calculation,openbabel,indigo"></script>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+  <style>
+    #stage
+    {
+      display: flex;
+    }
+    #composer, #viewer
+    {
+      flex: 1 1 auto;
+      width: 500px;
+      height: 400px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <div id="composer" data-widget="Kekule.Editor.Composer" data-resizable="true" data-predefined-setting="fullFunc"></div>
+    <div id="viewer" data-widget="Kekule.ChemWidget.Viewer" data-resizable="true" data-predefined-setting="basic"></div>
+  </div>
+
+
+  <script>
+    var composer, viewer;
+    Kekule.X.domReady(()=>{
+      composer = Kekule.Widget.getWidgetById('composer');
+      //composer.getEditor().enableOperContext = false;
+      viewer = Kekule.Widget.getWidgetById('viewer');
+
+      composer.on('operPush', e => {
+        console.log('Push Operation', e.operation.getClassName)
+      });
+      composer.on('load', e=>{
+        console.log('composer load');
+        viewer.setChemObj(composer.getChemObj());
+      });
+      composer.on(/*'editObjsUpdated'*/'endManipulateObject', e=>{
+        console.log('composer endManipulateObject');
+
+        if (viewer.getChemObj() !== composer.getChemObj())
+        {
+          viewer.setChemObj(composer.getChemObj());
+          console.log('sync chemObj');
+        }
+        viewer.requestRepaint();
+      });
+    });
+  </script>
+</body>
+</html>
