@@ -498,6 +498,11 @@ var Compressor = class {
 		var baseContent = fs.readFileSync(path.resolve(prjRootPath, 'package.base.json'));
 		var packageJson = JSON.parse(baseContent);
 
+		// package version, only reserves the first 3 parts XX.XX.XX
+		var kVersionParts = Kekule.VERSION.split('.');
+		var packageVersion = kVersionParts.slice(0, 3).join('.');
+		packageJson.version = packageVersion;
+
 		//console.log(dividedModFileMap);
 		for (var modName in dividedModFileMap)
 		{
