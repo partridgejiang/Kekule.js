@@ -207,9 +207,18 @@ Kekule.globalOptions.add('chemWidget.editor.issueChecker', {
  * @event
  */
 /**
- * Invoked when the user manipulation ends in the editor.
+ * Invoked when the user manipulation (add new objects, move, rotate...) ends in the editor.
  * This event is a safe and effective opportunity to retrieve the changes in editor.
+ * Note: operation undo/redo will change the object inside editor but will not evoke this event.
  * @name Kekule.Editor.BaseEditor#endManipulateObject
+ * @event
+ */
+/**
+ * Invoked when the user modification to chem object ends in the editor.
+ * This event occurs when manipulation done or operation undone/redone.
+ * It is a safe and effective opportunity to retrieve the changes in editor.
+ * Note: operation undo/redo will change the object inside editor but will not evoke this event.
+ * @name Kekule.Editor.BaseEditor#userModificationDone
  * @event
  */
 /**
@@ -1707,11 +1716,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	reactOperHistoryUndo: function(e)
 	{
 		this.invokeEvent('operUndo', e);
+		this.invokeEvent('userModificationDone');
 	},
 	/** @private */
 	reactOperHistoryRedo: function(e)
 	{
 		this.invokeEvent('operRedo', e);
+		this.invokeEvent('userModificationDone');
 	},
 	reactOperHistoryClear: function(e)
 	{
@@ -1984,6 +1995,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//console.log('[MANIPULATE END]');
 		this.setOperationsInCurrManipulation([]);
 		this.invokeEvent('endManipulateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
+		this.invokeEvent('userModificationDone');
 	},
 
 	/**
