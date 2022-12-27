@@ -42,16 +42,36 @@
         console.log('composer load');
         viewer.setChemObj(composer.getChemObj());
       });
-      composer.on(/*'editObjsUpdated'*/'userModificationDone', e=>{
-      //composer.on('editObjsUpdated', e=>{
-        //console.log('composer endManipulateObject');
+      // composer.on(/*'editObjsUpdated'*/'userModificationDone', e=>{
+      composer.on('editObjsUpdated', e=>{
+      //composer.on('endManipulateObject', e=>{
+        console.log('composer userModificationDone');
 
+        // if (viewer.getChemObj() !== composer.getSavingTargetObj())
+        // {
+        //   viewer.setChemObj(composer.getSavingTargetObj());
+        //   console.log('sync chemObj');
+        // }
         if (viewer.getChemObj() !== composer.getChemObj())
         {
           viewer.setChemObj(composer.getChemObj());
           console.log('sync chemObj');
         }
-        viewer.requestRepaint();
+        else
+        {
+          /*
+          var painter = viewer.getPainter();
+          painter.setRenderConfigs(viewer.getRenderConfigs());
+          viewer.requestRepaint();
+          */
+          //viewer._doLoadOnObj(viewer.getChemObj(), {'refreshOnly': true, debug: true});
+          //viewer.refitDrawContext(true);
+          viewer.requestRepaint();
+        }
+        //viewer.setChemObj(composer.getChemObj());
+      });
+      composer.on('endManipulateObject', e=> {
+        console.log('composer endManipulateObject');
       });
       composer.on('editObjsUpdated', e => {
         let obj = composer.getChemObj().clone();
