@@ -906,6 +906,7 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 
 			var isRoot = this.isRootRenderer();
 
+			this.doPrepareDraw(context, baseCoord, ops);
 			this.invokeEvent('prepareDrawing', {'context': context, 'obj': this.getChemObj()});
 
 			//console.log('DRAW', isRoot);
@@ -925,6 +926,18 @@ Kekule.Render.AbstractRenderer = Class.create(ObjectEx,
 		}
 
 		return result;
+	},
+	/**
+	 * Do some preparing job before {@link Kekule.Render.AbstractRenderer.doDraw}.
+	 * Descendants may override this method.
+	 * @param {Object} context Context to be drawn, such as Canvas, SVG, VML and so on.
+	 * @param {Hash} baseCoord Coord on context to draw the center of chemObj.
+	 * @param {Hash} options Actual draw options, such as draw rectangle, draw style and so on.
+	 * @private
+	 */
+	doPrepareDraw: function(context, baseCoord, options)
+	{
+		// do nothing here
 	},
 	/**
 	 * Do actual work of {@link Kekule.Render.AbstractRenderer.draw}.
@@ -2011,6 +2024,22 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 	},
 
 	/** @private */
+	doPrepareDraw: function(context, baseCoord, options)
+	{
+		this.refreshChildObjs();  // refresh child objects first
+		this.prepareChildRenderers();  // refresh renderer list
+		var childRenderers = this.getChildRenderers();
+		// all child renderers do prepare before doDraw, since the child renderer/obj may affect the objBox calc of parent
+		for (var i = 0, l = childRenderers.length; i < l; ++i)
+		{
+			var r = childRenderers[i];
+			r.doPrepareDraw(context, baseCoord, options);
+		}
+
+		// call doPrepareDraw of children
+		//console.log('doPrepareDraw', this.getClassName(), this.getTargetChildObjs());
+	},
+	/** @private */
 	doDraw: function(/*$super, */context, baseCoord, options)
 	{
 		//this.reset();
@@ -2019,8 +2048,8 @@ Kekule.Render.CompositeRenderer = Class.create(Kekule.Render.AbstractRenderer,
 		this.prepare();
 		//console.log('draw', this.getClassName(), options.partialDrawObjs, baseCoord);
 		*/
-		this.refreshChildObjs();  // refresh child objects first
-		this.prepareChildRenderers();  // refresh renderer list
+		// this.refreshChildObjs();  // refresh child objects first, should move to method doPrepareDraw before the parent.doDraw process
+		// this.prepareChildRenderers();  // refresh renderer list, should move to method doPrepareDraw
 
 		var op = Object.create(options);
 		if (options.partialDrawObjs && this._needWholelyDraw(options.partialDrawObjs, context))
