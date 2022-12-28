@@ -83,18 +83,3 @@ The periodic table widget is relatively simple to use,
 `this online demo <http://partridgejiang.github.io/Kekule.js/demos/items/periodicTable/periodicTable.html>`_
 illustrates functions of it. Viewer and composer are much powerful and they will be explored
 further in the following parts of this tutorial.
-
-
-.. [#moduleWidget] To use common widgets, widget module must be loaded and
-  additional style sheet also need to be linked in HTML page, e.g.:
-.. code-block:: html
-
-	<script src="kekule.js?module=widget"></script>
-	<link rel="stylesheet" type="text/css" href="themes/default/kekule.css" />
-
-.. [#moduleChemWidget] To use chem widgets, chem widget module must be loaded and
-  additional style sheet also need to be linked in HTML page, e.g.:
-.. code-block:: html
-
-	<script src="kekule.js?module=chemWidget"></script>
-	<link rel="stylesheet" type="text/css" href="themes/default/kekule.css" />

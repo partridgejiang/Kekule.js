@@ -9,9 +9,15 @@ introduced and all widgets can be used in a web component way.
 Since web component is introduced in Kekule.js recently and not a part of the default loaded modules,
 you need to load the web component module in Kekule.js explicitly in your web application first:
 
+.. code-block:: javascript
+
+  
+
 .. code-block:: html
 
   <script src="kekule.js?modules=webComponent"></script>
+
+
 
 Yes, only the JavaScript file. Theme stylesheet is not need to be linked in explicitly.
 It will be loaded in web component internal context automatically.

@@ -4,7 +4,7 @@ Loading and Saving Molecule
 Module Kekule.IO provides a series of methods to perform input
 and output of molecule (and other chemistry objects).
 
-Saving Molecule [#module]_
+Saving Molecule
 --------------------------
 
 To save molecule, just use ``saveFormatData``:[#example]_
@@ -23,7 +23,7 @@ To save molecule, just use ``saveFormatData``:[#example]_
 
 The return data usually is a string.
 
-Loading Molecule [#module]_
+Loading Molecule
 ---------------------------
 
 Loading from String Variable
@@ -100,7 +100,7 @@ It is notable that ``loadFileData`` also uses the asynchronous model and needs a
 
 .. _loadingFromResource:
 
-Loading from Resource [#module2]_
+Loading from Resource
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Kekule.js provides another way to utilize source data: the resource identifier.
@@ -187,16 +187,5 @@ The *resource* may link to external file as well:
   });
 
 Note the resource loading process is also asynchronous and requires a callback.
-
-
-.. [#module] To read and write molecule, IO module must be loaded, e.g.:
-.. code-block:: html
-
-	<script src="kekule.js?module=io"></script>
-
-.. [#module2] To load data from resource, both IO and HTML module must be used, e.g.:
-.. code-block:: html
-
-	<script src="kekule.js?module=io,html"></script>
 
 .. [#example] Example of this chapter can be found and run at `here <../examples/molIO.html>`_.

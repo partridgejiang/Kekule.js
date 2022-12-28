@@ -39,7 +39,7 @@ molecule, there often to be many other types of objects in a chemoinformatics ap
 method pattern is applied here. Rather than calling a *renderer* class directly, you should
 query the *renderer manager* to return a preferred class for molecule (or other types of object).
 
-After those background introduction, now let us implement those knowledge in code. [#module]_
+After those background introduction, now let us implement those knowledge in code.
 
 Drawing by Renderer
 -------------------
@@ -181,10 +181,5 @@ It is obvious that two code snippets are much more shorter than the one by using
 *renderer* directly. However, there do exists a even simpler method to display
 chemoinformatics objects: using **widget**.
 
-
-.. [#module] To draw molecule as examples in this chapter, render module must be loaded, e.g.:
-.. code-block:: html
-
-	<script src="kekule.js?module=render"></script>
 
 .. [#example] Example of this chapter can be found and run at `here <../examples/renderMol.html>`_.

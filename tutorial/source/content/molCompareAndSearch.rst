@@ -4,7 +4,7 @@ Molecule Comparison and Searching
 Users often need to compare the structure, or search for substructure in molecules.
 The toolkit provides corresponding APIs.
 
-Comparing Molecules [#module]_
+Comparing Molecules
 ------------------------------
 
 To check if two molecule structure is same, just call method ``isSameStructureWith``:[#example]_
@@ -17,7 +17,7 @@ To check if two molecule structure is same, just call method ``isSameStructureWi
   var msg = 'The two molecules are ' + (isSame? 'same': 'different');
 
 
-Substructure Searching [#module]_
+Substructure Searching
 ---------------------------------
 
 Substructure matching can be done by the following code:[#example]_
@@ -52,7 +52,3 @@ contains matching child objects (atoms and bonds) in targetMol. You can iterate 
 .. note:: Substructure search is a time-consuming job, especially to complex molecules.
 
 .. [#example] Example of this chapter can be found and run at `here <../examples/searchMol.html>`_.
-.. [#module] To use this feature, algorithm module must be loaded, e.g.:
-.. code-block:: html
-
-	<script src="kekule.js?module=algorithm"></script>

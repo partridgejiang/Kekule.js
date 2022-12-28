@@ -10,7 +10,7 @@ The Kekule.js package can be installed with npm with the following command line:
 
     npm install --save kekule
 
-Afterwards, the package can be imported to your project with ES6 module ``import`` or CommonJS ``require``:
+Afterwards, the package can be imported to your project with ES module ``import`` or CommonJS ``require``:
 
 .. code-block:: javascript
 
