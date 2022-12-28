@@ -6,23 +6,7 @@ a fashion solution to encapsulate custom elements and functions away from
 other context of the web applications. In the recent version of Kekule.js, web component technology is
 introduced and all widgets can be used in a web component way.
 
-Since web component is introduced in Kekule.js recently and not a part of the default loaded modules,
-you need to load the web component module in Kekule.js explicitly in your web application first:
-
-.. code-block:: javascript
-
-  
-
-.. code-block:: html
-
-  <script src="kekule.js?modules=webComponent"></script>
-
-
-
-Yes, only the JavaScript file. Theme stylesheet is not need to be linked in explicitly.
-It will be loaded in web component internal context automatically.
-
-Then, the toolkit provides a util function encapsulating a normal Kekule.js into a web component element:
+The toolkit provides a util function encapsulating a normal Kekule.js into a web component element:
 
 .. code-block:: javascript
 
