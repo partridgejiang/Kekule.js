@@ -41,7 +41,7 @@ widget in JavaScript code:
 Currently there are dozens of widgets shipped with the toolkit. They are divided
 into two groups: common widgets and chem widgets.
 
-Common Widgets [#moduleWidget]_
+Common Widgets
 -------------------------------
 
 These widgets are general-purposed and usually not directly related to chemoinformatics,
@@ -61,7 +61,7 @@ introduce them in details. You can check the
   ===========================   ===========
 
 
-Chem Widgets [#moduleChemWidget]_
+Chem Widgets
 ---------------------------------
 
 The most useful chem widgets in the toolkit is *composer*, *viewer* and *periodic table*.

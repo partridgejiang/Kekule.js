@@ -76,7 +76,7 @@ Formula can be calculated from atoms in molecule:[#example]_
   // turn formula object into text
   console.log(formula.getText());
 
-Ring Information [#module]_
+Ring Information
 ---------------------------
 
 Kekule.js provides method to easily find all rings and SSSR(Smallest Set of Smallest Rings) of a molecule.
@@ -162,7 +162,7 @@ by *findAllRings* and *findSSSR* will be cached until the structure of molecule 
 .. attention:: Currently, multicenter bonds and bond-bond connections are ignored during ring perception.
 
 
-Aromatic Detection [#module]_
+Aromatic Detection
 -----------------------------
 
 Currently, to save the calculation time, aromatic detection is carried on SSSR rings of molecule in
