@@ -1716,13 +1716,13 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 	reactOperHistoryUndo: function(e)
 	{
 		this.invokeEvent('operUndo', e);
-		this.invokeEvent('userModificationDone');
+		this.notifyUserModificationDone();
 	},
 	/** @private */
 	reactOperHistoryRedo: function(e)
 	{
 		this.invokeEvent('operRedo', e);
-		this.invokeEvent('userModificationDone');
+		this.notifyUserModificationDone();
 	},
 	reactOperHistoryClear: function(e)
 	{
@@ -1995,7 +1995,7 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		//console.log('[MANIPULATE END]');
 		this.setOperationsInCurrManipulation([]);
 		this.invokeEvent('endManipulateObject'/*, {'details': Object.extend({}, this._updatedObjectDetails)}*/);
-		this.invokeEvent('userModificationDone');
+		this.notifyUserModificationDone();
 	},
 
 	/**
@@ -2049,6 +2049,16 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			return null;
 	},
 	*/
+
+	/**
+	 * Notify the user modification has been done.
+	 * This method should be called on every user manipulation/modification ends.
+	 * @private
+	 */
+	notifyUserModificationDone: function()
+	{
+		this.invokeEvent('userModificationDone');
+	},
 
 	/** @private */
 	_needToCanonicalizeBeforeSaving: function()

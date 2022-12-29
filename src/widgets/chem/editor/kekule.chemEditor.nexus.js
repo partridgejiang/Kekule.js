@@ -112,12 +112,16 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 			if (oldValue)
 			{
 				if (oldValue.getOperHistory() === editor.getOperHistory())
+				{
+					this._uninstallObjInspectorEventHandler(oldValue);
 					oldValue.setOperHistory(null);
+				}
 			}
 			if (newValue)
 			{
 				newValue.setOperHistory(editor.getOperHistory());
 				newValue.setEnableOperHistory(editor.getEnableOperHistory());
+				this._installObjInspectorEventHandler(newValue);
 				this._updateByEditor();
 			}
 		}
@@ -163,6 +167,16 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 	_uninstallStructureTreeViewEventHandler: function(treeView)
 	{
 		treeView.removeEventListener('change', this._reactStructureTreeViewChanged, this);
+	},
+	/** @private */
+	_installObjInspectorEventHandler: function(objInspector)
+	{
+		objInspector.addEventListener('propertyChange', this._reactObjInspectorPropertyChange, this);
+	},
+	/** @private */
+	_uninstallObjInspectorEventHandler: function(objInspector)
+	{
+		objInspector.removeEventListener('propertyChange', this._reactObjInspectorPropertyChange, this);
 	},
 	/** @private */
 	_installIssueInspectorEventHandler: function(issueInspector)
@@ -251,6 +265,16 @@ Kekule.Editor.EditorNexus = Class.create(ObjectEx,
 		// reflect to editor
 		if (editor && editor.setActiveIssueCheckResult)
 			editor.setActiveIssueCheckResult(activeResult);
+	},
+	/** @private */
+	_reactObjInspectorPropertyChange: function(e)
+	{
+		// modification done by object inspector
+		var editor = this.getEditor();
+		if (editor && editor.notifyUserModificationDone)
+		{
+			editor.notifyUserModificationDone();
+		}
 	},
 
 	/**
