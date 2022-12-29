@@ -282,6 +282,7 @@ var Compressor = class {
 		if (kekuleModuleNames)
 		{
 			var kmodNameArrayExpress = '[' + kekuleModuleNames.map(n => '"' + n + '"').join(', ') + ']';
+			lines.push('if(!Kekule.scriptSrcInfo.modules)Kekule.scriptSrcInfo.modules=[];')
 			lines.push('Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ' + kmodNameArrayExpress + ');');
 		}
 		if (withKekuleLoadCall)
