@@ -181,9 +181,11 @@ It is also possible to wrap a widget into standard [web components](https://deve
 Details can be found at the web component chapter of [tutorial](http://partridgejiang.github.io/Kekule.js/documents/tutorial/content/webComponent.html).
 
 Project [Kekule-Vue](https://github.com/partridgejiang/Kekule-Vue) can be used to wrap Kekule widget into 
-[vue](https://github.com/vuejs/vue) components with vue props, models and events.
+[Vue](https://github.com/vuejs/vue) components with vue props, models and events.
 
-  
+Project [Kekule-React](https://github.com/partridgejiang/Kekule-React) can be used to wrap Kekule widget into
+[React](https://github.com/facebook/react) components with props and events.
+ 
 ## Documentations and Demos
 
 [Tutorials](http://partridgejiang.github.io/Kekule.js/documents/tutorial/index.html) and 
