@@ -57,7 +57,7 @@ Of course, as a JavaScript toolkit, Kekule.js can also be imported with HTML ``<
 
     <!-- from CDN -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/kekule/dist/themes/default/kekule.css" />
-	<script src="https://cdn.jsdelivr.net/npm/kekule/dist/kekule.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/kekule/dist/kekule.min.js"></script>
     <!-- or -->
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/browse/kekule/dist/themes/default/kekule.css" />
     <script src="https://unpkg.com/browse/kekule@0.9.9/dist/kekule.min.js"></script>
@@ -68,7 +68,7 @@ Of course, as a JavaScript toolkit, Kekule.js can also be imported with HTML ``<
 
     <!-- from local file -->
     <link rel="stylesheet" type="text/css" href="./node_modules/dist/themes/default/kekule.css" />
-	<script src="./node_modules/kekule/dist/kekule.min.js"></script>
+    <script src="./node_modules/kekule/dist/kekule.min.js"></script>
 
 If only partial of the package need to be loaded, the special bootstrap JavaScript file ``kekule.js`` can be used
 to include only the limited modules:
@@ -76,7 +76,7 @@ to include only the limited modules:
 .. code-block:: html
 
     <!--  Load IO and ChemWidget modules (and their prerequisites) only -->
-	<script src="./node_modules/kekule/dist/kekule.js?modules=io,chemWidget"></script>
+    <script src="./node_modules/kekule/dist/kekule.js?modules=io,chemWidget"></script>
 
 Other parameters can be used after ``kekule.js`` to set the localization information:
 
@@ -87,7 +87,7 @@ Other parameters can be used after ``kekule.js`` to set the localization informa
         The English and Chinese language data are loaded as well.
         Here the display language of Kekule widgets is set to Chinese manually (rather than be auto-detected from browser).
     -->
-	<script src="./node_modules/kekule/dist/kekule.js?modules=io,chemWidget&locals=en,zh&language=zh"></script>
+    <script src="./node_modules/kekule/dist/kekule.js?modules=io,chemWidget&locals=en,zh&language=zh"></script>
 
 
 Dynamic module loading
