@@ -1,71 +1,39 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Creating Molecule &mdash; Kekule Tutorial 2022.02 documentation</title>
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creating Molecule &mdash; Kekule Tutorial 2022.12 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Loading and Saving Molecule" href="molIO.html" />
     <link rel="prev" title="Atom and Bond" href="atomAndBond.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html" class="icon icon-home"> Kekule Tutorial
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
-                2022.02
+                2022.12
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,17 +41,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="objSys.html">Object and Class System of Kekule.js</a></li>
@@ -105,185 +63,148 @@
 <li class="toctree-l1"><a class="reference internal" href="webComponent.html">Web Component Wrapper of Widgets</a></li>
 </ul>
 
-            
-          
         </div>
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">Kekule Tutorial</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html">Docs</a> &raquo;</li>
-        
-      <li>Creating Molecule</li>
-    
-    
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Creating Molecule</li>
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="creating-molecule">
-<h1>Creating Molecule<a class="headerlink" href="#creating-molecule" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="creating-molecule">
+<h1>Creating Molecule<a class="headerlink" href="#creating-molecule" title="Permalink to this heading"></a></h1>
 <p>Molecule is the core concept in chemoinformatics. This chapter will illustrate some basic
 operations of molecules, especially organic molecules with connection table, in JavaScript code.</p>
-<div class="section" id="creating-molecule-with-atoms-and-bonds">
-<h2>Creating Molecule with Atoms and Bonds<a class="headerlink" href="#creating-molecule-with-atoms-and-bonds" title="Permalink to this headline">¶</a></h2>
+<section id="creating-molecule-with-atoms-and-bonds">
+<h2>Creating Molecule with Atoms and Bonds<a class="headerlink" href="#creating-molecule-with-atoms-and-bonds" title="Permalink to this heading"></a></h2>
 <p>The following code create a new oxirane molecule with three atoms and three bonds:<a class="footnote-reference brackets" href="#example" id="id1">1</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// create molecule first</span>
-<span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span>
-<span class="c1">// add three atoms to molecule, property setter can be called cascadely</span>
-<span class="kd">var</span> <span class="nx">a1</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">()).</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="o">:</span> <span class="mf">0.23</span><span class="p">});</span>
-<span class="kd">var</span> <span class="nx">a2</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">()).</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="o">:</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="o">:</span> <span class="mf">0.23</span><span class="p">});</span>
-<span class="kd">var</span> <span class="nx">a3</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">()).</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;O&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.46</span><span class="p">});</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="nx">a1</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="nx">a2</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="nx">a3</span><span class="p">);</span>
-<span class="c1">// add three bonds to molecule</span>
-<span class="kd">var</span> <span class="nx">b1</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Bond</span><span class="p">()).</span><span class="nx">setBondOrder</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">setConnectedObjs</span><span class="p">([</span><span class="nx">a1</span><span class="p">,</span> <span class="nx">a2</span><span class="p">]);</span>
-<span class="kd">var</span> <span class="nx">b2</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Bond</span><span class="p">()).</span><span class="nx">setBondOrder</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">setConnectedObjs</span><span class="p">([</span><span class="nx">a2</span><span class="p">,</span> <span class="nx">a3</span><span class="p">]);</span>
-<span class="kd">var</span> <span class="nx">b3</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Bond</span><span class="p">()).</span><span class="nx">setBondOrder</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">setConnectedObjs</span><span class="p">([</span><span class="nx">a3</span><span class="p">,</span> <span class="nx">a1</span><span class="p">]);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendConnector</span><span class="p">(</span><span class="nx">b1</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendConnector</span><span class="p">(</span><span class="nx">b2</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendConnector</span><span class="p">(</span><span class="nx">b3</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// create molecule first</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">mol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span><span class="w"></span>
+<span class="c1">// add three atoms to molecule, property setter can be called cascadely</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">a1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">()).</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;y&#39;</span><span class="o">:</span><span class="w"> </span><span class="mf">0.23</span><span class="p">});</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">a2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">()).</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="o">:</span><span class="w"> </span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;y&#39;</span><span class="o">:</span><span class="w"> </span><span class="mf">0.23</span><span class="p">});</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">a3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">()).</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;O&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;y&#39;</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.46</span><span class="p">});</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="nx">a1</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="nx">a2</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="nx">a3</span><span class="p">);</span><span class="w"></span>
+<span class="c1">// add three bonds to molecule</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">b1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Bond</span><span class="p">()).</span><span class="nx">setBondOrder</span><span class="p">(</span><span class="mf">1</span><span class="p">).</span><span class="nx">setConnectedObjs</span><span class="p">([</span><span class="nx">a1</span><span class="p">,</span><span class="w"> </span><span class="nx">a2</span><span class="p">]);</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">b2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Bond</span><span class="p">()).</span><span class="nx">setBondOrder</span><span class="p">(</span><span class="mf">1</span><span class="p">).</span><span class="nx">setConnectedObjs</span><span class="p">([</span><span class="nx">a2</span><span class="p">,</span><span class="w"> </span><span class="nx">a3</span><span class="p">]);</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">b3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Bond</span><span class="p">()).</span><span class="nx">setBondOrder</span><span class="p">(</span><span class="mf">1</span><span class="p">).</span><span class="nx">setConnectedObjs</span><span class="p">([</span><span class="nx">a3</span><span class="p">,</span><span class="w"> </span><span class="nx">a1</span><span class="p">]);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendConnector</span><span class="p">(</span><span class="nx">b1</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendConnector</span><span class="p">(</span><span class="nx">b2</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendConnector</span><span class="p">(</span><span class="nx">b3</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Molecule oxirane created with code:</p>
 <img alt="../_images/oxirane.png" src="../_images/oxirane.png" />
 <p>Atoms or bonds can also be easily removed from existing molecule:<a class="footnote-reference brackets" href="#example" id="id2">1</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// remove atom O related bonds in molecule</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">removeNodeAt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>  <span class="c1">// the atom index starts from 0</span>
-        <span class="c1">// or mol.removeNode(mol.getNodeAt(2));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">removeConnectorAt</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-        <span class="c1">// or mol.removeConnector(mol.getConnectorAt(1));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">removeConnectorAt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// remove atom O related bonds in molecule</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">removeNodeAt</span><span class="p">(</span><span class="mf">2</span><span class="p">);</span><span class="w">  </span><span class="c1">// the atom index starts from 0</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// or mol.removeNode(mol.getNodeAt(2));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">removeConnectorAt</span><span class="p">(</span><span class="mf">1</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// or mol.removeConnector(mol.getConnectorAt(1));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">removeConnectorAt</span><span class="p">(</span><span class="mf">2</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Molecule after removing atom O:</p>
 <img alt="../_images/ethane.png" src="../_images/ethane.png" />
 <p>Aside from normal atoms, pseudo atom and variable atom are also supported:<a class="footnote-reference brackets" href="#example" id="id3">1</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">mol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span><span class="w"></span>
 
-<span class="c1">// add atoms to molecule</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.80</span><span class="p">}));</span>
-<span class="c1">// explicit set mass number of an atom</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setMassNumber</span><span class="p">(</span><span class="mi">13</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.69</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.40</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.69</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.40</span><span class="p">}));</span>
-<span class="c1">// a pseudo atom</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Pseudoatom</span><span class="p">().</span><span class="nx">setAtomType</span><span class="p">(</span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">PseudoatomType</span><span class="p">.</span><span class="nx">ANY</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.80</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mf">0.69</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.40</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mf">0.69</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.40</span><span class="p">}));</span>
-<span class="c1">// a variable atom</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">VariableAtom</span><span class="p">().</span><span class="nx">setAllowedIsotopeIds</span><span class="p">([</span><span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;Cl&#39;</span><span class="p">,</span> <span class="s1">&#39;Br&#39;</span><span class="p">]).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mf">1.39</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.80</span><span class="p">}));</span>
+<span class="c1">// add atoms to molecule</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0.80</span><span class="p">}));</span><span class="w"></span>
+<span class="c1">// explicit set mass number of an atom</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setMassNumber</span><span class="p">(</span><span class="mf">13</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.69</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0.40</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.69</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.40</span><span class="p">}));</span><span class="w"></span>
+<span class="c1">// a pseudo atom</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Pseudoatom</span><span class="p">().</span><span class="nx">setAtomType</span><span class="p">(</span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">PseudoatomType</span><span class="p">.</span><span class="nx">ANY</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.80</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0.69</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.40</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0.69</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0.40</span><span class="p">}));</span><span class="w"></span>
+<span class="c1">// a variable atom</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">VariableAtom</span><span class="p">().</span><span class="nx">setAllowedIsotopeIds</span><span class="p">([</span><span class="s1">&#39;F&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Cl&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Br&#39;</span><span class="p">]).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">1.39</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0.80</span><span class="p">}));</span><span class="w"></span>
 
-<span class="c1">// add bonds to molecule</span>
-<span class="c1">//   here a shortcut method appendBond(atomIndexes, bondOrder) is used</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="mi">2</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
+<span class="c1">// add bonds to molecule</span><span class="w"></span>
+<span class="c1">//   here a shortcut method appendBond(atomIndexes, bondOrder) is used</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">],</span><span class="w"> </span><span class="mf">2</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">3</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">4</span><span class="p">],</span><span class="w"> </span><span class="mf">2</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="mf">5</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">5</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">],</span><span class="w"> </span><span class="mf">2</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">5</span><span class="p">,</span><span class="w"> </span><span class="mf">6</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>The result will be:</p>
 <img alt="../_images/molWithTypesOfNodes.png" src="../_images/molWithTypesOfNodes.png" />
 <p>Even the subgroup:<a class="footnote-reference brackets" href="#example" id="id4">1</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">mol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span><span class="w"></span>
 
-<span class="c1">// add atoms to molecule</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.80</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.69</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.40</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.69</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.40</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.80</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mf">0.69</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.40</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mf">0.69</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.40</span><span class="p">}));</span>
+<span class="c1">// add atoms to molecule</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0.80</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.69</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0.40</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.69</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.40</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.80</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0.69</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.40</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0.69</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0.40</span><span class="p">}));</span><span class="w"></span>
 
-<span class="c1">// create a sub group</span>
-<span class="kd">var</span> <span class="nx">sub</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">SubGroup</span><span class="p">();</span>
-<span class="c1">// add atoms/bonds to sub structure</span>
-<span class="nx">sub</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mf">1.39</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.80</span><span class="p">}));</span>
-<span class="nx">sub</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.40</span><span class="p">}));</span>
-<span class="nx">sub</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
-<span class="c1">// atom 0 in subgroup connected with main body</span>
-<span class="nx">sub</span><span class="p">.</span><span class="nx">appendAnchorNode</span><span class="p">(</span><span class="nx">sub</span><span class="p">.</span><span class="nx">getNodeAt</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
-<span class="nx">sub</span><span class="p">.</span><span class="nx">setAbbr</span><span class="p">(</span><span class="s1">&#39;Et&#39;</span><span class="p">);</span>
+<span class="c1">// create a sub group</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">sub</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">SubGroup</span><span class="p">();</span><span class="w"></span>
+<span class="c1">// add atoms/bonds to sub structure</span><span class="w"></span>
+<span class="nx">sub</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">1.39</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0.80</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">sub</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0.40</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">sub</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span><span class="w"></span>
+<span class="c1">// atom 0 in subgroup connected with main body</span><span class="w"></span>
+<span class="nx">sub</span><span class="p">.</span><span class="nx">appendAnchorNode</span><span class="p">(</span><span class="nx">sub</span><span class="p">.</span><span class="nx">getNodeAt</span><span class="p">(</span><span class="mf">0</span><span class="p">));</span><span class="w"></span>
+<span class="nx">sub</span><span class="p">.</span><span class="nx">setAbbr</span><span class="p">(</span><span class="s1">&#39;Et&#39;</span><span class="p">);</span><span class="w"></span>
 
-<span class="c1">// then add sub structure to molecule</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="nx">sub</span><span class="p">);</span>
+<span class="c1">// then add sub structure to molecule</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="nx">sub</span><span class="p">);</span><span class="w"></span>
 
-<span class="c1">// add bonds to molecule</span>
-<span class="c1">//   here a shortcut method appendBond(atomIndexes, bondOrder) is used</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="mi">2</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>  <span class="c1">// bond connecting subgroup</span>
+<span class="c1">// add bonds to molecule</span><span class="w"></span>
+<span class="c1">//   here a shortcut method appendBond(atomIndexes, bondOrder) is used</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">],</span><span class="w"> </span><span class="mf">2</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">3</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">4</span><span class="p">],</span><span class="w"> </span><span class="mf">2</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="mf">5</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">5</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">],</span><span class="w"> </span><span class="mf">2</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">5</span><span class="p">,</span><span class="w"> </span><span class="mf">6</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span><span class="w">  </span><span class="c1">// bond connecting subgroup</span><span class="w"></span>
 </pre></div>
 </div>
 <p>The result:</p>
 <img alt="../_images/PhEt.png" src="../_images/PhEt.png" />
-</div>
-<div class="section" id="multicenter-bonds">
-<h2>Multicenter Bonds<a class="headerlink" href="#multicenter-bonds" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="multicenter-bonds">
+<h2>Multicenter Bonds<a class="headerlink" href="#multicenter-bonds" title="Permalink to this heading"></a></h2>
 <p>The toolkit supports multicenter bonds (e.g., B-H-B bond in diborane and Cp-Fe bond in ferrocene).
 Such bond can be created by assigning multiple connected atoms:<a class="footnote-reference brackets" href="#example" id="id5">1</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// create molecule</span>
-<span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// create molecule</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">mol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span><span class="w"></span>
 
-<span class="c1">// add atoms to molecule</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">).</span><span class="nx">setExplicitHydrogenCount</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">0</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">).</span><span class="nx">setExplicitHydrogenCount</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">0</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">1</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">}));</span>
-<span class="c1">// add two multicenter bond: B-H-B</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
+<span class="c1">// add atoms to molecule</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">).</span><span class="nx">setExplicitHydrogenCount</span><span class="p">(</span><span class="mf">2</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">).</span><span class="nx">setExplicitHydrogenCount</span><span class="p">(</span><span class="mf">2</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">}));</span><span class="w"></span>
+<span class="c1">// add two multicenter bond: B-H-B</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <img alt="../_images/diborane.png" src="../_images/diborane.png" />
@@ -292,30 +213,30 @@ Such bond can be created by assigning multiple connected atoms:<a class="footnot
 <p>Currently the toolkit draws multicenter bond by simply connecting all centers.
 This should be improved in the future.</p>
 </div>
-</div>
-<div class="section" id="bond-bond-connection">
-<h2>Bond-bond Connection<a class="headerlink" href="#bond-bond-connection" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="bond-bond-connection">
+<h2>Bond-bond Connection<a class="headerlink" href="#bond-bond-connection" title="Permalink to this heading"></a></h2>
 <p>Special bond-bond connection (e.g., in Zeise’s salt) is also supported:<a class="footnote-reference brackets" href="#example" id="id6">1</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// create molecule</span>
-<span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// create molecule</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">mol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Molecule</span><span class="p">();</span><span class="w"></span>
 
-<span class="kd">var</span> <span class="nx">atomPt</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">();</span>  <span class="c1">// Pt atom</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="nx">atomPt</span><span class="p">.</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;Pt&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mf">0.35</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">0</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;Cl&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mf">0.35</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.80</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;Cl&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mf">0.35</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.80</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;Cl&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="mf">1.14</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">0</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.45</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mf">0.40</span><span class="p">}));</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.45</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.40</span><span class="p">}));</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">atomPt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">();</span><span class="w">  </span><span class="c1">// Pt atom</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="nx">atomPt</span><span class="p">.</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;Pt&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0.35</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;Cl&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0.35</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0.80</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;Cl&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0.35</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.80</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;Cl&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">1.14</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.45</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0.40</span><span class="p">}));</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendNode</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Atom</span><span class="p">().</span><span class="nx">setSymbol</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">).</span><span class="nx">setCoord2D</span><span class="p">({</span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.45</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">0.40</span><span class="p">}));</span><span class="w"></span>
 
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">BondType</span><span class="p">.</span><span class="nx">IONIC</span><span class="p">);</span>  <span class="c1">// Pt-Cl</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">BondType</span><span class="p">.</span><span class="nx">IONIC</span><span class="p">);</span>  <span class="c1">// Pt-Cl</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">BondType</span><span class="p">.</span><span class="nx">IONIC</span><span class="p">);</span>  <span class="c1">// Pt-Cl</span>
-<span class="kd">var</span> <span class="nx">doubleBond</span> <span class="o">=</span> <span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="mi">2</span><span class="p">);</span>        <span class="c1">// C=C</span>
-<span class="c1">// create bond-bond connection</span>
-<span class="kd">var</span> <span class="nx">coordinateBond</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">Bond</span><span class="p">();</span>            <span class="c1">// (C=C)-Pt</span>
-<span class="nx">coordinateBond</span><span class="p">.</span><span class="nx">setBondType</span><span class="p">(</span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">BondType</span><span class="p">.</span><span class="nx">COORDINATE</span><span class="p">);</span>
-<span class="nx">coordinateBond</span><span class="p">.</span><span class="nx">setConnectedObjs</span><span class="p">([</span><span class="nx">doubleBond</span><span class="p">,</span> <span class="nx">atomPt</span><span class="p">]);</span>
-<span class="nx">mol</span><span class="p">.</span><span class="nx">appendConnector</span><span class="p">(</span><span class="nx">coordinateBond</span><span class="p">);</span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">BondType</span><span class="p">.</span><span class="nx">IONIC</span><span class="p">);</span><span class="w">  </span><span class="c1">// Pt-Cl</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">BondType</span><span class="p">.</span><span class="nx">IONIC</span><span class="p">);</span><span class="w">  </span><span class="c1">// Pt-Cl</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">],</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">BondType</span><span class="p">.</span><span class="nx">IONIC</span><span class="p">);</span><span class="w">  </span><span class="c1">// Pt-Cl</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">doubleBond</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">mol</span><span class="p">.</span><span class="nx">appendBond</span><span class="p">([</span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="mf">5</span><span class="p">],</span><span class="w"> </span><span class="mf">2</span><span class="p">);</span><span class="w">        </span><span class="c1">// C=C</span><span class="w"></span>
+<span class="c1">// create bond-bond connection</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">coordinateBond</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">Bond</span><span class="p">();</span><span class="w">            </span><span class="c1">// (C=C)-Pt</span><span class="w"></span>
+<span class="nx">coordinateBond</span><span class="p">.</span><span class="nx">setBondType</span><span class="p">(</span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">BondType</span><span class="p">.</span><span class="nx">COORDINATE</span><span class="p">);</span><span class="w"></span>
+<span class="nx">coordinateBond</span><span class="p">.</span><span class="nx">setConnectedObjs</span><span class="p">([</span><span class="nx">doubleBond</span><span class="p">,</span><span class="w"> </span><span class="nx">atomPt</span><span class="p">]);</span><span class="w"></span>
+<span class="nx">mol</span><span class="p">.</span><span class="nx">appendConnector</span><span class="p">(</span><span class="nx">coordinateBond</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <img alt="../_images/zeiseSalt.png" src="../_images/zeiseSalt.png" />
@@ -327,56 +248,38 @@ external data (e.g., a file or a piece of string). This process will be introduc
 <dd><p>Example of this chapter can be found and run at <a class="reference external" href="../examples/creatingMol.html">here</a>.</p>
 </dd>
 </dl>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="molIO.html" class="btn btn-neutral float-right" title="Loading and Saving Molecule" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="atomAndBond.html" class="btn btn-neutral float-left" title="Atom and Bond" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="atomAndBond.html" class="btn btn-neutral float-left" title="Atom and Bond" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="molIO.html" class="btn btn-neutral float-right" title="Loading and Saving Molecule" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright Partridge Jiang
-
-    </p>
+    <p>&#169; Copyright Partridge Jiang.</p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

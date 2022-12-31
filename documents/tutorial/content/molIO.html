@@ -1,71 +1,39 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Loading and Saving Molecule &mdash; Kekule Tutorial 2022.02 documentation</title>
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loading and Saving Molecule &mdash; Kekule Tutorial 2022.12 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Get Molecule Information" href="getMolInfo.html" />
     <link rel="prev" title="Creating Molecule" href="molCreation.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html" class="icon icon-home"> Kekule Tutorial
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
-                2022.02
+                2022.12
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,28 +41,18 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="objSys.html">Object and Class System of Kekule.js</a></li>
 <li class="toctree-l1"><a class="reference internal" href="atomAndBond.html">Atom and Bond</a></li>
 <li class="toctree-l1"><a class="reference internal" href="molCreation.html">Creating Molecule</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Loading and Saving Molecule</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#saving-molecule">Saving Molecule </a></li>
-<li class="toctree-l2"><a class="reference internal" href="#loading-molecule">Loading Molecule </a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#saving-molecule">Saving Molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loading-molecule">Loading Molecule</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#loading-from-string-variable">Loading from String Variable</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#loading-from-file">Loading from File</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#loading-from-resource">Loading from Resource </a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-from-resource">Loading from Resource</a></li>
 </ul>
 </li>
 </ul>
@@ -109,104 +67,67 @@
 <li class="toctree-l1"><a class="reference internal" href="webComponent.html">Web Component Wrapper of Widgets</a></li>
 </ul>
 
-            
-          
         </div>
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">Kekule Tutorial</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html">Docs</a> &raquo;</li>
-        
-      <li>Loading and Saving Molecule</li>
-    
-    
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Loading and Saving Molecule</li>
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="loading-and-saving-molecule">
-<h1>Loading and Saving Molecule<a class="headerlink" href="#loading-and-saving-molecule" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="loading-and-saving-molecule">
+<h1>Loading and Saving Molecule<a class="headerlink" href="#loading-and-saving-molecule" title="Permalink to this heading"></a></h1>
 <p>Module Kekule.IO provides a series of methods to perform input
 and output of molecule (and other chemistry objects).</p>
-<div class="section" id="saving-molecule">
-<h2>Saving Molecule <a class="footnote-reference brackets" href="#module" id="id1">1</a><a class="headerlink" href="#saving-molecule" title="Permalink to this headline">¶</a></h2>
-<p>To save molecule, just use <code class="docutils literal notranslate"><span class="pre">saveFormatData</span></code>:<a class="footnote-reference brackets" href="#example" id="id2">3</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">saveFormatData</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span> <span class="s1">&#39;cml&#39;</span><span class="p">);</span>
-        <span class="c1">// or Kekule.IO.saveMimeData(mol, &#39;chemical/x-cml&#39;);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">saveFormatData</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span> <span class="s1">&#39;mol&#39;</span><span class="p">);</span>
-        <span class="c1">// or Kekule.IO.saveMimeData(mol, &#39;chemical/x-mdl-molfile&#39;);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">saveFormatData</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span> <span class="s1">&#39;smi&#39;</span><span class="p">);</span>
-        <span class="c1">// or Kekule.IO.saveMimeData(mol, &#39;chemical/x-daylight-smiles&#39;);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+<section id="saving-molecule">
+<h2>Saving Molecule<a class="headerlink" href="#saving-molecule" title="Permalink to this heading"></a></h2>
+<p>To save molecule, just use <code class="docutils literal notranslate"><span class="pre">saveFormatData</span></code>:<a class="footnote-reference brackets" href="#example" id="id1">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">saveFormatData</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;cml&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// or Kekule.IO.saveMimeData(mol, &#39;chemical/x-cml&#39;);</span><span class="w"></span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">saveFormatData</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;mol&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// or Kekule.IO.saveMimeData(mol, &#39;chemical/x-mdl-molfile&#39;);</span><span class="w"></span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">saveFormatData</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;smi&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// or Kekule.IO.saveMimeData(mol, &#39;chemical/x-daylight-smiles&#39;);</span><span class="w"></span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>The return data usually is a string.</p>
-</div>
-<div class="section" id="loading-molecule">
-<h2>Loading Molecule <a class="footnote-reference brackets" href="#module" id="id3">1</a><a class="headerlink" href="#loading-molecule" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="loading-from-string-variable">
-<h3>Loading from String Variable<a class="headerlink" href="#loading-from-string-variable" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="loading-molecule">
+<h2>Loading Molecule<a class="headerlink" href="#loading-molecule" title="Permalink to this heading"></a></h2>
+<section id="loading-from-string-variable">
+<h3>Loading from String Variable<a class="headerlink" href="#loading-from-string-variable" title="Permalink to this heading"></a></h3>
 <p>Saving molecule is rather simple, but loading is another story.
 The data source may be a string, in that case, loading process
-is quite simple by just calling <code class="docutils literal notranslate"><span class="pre">Kekule.IO.loadFormatData</span></code>:<a class="footnote-reference brackets" href="#example" id="id4">3</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cmlData</span> <span class="o">=</span> <span class="s1">&#39;&lt;cml xmlns=&quot;http://www.xml-cml.org/schema&quot;&gt;&lt;molecule id=&quot;m1&quot;&gt;&lt;atomArray&gt;&lt;atom id=&quot;a2&quot; elementType=&quot;C&quot; x2=&quot;7.493264658965051&quot; y2=&quot;35.58088907877604&quot;/&gt;&lt;atom id=&quot;a3&quot; elementType=&quot;O&quot; x2=&quot;8.186084981992602&quot; y2=&quot;35.18088907877604&quot;/&gt;&lt;atom id=&quot;a1&quot; elementType=&quot;C&quot; x2=&quot;6.800444335937501&quot; y2=&quot;35.18088907877604&quot;/&gt;&lt;/atomArray&gt;&lt;bondArray&gt;&lt;bond id=&quot;b2&quot; order=&quot;S&quot; atomRefs2=&quot;a2 a3&quot;/&gt;&lt;bond id=&quot;b1&quot; order=&quot;S&quot; atomRefs2=&quot;a2 a1&quot;/&gt;&lt;/bondArray&gt;&lt;/molecule&gt;&lt;/cml&gt;&#39;</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">mol</span> <span class="o">=</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadFormatData</span><span class="p">(</span><span class="nx">cmlData</span><span class="p">,</span> <span class="s1">&#39;cml&#39;</span><span class="p">);</span>
-  <span class="c1">// or Kekule.IO.loadMimeData(cmlData, &#39;chemical/x-cml&#39;);</span>
+is quite simple by just calling <code class="docutils literal notranslate"><span class="pre">Kekule.IO.loadFormatData</span></code>:<a class="footnote-reference brackets" href="#example" id="id2">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">cmlData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;&lt;cml xmlns=&quot;http://www.xml-cml.org/schema&quot;&gt;&lt;molecule id=&quot;m1&quot;&gt;&lt;atomArray&gt;&lt;atom id=&quot;a2&quot; elementType=&quot;C&quot; x2=&quot;7.493264658965051&quot; y2=&quot;35.58088907877604&quot;/&gt;&lt;atom id=&quot;a3&quot; elementType=&quot;O&quot; x2=&quot;8.186084981992602&quot; y2=&quot;35.18088907877604&quot;/&gt;&lt;atom id=&quot;a1&quot; elementType=&quot;C&quot; x2=&quot;6.800444335937501&quot; y2=&quot;35.18088907877604&quot;/&gt;&lt;/atomArray&gt;&lt;bondArray&gt;&lt;bond id=&quot;b2&quot; order=&quot;S&quot; atomRefs2=&quot;a2 a3&quot;/&gt;&lt;bond id=&quot;b1&quot; order=&quot;S&quot; atomRefs2=&quot;a2 a1&quot;/&gt;&lt;/bondArray&gt;&lt;/molecule&gt;&lt;/cml&gt;&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">mol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadFormatData</span><span class="p">(</span><span class="nx">cmlData</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;cml&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// or Kekule.IO.loadMimeData(cmlData, &#39;chemical/x-cml&#39;);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>The molecule read from string will be returned immediately.
 For example, the ethanol molecule loaded in the above example:</p>
 <img alt="../_images/ethanol.png" src="../_images/ethanol.png" />
-</div>
-<div class="section" id="loading-from-file">
-<h3>Loading from File<a class="headerlink" href="#loading-from-file" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="loading-from-file">
+<h3>Loading from File<a class="headerlink" href="#loading-from-file" title="Permalink to this heading"></a></h3>
 <p>It is a common request to load molecule from source file. The toolkit provides
 two methods for that task: <code class="docutils literal notranslate"><span class="pre">Kekule.IO.loadUrlData</span></code> and <code class="docutils literal notranslate"><span class="pre">Kekule.IO.loadFileData</span></code>.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">loadUrlData</span></code> method fetches data from a remote file URL, either a absolute path (like
@@ -218,75 +139,75 @@ can not be loaded by this method either.</p>
 <p>Since transferring data through network may cost quite a long time, <code class="docutils literal notranslate"><span class="pre">loadUrlData</span></code> use the
 asynchronous model to return result. It accept two parameter, first one is the URL of source,
 the second one is a callback function which will be called when the loading process is done.
-User should check the molecule loaded in this callback function:<a class="footnote-reference brackets" href="#example" id="id5">3</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s1">&#39;data/mol2D/quinone.mol&#39;</span><span class="p">;</span>
-<span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadUrlData</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span> <span class="nx">success</span><span class="p">){</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">success</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Loading from &#39;</span> <span class="o">+</span> <span class="nx">url</span> <span class="o">+</span> <span class="s1">&#39; Successful&#39;</span><span class="p">);</span>
-    <span class="nx">showMolecule</span><span class="p">(</span><span class="nx">mol</span><span class="p">);</span>
-  <span class="p">}</span>
-  <span class="k">else</span>
-  <span class="p">{</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Loading from &#39;</span> <span class="o">+</span> <span class="nx">url</span> <span class="o">+</span> <span class="s1">&#39; Failed&#39;</span><span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
+User should check the molecule loaded in this callback function:<a class="footnote-reference brackets" href="#example" id="id3">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;data/mol2D/quinone.mol&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadUrlData</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span><span class="w"> </span><span class="nx">success</span><span class="p">){</span><span class="w"></span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">success</span><span class="p">)</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Loading from &#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">url</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39; Successful&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="nx">showMolecule</span><span class="p">(</span><span class="nx">mol</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="k">else</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Loading from &#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">url</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39; Failed&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="p">});</span><span class="w"></span>
 </pre></div>
 </div>
 <p>In modern web browsers, local source file can also be loaded by <code class="docutils literal notranslate"><span class="pre">Kekule.IO.loadFileData</span></code> and
 <a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/API/File">File API</a>.
-Here is the example:<a class="footnote-reference brackets" href="#example" id="id6">3</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;inputFile&#39;</span><span class="p">).</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span>
-  <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">file</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;inputFile&#39;</span><span class="p">).</span><span class="nx">files</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">file</span><span class="p">)</span>
-    <span class="p">{</span>
-      <span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadFileData</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span> <span class="nx">success</span><span class="p">)</span>
-      <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">success</span> <span class="o">&amp;&amp;</span> <span class="nx">mol</span><span class="p">)</span>
-          <span class="nx">showMolecule</span><span class="p">(</span><span class="nx">mol</span><span class="p">);</span>
-      <span class="p">});</span>
-    <span class="p">}</span>
-  <span class="p">});</span>
+Here is the example:<a class="footnote-reference brackets" href="#example" id="id4">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;inputFile&#39;</span><span class="p">).</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">()</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;inputFile&#39;</span><span class="p">).</span><span class="nx">files</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">file</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">      </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadFileData</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span><span class="w"> </span><span class="nx">success</span><span class="p">)</span><span class="w"></span>
+<span class="w">      </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">success</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">mol</span><span class="p">)</span><span class="w"></span>
+<span class="w">          </span><span class="nx">showMolecule</span><span class="p">(</span><span class="nx">mol</span><span class="p">);</span><span class="w"></span>
+<span class="w">      </span><span class="p">});</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="p">});</span><span class="w"></span>
 </pre></div>
 </div>
 <p>It is notable that <code class="docutils literal notranslate"><span class="pre">loadFileData</span></code> also uses the asynchronous model and needs a callback function.</p>
-</div>
-<div class="section" id="loading-from-resource">
-<span id="loadingfromresource"></span><h3>Loading from Resource <a class="footnote-reference brackets" href="#module2" id="id7">2</a><a class="headerlink" href="#loading-from-resource" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="loading-from-resource">
+<span id="loadingfromresource"></span><h3>Loading from Resource<a class="headerlink" href="#loading-from-resource" title="Permalink to this heading"></a></h3>
 <p>Kekule.js provides another way to utilize source data: the resource identifier.
 With this form, user can even embed molecule data into HTML element. For example,
 HTML <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> tag is ideal to embed a piece of molecule data:</p>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;molResInsideElem&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;chemical/x-mdl-molfile&quot;</span><span class="p">&gt;</span>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;molResInsideElem&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;chemical/x-mdl-molfile&quot;</span><span class="p">&gt;</span><span class="w"></span>
 
-  <span class="nx">CDK</span>    <span class="mi">9</span><span class="o">/</span><span class="mi">19</span><span class="o">/</span><span class="mi">06</span><span class="p">,</span><span class="mi">14</span><span class="o">:</span><span class="mi">29</span>
+<span class="w">  </span><span class="nx">CDK</span><span class="w">    </span><span class="mf">9</span><span class="o">/</span><span class="mf">19</span><span class="o">/</span><span class="mo">06</span><span class="p">,</span><span class="mf">14</span><span class="o">:</span><span class="mf">29</span><span class="w"></span>
 
- <span class="mi">12</span> <span class="mi">12</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0999</span> <span class="nx">V2000</span>
-  <span class="mf">415.0000</span>  <span class="mf">974.0000</span>    <span class="mf">0.0000</span> <span class="nx">C</span>   <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mf">383.8231</span>  <span class="mf">992.0000</span>    <span class="mf">0.0000</span> <span class="nx">C</span>   <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mf">383.8231</span> <span class="mf">1028.0000</span>    <span class="mf">0.0000</span> <span class="nx">C</span>   <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mf">415.0000</span> <span class="mf">1046.0000</span>    <span class="mf">0.0000</span> <span class="nx">O</span>   <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mf">446.1769</span> <span class="mf">1028.0000</span>    <span class="mf">0.0000</span> <span class="nx">C</span>   <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mf">446.1769</span>  <span class="mf">992.0000</span>    <span class="mf">0.0000</span> <span class="nx">C</span>   <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mf">352.6462</span> <span class="mf">1046.0000</span>    <span class="mf">0.0000</span> <span class="nx">C</span>   <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mf">352.6462</span> <span class="mf">1082.0000</span>    <span class="mf">0.0000</span> <span class="nx">O</span>   <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mf">352.6462</span>  <span class="mf">974.0000</span>    <span class="mf">0.0000</span> <span class="nx">O</span>   <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mf">415.0000</span>  <span class="mf">938.0000</span>    <span class="mf">0.0000</span> <span class="nx">O</span>   <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mf">477.3538</span>  <span class="mf">974.0000</span>    <span class="mf">0.0000</span> <span class="nx">O</span>   <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mf">477.3538</span> <span class="mf">1046.0000</span>    <span class="mf">0.0000</span> <span class="nx">O</span>   <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mi">6</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mi">3</span>  <span class="mi">7</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mi">2</span>  <span class="mi">9</span>  <span class="mi">1</span>  <span class="mi">6</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mi">1</span> <span class="mi">10</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mi">6</span> <span class="mi">11</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-  <span class="mi">5</span> <span class="mi">12</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
-<span class="nx">M</span>  <span class="nx">END</span>
+<span class="w"> </span><span class="mf">12</span><span class="w"> </span><span class="mf">12</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0999</span><span class="w"> </span><span class="nx">V2000</span><span class="w"></span>
+<span class="w">  </span><span class="mf">415.0000</span><span class="w">  </span><span class="mf">974.0000</span><span class="w">    </span><span class="mf">0.0000</span><span class="w"> </span><span class="nx">C</span><span class="w">   </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">383.8231</span><span class="w">  </span><span class="mf">992.0000</span><span class="w">    </span><span class="mf">0.0000</span><span class="w"> </span><span class="nx">C</span><span class="w">   </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">383.8231</span><span class="w"> </span><span class="mf">1028.0000</span><span class="w">    </span><span class="mf">0.0000</span><span class="w"> </span><span class="nx">C</span><span class="w">   </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">415.0000</span><span class="w"> </span><span class="mf">1046.0000</span><span class="w">    </span><span class="mf">0.0000</span><span class="w"> </span><span class="nx">O</span><span class="w">   </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">446.1769</span><span class="w"> </span><span class="mf">1028.0000</span><span class="w">    </span><span class="mf">0.0000</span><span class="w"> </span><span class="nx">C</span><span class="w">   </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">446.1769</span><span class="w">  </span><span class="mf">992.0000</span><span class="w">    </span><span class="mf">0.0000</span><span class="w"> </span><span class="nx">C</span><span class="w">   </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">352.6462</span><span class="w"> </span><span class="mf">1046.0000</span><span class="w">    </span><span class="mf">0.0000</span><span class="w"> </span><span class="nx">C</span><span class="w">   </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">352.6462</span><span class="w"> </span><span class="mf">1082.0000</span><span class="w">    </span><span class="mf">0.0000</span><span class="w"> </span><span class="nx">O</span><span class="w">   </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">352.6462</span><span class="w">  </span><span class="mf">974.0000</span><span class="w">    </span><span class="mf">0.0000</span><span class="w"> </span><span class="nx">O</span><span class="w">   </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">415.0000</span><span class="w">  </span><span class="mf">938.0000</span><span class="w">    </span><span class="mf">0.0000</span><span class="w"> </span><span class="nx">O</span><span class="w">   </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">477.3538</span><span class="w">  </span><span class="mf">974.0000</span><span class="w">    </span><span class="mf">0.0000</span><span class="w"> </span><span class="nx">O</span><span class="w">   </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">477.3538</span><span class="w"> </span><span class="mf">1046.0000</span><span class="w">    </span><span class="mf">0.0000</span><span class="w"> </span><span class="nx">O</span><span class="w">   </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">2</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">2</span><span class="w">  </span><span class="mf">3</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">3</span><span class="w">  </span><span class="mf">4</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">4</span><span class="w">  </span><span class="mf">5</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">5</span><span class="w">  </span><span class="mf">6</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">6</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">3</span><span class="w">  </span><span class="mf">7</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">7</span><span class="w">  </span><span class="mf">8</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">2</span><span class="w">  </span><span class="mf">9</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">6</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">1</span><span class="w"> </span><span class="mf">10</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">6</span><span class="w"> </span><span class="mf">11</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="w">  </span><span class="mf">5</span><span class="w"> </span><span class="mf">12</span><span class="w">  </span><span class="mf">1</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w">  </span><span class="mf">0</span><span class="w"></span>
+<span class="nx">M</span><span class="w">  </span><span class="nx">END</span><span class="w"></span>
 <span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
@@ -300,109 +221,75 @@ in Kekule.js.</p>
 </pre></div>
 </div>
 <p><em>Resource</em> can be loaded and parsed by <code class="docutils literal notranslate"><span class="pre">Kekule.IO.loadResourceData</span></code>:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// resource is referred by url(#id), similar to CSS URI</span>
-<span class="kd">var</span> <span class="nx">resId</span> <span class="o">=</span> <span class="s1">&#39;url(#molResInsideElem)&#39;</span><span class="p">;</span>
-<span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadResourceData</span><span class="p">(</span><span class="nx">resId</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span> <span class="nx">success</span><span class="p">)</span>
-<span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">success</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Loading from &#39;</span> <span class="o">+</span> <span class="nx">resId</span> <span class="o">+</span> <span class="s1">&#39; Successful&#39;</span><span class="p">);</span>
-    <span class="nx">showMolecule</span><span class="p">(</span><span class="nx">mol</span><span class="p">);</span>
-  <span class="p">}</span>
-  <span class="k">else</span>
-  <span class="p">{</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Loading from &#39;</span> <span class="o">+</span> <span class="nx">resId</span> <span class="o">+</span> <span class="s1">&#39; Failed&#39;</span><span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// resource is referred by url(#id), similar to CSS URI</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">resId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;url(#molResInsideElem)&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadResourceData</span><span class="p">(</span><span class="nx">resId</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span><span class="w"> </span><span class="nx">success</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">success</span><span class="p">)</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Loading from &#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">resId</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39; Successful&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="nx">showMolecule</span><span class="p">(</span><span class="nx">mol</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="k">else</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Loading from &#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">resId</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39; Failed&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="p">});</span><span class="w"></span>
 
-<span class="kd">var</span> <span class="nx">resId</span> <span class="o">=</span> <span class="s1">&#39;url(#molResExternalLink)&#39;</span><span class="p">;</span>
-<span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadResourceData</span><span class="p">(</span><span class="s1">&#39;url(#molResExternalLink)&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span> <span class="nx">success</span><span class="p">)</span>
-<span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">success</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Loading from &#39;</span> <span class="o">+</span> <span class="nx">resId</span> <span class="o">+</span> <span class="s1">&#39; Successful&#39;</span><span class="p">);</span>
-    <span class="nx">showMolecule</span><span class="p">(</span><span class="nx">mol</span><span class="p">);</span>
-  <span class="p">}</span>
-  <span class="k">else</span>
-  <span class="p">{</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Loading from &#39;</span> <span class="o">+</span> <span class="nx">resId</span> <span class="o">+</span> <span class="s1">&#39; Failed&#39;</span><span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">resId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;url(#molResExternalLink)&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="nx">Kekule</span><span class="p">.</span><span class="nx">IO</span><span class="p">.</span><span class="nx">loadResourceData</span><span class="p">(</span><span class="s1">&#39;url(#molResExternalLink)&#39;</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">mol</span><span class="p">,</span><span class="w"> </span><span class="nx">success</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">success</span><span class="p">)</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Loading from &#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">resId</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39; Successful&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="nx">showMolecule</span><span class="p">(</span><span class="nx">mol</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="k">else</span><span class="w"></span>
+<span class="w">  </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Loading from &#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">resId</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39; Failed&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="p">});</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Note the resource loading process is also asynchronous and requires a callback.</p>
 <dl class="footnote brackets">
-<dt class="label" id="module"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id3">2</a>)</span></dt>
-<dd><p>To read and write molecule, IO module must be loaded, e.g.:</p>
-</dd>
-</dl>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=io&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-</pre></div>
-</div>
-<dl class="footnote brackets">
-<dt class="label" id="module2"><span class="brackets"><a class="fn-backref" href="#id7">2</a></span></dt>
-<dd><p>To load data from resource, both IO and HTML module must be used, e.g.:</p>
-</dd>
-</dl>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=io,html&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-</pre></div>
-</div>
-<dl class="footnote brackets">
-<dt class="label" id="example"><span class="brackets">3</span><span class="fn-backref">(<a href="#id2">1</a>,<a href="#id4">2</a>,<a href="#id5">3</a>,<a href="#id6">4</a>)</span></dt>
+<dt class="label" id="example"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>,<a href="#id3">3</a>,<a href="#id4">4</a>)</span></dt>
 <dd><p>Example of this chapter can be found and run at <a class="reference external" href="../examples/molIO.html">here</a>.</p>
 </dd>
 </dl>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="getMolInfo.html" class="btn btn-neutral float-right" title="Get Molecule Information" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="molCreation.html" class="btn btn-neutral float-left" title="Creating Molecule" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="molCreation.html" class="btn btn-neutral float-left" title="Creating Molecule" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="getMolInfo.html" class="btn btn-neutral float-right" title="Get Molecule Information" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright Partridge Jiang
-
-    </p>
+    <p>&#169; Copyright Partridge Jiang.</p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

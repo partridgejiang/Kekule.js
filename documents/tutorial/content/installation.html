@@ -1,71 +1,39 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Installation &mdash; Kekule Tutorial 2022.02 documentation</title>
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; Kekule Tutorial 2022.12 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Object and Class System of Kekule.js" href="objSys.html" />
     <link rel="prev" title="Tutorial of Kekule.js" href="../index.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html" class="icon icon-home"> Kekule Tutorial
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
-                2022.02
+                2022.12
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,19 +41,15 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#using-npm">Using NPM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-traditional-way">The Traditional Way</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dynamic-module-loading">Dynamic module loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#child-modules-and-function-of-kekule-js">Child modules and function of Kekule.js</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="objSys.html">Object and Class System of Kekule.js</a></li>
 <li class="toctree-l1"><a class="reference internal" href="atomAndBond.html">Atom and Bond</a></li>
 <li class="toctree-l1"><a class="reference internal" href="molCreation.html">Creating Molecule</a></li>
@@ -100,95 +64,131 @@
 <li class="toctree-l1"><a class="reference internal" href="webComponent.html">Web Component Wrapper of Widgets</a></li>
 </ul>
 
-            
-          
         </div>
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">Kekule Tutorial</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html">Docs</a> &raquo;</li>
-        
-      <li>Installation</li>
-    
-    
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>As a JavaScript toolkit, Kekule.js can be <a class="reference external" href="http://partridgejiang.github.io/Kekule.js/download/">downloaded</a>
-and be referred in HTML page by &lt;script&gt; tag. You can use the compressed script file to
-reduce the net traffic:</p>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+             
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h1>
+<section id="using-npm">
+<h2>Using NPM<a class="headerlink" href="#using-npm" title="Permalink to this heading"></a></h2>
+<p>The Kekule.js package can be installed with npm with the following command line:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>npm install --save kekule
 </pre></div>
 </div>
-<p>By using kekule.min.js, all modules (exclude module Extra) are loaded into HTML page. If only a few modules is needed, you can utilize a special bootstrap script:</p>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=chemWidget,algorithm&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<p>Afterwards, the package can be imported to your project with ES module <code class="docutils literal notranslate"><span class="pre">import</span></code> or CommonJS <code class="docutils literal notranslate"><span class="pre">require</span></code>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Kekule</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;kekule&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="k">import</span><span class="w"> </span><span class="s1">&#39;kekule/theme/default&#39;</span><span class="p">;</span><span class="w">       </span><span class="c1">// if Kekule widgets is used in browser, the theme CSS should be imported as well</span><span class="w"></span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">VERSION</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
-<p>Note the module parameter after “?”. In the example above, module chemWidget and algorithm, as well as other prerequisite modules will be loaded.</p>
-<p>The whole package can also be installed by npm and included with <code class="docutils literal notranslate"><span class="pre">require</span></code> function:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ npm install kekule
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">Kekule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;kekule&#39;</span><span class="p">).</span><span class="nx">Kekule</span><span class="p">;</span><span class="w"></span>
+<span class="nx">require</span><span class="p">(</span><span class="s1">&#39;kekule/theme/default&#39;</span><span class="p">);</span><span class="w">    </span><span class="c1">// if Kekule widgets is used in browser, the theme CSS should be imported as well</span><span class="w"></span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">VERSION</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kr">const</span> <span class="nx">Kekule</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;kekule&#39;</span><span class="p">).</span><span class="nx">Kekule</span><span class="p">;</span>
+<p>The default import approaches above include all modules of Kekule.js.
+If you want to reduce the total file size and achieve a better result from tree-shaking,
+individual modules may be imported as well:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Import IO and ChemWidget modules (and their prerequisites) only</span><span class="w"></span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Kekule</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;./node_modules/kekule/dist/jsmods/io.esm.mjs&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="k">import</span><span class="w"> </span><span class="s1">&#39;./node_modules/kekule/dist/jsmods/spectroscopy.esm.mjs&#39;</span><span class="p">;</span><span class="w">   </span><span class="c1">// Yes, no need to set Kekule here again</span><span class="w"></span>
+<span class="c1">// Also load the Chinese(zh-CN) language data resource</span><span class="w"></span>
+<span class="k">import</span><span class="w"> </span><span class="s1">&#39;./node_modules/kekule/dist/jsmods/localizationData.zh.esm.mjs&#39;</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">import</span><span class="w"> </span><span class="s1">&#39;Kekule/theme/default&#39;</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 </div>
-<p>Additional modules can also be dynamicly loaded:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">modules</span><span class="p">([</span><span class="s1">&#39;algorithm&#39;</span><span class="p">,</span> <span class="s1">&#39;calculation&#39;</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">error</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="c1">// algorithm and calculation modules loaded successfully, functions can be used now.</span>
-    <span class="p">}</span>
-<span class="p">});</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Import IO and ChemWidget modules (and their prerequisites) only</span><span class="w"></span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">Kekule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./node_modules/kekule/dist/jsmods/io.cm.js&#39;</span><span class="p">).</span><span class="nx">Kekule</span><span class="p">;</span><span class="w"></span>
+<span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./node_modules/kekule/dist/jsmods/chemWidget.cm.js&#39;</span><span class="p">);</span><span class="w">      </span><span class="c1">// No need to set Kekule here again</span><span class="w"></span>
+<span class="c1">// Also load the Chinese(zh-CN) language data resource</span><span class="w"></span>
+<span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./node_modules/kekule/dist/jsmods/localizationData.zh.cm.js&#39;</span><span class="p">);</span><span class="w"></span>
+
+<span class="nx">require</span><span class="p">(</span><span class="s1">&#39;Kekule/theme/default&#39;</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
+</section>
+<section id="the-traditional-way">
+<h2>The Traditional Way<a class="headerlink" href="#the-traditional-way" title="Permalink to this heading"></a></h2>
+<p>Of course, as a JavaScript toolkit, Kekule.js can also be imported with HTML <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> tag.</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="cm">&lt;!-- from CDN --&gt;</span>
+<span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text/css&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://cdn.jsdelivr.net/npm/kekule/dist/themes/default/kekule.css&quot;</span> <span class="p">/&gt;</span>
+<span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;https://cdn.jsdelivr.net/npm/kekule/dist/kekule.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="cm">&lt;!-- or --&gt;</span>
+<span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text/css&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://unpkg.com/browse/kekule/dist/themes/default/kekule.css&quot;</span> <span class="p">/&gt;</span>
+<span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;https://unpkg.com/browse/kekule@0.9.9/dist/kekule.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="cm">&lt;!-- or from other CDN --&gt;</span>
+</pre></div>
+</div>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="cm">&lt;!-- from local file --&gt;</span>
+<span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text/css&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;./node_modules/dist/themes/default/kekule.css&quot;</span> <span class="p">/&gt;</span>
+<span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;./node_modules/kekule/dist/kekule.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>If only partial of the package need to be loaded, the special bootstrap JavaScript file <code class="docutils literal notranslate"><span class="pre">kekule.js</span></code> can be used
+to include only the limited modules:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="cm">&lt;!--  Load IO and ChemWidget modules (and their prerequisites) only --&gt;</span>
+<span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;./node_modules/kekule/dist/kekule.js?modules=io,chemWidget&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>Other parameters can be used after <code class="docutils literal notranslate"><span class="pre">kekule.js</span></code> to set the localization information:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="cm">&lt;!--</span>
+<span class="cm">    Load IO and ChemWidget modules (and their prerequisites) only.</span>
+<span class="cm">    The English and Chinese language data are loaded as well.</span>
+<span class="cm">    Here the display language of Kekule widgets is set to Chinese manually (rather than be auto-detected from browser).</span>
+<span class="cm">--&gt;</span>
+<span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;./node_modules/kekule/dist/kekule.js?modules=io,chemWidget&amp;locals=en,zh&amp;language=zh&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="dynamic-module-loading">
+<h2>Dynamic module loading<a class="headerlink" href="#dynamic-module-loading" title="Permalink to this heading"></a></h2>
+<p>In your JavaScript code, additional Kekule.js modules can also be dynamically loaded:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">modules</span><span class="p">([</span><span class="s1">&#39;algorithm&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;calculation&#39;</span><span class="p">],</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">error</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// algorithm and calculation modules loaded successfully, functions can be used now.</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">});</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The dynamic loading mechanism is also applied to web worker and web assembly files inside Kekule.js.
+For example, when utilizing the wasm compilation of OpenBabel with Kekule, the following codes are often used:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">OpenBabel</span><span class="p">.</span><span class="nx">enable</span><span class="p">(</span><span class="nx">error</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">error</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;OpenBabel wasm loaded and can be accessed!&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">});</span><span class="w"></span>
+</pre></div>
+</div>
+<p>In this process, the external <code class="docutils literal notranslate"><span class="pre">dist/extra/openbabel.js</span></code>, <code class="docutils literal notranslate"><span class="pre">dist/extra/openbabel.wasm</span></code>, <code class="docutils literal notranslate"><span class="pre">dist/extra/openbabel.data</span></code>
+and <code class="docutils literal notranslate"><span class="pre">dist/extra/kekule.worker.obStructureGenerator.js</span></code> may be loaded. Since this dynamic loading method can not be
+handled automatically by project package tool like WebPack, you have to copy the <code class="docutils literal notranslate"><span class="pre">dist/extra</span></code> and <code class="docutils literal notranslate"><span class="pre">dist/mins</span></code>
+directory to your root of the bundled js.</p>
+</section>
+<section id="child-modules-and-function-of-kekule-js">
+<h2>Child modules and function of Kekule.js<a class="headerlink" href="#child-modules-and-function-of-kekule-js" title="Permalink to this heading"></a></h2>
 <p>The following table is a brief introduction of major modules in current toolkit:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -270,10 +270,6 @@ reduce the net traffic:</p>
 </tr>
 </tbody>
 </table>
-<p>If widget or chem widget modules are used, additional style sheet file also need to be linked into HTML page:</p>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text/css&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;themes/default/kekule.css&quot;</span> <span class="p">/&gt;</span>
-</pre></div>
-</div>
 <p id="libsforrendering">Two additional JavaScript libraries may also be requested for drawing molecule (and other chem objects) in HTML page. You can download those libraries from their website easily:</p>
 <dl class="simple">
 <dt><a class="reference external" href="http://dmitrybaranovskiy.github.io/raphael/">Raphael.js</a>:</dt><dd><p>This library is utilized to draw 2D chem objects in SVG or VML format (rather than the default Canvas form of Kekule.js). However, as currently most modern web browsers support Canvas well, it is seldom needed unless you have to support a very ancient web browser (e.g., IE6-9).</p>
@@ -287,65 +283,48 @@ reduce the net traffic:</p>
 <span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=chemWidget&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
-<p>When using Raphael.js or three.js with <code class="docutils literal notranslate"><span class="pre">import</span></code>/<code class="docutils literal notranslate"><span class="pre">require</span></code> or <code class="docutils literal notranslate"><span class="pre">AMD</span></code> style, additional code need to be used to let Kekule.js be aware of its existence:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kr">import</span> <span class="o">*</span> <span class="nx">as</span> <span class="nx">THREE</span> <span class="nx">from</span> <span class="s1">&#39;three&#39;</span><span class="p">;</span>
-<span class="kr">import</span> <span class="p">{</span><span class="nx">Kekule</span><span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;kekule&#39;</span><span class="p">;</span>
-<span class="nx">Kekule</span><span class="p">.</span><span class="nx">externalResourceManager</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="s1">&#39;three.js&#39;</span><span class="p">,</span> <span class="nx">THREE</span><span class="p">);</span>
+<p>When using Raphael.js or three.js with <code class="docutils literal notranslate"><span class="pre">import</span></code>/<code class="docutils literal notranslate"><span class="pre">require</span></code>, additional code need to be used to let Kekule.js be aware of its existence:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">THREE</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;three&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Kekule</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;kekule&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="nx">Kekule</span><span class="p">.</span><span class="nx">externalResourceManager</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="s1">&#39;three.js&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">THREE</span><span class="p">);</span><span class="w"></span>
 
-<span class="nx">define</span><span class="p">([</span> <span class="s2">&quot;path/to/raphael&quot;</span> <span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">Raphael</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">Kekule</span><span class="p">.</span><span class="nx">externalResourceManager</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="s1">&#39;Raphael.js&#39;</span><span class="p">,</span> <span class="nx">Raphael</span><span class="p">);</span>
-<span class="p">});</span>
+<span class="nx">define</span><span class="p">([</span><span class="w"> </span><span class="s2">&quot;path/to/raphael&quot;</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">Raphael</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">externalResourceManager</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="s1">&#39;Raphael.js&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">Raphael</span><span class="p">);</span><span class="w"></span>
+<span class="p">});</span><span class="w"></span>
 </pre></div>
 </div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="objSys.html" class="btn btn-neutral float-right" title="Object and Class System of Kekule.js" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="../index.html" class="btn btn-neutral float-left" title="Tutorial of Kekule.js" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Tutorial of Kekule.js" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="objSys.html" class="btn btn-neutral float-right" title="Object and Class System of Kekule.js" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright Partridge Jiang
-
-    </p>
+    <p>&#169; Copyright Partridge Jiang.</p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

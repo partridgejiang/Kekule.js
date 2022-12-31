@@ -1,71 +1,39 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Molecule Comparison and Searching &mdash; Kekule Tutorial 2022.02 documentation</title>
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Molecule Comparison and Searching &mdash; Kekule Tutorial 2022.12 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Drawing Molecule" href="renderMol.html" />
     <link rel="prev" title="Get Molecule Information" href="getMolInfo.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html" class="icon icon-home"> Kekule Tutorial
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
-                2022.02
+                2022.12
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,17 +41,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="objSys.html">Object and Class System of Kekule.js</a></li>
@@ -92,8 +50,8 @@
 <li class="toctree-l1"><a class="reference internal" href="molIO.html">Loading and Saving Molecule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getMolInfo.html">Get Molecule Information</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Molecule Comparison and Searching</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#comparing-molecules">Comparing Molecules </a></li>
-<li class="toctree-l2"><a class="reference internal" href="#substructure-searching">Substructure Searching </a></li>
+<li class="toctree-l2"><a class="reference internal" href="#comparing-molecules">Comparing Molecules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#substructure-searching">Substructure Searching</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="renderMol.html">Drawing Molecule</a></li>
@@ -104,103 +62,66 @@
 <li class="toctree-l1"><a class="reference internal" href="webComponent.html">Web Component Wrapper of Widgets</a></li>
 </ul>
 
-            
-          
         </div>
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">Kekule Tutorial</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html">Docs</a> &raquo;</li>
-        
-      <li>Molecule Comparison and Searching</li>
-    
-    
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Molecule Comparison and Searching</li>
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="molecule-comparison-and-searching">
-<h1>Molecule Comparison and Searching<a class="headerlink" href="#molecule-comparison-and-searching" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="molecule-comparison-and-searching">
+<h1>Molecule Comparison and Searching<a class="headerlink" href="#molecule-comparison-and-searching" title="Permalink to this heading"></a></h1>
 <p>Users often need to compare the structure, or search for substructure in molecules.
 The toolkit provides corresponding APIs.</p>
-<div class="section" id="comparing-molecules">
-<h2>Comparing Molecules <a class="footnote-reference brackets" href="#module" id="id1">2</a><a class="headerlink" href="#comparing-molecules" title="Permalink to this headline">¶</a></h2>
-<p>To check if two molecule structure is same, just call method <code class="docutils literal notranslate"><span class="pre">isSameStructureWith</span></code>:<a class="footnote-reference brackets" href="#example" id="id2">1</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// compare srcMol and targetMol, check if the structure is same</span>
-<span class="kd">var</span> <span class="nx">isSame</span> <span class="o">=</span> <span class="nx">srcMol</span><span class="p">.</span><span class="nx">isSameStructureWith</span><span class="p">(</span><span class="nx">targetMol</span><span class="p">);</span>
-<span class="c1">// report in console</span>
-<span class="kd">var</span> <span class="nx">msg</span> <span class="o">=</span> <span class="s1">&#39;The two molecules are &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">isSame</span><span class="o">?</span> <span class="s1">&#39;same&#39;</span><span class="o">:</span> <span class="s1">&#39;different&#39;</span><span class="p">);</span>
+<section id="comparing-molecules">
+<h2>Comparing Molecules<a class="headerlink" href="#comparing-molecules" title="Permalink to this heading"></a></h2>
+<p>To check if two molecule structure is same, just call method <code class="docutils literal notranslate"><span class="pre">isSameStructureWith</span></code>:<a class="footnote-reference brackets" href="#example" id="id1">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// compare srcMol and targetMol, check if the structure is same</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">isSame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">srcMol</span><span class="p">.</span><span class="nx">isSameStructureWith</span><span class="p">(</span><span class="nx">targetMol</span><span class="p">);</span><span class="w"></span>
+<span class="c1">// report in console</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;The two molecules are &#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="nx">isSame</span><span class="o">?</span><span class="w"> </span><span class="s1">&#39;same&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;different&#39;</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="substructure-searching">
-<h2>Substructure Searching <a class="footnote-reference brackets" href="#module" id="id3">2</a><a class="headerlink" href="#substructure-searching" title="Permalink to this headline">¶</a></h2>
-<p>Substructure matching can be done by the following code:<a class="footnote-reference brackets" href="#example" id="id4">1</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// search options</span>
-<span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s1">&#39;level&#39;</span><span class="o">:</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">StructureComparationLevel</span><span class="p">.</span><span class="nx">CONSTITUTION</span><span class="p">,</span>  <span class="c1">// compare in consititution level</span>
-  <span class="s1">&#39;compareCharge&#39;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>   <span class="c1">// ignore charge</span>
-  <span class="s1">&#39;compareMass&#39;</span><span class="o">:</span> <span class="kc">false</span>      <span class="c1">// ignore mass number difference</span>
-<span class="p">};</span>
-<span class="c1">// check if srcMol is a sub structure in targetMol</span>
-<span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">targetMol</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">srcMol</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+</section>
+<section id="substructure-searching">
+<h2>Substructure Searching<a class="headerlink" href="#substructure-searching" title="Permalink to this heading"></a></h2>
+<p>Substructure matching can be done by the following code:<a class="footnote-reference brackets" href="#example" id="id2">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// search options</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="s1">&#39;level&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">StructureComparationLevel</span><span class="p">.</span><span class="nx">CONSTITUTION</span><span class="p">,</span><span class="w">  </span><span class="c1">// compare in consititution level</span><span class="w"></span>
+<span class="w">  </span><span class="s1">&#39;compareCharge&#39;</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">   </span><span class="c1">// ignore charge</span><span class="w"></span>
+<span class="w">  </span><span class="s1">&#39;compareMass&#39;</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="w">      </span><span class="c1">// ignore mass number difference</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+<span class="c1">// check if srcMol is a sub structure in targetMol</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">targetMol</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">srcMol</span><span class="p">,</span><span class="w"> </span><span class="nx">options</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>When not matching, the search result will be <code class="docutils literal notranslate"><span class="pre">null</span></code>, otherwise the result is an array that
-contains matching child objects (atoms and bonds) in targetMol. You can iterate it easily:<a class="footnote-reference brackets" href="#example" id="id5">1</a></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">l</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">l</span><span class="p">;</span> <span class="o">++</span><span class="nx">i</span><span class="p">)</span>
-<span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">result</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span> <span class="k">instanceof</span> <span class="nx">Kekule</span><span class="p">.</span><span class="nx">ChemStructureConnector</span><span class="p">)</span>  <span class="c1">// is bond</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">getClassName</span><span class="p">(),</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">getBondOrder</span><span class="o">?</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">getBondOrder</span><span class="p">()</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
-  <span class="k">else</span>   <span class="c1">// is atom</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">getClassName</span><span class="p">(),</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">getLabel</span><span class="p">());</span>
-<span class="p">}</span>
+contains matching child objects (atoms and bonds) in targetMol. You can iterate it easily:<a class="footnote-reference brackets" href="#example" id="id3">1</a></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">l</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">l</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="nx">i</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="kd">var</span><span class="w"> </span><span class="nx">obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">result</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span><span class="w"></span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">obj</span><span class="w"> </span><span class="ow">instanceof</span><span class="w"> </span><span class="nx">Kekule</span><span class="p">.</span><span class="nx">ChemStructureConnector</span><span class="p">)</span><span class="w">  </span><span class="c1">// is bond</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">getClassName</span><span class="p">(),</span><span class="w"> </span><span class="nx">obj</span><span class="p">.</span><span class="nx">getBondOrder</span><span class="o">?</span><span class="w"> </span><span class="nx">obj</span><span class="p">.</span><span class="nx">getBondOrder</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="k">else</span><span class="w">   </span><span class="c1">// is atom</span><span class="w"></span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">getClassName</span><span class="p">(),</span><span class="w"> </span><span class="nx">obj</span><span class="p">.</span><span class="nx">getLabel</span><span class="p">());</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -212,66 +133,42 @@ contains matching child objects (atoms and bonds) in targetMol. You can iterate 
 <p>Substructure search is a time-consuming job, especially to complex molecules.</p>
 </div>
 <dl class="footnote brackets">
-<dt class="label" id="example"><span class="brackets">1</span><span class="fn-backref">(<a href="#id2">1</a>,<a href="#id4">2</a>,<a href="#id5">3</a>)</span></dt>
+<dt class="label" id="example"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>,<a href="#id3">3</a>)</span></dt>
 <dd><p>Example of this chapter can be found and run at <a class="reference external" href="../examples/searchMol.html">here</a>.</p>
 </dd>
-<dt class="label" id="module"><span class="brackets">2</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id3">2</a>)</span></dt>
-<dd><p>To use this feature, algorithm module must be loaded, e.g.:</p>
-</dd>
 </dl>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;kekule.js?module=algorithm&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-</pre></div>
-</div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="renderMol.html" class="btn btn-neutral float-right" title="Drawing Molecule" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="getMolInfo.html" class="btn btn-neutral float-left" title="Get Molecule Information" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getMolInfo.html" class="btn btn-neutral float-left" title="Get Molecule Information" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="renderMol.html" class="btn btn-neutral float-right" title="Drawing Molecule" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright Partridge Jiang
-
-    </p>
+    <p>&#169; Copyright Partridge Jiang.</p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
