@@ -988,7 +988,7 @@ Kekule.MolStereoUtils = {
 		if (totalSiblingCount < 4)  // not a tetrahedron
 			return {direction: RD.UNKNOWN};
 
-		var calcNodeCoords = function(centerNode, siblings, coordMode, fischerInfo, allowCoordBorrow)
+		var calcNodeCoords = function(centerNode, siblings, totalSiblingCount, coordMode, fischerInfo, allowCoordBorrow)
 		{
 			var isUnset = Kekule.ObjUtils.isUnset;
 			//var nodes = [].concat(siblings).unshift(centerNode);
@@ -1067,7 +1067,14 @@ Kekule.MolStereoUtils = {
 			// fill missing z coord in 2D mode
 			if (!is3D && centerCoord)
 			{
-				var defCoord2DZ = -siblingCoord2DZInfo.sum / (siblings.length - siblingCoord2DZInfo.count) + centerCoord.z;
+				var defCoord2DZ;
+				//defCoord2DZ = centerCoord.z || 0;
+				//defCoord2DZ = -siblingCoord2DZInfo.sum / (siblings.length - siblingCoord2DZInfo.count) + centerCoord.z;
+				// should take implicit sibling into account, otherwise the implicit sibling coord calculation may get a wrong result
+				defCoord2DZ = -siblingCoord2DZInfo.sum / (totalSiblingCount - siblingCoord2DZInfo.count) + centerCoord.z;
+
+				//console.log('zcount', siblingCoord2DZInfo.count);
+
 				//console.log('defCoord2DZ', defCoord2DZ);
 				for (var i = 0, l = siblings.length; i < l; ++i)
 				{
@@ -1162,7 +1169,7 @@ Kekule.MolStereoUtils = {
 		var _allCalcSibilings = AU.clone(siblings);
 		if (refSibling)
 			AU.pushUnique(_allCalcSibilings, refSibling);
-		var _calculatedNodeCoordMap = calcNodeCoords(centerNode, _allCalcSibilings, coordMode, fischerInfo, true);
+		var _calculatedNodeCoordMap = calcNodeCoords(centerNode, _allCalcSibilings, totalSiblingCount, coordMode, fischerInfo, true);
 		var centerCoord = _calculatedNodeCoordMap.get(centerNode);
 		var getNodeCoord = function(node, centerNode, centerCoord, coordMode, fischerInfo) {
 			var result = _calculatedNodeCoordMap.get(node);
