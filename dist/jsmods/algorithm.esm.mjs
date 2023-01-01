@@ -8,5 +8,6 @@ import "../mins/core.min.js";
 import "../mins/algorithm.min.js";
 let { Kekule, Class, ClassEx, ObjectEx, DataType} = exporter();
 export { Kekule, Class, ClassEx, ObjectEx, DataType};
+if(!Kekule.scriptSrcInfo.modules)Kekule.scriptSrcInfo.modules=[];
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "common", "data", "core", "algorithm"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }

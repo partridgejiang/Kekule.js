@@ -8,5 +8,6 @@ require("../mins/core.min.js");
 require("../mins/algorithm.min.js");
 require("../mins/calculation.min.js");
 module.exports = exporter();
+if(!Kekule.scriptSrcInfo.modules)Kekule.scriptSrcInfo.modules=[];
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "common", "data", "core", "algorithm", "calculation"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }

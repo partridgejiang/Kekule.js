@@ -167,6 +167,7 @@ require("../src/_extras/Indigo/kekule.indigo.structures.js");
 require("../src/_extras/InChI/kekule.inchi.js");
 require("../src/kekule.loaded.js");
 module.exports = exporter();
+if(!Kekule.scriptSrcInfo.modules)Kekule.scriptSrcInfo.modules=[];
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "localizationData.zh", "common", "core", "html", "io", "render", "spectroscopy", "widget", "chemWidget", "webComponent", "algorithm", "calculation", "data", "emscripten", "openbabel", "indigo", "inchi"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }
 Kekule.scriptSrcInfo.useMinFile = false;

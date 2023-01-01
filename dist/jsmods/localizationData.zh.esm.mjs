@@ -6,5 +6,6 @@ import "../mins/common.min.js";
 import "../mins/localizationData.zh.min.js";
 let { Kekule, Class, ClassEx, ObjectEx, DataType} = exporter();
 export { Kekule, Class, ClassEx, ObjectEx, DataType};
+if(!Kekule.scriptSrcInfo.modules)Kekule.scriptSrcInfo.modules=[];
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "common", "localizationData.zh"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }

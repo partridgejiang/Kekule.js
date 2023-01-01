@@ -13,5 +13,6 @@ import "../mins/widget.min.js";
 import "../mins/chemWidget.min.js";
 let { Kekule, Class, ClassEx, ObjectEx, DataType} = exporter();
 export { Kekule, Class, ClassEx, ObjectEx, DataType};
+if(!Kekule.scriptSrcInfo.modules)Kekule.scriptSrcInfo.modules=[];
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "common", "data", "core", "html", "algorithm", "io", "render", "widget", "chemWidget"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }

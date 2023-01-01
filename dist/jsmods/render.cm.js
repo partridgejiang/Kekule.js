@@ -8,5 +8,6 @@ require("../mins/core.min.js");
 require("../mins/html.min.js");
 require("../mins/render.min.js");
 module.exports = exporter();
+if(!Kekule.scriptSrcInfo.modules)Kekule.scriptSrcInfo.modules=[];
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "common", "data", "core", "html", "render"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }

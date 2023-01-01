@@ -20,5 +20,6 @@ require("./mins/openbabel.min.js");
 require("./mins/indigo.min.js");
 require("./mins/inchi.min.js");
 module.exports = exporter();
+if(!Kekule.scriptSrcInfo.modules)Kekule.scriptSrcInfo.modules=[];
 Kekule.ArrayUtils.pushUnique(Kekule.scriptSrcInfo.modules, ["lan", "root", "localization", "localizationData", "localizationData.zh", "common", "core", "html", "io", "render", "spectroscopy", "widget", "chemWidget", "webComponent", "algorithm", "calculation", "data", "emscripten", "openbabel", "indigo", "inchi"]);
 if (typeof(Kekule) !== 'undefined') { Kekule._loaded(); }
