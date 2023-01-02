@@ -46,7 +46,7 @@
 				<!-- InstanceEndEditable -->				
 				<h1 class="MainTitle" id="mainTitle"><!-- InstanceBeginEditable name="ArticleHeadLine" -->Kekule.js Overview<!-- InstanceEndEditable --></h1>
 			</header>		
-			<!-- InstanceBeginEditable name="MainContent" -->
+		  <!-- InstanceBeginEditable name="MainContent" -->
 			<p>Kekule.js is an open source JavaScript library for chemoinformatics released under <a href="http://opensource.org/licenses/mit-license.php" target="_blank">MIT license</a>. Currently, it is molecule-centric, focusing on providing the ability to represent, draw, edit, compare and search molecule structures on web browsers.</p>
 			<h2>Major Features</h2>
 			<p>The whole library is divided into several  modules, each provides different features and functions. Users can use the combination of modules for specific purpose. The following table lists the major features of each module in Kekule.js.</p>
@@ -135,11 +135,20 @@
 				</tr>
 			</table>
 			<h2>Installation</h2>
-			<p>As a JavaScript library, usually Kekule.js need to be included in HTML page by &lt;script&gt; tag. You can use the compressed script file to reduce the net traffic:</p>
+			<p>The whole Kekule.js package can be installed with npm:</p>
+			<pre class="CodeBlock">npm install --save kekule</pre>
+			<p>then be imported to your project with ES module import:</p>
+			<pre class="CodeBlock">import { Kekule } from 'kekule';
+// if Kekule widgets is used, the theme CSS should be imported as well
+import 'kekule/theme/default';
+console.log(Kekule.VERSION);</pre>
+			<p>As a JavaScript library, Kekule.js can also be included in HTML page in a traditional way using by &lt;script&gt; tag:</p>
 			<pre class="CodeBlock">&lt;script src=&quot;kekule.min.js&quot;&gt;&lt;/script&gt;</pre>
+			<!--
 			<p>By using kekule.min.js, all modules (exclude module Extra) are loaded into HTML page. If only a few modules is needed, you can utilize a special bootstrap script: </p>
 			<pre class="CodeBlock">&lt;script src=&quot;kekule.js?module=chemWidget,algorithm&quot;&gt;&lt;/script&gt;</pre>
 			<p>Note the module param after &quot;?&quot;. In the example above, module chemWidget and algorithm, as well as other prerequisite modules will be loaded.</p>
+			-->
 			<p>If widget or chem widget modules are used, additional style sheet file also need to be linked in HTML page:</p>
 			<pre class="CodeBlock">&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;themes/default/kekule.css&quot; /&gt;
 </pre>
@@ -151,7 +160,7 @@
 				<li>Firefox</li>
 				<li>Chrome</li>
 				<li>Safari</li>
-				<li>Internet Explorer 8 and above</li>
+				<li>Internet Explorer 10 and above</li>
 				<li>Web browser of Android and iOS</li>
 			</ul>
 			<h2>Publication</h2>
