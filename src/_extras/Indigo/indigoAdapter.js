@@ -1,6 +1,6 @@
 function CreateIndigo(module)  // create Indigo adapter object
 {
-	var Module = module || IndigoModule();
+	var Module = module || Module();
 	var result = {
 		INDIGO_RC_NOT_CENTER: -1,
 		INDIGO_RC_UNMARKED: 0,
@@ -101,7 +101,7 @@ function CreateIndigo(module)  // create Indigo adapter object
 		automap: Module.cwrap('indigoAutomap', 'number', ['number', 'string']),
 		getAtomMappingNumber: Module.cwrap('indigoGetAtomMappingNumber', 'number', ['number', 'number']),
 		setAtomMappingNumber: Module.cwrap('indigoSetAtomMappingNumber', 'number', ['number', 'number', 'number']),
-		getReactingCenter: Module.cwrap('indigoGetReactingCenter', 'number', ['number', 'number', 'array']),
+		getReactingCenter: Module.cwrap('indigoGetReactingCenter', 'number', ['number', 'number', 'number']),
 		setReactingCenter: Module.cwrap('indigoSetReactingCenter', 'number', ['number', 'number', 'number']),
 		clearAAM: Module.cwrap('indigoClearAAM', 'number', ['number']),
 		correctReactingCenters: Module.cwrap('indigoCorrectReactingCenters', 'number', ['number']),
@@ -118,7 +118,7 @@ function CreateIndigo(module)  // create Indigo adapter object
 		changeStereocenterType: Module.cwrap('indigoChangeStereocenterType', 'number', ['number', 'number']),
 		stereocenterGroup: Module.cwrap('indigoStereocenterGroup', 'number', ['number']),
 		setStereocenterGroup: Module.cwrap('indigoSetStereocenterGroup', 'number', ['number', 'number']),
-		stereocenterPyramid: Module.cwrap('indigoStereocenterPyramid', 'array', ['number']),
+		stereocenterPyramid: Module.cwrap('indigoStereocenterPyramid', 'number', ['number']),
 		singleAllowedRGroup: Module.cwrap('indigoSingleAllowedRGroup', 'number', ['number']),
 		addStereocenter: Module.cwrap('indigoAddStereocenter', 'number', ['number', 'number', 'number', 'number', 'number', 'number']),
 		iterateRGroupFragments: Module.cwrap('indigoIterateRGroupFragments', 'number', ['number']),
@@ -126,8 +126,8 @@ function CreateIndigo(module)  // create Indigo adapter object
 		iterateAttachmentPoints: Module.cwrap('indigoIterateAttachmentPoints', 'number', ['number', 'number']),
 		symbol: Module.cwrap('indigoSymbol', 'string', ['number']),
 		degree: Module.cwrap('indigoDegree', 'number', ['number']),
-		getCharge: Module.cwrap('indigoGetCharge', 'number', ['number', 'array']),
-		getExplicitValence: Module.cwrap('indigoGetExplicitValence', 'number', ['number', 'array']),
+		getCharge: Module.cwrap('indigoGetCharge', 'number', ['number', 'number']),
+		getExplicitValence: Module.cwrap('indigoGetExplicitValence', 'number', ['number', 'number']),
 		setExplicitValence: Module.cwrap('indigoSetExplicitValence', 'number', ['number', 'number']),
 		atomicNumber: Module.cwrap('indigoAtomicNumber', 'number', ['number']),
 		isotope: Module.cwrap('indigoIsotope', 'number', ['number']),
@@ -135,7 +135,7 @@ function CreateIndigo(module)  // create Indigo adapter object
 		checkValence: Module.cwrap('indigoCheckValence', 'number', ['number']),
 		checkQuery: Module.cwrap('indigoCheckQuery', 'number', ['number']),
 		checkRGroups: Module.cwrap('indigoCheckRGroups', 'number', ['number']),
-		countHydrogens: Module.cwrap('indigoCountHydrogens', 'number', ['number', 'array']),
+		countHydrogens: Module.cwrap('indigoCountHydrogens', 'number', ['number', 'number']),
 		countImplicitHydrogens: Module.cwrap('indigoCountImplicitHydrogens', 'number', ['number']),
 		xYZ: Module.cwrap('indigoXYZ', 'array', ['number']),
 		setXYZ: Module.cwrap('indigoSetXYZ', 'number', ['number', 'number', 'number', 'number']),
@@ -157,8 +157,8 @@ function CreateIndigo(module)  // create Indigo adapter object
 		getRepeatingUnit: Module.cwrap('indigoGetRepeatingUnit', 'number', ['number', 'number']),
 		description: Module.cwrap('indigoDescription', 'string', ['number']),
 		data: Module.cwrap('indigoData', 'string', ['number']),
-		addDataSGroup: Module.cwrap('indigoAddDataSGroup', 'number', ['number', 'number', 'array', 'number', 'array', 'string', 'string']),
-		addSuperatom: Module.cwrap('indigoAddSuperatom', 'number', ['number', 'number', 'array', 'string']),
+		addDataSGroup: Module.cwrap('indigoAddDataSGroup', 'number', ['number', 'number', 'number', 'number', 'number', 'string', 'string']),
+		addSuperatom: Module.cwrap('indigoAddSuperatom', 'number', ['number', 'number', 'number', 'string']),
 		setDataSGroupXY: Module.cwrap('indigoSetDataSGroupXY', 'number', ['number', 'number', 'number', 'string']),
 		setSGroupData: Module.cwrap('indigoSetSGroupData', 'number', ['number', 'string']),
 		setSGroupCoords: Module.cwrap('indigoSetSGroupCoords', 'number', ['number', 'number', 'number']),
@@ -239,8 +239,8 @@ function CreateIndigo(module)  // create Indigo adapter object
 		setRSite: Module.cwrap('indigoSetRSite', 'number', ['number', 'string']),
 		setCharge: Module.cwrap('indigoSetCharge', 'number', ['number', 'number']),
 		setIsotope: Module.cwrap('indigoSetIsotope', 'number', ['number', 'number']),
-		getRadicalElectrons: Module.cwrap('indigoGetRadicalElectrons', 'number', ['number', 'array']),
-		getRadical: Module.cwrap('indigoGetRadical', 'number', ['number', 'array']),
+		getRadicalElectrons: Module.cwrap('indigoGetRadicalElectrons', 'number', ['number', 'number']),
+		getRadical: Module.cwrap('indigoGetRadical', 'number', ['number', 'number']),
 		setRadical: Module.cwrap('indigoSetRadical', 'number', ['number', 'number']),
 		resetRadical: Module.cwrap('indigoResetRadical', 'number', ['number']),
 		setImplicitHCount: Module.cwrap('indigoSetImplicitHCount', 'number', ['number', 'number']),
@@ -267,17 +267,17 @@ function CreateIndigo(module)  // create Indigo adapter object
 		massComposition: Module.cwrap('indigoMassComposition', 'string', ['number']),
 		canonicalSmiles: Module.cwrap('indigoCanonicalSmiles', 'string', ['number']),
 		layeredCode: Module.cwrap('indigoLayeredCode', 'string', ['number']),
-		symmetryClasses: Module.cwrap('indigoSymmetryClasses', 'array', ['number', 'array']),
+		symmetryClasses: Module.cwrap('indigoSymmetryClasses', 'number', ['number', 'number']),
 		hasCoord: Module.cwrap('indigoHasCoord', 'number', ['number']),
 		hasZCoord: Module.cwrap('indigoHasZCoord', 'number', ['number']),
 		isChiral: Module.cwrap('indigoIsChiral', 'number', ['number']),
 		isPossibleFischerProjection: Module.cwrap('indigoIsPossibleFischerProjection', 'number', ['number', 'string']),
-		createSubmolecule: Module.cwrap('indigoCreateSubmolecule', 'number', ['number', 'number', 'array']),
-		createEdgeSubmolecule: Module.cwrap('indigoCreateEdgeSubmolecule', 'number', ['number', 'number', 'array', 'number', 'array']),
-		getSubmolecule: Module.cwrap('indigoGetSubmolecule', 'number', ['number', 'number', 'array']),
-		removeAtoms: Module.cwrap('indigoRemoveAtoms', 'number', ['number', 'number', 'array']),
-		removeBonds: Module.cwrap('indigoRemoveBonds', 'number', ['number', 'number', 'array']),
-		alignAtoms: Module.cwrap('indigoAlignAtoms', 'number', ['number', 'number', 'array', 'array']),
+		createSubmolecule: Module.cwrap('indigoCreateSubmolecule', 'number', ['number', 'number', 'number']),
+		createEdgeSubmolecule: Module.cwrap('indigoCreateEdgeSubmolecule', 'number', ['number', 'number', 'number', 'number', 'number']),
+		getSubmolecule: Module.cwrap('indigoGetSubmolecule', 'number', ['number', 'number', 'number']),
+		removeAtoms: Module.cwrap('indigoRemoveAtoms', 'number', ['number', 'number', 'number']),
+		removeBonds: Module.cwrap('indigoRemoveBonds', 'number', ['number', 'number', 'number']),
+		alignAtoms: Module.cwrap('indigoAlignAtoms', 'number', ['number', 'number', 'number', 'array']),
 		aromatize: Module.cwrap('indigoAromatize', 'number', ['number']),
 		dearomatize: Module.cwrap('indigoDearomatize', 'number', ['number']),
 		foldHydrogens: Module.cwrap('indigoFoldHydrogens', 'number', ['number']),
@@ -369,5 +369,4 @@ function CreateIndigo(module)  // create Indigo adapter object
 	};
 	result._module = Module;  // save module object
 	return result;
-
 };
