@@ -326,7 +326,8 @@ Kekule.IssueCheck.Node2DDistanceChecker = Class.create(Kekule.IssueCheck.BaseChe
 		// only check exposed nodes in a chem space
 		return (rootObj instanceof Kekule.ChemSpace)
 			&& (target instanceof Kekule.ChemStructureNode)
-			&& (!(target instanceof Kekule.Molecule) || !(target.isExpanded && target.isExpanded))
+			&& (!(target instanceof Kekule.Molecule) || !(target.isExpanded && target.isExpanded()))
+			&& !((target instanceof Kekule.SubGroup) && (target.isExpanded && target.isExpanded()))  // expanded subgroup will always too near to child atoms
 			&& (!target.isExposed || target.isExposed());
 	},
 	/* @ignore */
