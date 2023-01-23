@@ -60,7 +60,7 @@ Of course, as a JavaScript toolkit, Kekule.js can also be imported with HTML ``<
     <script src="https://cdn.jsdelivr.net/npm/kekule/dist/kekule.min.js"></script>
     <!-- or -->
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/browse/kekule/dist/themes/default/kekule.css" />
-    <script src="https://unpkg.com/browse/kekule@0.9.9/dist/kekule.min.js"></script>
+    <script src="https://unpkg.com/kekule@1.0.0/dist/kekule.min.js"></script>
     <!-- or from other CDN -->
 
 
