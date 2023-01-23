@@ -1499,6 +1499,8 @@ Kekule.ChemWidget.ChemObjDisplayer = Class.create(Kekule.ChemWidget.AbstractWidg
 			else
 				callback(chemObj);
 		}
+		else
+			callback(chemObj);
 	},
 	/** @private */
 	_tryAutoGenerateChemObjCoordsAndLoad: function(chemObj)
