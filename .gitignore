@@ -86,6 +86,7 @@ test/misc/touchEventTest.html
 /src/_devUtils/compressUtil
 /src/_devUtils/cmlUnitUtil
 /src/_devUtils/jcampLabelUtil
+/src/_devUtils/chemDataExportUtil
 /utils/superRemover
 /website
 /tutorial/build
