@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>ChemViewer Edit Test</title>
+  <script name="mol1" id="mol1" type="chemical/x-mdl-molfile">
+cyclohextone.mol
+  ChemDraw07021213382D
+
+  7  7  0  0  0  0  0  0  0  0999 V2000
+   -0.5275    0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8131   -0.5266    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2856   -1.1610    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5275   -1.0213    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8131   -0.2473    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2856    0.3870    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5712    1.1610    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  4  5  1  0
+  5  6  1  0
+  6  1  1  0
+  6  7  2  0
+M  END
+  </script>
+  <script src="../../../src/kekule.js?min=false"></script>
+  <link rel="stylesheet" type="text/css" href="../../../src/widgets/themes/default/kekule.css" />
+  <style>
+    #viewer {
+      width: 600px;
+      height: 400px;
+    }
+  </style>
+
+  <script>
+    Kekule.X.domReady(() => {
+      let viewer = Kekule.Widget.getWidgetById('viewer');
+      viewer.setRestrainEditorWithCurrObj(false);
+    });
+  </script>
+</head>
+<body>
+  <div id="stage">
+    <div id="viewer" data-widget="Kekule.ChemWidget.Viewer" data-chem-obj="url('#mol1')" data-predefined-setting="fullFunc"></div>
+  </div>
+</body>
+</html>
