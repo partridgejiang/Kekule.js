@@ -98,6 +98,8 @@ Kekule.OpenBabel = {
 		{
 			OB.loadObScript(Kekule.$jsRoot.document, function(error){
 				//Kekule.IO.registerAllInChIFormats();
+				if (!Kekule.OpenBabel.AdaptUtils.isAvailable())  // a fake load, waiting for the next load ready event in which all wasm should be compiled
+					return;
 				if (!error)
 					OB._enableAllFunctions();
 				if (callback)

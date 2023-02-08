@@ -9,9 +9,9 @@
  * requires /xbrowsers/kekule.x.js
  */
 
-(function($root) {
-if (!$root)
-	$root = Kekule.$jsRoot;
+(function($init_root) {
+
+var	$root = Kekule.$jsRoot || $init_root;  // this may be undefined in JS module, so we use Kekule.$jsRoot as default
 /** ignore */
 Kekule.EmscriptenUtils = {
 	/** @private */
