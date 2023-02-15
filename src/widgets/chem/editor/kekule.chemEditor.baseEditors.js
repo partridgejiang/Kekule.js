@@ -217,7 +217,7 @@ Kekule.globalOptions.add('chemWidget.editor.issueChecker', {
  * Invoked when the user modification to chem object ends in the editor.
  * This event occurs when manipulation done or operation undone/redone.
  * It is a safe and effective opportunity to retrieve the changes in editor.
- * Note: operation undo/redo will change the object inside editor but will not evoke this event.
+ * Note: operation undo/redo will change the object inside editor and will also evoke this event.
  * @name Kekule.Editor.BaseEditor#userModificationDone
  * @event
  */
