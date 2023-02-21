@@ -56,7 +56,7 @@ function init() {
 			{
 				widgetProps.restrainEditorWithCurrObj = false;
 				widgetProps.editorProperties = {
-					'predefinedSetting': 'molOnly',
+					'predefinedSetting': 'fullFunc',
 					'allowCreateNewChild': true
 				};
 			} else  // molecule
