@@ -1739,6 +1739,12 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_HYDROGEN'),
 				'htmlClass': HTMLCLASS_PREFIX + 'Hydrogen',
 				'bondProps': {'bondType': BT.HYDROGEN, 'bondOrder': BO.SINGLE,	'stereo': BS.NONE}
+			},
+			'transition': {
+				'text': $L('ChemWidgetTexts.CAPTION_MOL_BOND_TRANSITION'),
+				'hint': $L('ChemWidgetTexts.HINT_MOL_BOND_TRANSITION'),
+				'htmlClass': HTMLCLASS_PREFIX + 'Transition',
+				'bondProps': {'bondType': BT.TRANSITION, 'bondOrder': BO.SINGLE,	'stereo': BS.NONE}
 			}
 		};
 		var predefinedExtraData = {

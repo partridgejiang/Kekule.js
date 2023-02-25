@@ -85,6 +85,8 @@ Kekule.BondType = {
 	METALLIC: 'metallic',
 	/** HYDROGEN bond */
 	HYDROGEN: 'hydrogen',
+	/** Trasition bond, bond forming or breaking in transition state */
+	TRANSITION: 'transition',
 	/** Unknown */
 	UNKNOWN: null,
 	/** Default type is covalent bond */

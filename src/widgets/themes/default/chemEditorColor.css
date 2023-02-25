@@ -254,6 +254,10 @@
 {
   background-image: url("images/slice/iconsSmall/bondHydrogen.gif");
 }
+.K-Chem-MolBondIaController-Transition .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/bondTransition.gif");
+}
 .K-Chem-MolBondIaController-Double-Either .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/bondDoubleEither.gif");

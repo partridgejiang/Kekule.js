@@ -61,7 +61,7 @@ Kekule.UnivChemStructObjComparer = {
 	/** @private */
 	CHARGE_BASE: 0x7,
 	/** @private */
-	BOND_TYPE_MAP: (new K.MapEx(true)).set(BT.COVALENT, 1).set(BT.IONIC, 2).set(BT.COORDINATE, 3).set(BT.METALLIC, 4).set(BT.HYDROGEN, 9),
+	BOND_TYPE_MAP: (new K.MapEx(true)).set(BT.COVALENT, 1).set(BT.IONIC, 2).set(BT.COORDINATE, 3).set(BT.METALLIC, 4).set(BT.HYDROGEN, 9).set(BT.TRANSITION, 20),
 	/** @private */
 	_P32: Math.pow(2, 32),
 	/** @private */

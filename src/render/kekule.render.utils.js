@@ -1250,7 +1250,9 @@ Kekule.Render.ConnectorDrawUtils = {
 		var btype = bond.getBondType();
 		switch (btype)
 		{
-			case BT.HYDROGEN: return [RT.DASHED, RT.ARROWED, RT.WAVY]; break;
+			case BT.HYDROGEN:
+			case BT.TRANSITION:
+				return [RT.DASHED, RT.ARROWED, RT.WAVY]; break;
 			// TODO: Arrow direction of coordinate bond should be calculated
 			case BT.COORDINATE: return [RT.ARROWED, RT.SINGLE, RT.DASHED, RT.WAVY]; break;
 			case BT.IONIC: /*case BT.COORDINATE:*/ case BT.METALLIC: case BT.UNKNOWN:
@@ -1343,7 +1345,9 @@ Kekule.Render.ConnectorDrawUtils = {
 		var btype = bond.getBondType();
 		switch (btype)
 		{
-			case BT.HYDROGEN: return RT.DASH; break;
+			case BT.HYDROGEN:
+			case BT.TRANSITION:
+				return RT.DASH; break;
 			case BT.COVALENT: break;  // need further check in the following code
 			default:
 				return RT.SINGLE;

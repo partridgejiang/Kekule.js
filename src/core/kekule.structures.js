@@ -7882,7 +7882,7 @@ Kekule.Bond = Class.create(Kekule.ChemStructureConnector,
 	{
 		var BT = Kekule.BondType;
 		var bType = this.getBondType();
-		return [BT.COVALENT, BT.IONIC, BT.METALLIC, BT.HYDROGEN, BT.UNKNOWN].indexOf(bType) >= 0;
+		return [BT.COVALENT, BT.IONIC, BT.METALLIC, BT.HYDROGEN, BT.UNKNOWN, BT.TRANSITION].indexOf(bType) >= 0;
 	},
 	/**
 	 * Change bond direction to a inverted one (in case when connected object order swapped).

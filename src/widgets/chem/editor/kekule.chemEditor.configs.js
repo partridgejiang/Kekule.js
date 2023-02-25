@@ -411,7 +411,8 @@ Kekule.Editor.StructureConfigs = Class.create(Kekule.AbstractConfigs,
 			'ionic': false,
 			'coordinate': false,
 			'metallic': false,
-			'hydrogen': true
+			'hydrogen': true,
+			'transition': true
 		});
 	},
 	/** @private */
