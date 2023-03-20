@@ -155,19 +155,28 @@ function init() {
 				var molData = '', smiles = '', smilesNoStereo = '';
 				var chemObj = viewer.getChemObj();
 				if (chemObj) {
-					try {
-						molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
-						smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': false});
-						smilesNoStereo = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': true});
-					} catch (e) {
-
+					if ((chemObj.isEmpty && chemObj.isEmpty()) || ((chemObj instanceof Kekule.ChemDocument) && (chemObj.getChildCount() <= 0)))  // a empty chem object/document
+					{
+						sAnswer = '';
 					}
-					var saveObj = {
-						'smiles': smiles || '',
-						'smilesNoStereo': smilesNoStereo || '',
-						'molData': molData || ''
-					};
-					sAnswer = JSON.stringify(saveObj);
+					else
+					{
+						try
+						{
+							molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
+							smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': false});
+							smilesNoStereo = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': true});
+						} catch (e)
+						{
+
+						}
+						var saveObj = {
+							'smiles': smiles || '',
+							'smilesNoStereo': smilesNoStereo || '',
+							'molData': molData || ''
+						};
+						sAnswer = JSON.stringify(saveObj);
+					}
 				}
 				ansElem.value = sAnswer;
 			}

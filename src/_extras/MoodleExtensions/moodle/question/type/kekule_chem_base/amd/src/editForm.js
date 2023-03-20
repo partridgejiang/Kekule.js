@@ -48,12 +48,18 @@ function init() {
 			var ansData = placeHolder.value;
 			var molData = null;
 			var molDataType = null;
-			try {
-				var ansJSON = JSON.parse(ansData);
-				molData = ansJSON.molData;
-				molDataType = ansJSON.molDataType;
-			} catch (e) {
+			if (ansData)
+			{
+				try
+				{
+					var ansJSON = JSON.parse(ansData);
+					molData = ansJSON.molData;
+					molDataType = ansJSON.molDataType;
+				}
+				catch (e)
+				{
 
+				}
 			}
 			var className = placeHolder.getAttribute('data-widget-class');
 			createChemViewer(placeHolder, molData, molDataType, className, inputType);
@@ -108,6 +114,8 @@ function init() {
 					console.error(e);
 				}
 			}
+			// save input type
+			//result.__inputType__ = inputType;
 			// save ansIndex
 			result.__answerIndex__ = ansIndex;
 			var ansRelElems = getAnsRelatedElems(ansIndex);
@@ -136,20 +144,32 @@ function init() {
 				var chemObj = viewer.getChemObj();
 				if (chemObj) {
 					var sAnswer = '';
-					try {
-						molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
-						smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': false});
-						smilesNoStereo = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': true});
-					} catch (e) {
-
+					if ((chemObj.isEmpty && chemObj.isEmpty()) || ((chemObj instanceof Kekule.ChemDocument) && (chemObj.getChildCount() <= 0)))  // a empty chem object/document
+					{
+						sAnswer = '';
 					}
-					var saveObj = {
-						'smiles': smiles,
-						'smilesNoStereo': smilesNoStereo,
-						'molDataType': Kekule.IO.MimeType.KEKULE_JSON,
-						'molData': molData
-					};
-					sAnswer = JSON.stringify(saveObj);
+					else if (!chemObj.isEmpty())
+					{
+						try
+						{
+							molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
+							smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': false});
+							smilesNoStereo = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': true});
+						}
+						catch (e)
+						{
+
+						}
+						var saveObj = {
+							'smiles': smiles,
+							'smilesNoStereo': smilesNoStereo,
+							'molDataType': Kekule.IO.MimeType.KEKULE_JSON,
+							'molData': molData
+						};
+						sAnswer = JSON.stringify(saveObj);
+					}
+					else
+						sAnswer = '';
 				}
 				//molDataElem.value = molData;
 				//smilesElem.value = smiles;
