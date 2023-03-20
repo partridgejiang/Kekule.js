@@ -78,6 +78,7 @@
 .K-Chem-Periodic-Table-Head-Cell-Content
 {
     display: inline-block;
+    position: relative;
     padding: 0.3em 0.3em;
     font-weight: bold;
     font-size: 1.1em;
