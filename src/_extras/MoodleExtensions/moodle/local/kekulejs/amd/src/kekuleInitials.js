@@ -100,6 +100,12 @@ define(/*'local_kekulejs/kekuleInitials',*/ ['three', 'kekule'], function(){
 				});
 			}
 		}
+
+		if (Kekule.globalOptions && Kekule.Editor.MolBondIaController)
+		{
+			// change the default behavior of MolBondIaController in editor to similar to ChemDraw
+			Kekule.globalOptions.add('chemWidget.editor.bondManipulation.autoSwitchBondOrder', true);
+		}
 	}
 
 	return {
