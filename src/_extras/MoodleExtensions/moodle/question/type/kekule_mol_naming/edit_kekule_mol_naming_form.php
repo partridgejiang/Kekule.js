@@ -52,6 +52,15 @@ class qtype_kekule_mol_naming_edit_form extends qtype_kekule_multianswer_edit_fo
 		    $question->strictstereoflags = $strictStereoFlags;
 	    }
 
+        /*
+        if (!isset($question->enablecharselector)) {
+            $enableCharSelector = get_config('mod_qtype_kekule_mol_naming', 'enablecharselector');
+            if (!isset($enableCharSelector))
+                $enableCharSelector = qtype_kekule_mol_naming_configs::DEF_ENABLE_CHAR_SELECTOR;
+            $question->enablecharselector = $enableCharSelector;
+        }
+        */
+
         return parent::data_preprocessing($question);
     }
     protected function data_preprocessing_answers($question, $withanswerfiles = false)
@@ -89,6 +98,19 @@ class qtype_kekule_mol_naming_edit_form extends qtype_kekule_multianswer_edit_fo
 		    get_string('captionStrictStereoFlags', 'qtype_kekule_mol_naming'), '');
         $mform->addElement('advcheckbox', 'ignorecase',
             get_string('captionIgnoreCase', 'qtype_kekule_mol_naming'), '');
+        /*
+        $mform->addElement('advcheckbox', 'enablecharselector',
+            get_string('captionEnableCharSelector', 'qtype_kekule_mol_naming'), '');
+        */
+
+        $mform->addElement('select', 'enablecharselector',
+            get_string('captionEnableCharSelector', 'qtype_kekule_mol_naming'),
+            array(
+                qtype_kekule_mol_naming_char_selector_enable_state::DEFAULT => get_string('enableCharSelectorDefault', 'qtype_kekule_mol_naming'),
+                qtype_kekule_mol_naming_char_selector_enable_state::ENABLED => get_string('enableCharSelectorTrue', 'qtype_kekule_mol_naming'),
+                qtype_kekule_mol_naming_char_selector_enable_state::DISABLED => get_string('enableCharSelectorFalse', 'qtype_kekule_mol_naming')
+            )
+        );
         /*
         $mform->addElement('select', 'inputtype',
             get_string('captionMolInputType', 'qtype_kekule_chem_base'),

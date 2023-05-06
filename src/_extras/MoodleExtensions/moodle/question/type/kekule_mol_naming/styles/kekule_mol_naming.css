@@ -1,0 +1,47 @@
+.formulation input[type="text"].KM-TextboxWithCharSelector,
+.KM-MolNamingCharSelectorWrapper {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.KM-CharSelectorPanel {
+    min-width: 30em;
+    background-color: #fff;
+}
+
+.KM-CharSelectorPanel p {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+.KM-CharSelectorPanel p span {
+    display: inline-block;
+    padding: 0.1em 0.2em;
+    margin: 0;
+    /*border: 1px solid transparent;*/
+    border-radius: 0.2em;
+    font-size: 1.2em;
+    transition-property: transform;
+    transition-duration: 0.2s;
+}
+.KM-CharSelectorPanel p span:hover {
+    /*border-color: #777;*/
+    background-color: #777;
+    color: #fff;
+    z-index: 10000;
+    transform: scale(1.3);
+}
+
+.KM-CharSelectorGroupButton {
+    vertical-align: middle;
+}
+
+.KM-CharSelectorGroupButton .K-Pri-Glyph-Content {
+    background-size: 100% 100%;
+    /*
+    background-image: url(data:image/gif;base64,R0lGODlhFQAVAPMMAD8/P+/v7w8PDy8vL4+Pj8/Pz9/f309PTx8fH7+/v39/fwAAAP///wAAAAAAAAAAACH5BAEAAAwALAAAAAAVABUAAARPkMlJq704s5C6/11wJUtpnmVyKYsAKED5AsJCrEshsYsiFb3VYMLzSQZGTVGDCzIryyclKt2VklVq9lolcrsM7dOAKB0MW9TtyQGJwPBqBAA7);
+    */
+    background-image: url("data:image/svg+xml,%3Csvg t='1680774899835' class='icon' viewBox='0 0 1024 1024' xmlns='http://www.w3.org/2000/svg' p-id='13501' width='200' height='200'%3E%3Cpath d='M484.053333 789.333333l-55.018666-159.573333H199.893333L144.448 789.333333H48.64L265.706667 188.074667h100.416L583.210667 789.333333h-99.178667z m-172.928-492.074666l-87.509333 254.165333h181.674667l-87.082667-254.165333h-7.082667z m466.922667 424.149333c67.498667 0 117.504-42.901333 117.504-99.157333v-37.909334l-110.848 7.082667c-62.506667 4.16-90.837333 25.408-90.837333 65.408 0 40.832 35.413333 64.576 84.181333 64.576z m-22.933333 75.434667c-87.488 0-151.253333-52.906667-151.253334-135.850667 0-81.664 60.842667-128.746667 168.746667-135.402667l122.944-7.082666v-39.168c0-47.914667-31.68-75.008-92.928-75.008-50.005333 0-84.586667 18.346667-94.592 50.410666h-86.656c9.173333-77.909333 82.496-127.914667 185.408-127.914666 113.749333 0 177.92 56.682667 177.92 152.512V789.333333h-86.250667v-63.744h-7.082666c-27.093333 45.418667-76.672 71.253333-136.256 71.253334z' fill='%23000000' p-id='13502'%3E%3C/path%3E%3C/svg%3E");
+}
+
+

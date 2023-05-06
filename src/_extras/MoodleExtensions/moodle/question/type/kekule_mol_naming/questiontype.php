@@ -44,7 +44,7 @@ class qtype_kekule_mol_naming extends qtype_kekule_multianswer {
 
     public function extra_question_fields()
     {
-        return array('qtype_kekule_molname_ops', 'manualgraded', 'replaceunstandardchars', 'removespaces', 'ignorecase', 'strictstereoflags');
+        return array('qtype_kekule_molname_ops', 'manualgraded', 'replaceunstandardchars', 'removespaces', 'ignorecase', 'strictstereoflags', 'enablecharselector', 'charselectorcontent');
     }
     public function extra_answer_fields() {
         return array('qtype_kekule_molname_ansops', 'blankindex', 'standardizedname', 'namingtree');

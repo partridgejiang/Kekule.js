@@ -58,3 +58,10 @@ $settings->add(new admin_setting_configcheckbox(('mod_qtype_kekule_mol_naming/st
 $settings->add(new admin_setting_configtextarea('mod_qtype_kekule_mol_naming/stereoflags',
 	get_string('captionStereoFlags', 'qtype_kekule_mol_naming'), get_string('descStereoFlags', 'qtype_kekule_mol_naming'),
 	qtype_kekule_mol_naming_configs::DEF_STEREO_FLAG_STRS));
+
+$settings->add(new admin_setting_configcheckbox(('mod_qtype_kekule_mol_naming/enablecharselector'),
+    get_string('captionEnableCharSelector', 'qtype_kekule_mol_naming'), get_string('descEnableCharSelector', 'qtype_kekule_mol_naming'),
+    qtype_kekule_mol_naming_configs::DEF_ENABLE_CHAR_SELECTOR));
+$settings->add(new admin_setting_configtextarea('mod_qtype_kekule_mol_naming/charselectorcontent',
+    get_string('captionCharSelectorContent', 'qtype_kekule_mol_naming'), get_string('descCharSelectorContent', 'qtype_kekule_mol_naming'),
+    qtype_kekule_mol_naming_configs::DEF_CHAR_SELECTOR_CONTENT));

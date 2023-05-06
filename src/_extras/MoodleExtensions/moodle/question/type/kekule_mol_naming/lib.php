@@ -26,6 +26,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+class qtype_kekule_mol_naming_char_selector_enable_state {
+    const DEFAULT = 0;  // default, use the global setting
+    const ENABLED = 1;
+    const DISABLED = -1;
+}
+
 class qtype_kekule_mol_naming_configs
 {
     const DEF_STR_REPLACEMENT = '　= \n' . <<<'STR1'
@@ -59,11 +65,20 @@ trans
 反
 STR2;
 
+    const DEF_CHAR_SELECTOR_CONTENT = <<<'STR3'
+E Z R S r s
+, . - ( ) [ ]
+1 2 3 4 5 6 7 8 9 0
+α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ ς σ τ υ φ χ ψ ω
+STR3;
+
 	// ['R', 'S', 'r', 's', 'Z', 'E', 'cis', 'trans', '顺', '反'];
     const DEF_STRICT_STEREO_FLAGS = false;
     const DEF_REMOVE_SPACES = true;
     const DEF_REPLACE_UNSTANDARD_CHARS= true;
     const DEF_IGNORE_CASE = true;
+
+    const DEF_ENABLE_CHAR_SELECTOR = false;
 }
 
 class qtype_kekule_mol_naming_utils
@@ -115,6 +130,22 @@ class qtype_kekule_mol_naming_utils
 		    $flags[$i] = trim($value);
 	    }
 	    return $flags;
+    }
+
+    /**
+     * Returns the default naming char selector content string.
+     * @return string
+     */
+    static public function getCharSelectorContent()
+    {
+        $content = get_config('mod_qtype_kekule_mol_naming', 'charselectorcontent');
+        if (empty($content))
+        {
+            $content = get_string('defCharSelectorContent', 'qtype_kekule_mol_naming');
+        }
+        if (empty($content))
+            $content = qtype_kekule_mol_naming_configs::DEF_CHAR_SELECTOR_CONTENT;
+        return $content;
     }
     /**
      * Clean a molecule name, remove unstandard chars.

@@ -43,3 +43,23 @@ $string['captionReplaceUnstandardChars'] = 'Replace unstandard chars';
 $string['descReplaceUnstandardChars'] = 'Whether replace all unstandard chars (e.g. full-width chars) to half-width ones in answer input';
 $string['captionIgnoreCase'] = 'Ignore case in name';
 $string['descIgnoreCase'] = 'Whether ignore lowercase or uppercase in molecule name';
+
+$string['captionEnableCharSelector'] = 'Enable char selector';
+$string['descEnableCharSelector'] = 'Whether display a panel for selecting predefined characters';
+$string['captionCharSelectorContent'] = 'Char selector content';
+$string['descCharSelectorContent'] = 'Content of char selector panel. Each char should be separated with a blank and groups are divided with CR';
+
+// text for widgets
+$string['captionSelectorMolNamingChar'] = 'Select Naming Character';
+$string['hintSelectorMolNamingChar'] = 'Open a panel for selecting characters for molecule naming';
+
+$string['enableCharSelectorDefault'] = 'Default';
+$string['enableCharSelectorTrue'] = 'Yes';
+$string['enableCharSelectorFalse'] = 'No';
+
+// language related string consts
+$string['defCharSelectorContent'] = <<<'STR_C'
+, . - ( ) [ ]
+1 2 3 4 5 6 7 8 9 0
+α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ ς σ τ υ φ χ ψ ω
+STR_C;
