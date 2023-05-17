@@ -91,6 +91,12 @@ Kekule.globalOptions.add('chemWidget.viewer', {
 	'enableDirectInteraction': true,
 	'enableTouchInteraction': false,
 	'enableGestureInteraction': false,
+	'enabledDirectInteractionModes': {
+		'move': true,
+		'rotate': true,
+		'zoom': true
+	},
+
 	'showCaption': false,
 
 	'useNormalBackground': false,
@@ -749,6 +755,7 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 				}
 			}
 		});
+		this.defineProp('enabledDirectInteractionModes', {'dataType': DataType.HASH});
 
 		this.defineProp('hotTrackedObjects', {
 			'dataType': DataType.ARRAY,
@@ -803,6 +810,11 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		this.setRestraintRotation3DEdgeRatio(oneOf(options.restraintRotation3DEdgeRatio, 0.18));
 		this.setEnableRestraintRotation3D(oneOf(options.enableRestraintRotation3D, true));
 		this.setEnableTouchInteraction(oneOf(options.enableTouchInteraction, false));
+		this.setEnabledDirectInteractionModes(oneOf(options.enabledDirectInteractionModes, {
+			'move': true,
+			'rotate': true,
+			'zoom': true
+		}));
 
 		options = options.editor || {};
 		this.setModalEdit(oneOf(options.modal, true));
@@ -2986,6 +2998,33 @@ Kekule.ChemWidget.Viewer = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		}
 	},
 
+	/**
+	 * Returns whether a direct interaction mode (move/rotate/zoom) is enabled.
+	 * @param {String} mode
+	 * @returns {Bool}
+	 */
+	getEnabledOfDirectInteractionMode: function(mode)
+	{
+		var enabledModeSettings = this.getEnabledDirectInteractionModes() || {};
+		return !!enabledModeSettings[mode];
+	},
+	/**
+	 * Set the enabled setting of a direct interaction mode (move/rotate/zoom).
+	 * @param {String} mode
+	 * @param {Bool} enabled
+	 */
+	setEnabledOfDirectInteractionMode: function(mode, enabled)
+	{
+		var enabledModeSettings = this.getEnabledDirectInteractionModes();
+		if (!enabledModeSettings)
+		{
+			enabledModeSettings = {};
+			this.setPropStoreFieldValue('enabledDirectInteractionModes', enabledModeSettings);
+		}
+		enabledModeSettings[mode] = !!enabled;
+		return this;
+	},
+
 	// event handle functions
 	/**
 	 * React to a HTML event to find if it is a registered hotkey, then react to it when necessary.
@@ -3126,7 +3165,14 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 	{
 		this.defineProp('viewer', {'dataType': 'Kekule.ChemWidget.Viewer', 'serializable': false,
 			'getter': function() { return this.getWidget(); }, 'setter': function(value) { this.setWidget(value); } });
+
+		/*
+		this.defineProp('enableMove', {'dataType': DataType.BOOL, 'serializable': false});
+		this.defineProp('enableRotate', {'dataType': DataType.BOOL, 'serializable': false});
+		this.defineProp('enableZoom', {'dataType': DataType.BOOL, 'serializable': false});
+		*/
 	},
+
 	/** @private */
 	getViewerRenderType: function()
 	{
@@ -3370,11 +3416,18 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			}
 			else if (this._transformInfo.isTransforming)
 			{
+				var viewer = this.getViewer();
 				var screenCoord = this._transformInfo.interactScreenCoord;
 				if (this.getViewerRenderType() === Kekule.Render.RendererType.R3D)
-					this.rotateByXYDistance(screenCoord.x, screenCoord.y);
-				else
-					this.moveByXYDistance(screenCoord.x, screenCoord.y);
+				{
+					if (viewer.getEnabledOfDirectInteractionMode('rotate'))
+						this.rotateByXYDistance(screenCoord.x, screenCoord.y);
+				}
+				else   // 2D
+				{
+					if (viewer.getEnabledOfDirectInteractionMode('move'))
+						this.moveByXYDistance(screenCoord.x, screenCoord.y);
+				}
 			}
 			this._interactiveTransformStepId = window.requestAnimationFrame(this._doInteractiveTransformStepBind);
 		}
@@ -3389,7 +3442,7 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 			if (info.isGestureTransforming && info.pinchScale)
 			{
 				var gestureScale = info.pinchScale;
-				if (gestureScale)
+				if (gestureScale && viewer.getEnabledOfDirectInteractionMode('zoom'))
 				{
 					var newZoom = info.initialGestureZoomLevel * gestureScale;
 					viewer.zoomTo(newZoom);
@@ -3487,13 +3540,17 @@ Kekule.ChemWidget.ViewerBasicInteractionController = Class.create(Kekule.Widget.
 		//console.log('wheel', this.needReactEvent(e));
 		if (this.needReactEvent(e))
 		{
-			var delta = e.wheelDeltaY || e.wheelDelta;
-			if (delta)
-				delta /= 120;
-			var centerCoord = e.getOffsetCoord();
-			this.zoomViewer(delta, centerCoord);
-			e.preventDefault();
-			return true;
+			var viewer = this.getViewer();
+			if (viewer.getEnabledOfDirectInteractionMode('zoom'))
+			{
+				var delta = e.wheelDeltaY || e.wheelDelta;
+				if (delta)
+					delta /= 120;
+				var centerCoord = e.getOffsetCoord();
+				this.zoomViewer(delta, centerCoord);
+				e.preventDefault();
+				return true;
+			}
 		}
 	},
 	/** @private */
