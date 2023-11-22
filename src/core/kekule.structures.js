@@ -5558,7 +5558,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 	 */
 	indexStackOfNode: function(node)
 	{
-		return this.hasCtab()? this.getCtab().indexStackOfNode(node): -1;
+		return this.hasCtab()? this.getCtab().indexStackOfNode(node): null;
 	},
 	/**
 	 * Get node at indexStack.
