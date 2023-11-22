@@ -345,7 +345,7 @@ Kekule.Editor.UiMarkerConfigs = Class.create(Kekule.AbstractConfigs,
  * @property {String} defIsotopeId Default isotope of atom.
  * @property {Array} primaryOrgChemAtoms Atom symbols of most often seen in organic chemistry.
  * @property {Bool} enableChargeAndRadicalMarker If true, marker objects will be used in editor to represent charge and radical.
- * @property {Int}  The max atom count when creating carbon chain using flex chain tool. 0 means no restricts.
+ * @property {Int} maxFlexChainAtomCount The max atom count when creating carbon chain using flex chain tool. 0 means no restricts.
  * @property {Int} minFlexRingAtomCount The min atom count when creating carbon ring using flex ring tool.
  * @property {Int} maxFlexRingAtomCount The max atom count when creating carbon ring using flex ring tool. 0 means no restricts.
  * //@property {Int} initialFlexRingAtomCount The initial atom count when creating carbon ring using flex ring tool.
