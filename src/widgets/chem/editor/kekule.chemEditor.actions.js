@@ -1430,6 +1430,8 @@ Kekule.Editor.ActionOnComposer = Class.create(Kekule.Action,
  * @property {Kekule.ActionList} attachedActions
  * @property {Kekule.Action} defaultAttachedAction If this property is set, when check on the parent action,
  *   if no attached action is checked, default one will be checked on automatically.
+ * @property {Class} defaultAttachedActionClass If this property is set, when creating child attached actions,
+ *   {@link Kekule.Editor.ActionOnComposerAdv.defaultAttachedAction} will be set automatically.
  */
 Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 /** @lends Kekule.Editor.ActionOnComposerAdv# */
@@ -1455,6 +1457,7 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 		this.defineProp('attachedActionClasses', {'dataType': DataType.ARRAY, 'serializable': false, 'setter': null});
 		this.defineProp('attachedActions', {'dataType': 'Kekule.ActionList', 'serializable': false, 'setter': null});
 		this.defineProp('defaultAttachedAction', {'dataType': 'Kekule.Action', 'serializable': false});
+		this.defineProp('defaultAttachedActionClass', {'dataType': DataType.CLASS, 'serializable': false});
 	},
 
 	/** @private */
@@ -1508,6 +1511,22 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 		}
 	},
 
+	doSetDefaultAttachedActionClass: function(value) {
+		this.setPropStoreFieldValue('defaultAttachedActionClass', value);
+		if (value && this.hasAttachedActions())
+		{
+			for (var i = 0, l = this.getAttachedActions().getActionCount(); i < l; ++i)
+			{
+				var attachedAction = this.getAttachedActions().getActionAt(i);
+				if (attachedAction.getClass() === value)
+				{
+					this.setDefaultAttachedAction(attachedAction);
+					break;
+				}
+			}
+		}
+	},
+
 	/**
 	 * Check if there are attached actions to this one.
 	 * @returns {Bool}
@@ -1538,6 +1557,11 @@ Kekule.Editor.ActionOnComposerAdv = Class.create(Kekule.Editor.ActionOnComposer,
 		this.getAttachedActions().add(action);
 		if (asDefault)
 			this.setDefaultAttachedAction(action);
+		else if (asDefault === undefined) {
+			let defClass = this.getDefaultAttachedActionClass();
+			if (defClass && action.getClass() === defClass)
+				this.setDefaultAttachedAction(action);
+		}
 		return this;
 	},
 	/**
@@ -1701,7 +1725,7 @@ Kekule.Editor.ActionComposerSetIaController = Class.create(Kekule.Editor.ActionO
 Kekule.Editor.createComposerIaControllerActionClass = function(className,
 	caption, hint, iaControllerId, htmlClassName,
 	specifiedProps, attachedActionClasses, methods,
-	actionRegName, actionTargetClass)
+	actionRegName, actionTargetClass, additionalProps)
 {
 	if (!htmlClassName)
 		htmlClassName = iaControllerId;
@@ -1720,6 +1744,12 @@ Kekule.Editor.createComposerIaControllerActionClass = function(className,
 	if (methods)
 	{
 		data = Object.extend(data, methods);
+	}
+	if (additionalProps) {
+		data.initPropValues = function() {
+			this.tryApplySuper('initPropValues');
+			this.setPropValues(additionalProps);
+		};
 	}
 	if (specifiedProps)
 	{
@@ -2604,7 +2634,9 @@ Kekule.Editor.ActionComposerSetRepositoryRingController = Kekule.Editor.createCo
 		Kekule.Editor.ActionComposerSetRepositoryCyclohexaneChair2Controller
 	],
 	null,
-	BNS.molRing
+	BNS.molRing,
+	undefined,
+	{'defaultAttachedActionClass': Kekule.Editor.ActionComposerSetRepositoryRing6Controller}
 );
 
 // PathGlyph
