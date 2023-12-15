@@ -56,7 +56,7 @@ function init() {
 			{
 				widgetProps.restrainEditorWithCurrObj = false;
 				widgetProps.editorProperties = {
-					'predefinedSetting': 'fullFunc',
+					'predefinedSetting': 'molOnly',
 					'allowCreateNewChild': true
 				};
 			} else  // molecule
@@ -135,6 +135,7 @@ function init() {
 				'dropDownWidgetGetter': _btnStructureCopyDropDownPanelGetter,
 				'#dropDown': _reactBtnCopyStructureDropdown
 			},
+				Kekule.ChemWidget.ComponentWidgetNames.molDisplayType,
 				Kekule.ChemWidget.ComponentWidgetNames.openEditor]);
 		}
 
@@ -161,13 +162,11 @@ function init() {
 					}
 					else
 					{
-						try
-						{
+						try {
 							molData = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.KEKULE_JSON);
 							smiles = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': false});
 							smilesNoStereo = Kekule.IO.saveMimeData(chemObj, Kekule.IO.MimeType.SMILES, {'ignoreStereo': true});
-						} catch (e)
-						{
+						} catch (e) {
 
 						}
 						var saveObj = {
