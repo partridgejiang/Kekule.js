@@ -367,25 +367,31 @@ Kekule.Render.ThreeRendererBridge = Class.create(Kekule.Render.Abstract3DDrawBri
 		scene.add(camera);
 		renderer.setSize(width, height);
 
+		// After Three.js r155, light intensities will not be multiplied by PI internally,
+		// so we need to adjust the intensity value in code explicitly
+		const lightIntensityFactor = (parseInt(THREE.REVISION) >= 155)? Math.PI: 1;
+		// const lightIntensityFactor = 1;
+
 		// TODO: now light is fixed
 		var lightPositions = this.getInitialLightPositions();
 		var lights = [];
 		for (var i = 0, l = lightPositions.length; i < l; ++i)
 		{
-			var alight = new THREE.DirectionalLight(0xcccccc, 1, 10, true);
+			var alight = new THREE.DirectionalLight(0xcccccc, 1 * lightIntensityFactor, 10, true);
 			var lightCoord = lightPositions[i];
+			alight.castShadow = true;
 			alight.position.set(lightCoord.x, lightCoord.y, lightCoord.z);
 			scene.add(alight);
 			lights.push(alight);
 		}
 
 		/*
-		var alight = new THREE.DirectionalLight(0xcccccc, 1, 10, true);
+		var alight = new THREE.DirectionalLight(0xcccccc, 1 * lightIntensityFactor, 10, true);
 		alight.position.set(-5, -5, -10);
 		scene.add(alight);
 		*/
 
-		var alight = new THREE.AmbientLight( 0x202020 ); // soft white light
+		var alight = new THREE.AmbientLight( 0x202020, 1 * lightIntensityFactor ); // soft white light
 		scene.add(alight);
 
 		parentElem.appendChild(renderer.domElement);
