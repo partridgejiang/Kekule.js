@@ -586,9 +586,22 @@ Kekule.Render.ThreeRendererBridge = Class.create(Kekule.Render.Abstract3DDrawBri
 		var lineMat = this.materialCache.get(THREE.LineBasicMaterial, context.getScene(),
 			{ 'color': this.colorStrToHex(options.color), 'opacity': options.opacity || 1, linewidth: options.lineWidth || 1});
 
-		var geom = new THREE.Geometry();
-		geom.vertices.push(new THREE.Vector3(coord1.x, coord1.y, coord1.z));
-		geom.vertices.push(new THREE.Vector3(coord2.x, coord2.y, coord2.z));
+		var geom;
+		if (THREE.Geometry)  // before Three.js r125
+		{
+			geom = new THREE.Geometry();
+			geom.vertices.push(new THREE.Vector3(coord1.x, coord1.y, coord1.z));
+			geom.vertices.push(new THREE.Vector3(coord2.x, coord2.y, coord2.z));
+		}
+		else   // after r125, THREE.Geometry is deprecated
+		{
+			geom = new THREE.BufferGeometry();
+			var points = [
+				new THREE.Vector3(coord1.x, coord1.y, coord1.z),
+				new THREE.Vector3(coord2.x, coord2.y, coord2.z)
+			];
+			geom.setFromPoints(points);
+		}
 
 		var line = new THREE.Line(geom, lineMat);
 		context.getScene().add(line);
