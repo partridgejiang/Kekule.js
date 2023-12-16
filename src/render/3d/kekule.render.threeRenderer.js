@@ -368,8 +368,10 @@ Kekule.Render.ThreeRendererBridge = Class.create(Kekule.Render.Abstract3DDrawBri
 		renderer.setSize(width, height);
 
 		// After Three.js r155, light intensities will not be multiplied by PI internally,
+		// WebGLRenderer.useLegacyLights will be set to false,
 		// so we need to adjust the intensity value in code explicitly
-		const lightIntensityFactor = (parseInt(THREE.REVISION) >= 155)? Math.PI: 1;
+		const lightIntensityFactor = (renderer.useLegacyLights === false)? Math.PI: 1;
+		//(parseInt(THREE.REVISION) >= 155)? Math.PI: 1;
 		// const lightIntensityFactor = 1;
 
 		// TODO: now light is fixed
