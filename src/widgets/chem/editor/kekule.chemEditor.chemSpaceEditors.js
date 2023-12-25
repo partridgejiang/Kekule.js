@@ -4247,6 +4247,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 		if (needModify)
 		{
 			var editor = this.getEditor();
+			editor.beginManipulateObject();
 			editor.beginUpdateObject();
 			try
 			{
@@ -4265,6 +4266,7 @@ Kekule.Editor.MolBondIaController = Class.create(Kekule.Editor.StructureInsertIa
 			finally
 			{
 				editor.endUpdateObject();
+				editor.endManipulateObject();
 			}
 		}
 	},
