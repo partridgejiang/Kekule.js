@@ -995,7 +995,8 @@
 				//var coreAnchorItem = coreItem.anchorItem;  // preserve previous core anchor
 				if (showCharge)
 				{
-					coreItem = this.appendElectronStateDisplayText(coreItem, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical);
+					coreItem = this.appendElectronStateDisplayText(coreItem, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical,
+						displayLabelConfigs.getElectronicBiasMark());
 				}
 				if (coreItem)
 				{
@@ -1034,12 +1035,16 @@
 			return null;
 		},
 
-		appendElectronStateDisplayText: function(coreItem, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical)
+		appendElectronStateDisplayText: function(coreItem, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical, electronicBiasMark)
 		{
 			var R = Kekule.Render;
 			var charge = this.getCharge();
+			var electronicBias = this.getElectronicBias && this.getElectronicBias();
 			var radical = this.getRadical();
-			var section = R.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, radical, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical);
+			var section = R.ChemDisplayTextUtils.createElectronStateDisplayTextSection(
+				charge, radical, partialChargeDecimalsLength, chargeMarkType, distinguishSingletAndTripletRadical,
+				electronicBias, electronicBiasMark
+			);
 			if (section)
 			{
 				//richText = R.RichTextUtils.append(richText, section);

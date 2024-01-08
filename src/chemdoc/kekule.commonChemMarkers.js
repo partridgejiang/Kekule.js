@@ -204,12 +204,25 @@ Kekule.ChemMarker.Charge = Class.create(Kekule.ChemMarker.ChemPropertyMarker,
 	/** @ignore */
 	getPropertyName: function()
 	{
-		return 'charge';
+		return 'chargeEx';
 	},
 	/** @ignore */
 	getAutoIdPrefix: function()
 	{
 		return 'charge';
+	},
+
+	// for backward compatibility
+	doSetValue: function(value)
+	{
+		// console.log('set marker value', value);
+		if (typeof(value) === 'number')   // simple precise charge value
+		{
+			this.tryApplySuper('doSetValue', [{precise: value}]);
+		}
+		else
+			this.tryApplySuper('doSetValue', [value]);
+
 	}
 });
 

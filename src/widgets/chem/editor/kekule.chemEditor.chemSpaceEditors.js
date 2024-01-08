@@ -1536,7 +1536,8 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 		mol.beginUpdate();
 		try
 		{
-			if (mol.getCharge && mol.getCharge())
+			// if (mol.getCharge && mol.getCharge())
+			if (mol.hasExplicitCharge && mol.hasExplicitCharge())
 				mol.fetchChargeMarker(true);
 			// then the children
 			var nodes = mol.getNodes();
@@ -1546,7 +1547,8 @@ Kekule.Editor.ChemSpaceEditor = Class.create(Kekule.Editor.BaseEditor,
 				node.beginUpdate();
 				try
 				{
-					if (node.getCharge())
+					// if (node.getCharge())
+					if (node.hasExplicitChargeOrElectronicBias && node.hasExplicitChargeOrElectronicBias())
 						node.fetchChargeMarker(true);
 					if (node.getRadical())
 						node.fetchRadicalMarker(true);
@@ -8124,6 +8126,8 @@ Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMar
 	{
 		this.defineProp('chargeInc', {'dataType': DataType.NUMBER, 'serializable': false});
 		this.defineProp('charge', {'dataType': DataType.NUMBER, 'serializable': false});
+		this.defineProp('electronicBiasInc', {'dataType': DataType.NUMBER, 'serializable': false});
+		this.defineProp('electronicBias', {'dataType': DataType.NUMBER, 'serializable': false});
 		this.defineProp('radical', {'dataType': DataType.INT, 'serializable': false});
 		this.defineProp('currNode', {'dataType': DataType.OBJECT, 'serializable': false});  // private
 	},
@@ -8139,9 +8143,11 @@ Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMar
 		var result;
 		// check charge
 		var chargeModified = false;
+		var electronicBiasModified = false;
 		var radicalModified = false;
 		var modifiedData = {};
 		var charge = node.getCharge();
+		var electronicBias = node.getElectronicBias && node.getElectronicBias();
 		if (Kekule.ObjUtils.notUnset(this.getCharge()))
 		{
 			if (charge !== this.getCharge())
@@ -8156,6 +8162,25 @@ Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMar
 			modifiedData.charge = charge;
 			chargeModified = true;
 		}
+
+		if (Kekule.ObjUtils.notUnset(this.getElectronicBias()))
+		{
+			if (electronicBias !== this.getElectronicBias())
+			{
+				modifiedData.electronicBias = this.getElectronicBias();
+				electronicBiasModified = true;
+			}
+		}
+		else if (this.getElectronicBiasInc())
+		{
+			if (electronicBias)  // avoid electronicBias is undefined
+				electronicBias += this.getElectronicBiasInc();
+			else
+				electronicBias = this.getElectronicBiasInc();
+			modifiedData.electronicBias = electronicBias;
+			electronicBiasModified = true;
+		}
+
 		var radical = node.getRadical();
 		if (this.getRadical() !== radical)
 		{
@@ -8167,24 +8192,41 @@ Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMar
 		var result = [];
 		// add or remove marker operation
 		var markerOperations = [];
+		var markerRemoveOperations = [];
 		var marker;
 		var editor = this.getEditor();
-		if (chargeModified)
+		if (chargeModified || electronicBiasModified)
 		{
 			var chargeMarker = node.fetchChargeMarker(false);  // do not auto create
-			if (modifiedData.charge !== 0 && !chargeMarker)
+			if (!chargeMarker)
 			{
-				// need add new charge marker
-				marker = new Kekule.ChemMarker.Charge();
-				marker.setValue(modifiedData.charge);
-				markerOperations.push(new Kekule.ChemObjOperation.Add(marker, node, null, editor));
+				if (modifiedData.electronicBias !== 0 || modifiedData.charge !== 0)
+				{
+					// need add new charge marker
+					marker = new Kekule.ChemMarker.Charge();
+					marker.setValue({electronicBias: modifiedData.electronicBias, charge: modifiedData.charge});
+					markerOperations.push(new Kekule.ChemObjOperation.Add(marker, node, null, editor));
+				}
+				/*
+				if (modifiedData.charge !== 0)
+				{
+					// need add new charge marker
+					marker = new Kekule.ChemMarker.Charge();
+					marker.setValue(modifiedData.charge);
+					markerOperations.push(new Kekule.ChemObjOperation.Add(marker, node, null, editor));
+				}
+				*/
 			}
-			if (modifiedData.charge === 0 && chargeMarker)
+			else
 			{
-				// need remove existing charge marker
-				markerOperations.push(new Kekule.ChemObjOperation.Remove(chargeMarker, null, null, editor));
+				if (!modifiedData.charge && !modifiedData.electronicBias)
+				{
+					// need remove existing charge marker
+					markerRemoveOperations.push(new Kekule.ChemObjOperation.Remove(chargeMarker, null, null, editor));
+				}
 			}
 		}
+
 		if (radicalModified)
 		{
 			var radicalMarker = node.fetchRadicalMarker(false);  // do not auto create
@@ -8198,18 +8240,20 @@ Kekule.Editor.MolNodeChargeIaController = Class.create(Kekule.Editor.AttachedMar
 			if (modifiedData.radical === 0 && radicalMarker)
 			{
 				// need remove existing radical marker
-				markerOperations.push(new Kekule.ChemObjOperation.Remove(radicalMarker, null, null, editor));
+				markerRemoveOperations.push(new Kekule.ChemObjOperation.Remove(radicalMarker, null, null, editor));
 			}
 		}
 		result = result.concat(markerOperations);
 
 		// modifcation operation
 		var propModifyOper;
-		if (chargeModified || radicalModified)
+		if (chargeModified || electronicBiasModified || radicalModified)
 		{
 			propModifyOper = new Kekule.ChemObjOperation.Modify(node, modifiedData, this.getEditor());
 			result.push(propModifyOper);
 		}
+
+		result = result.concat(markerRemoveOperations);  // the sequence is import: add-modify-remove
 
 		return result;
 	}

@@ -1255,7 +1255,41 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	{
 		this.defineProp('charge', {'dataType': DataType.FLOAT,
 			'getter': function() { return this.getPropStoreFieldValue('charge') || 0; }
+			/*
+			'getter': function() {
+				var detail = this.getChargeDetail();
+				return detail? (detail.precise || 0): 0;
+			},
+			'setter': function(value) {
+				var detail = this.getChargeDetail();
+				if (detail)
+					detail.precise = value;
+				else
+					this.setChargeDetail({precise: value});
+			}
+			*/
 		});
+		this.defineProp('electronicBias', {'dataType': DataType.INT,
+			/*
+			'getter': function() {
+				var detail = this.getChargeDetail() || {};
+				return detail.schematic;
+			},
+			'setter': function(value) {
+				var schematicValue;
+				if (!value)
+					schematicValue = undefined;
+				else
+					schematicValue = Math.round(value) || 0;
+				var detail = this.getChargeDetail();
+				if (detail)
+					detail.schematic = schematicValue;
+				else
+					this.setChargeDetail({schematic: schematicValue});
+			}
+			*/
+		});
+
 		this.defineProp('radical', {'dataType': DataType.INT});
 		this.defineProp('parity', {'dataType': DataType.INT});
 		this.defineProp('isAnchor', {'dataType': DataType.BOOL, 'serializable': false,
@@ -1279,6 +1313,28 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 						else if (!value && p.removeAnchorNode)
 							p.removeAnchorNode(this);
 					}
+				}
+			}
+		});
+
+		// private, save the precise charge (including particle charge like +0.5) or electronic bias charge (δ+/-),
+		// the value of this property is a object {precise: float, schematic: int(abs value means the number of + or - mark)}.
+		this.defineProp('chargeEx', {'dataType': DataType.OBJECT, 'scope': Class.PropertyScope.PRIVATE, 'serializable': false,
+			'getter': function() {
+			  return {charge: this.getCharge(), electronicBias: this.getElectronicBias()}
+			},
+			'setter': function(value) {
+				this.beginUpdate();
+				try
+				{
+					if (value && Kekule.ObjUtils.notUnset(value.charge))
+						this.setCharge(value.charge);
+					if (value && Kekule.ObjUtils.notUnset(value.electronicBias))
+						this.setElectronicBias(value.electronicBias);
+				}
+				finally
+				{
+					this.endUpdate();
 				}
 			}
 		});
@@ -1466,6 +1522,14 @@ Kekule.ChemStructureNode = Class.create(Kekule.BaseStructureNode,
 	isHydrogenAtom: function()
 	{
 		return false;
+	},
+
+	/**
+	 * Returns whether the node has an explicit charge setting.
+	 * @returns {Bool}
+	 */
+	hasExplicitChargeOrElectronicBias: function() {
+		return !!(this.getCharge() || this.getElectronicBias());
 	},
 
 	/** @private */
@@ -8817,7 +8881,9 @@ Kekule.ChemStructureNodeLabels = {
 	/** Default delimiter for each isotope in list */
 	ISO_LIST_DELIMITER: ',',
 	/** Default prefix to indicate it is a disallow list. */
-	ISO_LIST_DISALLOW_PREFIX: 'NOT'
+	ISO_LIST_DISALLOW_PREFIX: 'NOT',
+
+	DEF_ELECTRONIC_BIAS_MARK: 'δ',
 }
 
 /**

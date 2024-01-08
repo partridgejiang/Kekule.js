@@ -1584,6 +1584,17 @@ Kekule.Render.TextBasedChemMarker2DRenderer = Class.create(Kekule.Render.RichTex
 		var text;
 		if (obj instanceof Kekule.ChemMarker.Charge)
 		{
+			var chargeEx = obj.getValue();
+			text = Kekule.Render.ChemDisplayTextUtils.getChargeExDisplayText(chargeEx && chargeEx.charge, chargeEx && chargeEx.electronicBias,
+				drawOptions.partialChargeDecimalsLength, drawOptions.displayLabelConfigs.getElectronicBiasMark(), drawOptions.chargeMarkType);
+			//var section = Kekule.Render.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, 0, drawOptions.partialChargeDecimalsLength, drawOptions.chargeMarkType);
+			if (text)
+				return Kekule.Render.RichTextUtils.createSection(text,
+					{'charDirection': Kekule.Render.TextDirection.LTR});
+		}
+		/*
+		else if (obj instanceof Kekule.ChemMarker.Charge)
+		{
 			var charge = obj.getValue();
 			text = Kekule.Render.ChemDisplayTextUtils.getChargeDisplayText(charge, drawOptions.partialChargeDecimalsLength, drawOptions.chargeMarkType);
 			//var section = Kekule.Render.ChemDisplayTextUtils.createElectronStateDisplayTextSection(charge, 0, drawOptions.partialChargeDecimalsLength, drawOptions.chargeMarkType);
@@ -1591,6 +1602,7 @@ Kekule.Render.TextBasedChemMarker2DRenderer = Class.create(Kekule.Render.RichTex
 				return Kekule.Render.RichTextUtils.createSection(text,
 						{'charDirection': Kekule.Render.TextDirection.LTR});
 		}
+		*/
 		else if (obj instanceof Kekule.ChemMarker.Radical)
 		{
 			var radical = obj.getValue();
@@ -2904,7 +2916,8 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		//var autoCreateChargeAndRadicalMarker = nodeRenderOptions.autoCreateChargeAndRadicalMarker;
 		// TODO: charge and radical drawing are now handled togather, may be splitted in the future
 		var hasChargeOrRadical = node.getCharge() || node.getRadical();
-		var needDrawCharge = (node.getCharge() && !node.fetchChargeMarker(false));
+		// var needDrawCharge = (node.getCharge() && !node.fetchChargeMarker(false));
+		var needDrawCharge = (node.hasExplicitCharge && node.hasExplicitCharge() && !node.fetchChargeMarker(false));
 		var needDrawRadical = (node.getRadical() && !node.fetchRadicalMarker(false));
 		var nodeWithLabel = false;
 		if (this.getObjNeedDrawLabel(context, node))  // draw label
@@ -4635,7 +4648,8 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 		mol.beginUpdate();
 		try
 		{
-			if (mol.getCharge && mol.getCharge())
+			// if (mol.getCharge && mol.getCharge())
+			if (mol.hasExplicitCharge && mol.hasExplicitCharge())
 				mol.fetchChargeMarker(true);
 			// then the children
 			var nodes = mol.getNodes();
@@ -4645,7 +4659,8 @@ Kekule.Render.StructFragment2DRenderer = Class.create(Kekule.Render.ChemObj2DRen
 				node.beginUpdate();
 				try
 				{
-					if (node.getCharge())
+					// if (node.getCharge())
+					if (node.hasExplicitChargeOrElectronicBias && node.hasExplicitChargeOrElectronicBias())
 						node.fetchChargeMarker(true);
 					if (node.getRadical())
 						node.fetchRadicalMarker(true);

@@ -67,6 +67,8 @@ Object.extend(Kekule.ChemWidget.ComponentWidgetNames, {
 	molChargeClear: 'chargeClear',
 	molChargePositive: 'chargePositive',
 	molChargeNegative: 'chargeNegative',
+	molElectronicBiasPositive: 'electronicBiasPositive',
+	molElectronicBiasNegative: 'electronicBiasNegative',
 	molRadicalSinglet: 'radicalSinglet',
 	molRadicalTriplet: 'radicalTriplet',
 	molRadicalDoublet: 'radicalDoublet',
@@ -2282,6 +2284,8 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerClear = Kekule.Editor.createC
 	{
 		'charge': 0,
 		'chargeInc': 0,
+		'electronicBias': 0,
+		'electronicBiasInc': 0,
 		'radical': Kekule.RadicalOrder.NONE
 	},
 	null, null,
@@ -2296,6 +2300,8 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerPositive = Kekule.Editor.crea
 	{
 		'charge': null,
 		'chargeInc': 1,
+		'electronicBias': 0,
+		'electronicBiasInc': 0,
 		'radical': Kekule.RadicalOrder.NONE
 	},
 	null, null,
@@ -2310,10 +2316,44 @@ Kekule.Editor.ActionComposerSetNodeChargeControllerNegative = Kekule.Editor.crea
 	{
 		'charge': null,
 		'chargeInc': -1,
+		'electronicBias': 0,
+		'electronicBiasInc': 0,
 		'radical': Kekule.RadicalOrder.NONE
 	},
 	null, null,
 	BNS.molChargeNegative
+);
+Kekule.Editor.ActionComposerSetNodeElectronicBiasControllerPositive = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetNodeElectronicBiasControllerPositive',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_ELECTRONIC_BIAS_POSITIVE'), //Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_POSITIVE,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_ELECTRONIC_BIAS_POSITIVE'), //Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_POSITIVE,
+	'MolNodeChargeIaController',
+	'MolNodeChargeIaController-ElectronicBiasPositive',
+	{
+		'charge': 0,
+		'chargeInc': 0,
+		'electronicBias': null,
+		'electronicBiasInc': 1,
+		'radical': Kekule.RadicalOrder.NONE
+	},
+	null, null,
+	BNS.molElectronicBiasPositive
+);
+Kekule.Editor.ActionComposerSetNodeElectronicBiasControllerNegative = Kekule.Editor.createComposerIaControllerActionClass(
+	'Kekule.Editor.ActionComposerSetNodeElectronicBiasControllerNegative',
+	Kekule.$L('ChemWidgetTexts.CAPTION_MOL_ELECTRONIC_BIAS_NEGATIVE'), //Kekule.ChemWidgetTexts.CAPTION_MOL_CHARGE_NEGATIVE,
+	Kekule.$L('ChemWidgetTexts.HINT_MOL_ELECTRONIC_BIAS_NEGATIVE'), //Kekule.ChemWidgetTexts.HINT_MOL_CHARGE_NEGATIVE,
+	'MolNodeChargeIaController',
+	'MolNodeChargeIaController-ElectronicBiasNegative',
+	{
+		'charge': 0,
+		'chargeInc': 0,
+		'electronicBias': null,
+		'electronicBiasInc': -1,
+		'radical': Kekule.RadicalOrder.NONE
+	},
+	null, null,
+	BNS.molElectronicBiasNegative
 );
 Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet = Kekule.Editor.createComposerIaControllerActionClass(
 	'Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet',
@@ -2369,6 +2409,8 @@ Kekule.Editor.ActionComposerSetNodeChargeController = Kekule.Editor.createCompos
 		Kekule.Editor.ActionComposerSetNodeChargeControllerClear,
 		Kekule.Editor.ActionComposerSetNodeChargeControllerPositive,
 		Kekule.Editor.ActionComposerSetNodeChargeControllerNegative,
+		Kekule.Editor.ActionComposerSetNodeElectronicBiasControllerPositive,
+		Kekule.Editor.ActionComposerSetNodeElectronicBiasControllerNegative,
 		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalSinglet,
 		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalTriplet,
 		Kekule.Editor.ActionComposerSetNodeChargeControllerRadicalDoublet,

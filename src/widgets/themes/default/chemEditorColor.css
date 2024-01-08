@@ -316,6 +316,14 @@
 {
   background-image: url("images/slice/iconsSmall/charge2.gif");
 }
+.K-Chem-MolNodeChargeIaController-ElectronicBiasPositive > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/electronicBiasPositive.gif");
+}
+.K-Chem-MolNodeChargeIaController-ElectronicBiasNegative > .K-Pri-Glyph-Content
+{
+  background-image: url("images/slice/iconsSmall/electronicBiasNegative.gif");
+}
 .K-Chem-MolNodeChargeIaController-Singlet > .K-Pri-Glyph-Content
 {
   background-image: url("images/slice/iconsSmall/radical1.gif");

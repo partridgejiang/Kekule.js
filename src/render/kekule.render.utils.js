@@ -864,7 +864,6 @@ Kekule.Render.ChemDisplayTextUtils = {
 	/**
 	 * Returns text to represent atom charge and radical (e.g., 2+).
 	 * @param {Number} charge
-	 * @param {Int} radical
 	 * @param {Int} partialChargeDecimalsLength
 	 * @param {Int} chargeMarkType
 	 * @returns {String}
@@ -891,14 +890,57 @@ Kekule.Render.ChemDisplayTextUtils = {
 		return slabel;
 	},
 	/**
+	 * Returns text to represent atom electronic bias charge (e.g., δ+).
+	 * @param {Int} electronicBias
+	 * @param {String} electronicBiasMark
+	 * @returns {String}
+	 */
+	getElectronicBiasDisplayText: function(electronicBias, electronicBiasMark)
+	{
+		var sLabel = '';
+		if (electronicBias && electronicBiasMark)
+		{
+			var chargeSign = (electronicBias > 0)? '+':
+				(electronicBias < 0)? '-': null;
+			if (chargeSign)
+			{
+				sLabel = electronicBiasMark;
+				var count = Math.abs(electronicBias);
+				for (var i = 0; i < count; ++i)
+					sLabel += chargeSign;
+			}
+		}
+		return sLabel;
+	},
+	/**
+	 * Returns text to represent atom charge (e.g., 2+).
+	 * @param {Float} charge
+	 * @param {Int} electronicBias
+	 * @param {Int} partialChargeDecimalsLength
+	 * @param {String} electronicBiasMark
+	 * @param {Int} chargeMarkType
+	 * @returns {String}
+	 */
+	getChargeExDisplayText: function(charge, electronicBias, partialChargeDecimalsLength, electronicBiasMark, chargeMarkType)
+	{
+		if (charge)  // usual presice charge
+			return Kekule.Render.ChemDisplayTextUtils.getChargeDisplayText(charge, partialChargeDecimalsLength, chargeMarkType);
+		else if (electronicBias)  // delta+ or delta-
+			return Kekule.Render.ChemDisplayTextUtils.getElectronicBiasDisplayText(electronicBias, electronicBiasMark);
+		else
+			return '';
+	},
+	/**
 	 * Create a rich text section (usually superscript) to display atom charge and radical.
 	 * @param {Number} charge
 	 * @param {Int} radical
 	 * @param {Int} partialChargeDecimalsLength
 	 * @param {Int} chargeMarkType
+	 * @param {Int} electronicBias
+	 * @param {String} electronicBiasMark
 	 * @returns {Object}
 	 */
-	createElectronStateDisplayTextSection: function(charge, radical, partialChargeDecimalsLength, chargeMarkType, useAlterTripletRadicalMark)
+	createElectronStateDisplayTextSection: function(charge, radical, partialChargeDecimalsLength, chargeMarkType, useAlterTripletRadicalMark, electronicBias, electronicBiasMark)
 	{
 		var result = null;
 		var slabel = '';
@@ -920,9 +962,10 @@ Kekule.Render.ChemDisplayTextUtils = {
 			slabel += chargeSign;
 		}
 		*/
-		if (charge)
+		if (charge || electronicBias)
 		{
-			slabel = Kekule.Render.ChemDisplayTextUtils.getChargeDisplayText(charge, partialChargeDecimalsLength, chargeMarkType);
+			// slabel = Kekule.Render.ChemDisplayTextUtils.getChargeDisplayText(charge, partialChargeDecimalsLength, chargeMarkType);
+			slabel = Kekule.Render.ChemDisplayTextUtils.getChargeExDisplayText(charge, electronicBias, partialChargeDecimalsLength, electronicBiasMark, chargeMarkType);
 		}
 		if (radical)
 		{

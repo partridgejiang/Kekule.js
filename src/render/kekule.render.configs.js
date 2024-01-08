@@ -222,6 +222,8 @@ Kekule.Render.DisplayLabelConfigs = Class.create(Kekule.AbstractConfigs,
 	/** Default prefix to indicate it is a disallow list. */
 	DEF_ISO_LIST_DISALLOW_PREFIX: 'NOT',
 
+	// DEF_SCHEMATIC_PARTIAL_CHARGE: 'δ',
+
 	/** @private */
 	initProperties: function()
 	{
@@ -273,6 +275,11 @@ Kekule.Render.DisplayLabelConfigs = Class.create(Kekule.AbstractConfigs,
 		this.addStrConfigProp('isoListDisallowPrefix', NL.ISO_LIST_DISALLOW_PREFIX, {
 			'getter': function() { return NL.ISO_LIST_DISALLOW_PREFIX; },
 			'setter': function(value) { if (value) NL.ISO_LIST_DISALLOW_PREFIX = value; }
+		});
+
+		this.addStrConfigProp('electronicBiasMark', NL.DEF_ELECTRONIC_BIAS_MARK, {
+			'getter': function() { return NL.DEF_ELECTRONIC_BIAS_MARK; },
+			'setter': function(value) { if (value) NL.DEF_ELECTRONIC_BIAS_MARK = value; }
 		});
 	}
 });
