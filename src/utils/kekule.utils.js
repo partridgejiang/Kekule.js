@@ -1877,6 +1877,7 @@ Kekule.MatrixUtils = {
 		var M = Kekule.MatrixUtils;
 		var rowCount = M.getRowCount(m1);
 		var colCount = M.getColCount(m2);
+		var rowCount2 = M.getRowCount(m2);
 		var result = M.create(rowCount, colCount);
 		for (var i = 1; i <= rowCount; ++i)
 		{
@@ -1884,9 +1885,9 @@ Kekule.MatrixUtils = {
 			for (var j = 1; j <= colCount; ++j)
 			{
 				var sum = 0;
-				for (var k = 1; k <= rowCount; ++k)
+				for (var k = 1; k <= rowCount2; ++k)
 				{
-					sum += M.getValue(m1, i, k) * M.getValue(m2, k, j)
+					sum += M.getValue(m1, i, k) * M.getValue(m2, k, j);
 				}
 				//r[j] = sum;
 				M.setValue(result, i, j, sum);
