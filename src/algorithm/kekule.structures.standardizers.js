@@ -47,6 +47,7 @@ Kekule.MolStandardizer = {
 	 *     clearHydrogens: bool, whether removes all explicit hydrogen atoms (and related bonds).
 	 *       Note that only H connected with simple single bond will be removed. The H on wedge bonds will be retained (as they may related to stereo).
 	 *     unmarshalSubFragments: bool, whether unmarshal all sub structures cascadedly of molecule, default is true.
+	 *     hucklizeStructure: bool, whether convert all single/double bond in aromatic rings to explicit aromatic one, default is false.
 	 *     doCanonicalization: bool, whether do canonicalization to molecule, default is true.
 	 *     canonicalizerExecutorId: string, which canonicalizer executor should be used. If this
 	 *       value is not set, default one will be used instead.
@@ -68,6 +69,10 @@ Kekule.MolStandardizer = {
 			mol.clearExplicitBondHydrogens();
 		*/
 
+
+		if (op.hucklizeStructure)
+			mol.hucklize();
+
 		/*
 		if (op.doStereoPerception)
 		{
@@ -80,8 +85,8 @@ Kekule.MolStandardizer = {
 		if (op.doAromaticPerception)
 		{
 			mol.perceiveAromaticRings();
-			//console.log('perceive aromatics');
 		}
+
 		if (op.doStereoPerception)
 			mol.perceiveStereos(null, true, op);  // already canonicalized, no need to do again, what's more, canonicalization may clear the ring info already perceived
 
@@ -114,6 +119,10 @@ Object.extend(Kekule.ChemStructureUtils,
 
 		// compare options, may also containing standardization options (e.g. stereo perception options)
 		var op = Object.create(compareOptions || {}); //Object.extend(compareOptions || {});
+
+		// explicitly convert aromatic ring bonds for comparison
+		if (op.hucklizeStructure === undefined)
+			op.hucklizeStructure = true;
 
 		// standardize each
 		m1 = Kekule.MolStandardizer.standardize(m1, op);

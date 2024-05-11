@@ -111,7 +111,8 @@ Kekule.ChemStructureSearcher = {
 			var standardizeOps = {
 				unmarshalSubFragments: !true,
 				doCanonicalization: true,
-				doAromaticPerception: true
+				doAromaticPerception: true,
+				hucklizeStructure: true
 			};
 			if (!op.compareStereo)  // do not need perceive stereo
 				standardizeOps.doCanonicalization = false;
