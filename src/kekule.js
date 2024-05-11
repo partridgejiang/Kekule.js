@@ -215,7 +215,8 @@ function loadChildScriptFiles(scriptUrls, forceDomLoader, callback)
 		appendScriptFiles(document, scriptUrls, function(error)
 		{
 			// set a marker indicate that all modules are loaded
-			(this.Kekule || __nodeContext.Kekule)._loaded();
+			if (this.Kekule || __nodeContext.Kekule)
+				(this.Kekule || __nodeContext.Kekule)._loaded();
 			if (callback)
 				callback(error);
 		});
@@ -1021,7 +1022,8 @@ function init()
 				this.DataType = exports.DataType;
 
 				// then store script info of Kekule
-				this.Kekule.scriptSrcInfo = scriptInfo;
+				if (this && this.Kekule)
+					this.Kekule.scriptSrcInfo = scriptInfo;
 			}
 		});
 	}
