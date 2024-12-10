@@ -49,6 +49,24 @@ Kekule.IO.SMILES = {
 /** @private */
 var SMI = Kekule.IO.SMILES;
 
+Kekule.IO.SMILES.PrimaryPathMode = {
+	LONGEST: 0,
+	HEAVIEST: 1,
+	RANDOM: 2
+};
+Kekule.IO.SMILES.StartingVertexMode = {
+	MANUAL: 0,
+	HEAVIEST: 1,
+	LIGHTEST: 2,
+	RANDOM: 3
+};
+
+Kekule.IO.SmilesGenerationMode = {
+	HEAVIEST_AND_LONGEST: 0,
+	HEAVIEST: 1,
+	LIGHTEST_AND_LONGEST: 2,
+	RANDOM: 3
+}
 
 /**
  * A helper class for SMILES I/O.
@@ -60,28 +78,40 @@ Kekule.IO.SmilesUtils = {
 	 * as the main chain for SMILES.
 	 * @param {Kekule.Graph} graph
 	 * @param {Kekule.GraphVertex} startingVertex
+	 * @param {Hash} options Options to create the tree, including fields: {
+	 * 		primaryPathMode: Kekule.IO.SMILES.PrimaryPathMode.LONGEST(default) | HEAVIEST | RANDOM,
+	 * 		startingVertexMode: Kekule.IO.SMILES.StartingVertexMode.MANUAL(default) | HEAVIEST | LIGHTEST | RANDOM,
+	 * }.
 	 * @returns {Array} Each item is a hash that contains the follow fields:
 	 *   {
 	 *     vertexes: Array of all found vertexes.
 	 *     edges: Array of all found edges.
-	 *     longestPath: {
+	 *     primaryPath: {
 	 *       vertexes,
 	 *       //edges,
-	 *       length: edge count of longest path
+	 *       length: edge count of primary path (should be the longest one if options.primaryPathMode is longest)
 	 *     }
 	 *   }
 	 *   As the graph may be unconnected, so spanning tree result may be more than one.
 	 */
-	createGraphDepthSpanningTreesEx: function(graph, startingVertex)
+	createGraphDepthSpanningTreesEx: function(graph, startingVertex, options)
+	{
+		var primaryPathMode = (options && options.primaryPathMode) || SMI.PrimaryPathMode.LONGEST;
+		var startingVertexMode = (options && options.startingVertexMode) || SMI.StartingVertexMode.MANUAL;
+		return Kekule.IO.SmilesUtils.doCreateGraphDepthSpanningTreesEx(graph, startingVertex, primaryPathMode, startingVertexMode);
+	},
+	/** @private */
+	doCreateGraphDepthSpanningTreesEx: function(graph, manualStartingVertex, primaryPathMode, startingVertexMode)
 	{
 		var VISITED_KEY = '__$visitedEx__';
+		var WEIGHT_KEY = '__$weight__';
 
 		var _doTravers = function(startingVertex)
 		{
 			var result = {
 				vertexes: [],
 				edges: [],
-				longestPath: {vertexes: [], edges: [], length: 0}
+				primaryPath: {vertexes: [], edges: [], length: 0}
 			};
 			var vertex = startingVertex;
 
@@ -95,9 +125,12 @@ Kekule.IO.SmilesUtils = {
 
 			var edges = vertex.getEdges();
 			var unvisitedVertexes = [];
-			var longestTargetNeighborEdge;
+			var primaryTargetNeighborEdge;
+			var heaviestWeight = -1;
+			var primaryEdgeIndex = (primaryPathMode === SMI.PrimaryPathMode.RANDOM)? Math.floor(Math.random() * edges.length): -1;
 			for (var i = 0, l = edges.length; i < l; ++i)
 			{
+				var updatePrimaryPath = false;
 				var edge = edges[i];
 				var neighbor = vertex.getNeighborOnEdge(edge);
 				if (!neighbor.getData(VISITED_KEY))
@@ -105,37 +138,78 @@ Kekule.IO.SmilesUtils = {
 					result.vertexes.push(neighbor);
 					result.edges.push(edge);
 					neighbor.setData(VISITED_KEY, true);
-					//result.longestPath.length
+					//result.primaryPath.length
 
 					var nextResult = _doTravers(neighbor);
 					result.vertexes = result.vertexes.concat(nextResult.vertexes);
 					result.edges = result.edges.concat(nextResult.edges);
-					if (nextResult.longestPath.length > result.longestPath.length || !result.longestPath.length)
+
+					// connect the primary path
+					if (primaryEdgeIndex >= 0 && i === primaryEdgeIndex)  // (primaryPathMode === SMI.PrimaryPathMode.RANDOM)
 					{
-						result.longestPath.vertexes = nextResult.longestPath.vertexes;
-						result.longestPath.edges = nextResult.longestPath.edges;
-						result.longestPath.length = nextResult.longestPath.length;
-						longestTargetNeighborEdge = edge;
+						updatePrimaryPath = true;
+					}
+					else if (primaryPathMode === SMI.PrimaryPathMode.HEAVIEST)
+					{
+						var neighborWeight = neighbor.getData(WEIGHT_KEY);
+						if (neighborWeight > heaviestWeight) {
+							heaviestWeight = neighborWeight;
+							updatePrimaryPath = true;
+						}
+					}
+					else // if (primaryPathMode === SMI.PrimaryPathMode.LONGEST) // default
+					{
+						if (nextResult.primaryPath.length > result.primaryPath.length || !result.primaryPath.length)
+						{
+							updatePrimaryPath = true;
+						}
+					}
+
+					if (updatePrimaryPath)
+					{
+						result.primaryPath.vertexes = nextResult.primaryPath.vertexes;
+						result.primaryPath.edges = nextResult.primaryPath.edges;
+						result.primaryPath.length = nextResult.primaryPath.length;
+						primaryTargetNeighborEdge = edge;
 					}
 				}
 			}
 
-			if (longestTargetNeighborEdge)
+			if (primaryTargetNeighborEdge)
 			{
-				result.longestPath.edges.unshift(longestTargetNeighborEdge);
-				result.longestPath.length = (result.longestPath.length || 0) + 1;
+				result.primaryPath.edges.unshift(primaryTargetNeighborEdge);
+				result.primaryPath.length = (result.primaryPath.length || 0) + 1;
 			}
-			result.longestPath.vertexes.unshift(vertex);
+			result.primaryPath.vertexes.unshift(vertex);
 
 			return result;
 		};
 
+		var _getAutoStartingVertex = function(candidateVertexes, startingVertexMode) {
+			var startingVertex =
+				(startingVertexMode === SMI.StartingVertexMode.LIGHTEST)? candidateVertexes[0]:
+				(startingVertexMode === SMI.StartingVertexMode.RANDOM)? candidateVertexes[Math.floor(Math.random() * candidateVertexes.length)]:
+				/*(startingVertexMode === SMI.StartingVertexMode.HEAVIEST)?*/ candidateVertexes[candidateVertexes.length - 1];
+			return startingVertex;
+		}
+
 		var remainingVertexes = AU.clone(graph.getVertexes());
 		// init
+		var markVertexWeight = primaryPathMode === SMI.PrimaryPathMode.HEAVIEST;
 		for (var i = 0, l = remainingVertexes.length; i < l; ++i)
 		{
 			remainingVertexes[i].setData(VISITED_KEY, false);
+			if (markVertexWeight)
+				remainingVertexes[i].setData(WEIGHT_KEY, i);
 		}
+
+		var startingVertex = (startingVertexMode === SMI.StartingVertexMode.MANUAL)? manualStartingVertex: _getAutoStartingVertex(remainingVertexes, startingVertexMode);
+
+		/* Debug
+		if (startingVertex !== _getAutoStartingVertex(remainingVertexes, SMI.StartingVertexMode.HEAVIEST))
+			console.warn('diff starting vertex', startingVertex, _getAutoStartingVertex(remainingVertexes, SMI.StartingVertexMode.HEAVIEST), remainingVertexes);
+		*/
+
 		var result = [];
 		while (remainingVertexes.length)
 		{
@@ -143,20 +217,23 @@ Kekule.IO.SmilesUtils = {
 			if (startingVertex && (remainingVertexes.indexOf(startingVertex) >= 0))
 				currVertex = startingVertex;
 			else
-				currVertex = remainingVertexes[0];
+			{
+				// currVertex = remainingVertexes[0];
+				currVertex = _getAutoStartingVertex(remainingVertexes, startingVertexMode);
+			}
 			//while (remainingVertexes.length)
 			{
 				var seq = {
 					vertexes: [],
 					edges: [],
-					longestPath: {vertexes: [], edges: [], length: 0}
+					primaryPath: {vertexes: [], edges: [], length: 0}
 				};
 				var partialResult = _doTravers(currVertex);
 				seq.vertexes = seq.vertexes.concat(partialResult.vertexes);
 				seq.edges = seq.edges.concat(partialResult.edges);
-				seq.longestPath.length = (seq.longestPath.length || 0) + partialResult.longestPath.length;
-				seq.longestPath.vertexes = seq.longestPath.vertexes.concat(partialResult.longestPath.vertexes);
-				seq.longestPath.edges = seq.longestPath.edges.concat(partialResult.longestPath.edges);
+				seq.primaryPath.length = (seq.primaryPath.length || 0) + partialResult.primaryPath.length;
+				seq.primaryPath.vertexes = seq.primaryPath.vertexes.concat(partialResult.primaryPath.vertexes);
+				seq.primaryPath.edges = seq.primaryPath.edges.concat(partialResult.primaryPath.edges);
 				remainingVertexes = AU.exclude(remainingVertexes, partialResult.vertexes);
 			}
 			result.push(seq);
@@ -189,6 +266,13 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 	doWriteData: function(obj, dataType, format, options)
 	{
 		/*
+		   the options can receive and handle two fields related with smiles:
+		   generationMode: Kekule.IO.SmilesGenerationMode, determinates the starting node and primary path choosing mode to generate SMILES
+		   randomOutputCount: int, if generationMode is Kekule.IO.SmilesGenerationMode.Random, max number of SMILES for this structure. In this case, the output will be an array
+		 */
+
+
+		/*
 		 if (dataType != Kekule.IO.ChemDataType.TEXT) // can not understand data other than text
 		 {
 		 Kekule.error(Kekule.ErrorMsg.MDL_OUTPUT_DATATYPE_NOT_TEXT);
@@ -202,8 +286,28 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return writer.writeBlock(obj);
 			*/
 			var mol = this.getMolecule(obj);
-			return mol? this.writeStructFragment(mol, options): '';
+
+			if (options && options.generationMode === Kekule.IO.SmilesGenerationMode.RANDOM && options.randomOutputCount > 1)
+				return mol? this._outputRandomSmiles(mol, options.randomOutputCount, options): [];
+			else
+				return mol? this.writeStructFragment(mol, options): '';
 		}
+	},
+	/** @private */
+	_outputRandomSmiles: function(mol, maxCount, options) {
+		var result = [];
+		var maxTryCount = Math.round(maxCount * 1.5);
+		var ops = Object.create(options);
+		ops.generationMode = Kekule.IO.SmilesGenerationMode.RANDOM;
+		for (var i = 0; i < maxTryCount; ++i) {
+			var smiles = this.writeStructFragment(mol, ops);
+			if (result.indexOf(smiles) < 0) {
+				result.push(smiles);
+				if (result.length >= maxCount)
+					break;
+			}
+		}
+		return result;
 	},
 	/**
 	 * Get molecule data from an object.
@@ -244,7 +348,20 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			var graphVertexes = molGraph.getVertexes();
 			var graphEdges = molGraph.getEdges();
 			var startingVertex = graphVertexes[graphVertexes.length - 1];
-			var depthSpanningTrees = Kekule.IO.SmilesUtils.createGraphDepthSpanningTreesEx(molGraph, startingVertex);
+
+			var GM = Kekule.IO.SmilesGenerationMode;
+			var ogm = options && options.generationMode;
+			var spaningTreeOptions = {
+				primaryPathMode: (ogm === GM.HEAVIEST)? SMI.PrimaryPathMode.HEAVIEST:
+					(ogm === GM.RANDOM)? SMI.PrimaryPathMode.RANDOM:
+					/*(ogm === GM.HEAVIEST_AND_LONGEST || ogm === GM.LIGHTEST_AND_LONGEST)?*/ SMI.PrimaryPathMode.LONGEST,
+				startingVertexMode: (ogm === GM.RANDOM)? SMI.StartingVertexMode.RANDOM:
+					(ogm === GM.LIGHTEST_AND_LONGEST)? SMI.StartingVertexMode.LIGHTEST:
+					/*(ogm === GM.HEAVIEST || ogm === GM.HEAVIEST_AND_LONGEST)?*/ SMI.StartingVertexMode.HEAVIEST
+			};
+			// debug
+			// spaningTreeOptions.startingVertexMode = SMI.StartingVertexMode.MANUAL;
+			var depthSpanningTrees = Kekule.IO.SmilesUtils.createGraphDepthSpanningTreesEx(molGraph, startingVertex, spaningTreeOptions);
 
 			// mark all stereo bonds
 			var bondStereoDirMap = this._prepareStereoBondsInformation(dupMol.getCtab(), options);
@@ -258,7 +375,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			for (var i = 0, l = depthSpanningTrees.length; i < l; ++i)
 			{
 				var depthSpanningTree = depthSpanningTrees[i];
-				var mainChainPath = depthSpanningTree.longestPath;
+				var mainChainPath = depthSpanningTree.primaryPath;
 				//console.log(mainChainPath);
 				var partResult = '';
 				// enumeration all vertexes and connectors

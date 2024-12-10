@@ -5,6 +5,9 @@ describe('Output test of SMILES', function(){
 		it(title, function(done){
 			Kekule.IO.loadUrlData('data/' + fileUrl, function(chemObj, success){
 				expect(chemObj).not.toBeNull();
+				// var ops = Object.create(options || {});
+				// ops.generationMode = Kekule.IO.SmilesGenerationMode.HEAVIEST_AND_LONGEST;
+				// var options = {generationMode: Kekule.IO.SmilesGenerationMode.HEAVIEST_AND_LONGEST};
 				var outputSmiles = Kekule.IO.saveFormatData(chemObj, Kekule.IO.DataFormat.SMILES, options);
 				expect(outputSmiles).toEqual(expectedSmiles);
 				done();
