@@ -17,10 +17,12 @@ describe('Output test of SMILES', function(){
 
 	var testCases = [
 		// H problems
+		{'url': 'smilesOutputTest/H2.mol', 'smiles': '[H][H]', 'smilesIgnoreImplicit': '[H][H]', 'smilesIgnoreExplicit': '[H][H]'},
+		{'url': 'smilesOutputTest/twoMethanes.mol', 'smiles': 'C.C', 'smilesIgnoreImplicit': '[C].[C]', 'smilesIgnoreExplicit': 'C.C'},
 		{'url': 'smilesOutputTest/[C].mol', 'smiles': '[C]', 'smilesIgnoreImplicit': '[C]', 'smilesIgnoreExplicit': '[C]'},
 		{'url': 'smilesOutputTest/[CH2].mol', 'smiles': '[CH2]', 'smilesIgnoreImplicit': '[CH2]', 'smilesIgnoreExplicit': '[C]'},
 		{'url': 'smilesOutputTest/CH3_explicitHBonds.mol', 'smiles': '[CH3]', 'smilesIgnoreImplicit': '[CH3]', 'smilesIgnoreExplicit': '[CH]'},
-    {'url': 'smilesOutputTest/[NH4].mol', 'smiles': '[NH4]', 'smilesIgnoreImplicit': '[NH4]', 'smilesIgnoreExplicit': '[NH3]'},
+    	{'url': 'smilesOutputTest/[NH4].mol', 'smiles': '[NH4]', 'smilesIgnoreImplicit': '[NH4]', 'smilesIgnoreExplicit': '[NH3]'},
 		{'url': 'smilesOutputTest/NH4_explicitHBonds.mol', 'smiles': '[NH5]', 'smilesIgnoreImplicit': '[NH4]', 'smilesIgnoreExplicit': '[NH5]'},
 		{'url': 'smilesOutputTest/NH3_explicitHBonds.mol', 'smiles': 'N', 'smilesIgnoreImplicit': 'N', 'smilesIgnoreExplicit': 'N'},
 		{'url': 'smilesOutputTest/NH2_explicitHBonds.mol', 'smiles': 'N', 'smilesIgnoreImplicit': '[NH2]', 'smilesIgnoreExplicit': 'N'},
