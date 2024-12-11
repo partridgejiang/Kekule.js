@@ -344,7 +344,9 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 				}
 			}
 
-			var molGraph = Kekule.GraphAdaptUtils.ctabToGraph(dupMol.getCtab(), null, {expandSubStructures: true, ignoreBondedHydrogen: true});
+			var BT = Kekule.BondType;
+			var molGraph = Kekule.GraphAdaptUtils.ctabToGraph(dupMol.getCtab(), null,
+				{expandSubStructures: true, ignoreBondedHydrogen: true, bondTypes: [BT.COVALENT, BT.UNKNOWN]});
 			// get the longest path as the main chain, starting from the last vertex
 			var graphVertexes = molGraph.getVertexes();
 			var graphEdges = molGraph.getEdges();
@@ -803,6 +805,12 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 						result += stereoDirectionMap.get(connector);
 					return result;
 				}
+			}
+			else
+			{
+				// when an explicit connector connects two nodes in ctab, even if it is not a covalent bond, it should be outputted as simple single bond?
+				// btw, we have already split non-covalent bonds to form multiple struct fragments before outputting
+				return '';
 			}
 		}
 		// default
