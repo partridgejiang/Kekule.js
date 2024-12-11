@@ -328,7 +328,8 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			//var aromaticRings = dupMol.perceiveAromaticRings();
 			if (dupMol.standardize)
 			{
-				dupMol.standardize({cleanStructure: false});  // avoid clean simple atom molecule set (e.g. C.C)
+				dupMol.clean({hangingChemConnector: true, orphanChemNode: false});
+				dupMol.standardize({cleanStructure: false});  // clean hanging connectors but not orphan nodes, avoid clean simple atom molecule set (e.g. C.C)
 			}
 			var aromaticNodes = [];
 			var aromaticConnectors = [];
