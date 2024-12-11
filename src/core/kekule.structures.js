@@ -6386,11 +6386,12 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 
 	/**
 	 * Removes all explicit hydrogen atoms and related bonds from this structure.
+	 * Note: H-H bond will be reserved.
 	 */
 	clearExplicitBondHydrogens: function(forceKeepStructureCache, forceClearStereoHydrogenAtoms, forceClearChargedHydrogenAtoms)
 	{
 		var self = this;
-		var isHydrogenConnectedWithSimpleSingleBond = function(node)
+		var isHydrogenConnectedWithSimpleSingleBondToOtherAtom = function(node)
 		{
 			var connectors = node.getLinkedConnectors();
 			var result = connectors.length === 1;
@@ -6399,6 +6400,14 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				var connector = connectors[0];
 				result = connector.isSingleBond && connector.isSingleBond()
 					&& connector.getStereo && (!connector.getStereo() || connector.getStereo() === Kekule.BondStereo.NONE);
+				if (result)  // further check if it is a H-H bond
+				{
+					var connectedNodes = node.getLinkedObjsOnConnector(connector);
+					if (connectedNodes.length !== 1)
+						result = false;
+					else
+						result = !connectedNodes[0].isHydrogenAtom || !connectedNodes[0].isHydrogenAtom();
+				}
 			}
 			return result;
 		};
@@ -6459,7 +6468,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 					{
 						if (node.isHydrogenAtom() && !node.getCharge())
 						{
-							if (forceClearStereoHydrogenAtoms || isHydrogenConnectedWithSimpleSingleBond(node))
+							if (forceClearStereoHydrogenAtoms || isHydrogenConnectedWithSimpleSingleBondToOtherAtom(node))
 							{
 								//delNodeWithConnectors(node, i);
 								delHydrogenAtomWithConnectors(node, i, true);

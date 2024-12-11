@@ -528,13 +528,24 @@ Kekule.GraphAdaptUtils = {
 								var linkedConns = node.getLinkedConnectors();
 								if (allConnectors)
 									linkedConns = AU.intersect(linkedConns, allConnectors);
-								if (linkedConns.length <= 1)
+								if (linkedConns.length === 1)  // only remove H atom with 1 bond connection (orphan H atom will be preserved)
 								{
 									var conn = linkedConns[0];
 									if (!conn)
 										return false;
-									else if (conn.isSingleBond && conn.isSingleBond())  // ignore only the H atoms connected with single bond, preserve other unusual (may be illegal) forms
-										return false;
+									else if (conn.isSingleBond && conn.isSingleBond())
+									{
+										// ignore only the H atoms connected with single bond to a non-H atom, preserve other unusual (may be illegal) forms
+										var connectedOtherNodes = node.getLinkedObjsOnConnector(conn);
+										if (connectedOtherNodes.length === 1)
+										{
+											var otherNode = connectedOtherNodes[0];
+											if (!otherNode.isHydrogenAtom || !otherNode.isHydrogenAtom())
+											{
+												return false;
+											}
+										}
+									}
 								}
 							}
 						}

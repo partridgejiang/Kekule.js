@@ -371,7 +371,7 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 
 
 			var ringEdgeRepo = [];
-			var result;
+			var result = '';
 			for (var i = 0, l = depthSpanningTrees.length; i < l; ++i)
 			{
 				var depthSpanningTree = depthSpanningTrees[i];
