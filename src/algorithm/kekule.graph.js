@@ -523,7 +523,7 @@ Kekule.GraphAdaptUtils = {
 						}
 						if (op.ignoreBondedHydrogen)
 						{
-							if (node.isHydrogenAtom && node.isHydrogenAtom())
+							if (node.isHydrogenAtom && node.isHydrogenAtom() && !node.getCharge())  // H+ or H- should not be ignored
 							{
 								var linkedConns = node.getLinkedConnectors();
 								if (allConnectors)
