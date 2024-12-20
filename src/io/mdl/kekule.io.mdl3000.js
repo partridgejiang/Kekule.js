@@ -692,7 +692,7 @@ Kekule.IO.Mdl3kBlockWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		textBuffer.writeLine(Kekule.IO.Mdl3kUtils.get3kBlockEndTag(blockName));
 	},
 	/** @private */
-	doWriteBlock: function(obj, textBuffer)
+	doWriteBlock: function(obj, textBuffer, options)
 	{
 		var buffer;
 		var newBuffer = !(textBuffer instanceof Kekule.IO.Mdl3kTextBuffer);
@@ -705,7 +705,7 @@ Kekule.IO.Mdl3kBlockWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		else
 			buffer = textBuffer;
 
-		var result = this.doWrite3kBlock(obj, buffer);
+		var result = this.doWrite3kBlock(obj, buffer, options);
 		if (newBuffer)
 		{
 			textBuffer.appendLines(newBuffer.getLines());
@@ -714,7 +714,7 @@ Kekule.IO.Mdl3kBlockWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		return result;
 	},
 	/** @private */
-	doWrite3kBlock: function(obj, textBuffer)
+	doWrite3kBlock: function(obj, textBuffer, options)
 	{
 		// do nothing here
 	}
@@ -1175,10 +1175,10 @@ Kekule.IO.Mdl3kCTabWriter = Class.create(Kekule.IO.Mdl3kBlockWriter,
 		// this.defineProp('writeCompatibilityCountline', {'dataType': DataType.BOOL});
 	},
 	/** @private */
-	doWrite3kBlock: function(obj, textBuffer)
+	doWrite3kBlock: function(obj, textBuffer, options)
 	{
 		Kekule.IO.MdlUtils.assertIlegalForCtabOutput(obj);
-		return this.outputCtab(obj, textBuffer);
+		return this.outputCtab(obj, textBuffer, options);
 	},
 	/**
 	 * Output atoms and bonds in molecule to text data.
@@ -1186,9 +1186,9 @@ Kekule.IO.Mdl3kCTabWriter = Class.create(Kekule.IO.Mdl3kBlockWriter,
 	 * @param {Kekule.IO.Mdl3kTextBuffer} textBuffer
 	 * @private
 	 */
-	outputCtab: function(mol, textBuffer)
+	outputCtab: function(mol, textBuffer, options)
 	{
-		var molInfo = Kekule.IO.MdlStructureUtils.getMoleculeCtabStructureInfo(mol);
+		var molInfo = Kekule.IO.MdlStructureUtils.getMoleculeCtabStructureInfo(mol, options);
 		/*
 		if (this.getWriteCompatibilityCountline())
 			textBuffer.writeLine(this.generateCompatibilityCountLine(molInfo));
@@ -1233,7 +1233,8 @@ Kekule.IO.Mdl3kCTabWriter = Class.create(Kekule.IO.Mdl3kBlockWriter,
 		values.push(molInfo.bonds.length);  // nb: bond count
 		values.push(molInfo.subGroups.length);  // sg: sgroup count
 		values.push(0);  // n3d, number of 3D constraints, ignored
-		values.push(0);  //TODO: chiral: chiral mark, ignored currently
+		var chiralFlag = (molInfo.chiral? 1: 0);
+		values.push(chiralFlag);
 		return Kekule.IO.Mdl3kValueUtils.mergeValues(values);
 	},
 	/**

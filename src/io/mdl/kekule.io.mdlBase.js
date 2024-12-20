@@ -529,10 +529,11 @@ Kekule.IO.MdlStructureUtils = {
 	/**
 	 * Get basic molecule info such as atoms, bonds, subgroups for Ctab writer.
 	 * @param {Kekule.StructureFragment} mol
+	 * @param {Hash} options
 	 * @returns {Hash} {atoms, bonds, subGroups, coordMode}
 	 * @private
 	 */
-	getMoleculeCtabStructureInfo: function(mol)
+	getMoleculeCtabStructureInfo: function(mol, options)
 	{
 		var result = {};
 		result.atoms = mol.getLeafNodes();
@@ -545,6 +546,8 @@ Kekule.IO.MdlStructureUtils = {
 				++count3d;
 			if (result.atoms[i].hasCoord2D())
 				++count2d;
+			if (options.explicitChiralFlagInCountLine && result.atoms[i].getParity && result.atoms[i].getParity())
+				result.chiral = true;
 		}
 		result.coordMode = (count2d > count3d)? Kekule.CoordMode.COORD2D: Kekule.CoordMode.COORD3D;
 		return result;
@@ -590,11 +593,13 @@ Kekule.IO.MdlStructureUtils = {
 	 * Generate 2k or 3k compatibility count line string of molecule.
 	 * @param {Hash} molInfo Info returned by {@link Kekule.IO.MdlStructureUtils.getMoleculeCtabStructureInfo}.
 	 * @param {Int} mdlVersion
+	 * @param {Hash} options
 	 * @returns {String}
 	 * @private
 	 */
 	generateClassicStyleCountLine: function(molInfo, mdlVersion)
 	{
+
 		if (mdlVersion == Kekule.IO.MdlVersion.V3000)
 			return '  0  0  0     0  0              0 V3000';
 		else // 2k count line
@@ -611,7 +616,7 @@ Kekule.IO.MdlStructureUtils = {
 			s += '0'.lpad(3);
 			// ccc: chiral flag: 0=not chiral, 1=chiral
 			// TODO: currently chiral is not considered
-			s += '0'.lpad(3);
+			s += (molInfo.chiral? '1': '0').lpad(3);
 			// sss: number of stext entries (for ISIS/Desktop)
 			s += '0'.lpad(3);
 			// xxxrrrpppiii: obsolete
@@ -719,10 +724,10 @@ Kekule.IO.MdlBlockWriter = Class.create(Kekule.IO.MdlBlockHandler,
 	 * @param {Variant} obj Kekule object to write.
 	 * @returns {String} Text written.
 	 */
-	writeBlock: function(obj)
+	writeBlock: function(obj, options)
 	{
 		this.getTextBuffer().clear();
-		this.doWriteBlock(obj, this.getTextBuffer());
+		this.doWriteBlock(obj, this.getTextBuffer(), options);
 		return this.getTextBuffer().getText();
 	},
 	/**
@@ -730,9 +735,10 @@ Kekule.IO.MdlBlockWriter = Class.create(Kekule.IO.MdlBlockHandler,
 	 * Read content in textBuffer and create suitable object. Descendants should override this method.
 	 * @param {Kekule.TextLinesBuffer} textBuffer
 	 * @param {Variant} obj Kekule object to write.
+	 * @param {Hash} options
 	 * @private
 	 */
-	doWriteBlock: function(obj, textBuffer)
+	doWriteBlock: function(obj, textBuffer, options)
 	{
 		// do nothing here.
 	}

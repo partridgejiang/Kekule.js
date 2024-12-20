@@ -837,10 +837,10 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		this.defineProp('coordMode', {'dataType': DataType.INT, 'deaultValue': Kekule.CoordMode.UNKNOWN});
 	},
 	/** @private */
-	doWriteBlock: function(obj, textBuffer)
+	doWriteBlock: function(obj, textBuffer, options)
 	{
 		Kekule.IO.MdlUtils.assertIlegalForCtabOutput(obj);
-		return this.outputCtab(obj, textBuffer);
+		return this.outputCtab(obj, textBuffer, options);
 	},
 	/**
 	 * Output atoms and bonds in molecule to text data.
@@ -848,10 +848,10 @@ Kekule.IO.Mdl2kCTabWriter = Class.create(Kekule.IO.MdlBlockWriter,
 	 * @param {Kekule.TextLinesBuffer} textBuffer
 	 * @private
 	 */
-	outputCtab: function(mol, textBuffer)
+	outputCtab: function(mol, textBuffer, options)
 	{
 		var atomPropLines = [];
-		var molInfo = Kekule.IO.MdlStructureUtils.getMoleculeCtabStructureInfo(mol);
+		var molInfo = Kekule.IO.MdlStructureUtils.getMoleculeCtabStructureInfo(mol, options);
 		// decide coordMode
 		if (this.getCoordMode() != Kekule.CoordMode.UNKNOWN)
 			molInfo.coordMode = this.getCoordMode();

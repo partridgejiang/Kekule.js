@@ -25,7 +25,8 @@
  */
 Kekule.globalOptions.add('IO.mdl', {
 	mdlVersion: Kekule.IO.MdlVersion.V2000,
-	coordMode: Kekule.CoordMode.UNKNOWN
+	coordMode: Kekule.CoordMode.UNKNOWN,
+	explicitChiralFlagInCountLine: !false  // if true, the chiral flag of ctab count line will be explicitly set when there is stereo center in molecule
 });
 
 /**
@@ -156,10 +157,10 @@ Kekule.IO.MdlStructureFragmentWriter = Class.create(Kekule.IO.MdlBlockWriter,
 			return new Kekule.IO.Mdl2kCTabWriter(this.getCoordMode());
 	},
 	/** @private */
-	doWriteBlock: function(/*$super, */obj, textBuffer)
+	doWriteBlock: function(/*$super, */obj, textBuffer, options)
 	{
 		var ctabWriter = this.createCtabWriter(this.getMdlVersion());
-		var text = ctabWriter.writeBlock(obj);
+		var text = ctabWriter.writeBlock(obj, options);
 		textBuffer.writeText(text);
 	}
 });
@@ -211,10 +212,10 @@ Kekule.IO.Mdl3kMoleculeCTabWriter = Class.create(Kekule.IO.MdlStructureFragmentW
 		this.tryApplySuper('initialize', [Kekule.IO.MdlVersion.V3000, coordMode])  /* $super(Kekule.IO.MdlVersion.V3000, coordMode) */;
 	},
 	/** @private */
-	doWriteBlock: function(/*$super, */obj, textBuffer)
+	doWriteBlock: function(/*$super, */obj, textBuffer, options)
 	{
 		var ctabWriter = new Kekule.IO.Mdl3kCTabWriter(this.getCoordMode());;
-		var text = ctabWriter.writeBlock(obj);
+		var text = ctabWriter.writeBlock(obj, options);
 		textBuffer.writeText(text);
 	}
 });
@@ -357,9 +358,10 @@ Kekule.IO.MdlMoleculeWriter = Class.create(Kekule.IO.MdlStructureFragmentWriter,
 	 * Write MOL 2000/3000 file header lines.
 	 * @param {Kekule.Molecule} mol
 	 * @param {Kekule.TextLinesBuffer} textBuffer
+	 * @param {Hash} options
 	 * @private
 	 */
-	writeHeaderInfo: function(mol, textBuffer)
+	writeHeaderInfo: function(mol, textBuffer, options)
 	{
 		// line 1: molecule name
 		textBuffer.writeLine(mol.getName() || /*Kekule.Texts.UNNAMED*/Kekule.$L('Texts.UNNAMED') || '');
@@ -406,19 +408,19 @@ Kekule.IO.MdlMoleculeWriter = Class.create(Kekule.IO.MdlStructureFragmentWriter,
 		return Kekule.ChemStructureUtils.getTotalStructFragment(obj);
 	},
 	/** @private */
-	doWriteBlock: function(/*$super, */obj, textBuffer)
+	doWriteBlock: function(/*$super, */obj, textBuffer, options)
 	{
 		var mol = this.getMolecule(obj);
 		if (mol)
 		{
-			var molInfo = Kekule.IO.MdlStructureUtils.getMoleculeCtabStructureInfo(mol);
+			var molInfo = Kekule.IO.MdlStructureUtils.getMoleculeCtabStructureInfo(mol, options);
 			this.setCoordMode(molInfo.coordMode);  // coord mode can be get from mol info
 			// header
-			this.writeHeaderInfo(mol, textBuffer);
+			this.writeHeaderInfo(mol, textBuffer, options);
 			if (this.getMdlVersion() == Kekule.IO.MdlVersion.V3000)  // add a compatible count line
 				textBuffer.writeLine(Kekule.IO.MdlStructureUtils.generateClassicStyleCountLine(molInfo, this.getMdlVersion()));
 			// Ctab
-			this.tryApplySuper('doWriteBlock', [mol, textBuffer])  /* $super(mol, textBuffer) */;
+			this.tryApplySuper('doWriteBlock', [mol, textBuffer, options])  /* $super(mol, textBuffer) */;
 			if (this.getMdlVersion() == Kekule.IO.MdlVersion.V3000)  // 3k compatible end tag
 				textBuffer.writeLine('M  END');
 		}
@@ -590,7 +592,7 @@ Kekule.IO.MdlStructDataWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		this.defineProp('coordMode', {'dataType': DataType.INT, 'defaultValue': Kekule.CoordMode.UNKNOWN});
 	},
 	/** @private */
-	doWriteBlock: function(chemObj, textBuffer)
+	doWriteBlock: function(chemObj, textBuffer, options)
 	{
 		var mols = this.getChildMols(chemObj);
 
@@ -604,12 +606,12 @@ Kekule.IO.MdlStructDataWriter = Class.create(Kekule.IO.MdlBlockWriter,
 			// write molecule
 			try
 			{
-				var text = molWriter.writeBlock(mol);
+				var text = molWriter.writeBlock(mol, options);
 				textBuffer.writeText(text);
 
 				// write data information
 				var data = this.getMolData(mol);
-				this.doWriteDataBlock(data, textBuffer);
+				this.doWriteDataBlock(data, textBuffer, options);
 
 				// then molecule delimiter
 				textBuffer.writeLine(Kekule.IO.MDL.MOL_DELIMITER);
@@ -621,7 +623,7 @@ Kekule.IO.MdlStructDataWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		}
 	},
 	/** @private */
-	doWriteDataBlock: function(data, textBuffer)
+	doWriteDataBlock: function(data, textBuffer, options)
 	{
 		var keys = Kekule.ObjUtils.getOwnedFieldNames(data);
 		for (var i = 0, l = keys.length; i < l; ++i)
@@ -984,7 +986,7 @@ Kekule.IO.MdlReactionWriter = Class.create(Kekule.IO.MdlBlockWriter,
 	 * @param {Kekule.TextLinesBuffer} textBuffer
 	 * @private
 	 */
-	writeHeaderBlock: function(reaction, textBuffer)
+	writeHeaderBlock: function(reaction, textBuffer, options)
 	{
 		var s;
 		// line 1: identifier
@@ -1039,24 +1041,25 @@ Kekule.IO.MdlReactionWriter = Class.create(Kekule.IO.MdlBlockWriter,
 	 * Write MOL blocks in RXN file.
 	 * @param {Kekule.Molecule} mol
 	 * @param {Kekule.TextLinesBuffer} textBuffer
+	 * @param {Hash} options
 	 * @private
 	 */
-	writeMolBlock: function(mol, textBuffer)
+	writeMolBlock: function(mol, textBuffer, options)
 	{
 		var writer = this.getMdlVersion() == Kekule.IO.MdlVersion.V3000?
 			new Kekule.IO.Mdl3kMoleculeCTabWriter(this.getCoordMode()):  // no need to write compatible lines in 3k
 			new Kekule.IO.MdlMoleculeWriter(this.getMdlVersion(), this.getCoordMode());
-		var text = writer.writeBlock(mol);
+		var text = writer.writeBlock(mol, options);
 		textBuffer.writeText(text);
 	},
 
 	/** @private */
-	doWriteBlock: function(/*$super, */reaction, textBuffer)
+	doWriteBlock: function(/*$super, */reaction, textBuffer, options)
 	{
 		var is3kMode = this.getMdlVersion() == Kekule.IO.MdlVersion.V3000;
 		  // if in 3k mode, reactant and products should be surrounded by block begin/end tag
 		// header
-		this.writeHeaderBlock(reaction, textBuffer);
+		this.writeHeaderBlock(reaction, textBuffer, options);
 		var substanceInfoLine = this.generateSubstanceCountLine(reaction);
 		textBuffer.writeLine(substanceInfoLine);
 		// then MOL blocks
@@ -1065,7 +1068,7 @@ Kekule.IO.MdlReactionWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		for (var i = 0; i < reaction.getReactantCount(); ++i)
 		{
 			this.writeMolDelimiterLine(textBuffer);
-			this.writeMolBlock(reaction.getReactantAt(i), textBuffer);
+			this.writeMolBlock(reaction.getReactantAt(i), textBuffer, options);
 		}
 		if (is3kMode)
 			textBuffer.writeLine('M  V30 ' + Kekule.IO.Mdl3kUtils.get3kBlockEndTag('REACTANT'));
@@ -1074,7 +1077,7 @@ Kekule.IO.MdlReactionWriter = Class.create(Kekule.IO.MdlBlockWriter,
 		for (var i = 0; i < reaction.getProductCount(); ++i)
 		{
 			this.writeMolDelimiterLine(textBuffer);
-			this.writeMolBlock(reaction.getProductAt(i), textBuffer);
+			this.writeMolBlock(reaction.getProductAt(i), textBuffer, options);
 		}
 		if (is3kMode)
 		{
@@ -1150,8 +1153,17 @@ Kekule.IO.BaseMdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 		this.defineProp('mdlVersion', {'dataType': DataType.INT, 'defaultValue': Kekule.IO.MdlVersion.V2000});
 		this.defineProp('coordMode', {'dataType': DataType.INT, 'defaultValue': Kekule.CoordMode.UNKNOWN});
 	},
+	/** @ignore */
+	writeData: function(obj, dataType, format, options)
+	{
+		var defOptions = {
+			explicitChiralFlagInCountLine: Kekule.globalOptions.IO.mdl.explicitChiralFlagInCountLine
+		};
+		var ops = options? Object.extend(defOptions, options): defOptions;
+		return this.tryApplySuper('writeData', [obj, dataType, format, ops]);
+	},
 	/** @private */
-	doWriteData: function(/*$super, */obj, dataType, format)
+	doWriteData: function(/*$super, */obj, dataType, format, options)
 	{
 		var dtype = dataType || Kekule.IO.ChemDataType.TEXT;
 		if (dtype != Kekule.IO.ChemDataType.TEXT) // can not understand data other than text
@@ -1160,7 +1172,7 @@ Kekule.IO.BaseMdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return null;
 		}
 		else
-			return this.tryApplySuper('doWriteData', [obj, dtype, format])  /* $super(obj, dtype, format) */;
+			return this.tryApplySuper('doWriteData', [obj, dtype, format, options])  /* $super(obj, dtype, format) */;
 	}
 });
 
@@ -1196,7 +1208,7 @@ Kekule.IO.MdlMolWriter = Class.create(Kekule.IO.BaseMdlWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.MdlMolWriter',
 	/** @private */
-	doWriteData: function(obj, dataType, format)
+	doWriteData: function(obj, dataType, format, options)
 	{
 		/*
 		if (dataType != Kekule.IO.ChemDataType.TEXT) // can not understand data other than text
@@ -1208,7 +1220,7 @@ Kekule.IO.MdlMolWriter = Class.create(Kekule.IO.BaseMdlWriter,
 		*/
 		{
 			var writer = new Kekule.IO.MdlMoleculeWriter(this.getMdlVersion(), this.getCoordMode());
-			return writer.writeBlock(obj);
+			return writer.writeBlock(obj, options);
 		}
 	}
 });
@@ -1245,10 +1257,10 @@ Kekule.IO.MdlSdWriter = Class.create(Kekule.IO.BaseMdlWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.MdlSdWriter',
 	/** @private */
-	doWriteData: function(obj, dataType, format)
+	doWriteData: function(obj, dataType, format, options)
 	{
 		var writer = new Kekule.IO.MdlStructDataWriter(this.getMdlVersion(), this.getCoordMode());
-		return writer.writeBlock(obj);
+		return writer.writeBlock(obj, options);
 	}
 });
 
@@ -1284,7 +1296,7 @@ Kekule.IO.MdlRxnWriter = Class.create(Kekule.IO.BaseMdlWriter,
 	/** @private */
 	CLASS_NAME: 'Kekule.IO.MdlRxnWriter',
 	/** @private */
-	doWriteData: function(obj, dataType, format)
+	doWriteData: function(obj, dataType, format, options)
 	{
 		/*
 		if (dataType != Kekule.IO.ChemDataType.TEXT) // can not understand data other than text
@@ -1296,7 +1308,7 @@ Kekule.IO.MdlRxnWriter = Class.create(Kekule.IO.BaseMdlWriter,
 		*/
 		{
 			var writer = new Kekule.IO.MdlReactionWriter(this.getMdlVersion(), this.getCoordMode());
-			return writer.writeBlock(obj);
+			return writer.writeBlock(obj, options);
 		}
 	}
 });
@@ -1361,7 +1373,7 @@ Kekule.IO.MdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 		this.defineProp('coordMode', {'dataType': DataType.INT, 'defaultValue': Kekule.CoordMode.UNKNOWN});
 	},
 	/** @private */
-	doWriteData: function(obj, dataType, format)
+	doWriteData: function(obj, dataType, format, options)
 	{
 		var writer;
 		if (obj instanceof Kekule.Reaction)
@@ -1375,7 +1387,7 @@ Kekule.IO.MdlWriter = Class.create(Kekule.IO.ChemDataWriter,
 			return null;
 		}
 		if (writer)
-			return writer.writeData(obj);
+			return writer.writeData(obj, dataType, options);
 	}
 });
 
