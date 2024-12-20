@@ -26,7 +26,7 @@
 Kekule.globalOptions.add('IO.mdl', {
 	mdlVersion: Kekule.IO.MdlVersion.V2000,
 	coordMode: Kekule.CoordMode.UNKNOWN,
-	explicitChiralFlagInCountLine: !false  // if true, the chiral flag of ctab count line will be explicitly set when there is stereo center in molecule
+	explicitChiralFlagInCountLine: true  // if true, the chiral flag of ctab count line will be explicitly set when there is stereo center in molecule
 });
 
 /**
