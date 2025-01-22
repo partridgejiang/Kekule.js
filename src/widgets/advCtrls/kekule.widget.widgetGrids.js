@@ -366,7 +366,17 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 	 */
 	getWidgetCell: function(widget)
 	{
-		return widget[this.CELL_FIELD];
+		let result = widget[this.CELL_FIELD];
+		/*
+		if (!result) {
+			let elem = widget.getElement().parentNode;
+			while (elem && elem.className.indexOf(CNS.WIDGET_GRID_CELL) < 0) {
+				elem = elem.parentNode;
+			}
+			result = elem;
+		}
+		*/
+		return result;
 	},
 	/**
 	 * Returns the direct parent element of widget.
@@ -634,13 +644,13 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 	/** @private */
 	reactCellMouseEnter: function(e)
 	{
-		var target = e.getTarget();
+		var target = e.getCurrentTarget();
 		this.setHotCell(target);
 	},
 	/** @private */
 	reactCellMouseLeave: function(e)
 	{
-		var target = e.getTarget();
+		var target = e.getCurrentTarget();
 		if (this.getHotCell() === target)
 		{
 			this.setHotCell(null);
@@ -649,7 +659,7 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 	/** @private */
 	reactCellClick: function(e)
 	{
-		var target = e.getTarget();
+		var target = e.getCurrentTarget();
 		if (DU.isDescendantOf(target, this.getAddingCell()) || target === this.getAddingCell())
 			this.createWidget();
 	},
@@ -657,7 +667,7 @@ Kekule.Widget.WidgetGrid = Class.create(Kekule.Widget.Container,
 	reactChildWidgetChange: function(e)
 	{
 		var widget = e.widget;
-		if (widget && this.hasChild(widget))
+		if (widget && this.hasChild(widget) && widget.getParent() === this)  // only react to the direct children
 		{
 			this.updateCell(this.getWidgetCell(widget), this.getHotCell() === this.getWidgetCell(widget));
 		}
