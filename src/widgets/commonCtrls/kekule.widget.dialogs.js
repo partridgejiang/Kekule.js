@@ -91,6 +91,7 @@ Kekule.Widget.Location = {
  * @property {Array} buttons Array of predefined button names that should be shown in dialog.
  * @property {String} result The name of button that close this dialog.
  * @property {Int} location Value from {@link Kekule.Widget.Location}, determine the position when dialog is popped up.
+ * @property {Object} autoFocusedObject The widget or element automatically be focused when opening a dialog.
  */
 Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 /** @lends Kekule.Widget.Dialog# */
@@ -148,6 +149,7 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 				this.buttonsChanged();
 			}
 		});
+		this.defineProp('autoFocusedObject', {'dataType': DataType.OBJECT, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('result', {'dataType': DataType.STRING, 'serializable': false, 'scope': Class.PropertyScope.PUBLIC});
 		this.defineProp('location', {'dataType': DataType.INT});
 		// private properties
@@ -606,6 +608,15 @@ Kekule.Widget.Dialog = Class.create(Kekule.Widget.BaseWidget,
 	{
 		this.prepareShow(callback, caller);
 		this.show(caller, null, showType || Kekule.Widget.ShowHideType.DIALOG);
+
+		var self = this;
+		(function(){
+			var autoFocusedObj = self.getAutoFocusedObject();
+			if (autoFocusedObj && typeof(autoFocusedObj.focus) === 'function') {
+				autoFocusedObj.focus();
+			}
+		}).defer();
+
 		this._dialogOpened = true;
 		return this;
 	},
