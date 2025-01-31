@@ -156,6 +156,7 @@ Kekule.ChemWidget.LoadDataDialog = Class.create(Kekule.Widget.Dialog,
 		dataEditor.setToolbarPos(Kekule.Widget.Position.BOTTOM);
 		dataEditor.addClassName(CCNS.DIALOG_LOADDATA_SRCEDITOR);
 		dataEditor.appendToElem(elem);
+		this.setAutoFocusedObject(dataEditor.getTextArea());
 		this._dataEditor = dataEditor;
 	},
 

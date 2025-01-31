@@ -3078,6 +3078,7 @@ Kekule.ChemWidget.ActionDisplayerSaveFile = Class.create(Kekule.ChemWidget.Actio
 		formatSelector.appendToElem(elem);
 		formatSelector.addEventListener('valueChange', this.reactFormatSelectorChange, this);
 		result._formatSelector = formatSelector;
+		result.setAutoFocusedObject(formatSelector);
 		// label
 		var elem = doc.createElement('div');
 		elem.innerHTML = Kekule.$L('ChemWidgetTexts.CAPTION_PREVIEW_FILE_CONTENT'); //CWT.CAPTION_PREVIEW_FILE_CONTENT;
