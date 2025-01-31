@@ -4944,14 +4944,16 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 			this.getOperationsInCurrManipulation().push(operation);
 			if (autoExec)
 			{
-				this.beginUpdateObject();
+				// this.beginUpdateObject();
+				this.beginManipulateAndUpdateObject();
 				try
 				{
 					operation.execute();
 				}
 				finally
 				{
-					this.endUpdateObject();
+					// this.endUpdateObject();
+					this.endManipulateAndUpdateObject();
 				}
 			}
 		}

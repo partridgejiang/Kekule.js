@@ -8066,11 +8066,11 @@ Kekule.Editor.AttachedMarkerIaController = Class.create(Kekule.Editor.BaseEditor
 				new Kekule.MacroOperation(operations);
 		if (oper)
 		{
-			oper.execute();
+			// oper.execute();
 			var editor = this.getEditor();
 			if (editor && editor.getEnableOperHistory())
 			{
-				editor.pushOperation(oper);
+				editor.pushOperation(oper, true);  // execute when pushing
 			}
 		}
 	},
