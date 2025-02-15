@@ -5258,6 +5258,24 @@ Kekule.Editor.BaseEditor = Class.create(Kekule.ChemWidget.ChemObjDisplayer,
 		result.y2 = result.y1 + result.height;
 		return result;
 	},
+
+	getEditRegionClientVisibleClientRect: function() {
+		var elem = this.getObjContextParentElem();
+		var rect = {
+			left: elem.offsetLeft - elem.scrollLeft,
+			top: elem.offsetTop - elem.scrollTop,
+			width: elem.clientWidth,
+			height: elem.clientHeight
+		};
+		rect.x1 = rect.left;
+		rect.y1 = rect.top;
+		rect.x2 = rect.left + rect.width;
+		rect.y2 = rect.top + rect.height;
+
+		var clientVisibleRect = this.getClientVisibleRect();
+		return Kekule.RectUtils.getIntersection(rect, clientVisibleRect);
+	},
+
 	/**
 	 * Scroll edit client to a position.
 	 * @param {Int} yPosition, in px.

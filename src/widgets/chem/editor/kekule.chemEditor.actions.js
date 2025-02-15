@@ -209,7 +209,9 @@ Kekule.Editor.ActionOperUtils = {
 				if (!screenCoordOffset && ops.autoAdjustPosition)  // auto adjust position
 				{
 					//var originCenterCoord = this.getObjsCenterScreenCoord(editor, originalSelectedObjs);
-					var editorClientRect = editor.getClientVisibleRect();
+					// var editorClientRect = editor.getClientVisibleRect();
+					var editorClientRect = editor.getEditRegionClientVisibleClientRect();
+
 					var editorCenterScreenCoord = {
 						'x': editorClientRect.left + editorClientRect.width / 2,
 						'y': editorClientRect.top + editorClientRect.height / 2
