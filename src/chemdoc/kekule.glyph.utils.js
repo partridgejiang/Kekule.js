@@ -18,12 +18,14 @@ Kekule.Glyph.ElectronArrowGlyphUtils = {
 	isValidChemNodeOrConnectorStickTarget: function(targetObj)
 	{
 		var result = (targetObj instanceof Kekule.ChemStructureNode) || (targetObj instanceof Kekule.ChemStructureConnector);
+		/*
 		if (!result && (targetObj instanceof Kekule.ChemMarker.BaseMarker))
 		{
 			var parent = targetObj.getParent && targetObj.getParent();
 			if (parent)  // the marker of node/connector (e.g., electron pair) can also be a valid target
 				result = (parent instanceof Kekule.ChemStructureNode) || (parent instanceof Kekule.ChemStructureConnector);
 		}
+		*/
 		return result;
 	},
 	isValidElectronTarget: function(obj)
