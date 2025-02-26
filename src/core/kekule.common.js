@@ -4245,7 +4245,8 @@ Kekule.ChemObject = Class.create(ObjectEx,
 		for (var i = 0, l = props.getLength(); i < l; ++i)
 		{
 			var propInfo = props.getPropInfoAt(i);
-			propNames.push(propInfo.name);
+			if (propInfo.name !== 'parent' && propInfo.name !== 'owner')  // relation property should not be compared to avoid recursion
+				propNames.push(propInfo.name);
 		}
 		return propNames;
 	},

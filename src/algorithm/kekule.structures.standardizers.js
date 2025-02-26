@@ -205,7 +205,7 @@ ClassEx.extend(Kekule.StructureFragment,
 		return Kekule.ChemStructureUtils.isSameStructure(this, target, compareOptions);
 	}
 });
-ClassEx.extendMethod(Kekule.StructureFragment, 'compare', function($origin, targetObj, options){
+ClassEx.extendMethod(Kekule.StructureFragment, 'doCompare', function($origin, targetObj, options){
 	if (options.method === Kekule.ComparisonMethod.CHEM_STRUCTURE
 			&& (options.doStandardize !== false)
 			&& (targetObj instanceof Kekule.StructureFragment))
