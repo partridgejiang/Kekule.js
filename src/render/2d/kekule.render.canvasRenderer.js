@@ -681,10 +681,33 @@ Kekule.Render.CanvasRendererBridge = Class.create(Kekule.Render.Abstract2DDrawBr
 		var fontStyle = this.getCanvasFontStyle(options);
 		context.font = fontStyle;
 		var m = context.measureText(text);
+
+		/*
 		var fontSize = options.fontSize;
 		if (typeof(fontSize) === 'string')  // with unit, e.g. 10px
 			fontSize = Kekule.StyleUtils.analysisUnitsValue(fontSize).value;
 		var result = {'width': m.width, 'height': fontSize};  // height can not be got from Canvas API, use font size instead
+		*/
+		
+		var result = {
+			width: m.width,
+			height: m.fontBoundingBoxAscent + m.fontBoundingBoxDescent,
+			actualWidth: m.actualBoundingBoxLeft + m.actualBoundingBoxRight,
+			actualHeight: m.actualBoundingBoxAscent + m.actualBoundingBoxDescent
+		};
+
+		// fall backs
+		if (isNaN(result.height)) {
+			var fontSize = options.fontSize;
+			if (typeof(fontSize) === 'string')  // with unit, e.g. 10px
+				fontSize = Kekule.StyleUtils.analysisUnitsValue(fontSize).value;
+			result.height = fontSize;
+		}
+		if (isNaN(result.actualHeight))
+			result.actualHeight = result.height;
+		if (isNaN(result.actualWidth))
+			result.actualWidth = result.width;
+
 		return result;
 	},
 
