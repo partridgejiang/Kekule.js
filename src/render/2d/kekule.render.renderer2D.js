@@ -2915,9 +2915,8 @@ Kekule.Render.ChemCtab2DRenderer = Class.create(Kekule.Render.Ctab2DRenderer,
 		//if (!this._needNodeDrawLabel(node))
 		//var autoCreateChargeAndRadicalMarker = nodeRenderOptions.autoCreateChargeAndRadicalMarker;
 		// TODO: charge and radical drawing are now handled togather, may be splitted in the future
-		var hasChargeOrRadical = node.getCharge() || node.getRadical();
 		// var needDrawCharge = (node.getCharge() && !node.fetchChargeMarker(false));
-		var needDrawCharge = (node.hasExplicitCharge && node.hasExplicitCharge() && !node.fetchChargeMarker(false));
+		var needDrawCharge = (!!node.getCharge() && !node.fetchChargeMarker(false));
 		var needDrawRadical = (node.getRadical() && !node.fetchRadicalMarker(false));
 		var nodeWithLabel = false;
 		if (this.getObjNeedDrawLabel(context, node))  // draw label
