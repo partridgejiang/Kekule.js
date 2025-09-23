@@ -391,6 +391,8 @@ Kekule.MolStereoUtils = {
 	 */
 	getStereoBondKeyNeighborConnectors: function(connector) {
 		var nodes = Kekule.MolStereoUtils.getStereoBondKeyNodes(connector);
+		if (!nodes)
+			return null;
 		var result = [nodes[1].getConnectorTo(nodes[0]), nodes[2].getConnectorTo(nodes[3])];
 		return result;
 	},

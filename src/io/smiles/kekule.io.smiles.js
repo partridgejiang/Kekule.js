@@ -418,6 +418,8 @@ Kekule.IO.SmilesMolWriter = Class.create(Kekule.IO.ChemDataWriter,
 			{
 				++stereoBondCount;
 				var refConnectors = Kekule.MolStereoUtils.getStereoBondKeyNeighborConnectors(connector);
+				if (!refConnectors)
+					continue;
 				var dirSymbols = this._getStereoDoubleBondInitialDirectionSymbols(connector);
 				// check if the refConnectors has already been marked, if so, may adjust dirSymbols
 				var markedConnectors = [];
