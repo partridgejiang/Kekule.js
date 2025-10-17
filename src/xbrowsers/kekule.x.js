@@ -24,7 +24,7 @@ var	win = $root, document = win && win.document;
 if (typeof(Kekule) === 'undefined')
 	Kekule = {};
 
-if (typeof(navigator) === "undefined")   // not in browser environment, node.js?
+if (typeof(window) === 'undefined' || typeof(navigator) === "undefined")   // not in browser environment, node.js?, in latest node version (24), navigator object has been implemented, so here we use double check
 {
 	Kekule.Browser = {};
 	Kekule.BrowserFeature = {};
