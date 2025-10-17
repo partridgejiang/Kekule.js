@@ -131,7 +131,7 @@
       toolButtons.push({'text': 'View Obj', 'showText': true, '#execute': openObjInViewer});
       toolButtons.push({'text': 'View Doc', 'showText': true, '#execute': openDocInViewer});
       //toolButtons.push({'widget': 'Kekule.Widget.CheckButton', 'text': 'Custom CheckButton'});
-      //toolButtons.push({'text': 'Set Btn', 'showText': true, '#execute': setCustomChemButtons});
+      toolButtons.push({'text': 'Set Btn', 'showText': true, '#execute': setCustomChemButtons});
       //toolButtons.push({'text': 'Set Btn2', 'showText': true, '#execute': setCustomChemButtons2});
       toolButtons.push({'text': 'FF', 'showText': true, '#execute': requestFullScreen});
       chemEditorUi.setCommonToolButtons(toolButtons);
@@ -293,11 +293,29 @@
 
     function setCustomChemButtons()
     {
+      var ActionBondTransition = Kekule.Editor.createComposerIaControllerActionClass(
+              'Kekule.Editor.ActionComposerSetBondControllerTransition',
+              'Transition', // caption
+              'Transition bond',  // hihnt
+              'MolBondIaController',  // base IA controller
+              'MolBondIaController-Transition',  // HTML class name for this action
+              {   // property of newly created object
+                'bondType': Kekule.BondType.TRANSITION
+              }
+      );
+
       var BNS = Kekule.ChemWidget.ComponentWidgetNames;
       var chemButtons = [
         BNS.manipulate,
         BNS.erase,
-        {'name': BNS.molBond, 'attached': [BNS.molBondSingle, BNS.molBondDouble, BNS.molRing6]},
+        {'name': BNS.molBond, 'attached': [
+                BNS.molBondSingle, BNS.molBondDouble, BNS.molRing6,
+            {
+              'name': 'transition',
+              'actionClass': ActionBondTransition
+            }
+          ]
+        },
         BNS.molRing,
         BNS.molAtom,
         BNS.molFormula,
