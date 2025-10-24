@@ -97,7 +97,7 @@ class qtype_kekule_chem_base_renderer extends qtype_kekule_multianswer_renderer 
      * @return string
      */
     protected function getBlankHtml($blankIndex, $blank, $answer, $question,
-                                    question_attempt $qa, question_display_options $options, $correctResponse)
+                                    question_attempt $qa, question_display_options $options, $correctResponse, $htmlElemAttribs = NULL)
     {
         $inputType = intval($question->inputtype);
         $widgetType = 'viewer';

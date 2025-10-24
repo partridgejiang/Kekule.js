@@ -74,7 +74,10 @@ class qtype_kekule_multianswer_renderer extends qtype_with_combined_feedback_ren
         {
             if ($subPart->role === qtype_kekule_multianswer_part::TEXT)  // normal text
             {
-                $sPart = html_writer::span($subPart->content);
+                $formattedContent = $question->format_text($subPart->content, $question->questiontextformat,
+                                        $qa, 'question', 'questiontext', $question->id);
+                //$sPart = html_writer::span($subPart->content);
+                $sPart = html_writer::span($formattedContent);
             }
             else if ($subPart->role === qtype_kekule_multianswer_part::BLANK)  // blank place holder
             {
@@ -113,7 +116,7 @@ class qtype_kekule_multianswer_renderer extends qtype_with_combined_feedback_ren
      * @return string
      */
     protected function getBlankHtml($blankIndex, $blank, $answer, $question,
-        question_attempt $qa, question_display_options $options, $correctResponse)
+        question_attempt $qa, question_display_options $options, $correctResponse, $htmlElemAttribs = NULL)
     {
         $answerFieldName = $this->getAnswerFieldName($blankIndex);
         $ctrlName = $qa->get_qt_field_name($answerFieldName);
@@ -124,6 +127,13 @@ class qtype_kekule_multianswer_renderer extends qtype_with_combined_feedback_ren
             'id' => $ctrlName,
             'size' => 40
         );
+
+        if (!empty($htmlElemAttribs))
+        {
+            foreach ($htmlElemAttribs as $key => $value)
+                $inputAttributes[$key] = $value;
+        }
+
         if ($options->readonly) {
             $inputAttributes['readonly'] = 'readonly';
         }
@@ -163,14 +173,16 @@ class qtype_kekule_multianswer_renderer extends qtype_with_combined_feedback_ren
         }
         */
         $correctRes = $question->getCorrectAnswers();
+        $currBlankIndex = 0;
         foreach($correctRes as $key=>$answers)
         {
             $sAnswers = array();
-            foreach ($answers as $answer)
+            foreach ($answers as $index => $answer)
             {
-                $sAnswers[] = $this->correctResponseTextToHtml($qa, $question, $answer);
+                $sAnswers[] = $this->correctResponseTextToHtml($qa, $question, $answer, $currBlankIndex);
             }
             $sResults[$key] = $question->make_html_inline(implode(' / ', $sAnswers));
+            ++$currBlankIndex;
         }
         if (!empty($sResults)) {
             /*
@@ -204,8 +216,9 @@ class qtype_kekule_multianswer_renderer extends qtype_with_combined_feedback_ren
      * @param $qa
      * @param $question
      * @param $texts
+     * @param $index Int Index of corresponding blank
      */
-    protected function correctResponseTextToHtml(question_attempt $qa, $question, $text)
+    protected function correctResponseTextToHtml(question_attempt $qa, $question, $text, $index)
     {
         return $text;
     }
