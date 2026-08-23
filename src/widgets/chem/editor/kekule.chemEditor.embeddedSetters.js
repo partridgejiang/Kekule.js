@@ -1280,7 +1280,9 @@ Kekule.Editor.EmbeddedSetter.Formula = Class.create(Kekule.Editor.EmbeddedSetter
 	},
 	/** @private */
 	needToModifyObj: function(obj, modifiedValues) {
-		return this.applySuper('needToModifyObj', [obj.getFormula(), {'text': modifiedValues.formulaText}]);
+		// return this.applySuper('needToModifyObj', [obj.getFormula(), {'text': modifiedValues.formulaText}]);
+		var oldFormulaText = this.getFormulaText(obj);
+		return oldFormulaText !== modifiedValues.formulaText;
 	},
 
 	/** @ignore */
