@@ -2487,8 +2487,9 @@ Kekule.CondensedFormulaUtils = {
 					//RTU.insertText(subRt, 0, bondSymbol, false);
 					RTU.insertText(subRts[0], 0, bondSymbol, false);
 				}
-				if (structUnit.count && structUnit.count > 1)
+				if (structUnit.count && structUnit.count > 1 && structUnit.structType !== 'atom')
 				{
+					// here we handle the count of branch or subgroup, since the count already be handled in atom section, no need to add here
 					var countPart = RTU.strToRichText(structUnit.count.toString(), {'textType': Kekule.Render.RichText.SUB});
 					subRts.push(countPart);
 				}
