@@ -10,7 +10,13 @@ span.K-StyleSheet-Detector
 /* top layer */
 .K-Top-Layer
 {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
     background-color: transparent;
+    z-index: 30000;
     /*
     display: block;
     z-index: 100;
