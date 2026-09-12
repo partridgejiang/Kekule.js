@@ -13,7 +13,7 @@
 "use strict";
 
 Kekule.globalOptions.add('glyph.chemMarker.electronArrow', {
-	enableChemMarkerAsCoordStickTarget: !false
+	enableChemMarkerAsCoordStickTarget: false
 });
 
 ////////////// A util class for electron donor/receptor arrows ///////////
