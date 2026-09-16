@@ -238,7 +238,7 @@ Object.extendEx = function(destination, source, options)
       continue;
 
     var oldValue = destination[property];
-    if (options.preserveExisted && oldValue)
+    if (options.preserveExisted && (oldValue || (property in destination)))
       continue;
     var oldProto = oldValue && oldValue.constructor && oldValue.constructor.prototype;
     var newProto = value && value.constructor && value.constructor.prototype;
@@ -692,7 +692,7 @@ Object._extendSupportMethods(String.prototype, {
       this.slice(0, length - truncation.length) + truncation : String(this);
   },
 
-  strip: function() {
+  stripStr: function() {
     return this.replace(/^\s+/, '').replace(/\s+$/, '');
   },
 
@@ -739,7 +739,7 @@ Object._extendSupportMethods(String.prototype, {
   },
 
   toQueryParams: function(separator) {
-    var match = this.strip().match(/([^?#]*)(#.*)?$/);
+    var match = this.stripStr().match(/([^?#]*)(#.*)?$/);
     if (!match) return { };
 
     return match[1].split(separator || '&').inject({ }, function(hash, pair) {
