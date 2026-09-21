@@ -5311,7 +5311,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 				var hasCtab1 = this.hasCtab();
 				var hasCtab2 = targetObj.hasCtab && targetObj.hasCtab();
 				result = hasCtab1? (hasCtab2? 0: 1): (hasCtab2? -1: 0);
-				if (!result)
+				if (!result && !hasCtab1)  // if all has no ctab, check formula
 				{
 					var hasFormula1 = this.hasFormula();
 					var hasFormula2 = targetObj.hasFormula && targetObj.hasFormula();
@@ -5432,7 +5432,7 @@ Kekule.StructureFragment = Class.create(Kekule.ChemStructureNode,
 							}
 						}
 					}
-					else if (this.hasFormula())
+					else if (this.hasFormula() && targetObj.getFormula())
 					{
 						// both have formula, compare formulas
 						return Kekule.FormulaUtils.compareFormula(this.getFormula(), targetObj.getFormula(), options);
